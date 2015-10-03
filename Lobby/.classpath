@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="C:/Users/Biel/MCDeps/Spigot183.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="https://hub.spigotmc.org/javadocs/spigot/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/BielAPI"/>
+	<classpathentry kind="lib" path="C:/Users/Biel/MCDeps/FeatherBoard.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Biel/MCDeps/HolographicDisplays.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Biel/MCDeps/ActionBarAPI.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Biel/MCDeps/PacketListenerApi_v2.5.2.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

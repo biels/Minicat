@@ -1,0 +1,42 @@
+name: lobby
+main: com.biel.lobby.lobby
+depend:
+- BielAPI
+version: 1.25
+commands:
+  prova:
+    description: Prova.
+    usage: /r [Mapa] El mapa es pot indicar pel seu ID o pel seu nom
+  mapes:
+    description: Mostra una llista dels mapes.
+    usage: /mapes
+  o:
+    description: Mostra les opcions generals.
+    usage: /o
+  m:
+    description: Mostra l'inventari del teletransportador.
+    usage: /m
+  l:
+    description: Retorna el jugador al lobby.
+    usage: /l
+  p:
+    description: Estableix la propietat.
+    usage: /p
+  e:
+    description: Entra en mode edicio.
+    usage: /e
+  s:
+    description: Guarda el mapa.
+    usage: /s
+  elo:
+    description: Mostra l'elo actual.
+    usage: /s
+  top:
+    description: Mostra el top de jugadors.
+    usage: /s
+  ranking:
+    description: Mostra el top de jugadors.
+    usage: /s
+  prog:
+    description: Progres estimat de la partida (ETA).
+    usage: /prog

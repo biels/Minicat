@@ -1,0 +1,50 @@
+name: FastSurvival
+main: com.biel.FastSurvival.FastSurvival
+version: 2.5
+load: STARTUP
+depend: [BKCommonLib]
+commands:
+   save:
+     description: Lol xD
+     aliases: [iniciar, i]
+     usage: OOPSh!
+   load:
+     description: Lol xD
+     
+   maze:
+     description: Lol xD
+   recall:
+     description: Back to base!
+     usage: Click items!
+   b:
+     description: Arcs
+     aliases: [arcs, bows]
+     usage: OOPSh!
+   it:
+     description: Gets all special items
+     aliases: [items, specialitems]
+     usage: OOPSh!
+   e:
+     description: Arcs
+     aliases: [pilota]
+     usage: OOPSh!
+   wand:
+     description: Get a magic builder's wand
+     aliases: [builder, w]
+     usage: OOPSh!
+   moonmats:
+     description: Arcs
+     aliases: [portal, materials, m]
+     usage: OOPSh!
+   t:
+     description: Torres
+     aliases: [turrets, torres]
+     usage: OOPSh!
+   moon:
+     description: Tet teletrasporta a la lluna
+     aliases: [lluna]
+     usage: OOPSh!
+   sky:
+     description: Tet teletrasporta al cel
+     aliases: [cel]
+     usage: OOPSh!
