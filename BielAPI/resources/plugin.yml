@@ -1,0 +1,7 @@
+name: BielAPI
+main: com.biel.BielAPI.BielAPI
+version: 2.0
+commands:
+  BielAPI:
+    description: API version
+    usage: /BielAPI

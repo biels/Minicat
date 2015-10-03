@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>BielAPI</groupId>
+	<artifactId>BielAPI</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>BielAPI</name>
+	<description>API base per aplicacions sobre spigot</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<versions.spigot-version>1.8.7-R0.1-SNAPSHOT</versions.spigot-version>
+		<versions.bungeecord-version>1.8-SNAPSHOT</versions.bungeecord-version>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>OSS-Repo</id>
+			<url>https://oss.sonatype.org/content/groups/public/</url>
+		</repository>
+		<repository>
+			<id>SpigotMC-Hub</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+		</repository>
+		<repository>
+			<id>shadowvolt-repo</id>
+			<url>http://ci.shadowvolt.com/plugin/repository/everything/</url>
+		</repository>
+	</repositories>
+	<dependencies>
+		<!--Spigot-API -->
+		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot-api</artifactId>
+			<version>${versions.spigot-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot</artifactId>
+			<version>${versions.spigot-version}</version>
+			<scope>system</scope>
+			<systemPath>${pom.basedir}/lib/spigot.jar</systemPath>
+		</dependency>
+	</dependencies>
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.3</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+		<finalName>BielAPI-${project.version}</finalName>
+		<resources>
+			<resource>
+				<directory>resources/</directory>
+			</resource>
+		</resources>
+	</build>
+	<organization>
+		<name>Biel, Inc</name>
+	</organization>
+</project>
