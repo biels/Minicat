@@ -1,6 +1,6 @@
 package com.biel.lobby.utilities;
 
-import org.bukkit.craftbukkit.v1_8_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 public class CBUtils {
@@ -9,3 +9,5 @@ public class CBUtils {
 		return ((CraftPlayer) player).getHandle().ping;
 	}
 }
+
+
