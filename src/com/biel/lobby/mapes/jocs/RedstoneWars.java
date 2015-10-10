@@ -2,6 +2,7 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 
+import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -31,11 +32,6 @@ import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.utilities.Utils;
 
-import de.inventivegames.packetlistener.PacketListenerAPI;
-import de.inventivegames.packetlistener.handler.PacketHandler;
-import de.inventivegames.packetlistener.handler.ReceivedPacket;
-import de.inventivegames.packetlistener.handler.SentPacket;
-import net.md_5.bungee.api.ChatColor;
 
 public class RedstoneWars extends JocEquips{
 	int chargeCount = 0;

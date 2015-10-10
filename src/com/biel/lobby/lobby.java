@@ -2,37 +2,22 @@ package com.biel.lobby;
 
 
 
-import java.util.ArrayList;
-
-import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.WorldCreator;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import be.maximvdw.featherboard.api.FeatherBoardAPI;
-import de.inventivegames.packetlistener.PacketListenerAPI;
-import de.inventivegames.packetlistener.handler.PacketHandler;
-import de.inventivegames.packetlistener.handler.ReceivedPacket;
-import de.inventivegames.packetlistener.handler.SentPacket;
 
-import com.biel.BielAPI.events.EventBusManager;
-import com.biel.BielAPI.events.GeneralListener;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
-import com.biel.lobby.mapes.jocs.ObsidianDefenders;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.Options;
-import com.biel.lobby.utilities.Turret;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.data.DataAPI;
 import com.biel.lobby.utilities.data.PlayerData;
@@ -50,7 +35,6 @@ public final class lobby extends JavaPlugin {
 
 		gest = new GestorMapes();
 		dataAPI = new DataAPI();
-		packets();
 	}
 
 	@Override
@@ -150,13 +134,7 @@ public final class lobby extends JavaPlugin {
 			Com.displayRanking(ply);
 			return true;
 		}
-		if(cmd.getName().equalsIgnoreCase("stoggle")){
-			//if (ply.isOp() == true){
-			FeatherBoardAPI.toggle(ply);
-			ply.sendMessage(Boolean.toString(FeatherBoardAPI.isToggled(ply)));
-			return true;
-			//}
-		}
+
 		if(cmd.getName().equalsIgnoreCase("prog")){
 			Mapa m = Com.getGest().getMapWherePlayerIs(ply);
 			if(m != null){
@@ -189,22 +167,5 @@ public final class lobby extends JavaPlugin {
 	public static Boolean isOnLobby(Player ply){
 		return getLobbyWorld().getPlayers().contains(ply);
 	}
-	public static void packets(){
-		PacketListenerAPI.addPacketHandler(new PacketHandler() {
-			
-			@Override
-			public void onSend(SentPacket packet) {
-				// TODO Auto-generated method stub
-				if(packet.getPacketName().equals("PacketPlayOutSpawnEntity")) {
-                    packet.setPacketValue("f", 55);//f is the Field in the packet which defines the Entity-type as an Integer
-                }
-			}
-			
-			@Override
-			public void onReceive(ReceivedPacket packet) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
-	}
+	
 }

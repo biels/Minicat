@@ -51,7 +51,6 @@ import com.biel.lobby.utilities.Pair;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
-import net.minecraft.server.v1_8_R2.PathfinderGoalInteractVillagers;
 
 public class InkWars extends JocEquips {
 	HashMap<Block, Pair<String, Double>> highInkBlocks = new HashMap<Block, Pair<String, Double>>();

@@ -24,7 +24,6 @@ public class DataAPI {
 	public Connection connection;
 
 	void openConnection() {
-
 		String host = "localhost";
 		String port = "3306";
 		String db = "minicat";
