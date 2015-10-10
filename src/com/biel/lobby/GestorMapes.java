@@ -60,7 +60,7 @@ public class GestorMapes implements Listener{
 		//Mapes.add(new ContenidorJoc(InfernoRush.class, "Inferno Rush", Material.BLAZE_POWDER, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(KingSkeletonChallenge.class, "King Skeleton", Material.GOLD_HELMET, DevelopmentState.PreAlpha));
 		//Mapes.add(new ContenidorJoc(WarehouseKOTH.class, "Warehouse KOTH", Material.WOOD, DevelopmentState.Beta));
-		Mapes.add(new ContenidorJoc(OniChan.class, "Oni-Chan", Material.CAKE, DevelopmentState.InDevelopment));
+		//Mapes.add(new ContenidorJoc(OniChan.class, "Oni-Chan", Material.CAKE, DevelopmentState.InDevelopment));
 		//Mapes.add(new ContenidorJoc(PixelRift.class, "Pixel Rift", Material.ITEM_FRAME, DevelopmentState.KnownIssues));
 		//Mapes.add(new ContenidorJoc(ResourceRush.class, "Resource Rush", Material.DIAMOND_ORE, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(Parkour.class, "ParkourFlow", Material.GOLD_BLOCK, DevelopmentState.Alpha));
@@ -318,7 +318,7 @@ public class GestorMapes implements Listener{
 				if(((MapaResetejable)map).getEditMode())return;
 			}
 			if (map.getWorld().getPlayers().size() == 0){
-				map.JocFinalitzat();
+				//map.JocFinalitzat();
 				map.deleteVirtualWorld();
 				Instàncies.remove(map);
 				map.destroyEventBus();
