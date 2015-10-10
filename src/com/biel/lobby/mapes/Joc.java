@@ -442,7 +442,7 @@ public abstract class Joc extends MapaResetejable {
 			getWorld().playEffect(p.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				 		
 		}
 		double m = 1;		
-		m =  175/CBUtils.getPing(p);
+		m =  175/(CBUtils.getPing(p)+1);
 		if(m > 1)m = 1;
 		if(m < 0.5)m = 0.5;
 		evt.setDamage(evt.getDamage() * Math.sqrt(m));
@@ -810,6 +810,7 @@ public abstract class Joc extends MapaResetejable {
 		PlayerInfo i = getPlayerInfo(p);
 		i.lastMoveEvent = ZonedDateTime.now();
 		i.setImmune(true);
+		i.lastRespawnEvent = ZonedDateTime.now();
 		if (getResetPlayerOnRespawn()){
 			Utils.clearPlayer(p);			
 			donarItemsInicials(p);
@@ -886,6 +887,7 @@ public abstract class Joc extends MapaResetejable {
 		double speedModifier = 0;
 		boolean immune = true;
 		ZonedDateTime lastMoveEvent = ZonedDateTime.now();
+		ZonedDateTime lastRespawnEvent = ZonedDateTime.now();
 		int kills = 0;
 		int deaths = 0;
 		boolean isAlive = true;
@@ -965,7 +967,7 @@ public abstract class Joc extends MapaResetejable {
 			this.objectivesCompleted = objectivesCompleted;
 		}
 		public boolean isImmune() {
-			return immune;
+			return immune || isAFK() || Duration.between(lastRespawnEvent, ZonedDateTime.now()).compareTo(Duration.ofSeconds(4)) > 0;
 		}
 		public void setImmune(boolean immune) {
 			this.immune = immune;
@@ -974,7 +976,7 @@ public abstract class Joc extends MapaResetejable {
 			return Duration.between(lastMoveEvent, ZonedDateTime.now());
 		}
 		public boolean isAFK(){
-			return getIdleTime().getSeconds() > 15;
+			return getIdleTime().getSeconds() > 10;
 		}
 		public void ultraTick(){		
 			updateSpeedSlowPotionEffects();
