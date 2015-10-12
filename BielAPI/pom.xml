@@ -39,7 +39,7 @@
 			<artifactId>spigot</artifactId>
 			<version>${versions.spigot-version}</version>
 			<scope>system</scope>
-			<systemPath>${pom.basedir}/lib/spigot.jar</systemPath>
+			<systemPath>${pom.basedir}/lib/spigot-1.8.8-R0.1-SNAPSHOT.jar</systemPath>
 		</dependency>
 	</dependencies>
 	<build>
