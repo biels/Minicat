@@ -977,7 +977,7 @@ public class Turret extends EventBus {
 		}
 		ItemStack toItemStack(){
 			ItemStack itemstack = new ItemStack(material, 1); // A stack of diamonds
-			ItemMeta meta = (ItemMeta) itemstack.getItemMeta();
+			ItemMeta meta = itemstack.getItemMeta();
 			ChatColor color = ChatColor.GREEN;
 			if (possibleUpgrade() == false){
 				color = ChatColor.YELLOW;

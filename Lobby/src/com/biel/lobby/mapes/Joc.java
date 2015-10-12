@@ -764,7 +764,7 @@ public abstract class Joc extends MapaResetejable {
 	protected void onBlockPlace(BlockPlaceEvent evt, Block blk) {
 		// TODO Auto-generated method stub
 		super.onBlockPlace(evt, blk);
-		if (evt.getPlayer() instanceof Player){
+		if (evt.getPlayer() != null){
 			Player ply = evt.getPlayer();
 			if(!blockBreakPlace){
 				evt.setCancelled(true);
@@ -782,7 +782,7 @@ public abstract class Joc extends MapaResetejable {
 	protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
 		// TODO Auto-generated method stub
 		super.onBlockBreak(evt, blk);
-		if (evt.getPlayer() instanceof Player){
+		if (evt.getPlayer() != null){
 			Player ply = evt.getPlayer();
 			if(!blockBreakPlace){
 				evt.setCancelled(true);
@@ -1099,7 +1099,7 @@ public abstract class Joc extends MapaResetejable {
 		public Block getBlockWherePlayerStands(){
 			BlockIterator i = new BlockIterator(getWorld(), getPlayer().getLocation().toVector(), new Vector(0, -1, 0), 1D, 30);
 			for (;i.hasNext();) {
-				Block b = (Block) i.next();
+				Block b = i.next();
 				if(!b.isEmpty())return b;
 			}
 			return null;

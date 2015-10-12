@@ -2,6 +2,7 @@ package com.biel.lobby.utilities.events.skills.types.specificskills;
 
 import java.util.ArrayList;
 
+
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
@@ -74,7 +75,7 @@ public class DeflectorSkill extends InherentSkill {
 			//H
 			PlayerInfo di = getPlayerInfo(damaged);
 			di.removeStatusEffect(DeflectorStatusEffect.class);
-			damager.damage((double) (evt.getDamage() * getDmgMultiplier()), damaged);
+			damager.damage(evt.getDamage() * getDmgMultiplier(), damaged);
 			evt.setCancelled(true);
 			Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
 			Vector dir = rawDir.normalize().multiply(-1.35).add(new Vector(0,0.42,0));

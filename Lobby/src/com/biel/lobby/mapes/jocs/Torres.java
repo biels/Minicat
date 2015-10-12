@@ -79,8 +79,8 @@ public class Torres extends JocEquips {
 		int d = (int) (20 * (5 + Math.sqrt(segonsTranscorreguts()) / 9));
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 4 * 20 + d, 4, false), true);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 10, 2, false), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) d , 50, false), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) d, 5, false), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, d , 50, false), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, d, 5, false), true);
 	}
 	@Override
 	public String getGameName() {
@@ -101,7 +101,7 @@ public class Torres extends JocEquips {
 		arc.addEnchantment(Enchantment.ARROW_INFINITE, 1);
 		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 		ItemStack itemstack = new ItemStack(Material.ENCHANTED_BOOK, 1); // A stack of diamonds
-		ItemMeta meta = (ItemMeta) itemstack.getItemMeta();
+		ItemMeta meta = itemstack.getItemMeta();
 		meta.setDisplayName(ChatColor.BLUE + "Control remot");
 		ArrayList<String> lore = new ArrayList<String>();
 		lore.add(ChatColor.WHITE + "Obre l'inventari de millores");
@@ -520,7 +520,7 @@ sendGlobalMessage("GA");
 		}
 		if (evt.getEntityType() == EntityType.PRIMED_TNT){
 			for (Iterator<Block> iterator = evt.blockList().iterator(); iterator.hasNext();) {
-				Block b = (Block) iterator.next();
+				Block b = iterator.next();
 				Material t = b.getType();
 				if(t == Material.GRASS || t == Material.DIRT || t == Material.GRAVEL)iterator.remove();
 			}

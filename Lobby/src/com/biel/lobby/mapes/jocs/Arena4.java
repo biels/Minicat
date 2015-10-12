@@ -78,7 +78,7 @@ public class Arena4 extends JocEquips {
 		ScoreBoardUpdater.setScoreBoard(getPlayers(), "Punts [Max 20]", list, nums);
 	}
 	@Override
-	protected void gameEvent(Event event) {
+	protected synchronized void gameEvent(Event event) {
 		if (event instanceof PlayerDeathEvent){
 			PlayerDeathEvent evt = (PlayerDeathEvent)event;
 			Player killed = evt.getEntity();

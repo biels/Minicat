@@ -217,7 +217,7 @@ public abstract class MapaResetejable extends Mapa {
 		return new GestorPropietats(getLiveWorldFolder() + "/" + "pPlayers" + "/" + ply.getName() + ".txt");
 	}
 	@Override
-	protected void gameEvent(Event event) {
+	protected synchronized void gameEvent(Event event) {
 		if (!EditMode){
 			super.gameEvent(event);
 		}		

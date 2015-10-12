@@ -26,6 +26,7 @@ import com.biel.lobby.utilities.data.PlayerData;
 public final class lobby extends JavaPlugin {
 	public GestorMapes gest;
 	public DataAPI dataAPI;
+	@SuppressWarnings("unused")
 	@Override
 	public void onEnable(){
 		// TODO Insert logic to be performed when the plugin is enabled

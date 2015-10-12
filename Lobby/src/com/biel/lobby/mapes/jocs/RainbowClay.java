@@ -186,7 +186,7 @@ public class RainbowClay extends JocObjectius {
 			{
 				loc.setYaw((float)(0.5 * Math.PI));
 			}
-			loc.setYaw((float)loc.getYaw() - (float)Math.atan(dz / dx));
+			loc.setYaw(loc.getYaw() - (float)Math.atan(dz / dx));
 		}
 		else if(dz < 0)
 		{

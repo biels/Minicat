@@ -135,8 +135,8 @@ public class LoginListener implements Listener {
 	}
 	@EventHandler
 	public void onPlace(BlockPlaceEvent evt) {
-		if (evt.getPlayer() instanceof Player){
-			Player ply = (Player) evt.getPlayer();
+		if (evt.getPlayer() != null){
+			Player ply = evt.getPlayer();
 			if(lobby.isOnLobby(ply)){
 
 				evt.setCancelled(true);
@@ -146,8 +146,8 @@ public class LoginListener implements Listener {
 	}
 	@EventHandler
 	public void onBreak(BlockBreakEvent evt) {
-		if (evt.getPlayer() instanceof Player){
-			Player ply = (Player) evt.getPlayer();
+		if (evt.getPlayer() != null){
+			Player ply = evt.getPlayer();
 			if(lobby.isOnLobby(ply)){
 
 				evt.setCancelled(true);

@@ -143,13 +143,13 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			if (damager != null) {
 				if (damager.getLocation().getBlockY() >= 50 && ranged == false){
-					evt.setDamage((double) (evt.getDamage() * 1.6 + Utils.NombreEntre(1, 11)));
+					evt.setDamage(evt.getDamage() * 1.6 + Utils.NombreEntre(1, 11));
 				}
 				if (damager.getLocation().getBlockY() >= 45){
-					evt.setDamage((double) (evt.getDamage() +  Utils.NombreEntre(1, 5)));
+					evt.setDamage(evt.getDamage() +  Utils.NombreEntre(1, 5));
 				}
 			}
-			evt.setDamage((double) (evt.getDamage() * 0.8));
+			evt.setDamage(evt.getDamage() * 0.8);
 			//evt.setDamage((double) (evt.getDamage() +  (plyr.getLevel() / 4)));
 			//			if (damager.getName().equalsIgnoreCase("biel") == true){
 			//				//evt.setDamage((double) (evt.getDamage() * 2));
@@ -227,7 +227,7 @@ public class ObsidianDefenders extends JocEquips {
 				if(Ability.hasAbility(plugin, this, damager, AbilityType.ESPADATXI) && evt.isCancelled() == false){
 					int crg = pPlayer(damager).ObtenirPropietatInt("StrongHitCount");
 					if(crg >= 5){
-						evt.setDamage((double) (evt.getDamage() * 1.5));
+						evt.setDamage(evt.getDamage() * 1.5);
 						Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
 						Vector dir = rawDir.normalize().multiply(2).add(new Vector(0,0.3,0));
 						damaged.setVelocity(dir);
@@ -245,7 +245,7 @@ public class ObsidianDefenders extends JocEquips {
 					double dmgm = 0.9;
 					dmgm = dmgm - (Utils.getNearbyPlayers(damaged, 10).size() * 0.08);
 					if (dmgm <= 0.1){dmgm = 0.1;}
-					double finaldmg = (double) (evt.getDamage() * 0.85);
+					double finaldmg = evt.getDamage() * 0.85;
 					evt.setDamage(finaldmg);
 					if(debug){
 						Bukkit.broadcastMessage("Mal reduït: " + Double.toString(evt.getDamage() - finaldmg) + " - " + dmgm * 100 +"%");
@@ -263,7 +263,7 @@ public class ObsidianDefenders extends JocEquips {
 					}else{
 						if(Ability.hasAbility(plugin, this, damager, AbilityType.DESTRUCTOR)){
 							int morts = Integer.parseInt(pTemp().ObtenirPropietat(damager.getName() + "Morts"));
-							i.setDurability((short) ((short) i.getDurability() + 5 + morts));
+							i.setDurability((short) (i.getDurability() + 5 + morts));
 
 						}
 					}
@@ -277,7 +277,7 @@ public class ObsidianDefenders extends JocEquips {
 				if (item.getType() == Material.IRON_PICKAXE){
 					evt.setDamage(30);
 					//dur
-					item.setDurability((short) ((short) item.getDurability() + (item.getType().getMaxDurability() / 4)));
+					item.setDurability((short) (item.getDurability() + (item.getType().getMaxDurability() / 4)));
 
 				}
 
@@ -540,7 +540,7 @@ public class ObsidianDefenders extends JocEquips {
 			if (stack.getType() == Material.ARROW){
 				if (stack.getEnchantments().size() >= 1){
 					for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-						p.setHealth((double)(p.getHealth() - 3));        				
+						p.setHealth(p.getHealth() - 3);        				
 					}
 					plyr.sendMessage("-1 cor a tot l'equip enemic.");
 					inv.removeItem(new ItemStack(stack.getType()));

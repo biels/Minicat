@@ -214,7 +214,7 @@ public class Spleef extends JocLastStanding {
 
 
 	@Override
-	protected void gameEvent(Event event) {
+	protected synchronized void gameEvent(Event event) {
 		//Bukkit.broadcastMessage("EVENT");
 		if (event instanceof BlockEvent){
 			Block blk = ((BlockEvent)event).getBlock();

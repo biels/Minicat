@@ -82,7 +82,7 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 	}
 	//Players
 	public void initAlivePlayers() { //initMethod
-		AlivePlayers = (ArrayList<Player>) this.getPlayers();
+		AlivePlayers = this.getPlayers();
 	}
 	public ArrayList<Player> getAlivePlayers() {
 		return AlivePlayers;

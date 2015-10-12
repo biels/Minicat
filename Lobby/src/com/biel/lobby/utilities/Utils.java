@@ -41,7 +41,6 @@ import org.bukkit.util.Vector;
 import com.biel.lobby.Com;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips.Equip;
-
 public class Utils {
 
 	public Utils() {
@@ -695,7 +694,7 @@ public class Utils {
 			{
 				loc.setYaw((float)(0.5 * Math.PI));
 			}
-			loc.setYaw((float)loc.getYaw() - (float)Math.atan(dz / dx));
+			loc.setYaw(loc.getYaw() - (float)Math.atan(dz / dx));
 		}
 		else if(dz < 0)
 		{

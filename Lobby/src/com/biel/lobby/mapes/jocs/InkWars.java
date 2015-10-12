@@ -458,7 +458,7 @@ public class InkWars extends JocEquips {
 			Vector startLoc = p.getLocation().toVector().subtract(paintDir);			
 			BlockIterator i = new BlockIterator(getWorld(), startLoc, paintDir, -1, (int) Math.round(2 * width));
 			for (;i.hasNext();) {
-				Block b = (Block) i.next();
+				Block b = i.next();
 				if (Utils.pointToLineDistance(startLoc, paintDir, b.getLocation().toVector()) < 0.8) {
 					paintBlock(b, ink);
 				}
@@ -560,7 +560,7 @@ public class InkWars extends JocEquips {
 		}
 		@Override
 		public int neededReloadTicks() {
-			return (int) (52 - Math.round(getWeaponLevel() * 2));
+			return 52 - Math.round(getWeaponLevel() * 2);
 		}
 		@Override
 		public void onWeaponHit(ProjectileHitEvent evt, Projectile proj, Block hitBlock, Block preHitBlock) {
