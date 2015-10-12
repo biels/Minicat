@@ -74,7 +74,7 @@ public class SwordsmanSkill extends InherentSkill {
 		if(ef.getValue() >= ef.getMaxValue()){
 			if (!ranged) {
 				//H
-				evt.setDamage((double) (evt.getDamage() * getDmgMultiplier()));
+				evt.setDamage(evt.getDamage() * getDmgMultiplier());
 				Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
 				Vector dir = rawDir.normalize().multiply(1.95).add(new Vector(0,0.42,0));
 				damaged.setVelocity(dir);

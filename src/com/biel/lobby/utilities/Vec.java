@@ -145,5 +145,10 @@ public class Vec {
 		return String.format(java.util.Locale.ENGLISH,
 				"(%.3f, %.3f, %.3f)", x, y, z);
 	}
+	@Override
+	public int hashCode() {
+		// TODO Auto-generated method stub
+		return super.hashCode();
+	}
 
 }

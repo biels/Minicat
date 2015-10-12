@@ -13,7 +13,7 @@ public class TheTowers extends JocExtern {
 	}
 
 	@Override
-	protected void gameEvent(Event event) {
+	protected synchronized void gameEvent(Event event) {
 		// TODO Auto-generated method stub
 		
 	}

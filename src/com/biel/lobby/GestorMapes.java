@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
@@ -25,7 +23,6 @@ import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.Pair;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
-import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.MapaResetejable.MapMode;
 import com.biel.lobby.mapes.jocs.*;
 
@@ -66,7 +63,7 @@ public class GestorMapes implements Listener{
 		Mapes.add(new ContenidorJoc(Parkour.class, "ParkourFlow", Material.GOLD_BLOCK, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(InkWars.class, "Ink Wars", Material.COAL_BLOCK, DevelopmentState.PreAlpha));
 		Mapes.add(new ContenidorJoc(RedstoneWars.class, "Redstone Wars", Material.REDSTONE_BLOCK, DevelopmentState.Alpha));
-		
+
 	}
 	public void queryAutoRatings() {
 		auto_ratings = Com.getDataAPI().getAutoRating();
@@ -201,7 +198,6 @@ public class GestorMapes implements Listener{
 		public ArrayList<String> getDescription() {
 			// TODO Auto-generated method stub
 			ArrayList<String> l = super.getDescription();
-			String rStr;
 			l.add(0, getRatingString() + ChatColor.DARK_GRAY + " (" + Math.round(getRating() * 10D) / 10D + "%)");
 			//l.add();
 			return l;
@@ -314,9 +310,9 @@ public class GestorMapes implements Listener{
 		//		}
 		void checkNecessary(Joc map){
 			if (map.getWorld() == null){ Bukkit.broadcastMessage("WORLD: null");return;}
-			if(map instanceof MapaResetejable){
-				if(((MapaResetejable)map).getEditMode())return;
-			}
+
+			if(((MapaResetejable)map).getEditMode())return;
+
 			if (map.getWorld().getPlayers().size() == 0){
 				//map.JocFinalitzat();
 				map.deleteVirtualWorld();
@@ -427,10 +423,10 @@ public class GestorMapes implements Listener{
 			public void onOptionClick(IconMenu.OptionClickEvent event) {
 				//event.getPlayer().sendMessage("You have chosen " + event.getName());
 				event.setWillClose(false);
-				List<Joc> allInstances = getGames();
+				//List<Joc> allInstances = getGames();
 				//Obrir mapa
-				int pos = event.getPosition();
-				Joc joc = (Joc) allInstances.get(pos);
+				//int pos = event.getPosition();
+				//Joc joc = (Joc) allInstances.get(pos);
 			}
 		});
 		List<Joc> games = getGames();

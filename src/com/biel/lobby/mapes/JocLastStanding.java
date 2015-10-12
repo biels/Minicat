@@ -11,7 +11,7 @@ public abstract class JocLastStanding extends Joc{
 	
 	ArrayList<Player> AlivePlayers;
 	public void initAlivePlayers() {
-		AlivePlayers = (ArrayList<Player>) this.getPlayers();
+		AlivePlayers = this.getPlayers();
 	}
 	public ArrayList<Player> getAlivePlayers() {
 		return AlivePlayers;
