@@ -44,6 +44,13 @@ public class Options {
 			}
 		});
 		inventory.setItem(3, button3.getItemStack());
+		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_POWDER), ChatColor.GOLD + "Instàncies en curs",  ChatColor.WHITE + "Mostra el rànquing de jugadors.", ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + ChatColor.YELLOW + " #" + playerData.getRank()), ply, new ItemButton.OptionClickEventHandler() {
+			@Override
+			public void onOptionClick(ItemButton.OptionClickEvent event) {
+				Com.getGest().openAllGamesMenu(event.getPlayer());			
+			}
+		});
+		//inventory.setItem(5, button4.getItemStack());
 		if (ply.isOp()){
 			ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.LEVER), ChatColor.RED + "Reiniciar",  ChatColor.WHITE + "Reinicia el servidor.", ChatColor.WHITE + "Cal esperar uns 10-15s per tornar a entrar."), ply, new ItemButton.OptionClickEventHandler() {
 				@Override
