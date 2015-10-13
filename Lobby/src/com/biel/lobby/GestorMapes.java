@@ -422,11 +422,12 @@ public class GestorMapes implements Listener{
 			@Override
 			public void onOptionClick(IconMenu.OptionClickEvent event) {
 				//event.getPlayer().sendMessage("You have chosen " + event.getName());
-				event.setWillClose(false);
-				//List<Joc> allInstances = getGames();
-				//Obrir mapa
-				//int pos = event.getPosition();
-				//Joc joc = (Joc) allInstances.get(pos);
+				event.setWillClose(true);
+				List<Joc> allInstances = getGames();
+//				Obrir mapa
+				int pos = event.getPosition();
+				Joc joc = allInstances.get(pos);
+				joc.Join(event.getPlayer());
 			}
 		});
 		List<Joc> games = getGames();
