@@ -50,6 +50,10 @@ public final class lobby extends JavaPlugin {
 			gest.ObrirMenuMapes(ply);
 			return true;
 		}
+		if(cmd.getName().equalsIgnoreCase("a")){
+			gest.openAllGamesMenu(ply);
+			return true;
+		}
 		if(cmd.getName().equalsIgnoreCase("o")){
 			Options.giveCommonOptionsMenu(ply);
 			return true;

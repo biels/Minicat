@@ -143,7 +143,8 @@ public abstract class Joc extends MapaResetejable {
 		return (int) (tempsTranscorregut() / 1000);
 	}
 	public void JocFinalitzat(){
-		if (JocFinalitzat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que ja havia acabat. Operació anul·lada!"); return;}
+		if (!JocIniciat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que no havia començat."); return;}
+		if (JocFinalitzat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que ja havia acabat."); return;}
 		//---
 		world.setPVP(false);
 		customJocFinalitzat();
@@ -967,7 +968,7 @@ public abstract class Joc extends MapaResetejable {
 			this.objectivesCompleted = objectivesCompleted;
 		}
 		public boolean isImmune() {
-			return immune || isAFK() || Duration.between(lastRespawnEvent, ZonedDateTime.now()).compareTo(Duration.ofSeconds(4)) > 0;
+			return immune || isAFK(); //|| Duration.between(lastRespawnEvent, ZonedDateTime.now()).compareTo(Duration.ofSeconds(4)) > 0;
 		}
 		public void setImmune(boolean immune) {
 			this.immune = immune;

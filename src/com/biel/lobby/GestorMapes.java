@@ -417,6 +417,7 @@ public class GestorMapes implements Listener{
 
 
 	}
+
 	public void openAllGamesMenu(Player ply){
 		IconMenu menu = new IconMenu("Totes les instàncies", 27, new IconMenu.OptionClickEventHandler() {
 			@Override

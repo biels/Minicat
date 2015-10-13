@@ -16,6 +16,9 @@ commands:
   m:
     description: Mostra l'inventari del teletransportador.
     usage: /m
+  a:
+    description: Mostra l'inventari del teletransportador.
+    usage: /m
   l:
     description: Retorna el jugador al lobby.
     usage: /l
