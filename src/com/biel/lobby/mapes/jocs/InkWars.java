@@ -297,7 +297,7 @@ public class InkWars extends JocEquips {
 				//Expansion physics
 				Block b = entry.getKey();
 				double ink = entry.getValue().getSecond();
-				int chance = (int) (8 + Math.round(ink * 15)); //Liquidity
+				int chance = (int) (7 + Math.round(ink * 12)); //Liquidity
 				if(Utils.Possibilitat(chance, 100 * 20)){
 					Block r = b.getRelative(BlockFace.DOWN);
 					double d = b.getLocation().distance(r.getLocation());
@@ -490,7 +490,7 @@ public class InkWars extends JocEquips {
 					highInkBlocks.remove(b);
 				}
 				if(oldOwnerTeam != newOwnerTeam)pInk = 0;
-				highInkBlocks.put(b, new Pair<String, Double>(getPlayer().getName(), inkAmount + pInk / 2));
+				highInkBlocks.put(b, new Pair<String, Double>(getPlayer().getName(), (inkAmount / 3) + pInk / 2)); // 1:3 Tick ratio !!!
 			}
 		}
 		protected void paintRadius(Location c, double r, double inkAmount){
