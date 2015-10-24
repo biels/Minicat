@@ -175,7 +175,7 @@ public class RedstoneWars extends JocEquips{
 	protected void onEntityExplode(EntityExplodeEvent evt, Entity e) {
 		// TODO Auto-generated method stub
 		super.onEntityExplode(evt, e);
-		evt.setYield(evt.getYield() * 8);
+		evt.setYield((float) (evt.getYield() * 1.2));
 	}
 	@Override
 	protected void setCustomGameRules() {
