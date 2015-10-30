@@ -64,10 +64,11 @@ public class DeflectorSkill extends InherentSkill {
 		// TODO Auto-generated method stub
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
 		Player p = getPlayer();
+		boolean blk = p.isBlocking();
 		if(damaged != p)return;
 		DeflectorStatusEffect ef = getAssociatedEffect();
 		//sendGlobalMessage(getName() + id +  ": " + evt.getEventName());
-		int markTicks = 20 * 11;
+		int markTicks = 20 * (9 + (blk ? 6 : 0));
 		//if(ef.getRemainingTicks() > markTicks - 10){return;}
 		ef.setRemainingTicks(markTicks);
 		
@@ -90,7 +91,7 @@ public class DeflectorSkill extends InherentSkill {
 			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());   				
 
 		}else{
-			ef.setValue(ef.getValue() + 1);
+			ef.setValue(ef.getValue() + 1 + (blk ? 1 : 0));
 			if(ef.getValue() >= ef.getMaxValue()){
 				damaged.playSound(damaged.getLocation(), Sound.ORB_PICKUP, 1, 1.3F);
 				ef.setModal(true);

@@ -312,6 +312,7 @@ public abstract class Joc extends MapaResetejable {
 		s.registerSkill(new BerserkSkill(null));
 		s.registerSkill(new SpeedyArcher(null));
 		s.registerSkill(new DiamondCoreSkill(null));
+		s.registerSkill(new CreeperSkill(null));
 	}
 	protected abstract ArrayList<ItemStack> getStartingItems(Player ply);
 	protected abstract void teletransportarTothom();
@@ -340,6 +341,11 @@ public abstract class Joc extends MapaResetejable {
 		ArrayList<Player> viewers = getViewers();
 		viewers.removeAll(Espectadors);
 		return viewers; //Futurs espectadors
+	}
+	public ArrayList<Player> getEnemies(Player p){
+		ArrayList<Player> enemies = getViewers();
+		enemies.remove(p);
+		return enemies; //Futurs espectadors
 	}
 	public List<Player> getSpectators(){
 		return Espectadors; //Futurs espectadors
