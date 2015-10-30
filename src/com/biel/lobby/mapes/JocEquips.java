@@ -283,6 +283,12 @@ public abstract class JocEquips extends Joc {
 	public Boolean areEnemies(Player ply, Player ply2){
 		return !areAllies(ply, ply2);
 	}
+	@Override
+	public ArrayList<Player> getEnemies(Player p) {
+		ArrayList<Player> enemies = getViewers();
+		enemies.removeAll(obtenirEquip(p).getPlayers());
+		return enemies; //Futurs espectadors
+	}
 	public void fixarSpawn(Player ply){
 		if (obtenirEquip(ply) != null){
 			ply.setBedSpawnLocation(obtenirEquip(ply).getTeamSpawnLocation(), true);

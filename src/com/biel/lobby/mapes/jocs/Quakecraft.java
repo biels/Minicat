@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -45,6 +46,7 @@ import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.CustomEntityFirework;
+import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.JocScoreRace;
 import com.biel.lobby.utilities.FireworkEffectPlayer;
 import com.biel.lobby.utilities.Utils;
@@ -106,19 +108,26 @@ public class Quakecraft extends JocScoreRace {
 
 	private void teleportToRandomSpawn(Player d) {
 		Location loc;
-		loc = getRandomSpawnLoc();
+		loc = getOptimalSpawnLoc(d);
 		d.teleport(loc);
 	}
 
-	private Location getRandomSpawnLoc() {
+	private Location getRandomSpawnLoc(Player p) {
 		Location loc;
 		ArrayList<Location> locs = pMapaActual().ObtenirLocations("s", world);
+		//locs.stream().sorted((l1, l2) -> GUtils.getNearbyEnemies(l1, 40).size());
 		Collections.shuffle(locs);
 		Location l = locs.get(0);
 		l.add(0, 2, 0);
 		return l;
 	}
-
+	private Location getOptimalSpawnLoc(Player pl) {
+		ArrayList<Location> locs = pMapaActual().ObtenirLocations("s", world); //Llista spawns
+		Location l = locs.stream().sorted((l1, l2) -> (int) (GUtils.getNearestEntity(l2, getEnemies(pl)).getLocation().distanceSquared(l2) - GUtils.getNearestEntity(l1, getEnemies(pl)).getLocation().distanceSquared(l1))).findFirst().get();
+		l.add(0, 2, 0);
+		return l;	
+	}
+	
 	int maxT = 1800;
 	int getMaxT(Player ply){
 		int t = 2000 - (getSpree(ply) * 150);
