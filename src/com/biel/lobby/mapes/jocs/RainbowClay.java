@@ -220,6 +220,7 @@ public class RainbowClay extends JocObjectius {
 		double balancingMultiplier = getBalancingMultiplier(e);
 		if(balancingMultiplier > 1)pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
 		items.add(pickaxe);
+		items.add(getSnowLauncher(64));
 		items.add(new ItemStack(Material.FLINT_AND_STEEL));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
@@ -231,10 +232,10 @@ public class RainbowClay extends JocObjectius {
 		int arrows = (int) (50 * balancingMultiplier);
 		if(arrows > 64){arrows = 64;}
 		items.add(new ItemStack(Material.ARROW, arrows));
-		int ladders = (int) (32 * balancingMultiplier);
+		int ladders = (int) (50 * balancingMultiplier);
 		if(ladders > 64){ladders = 64;}
 		items.add(new ItemStack(Material.LADDER, ladders));
-		int block_amount = (int) (32 * balancingMultiplier);
+		int block_amount = (int) (45 * balancingMultiplier);
 		if(block_amount > 64){block_amount = 64;}
 		if (obtenirEquip(ply).getId() == 0){
 			items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 14));
