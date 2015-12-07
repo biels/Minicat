@@ -47,6 +47,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import com.avaje.ebeaninternal.server.persist.Constant;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocLastStanding;
@@ -58,7 +59,7 @@ public class Spleef extends JocLastStanding {
 	public Spleef() {
 
 	}
-
+	public Material BREAK_TYPE = Material.AIR;
 	@Override
 	public String getGameName() {
 		// TODO Auto-generated method stub
@@ -240,7 +241,7 @@ public class Spleef extends JocLastStanding {
 //						getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 0);
 //					}
 //					getWorld().playSound(loc, Sound.CLICK, 0.8F + (0.4F * step), 1F + (0.4F * step));
-//					blockFaces.forEach(f -> blk.getRelative(f).breakNaturally());
+//					blockFaces.forEach(f -> blk.getRelative(f).setType(BREAK_TYPE));
 //					playerInfo.setValue(playerInfo.getValue() + 1);
 //					if(playerInfo.getValue() > 4)playerInfo.setValue(0);
 				}
@@ -298,6 +299,7 @@ public class Spleef extends JocLastStanding {
 			if (event instanceof PlayerMoveEvent){
 				PlayerMoveEvent evt = (PlayerMoveEvent)event;
 				if (p.getLocation().getBlockY() < 6 && JocIniciat == true){
+					p.getInventory().clear();
 					removeIfAlive(p); 		 
 				}		
 
@@ -309,11 +311,11 @@ public class Spleef extends JocLastStanding {
 	private void arrowAoE(Location loc, ProjectileHitEvent evt,
 			LivingEntity shooter) {
 		if (evt.getEntityType() == EntityType.ARROW && shooter.getLocation().getBlockY() > 20){        			
-			//        			loc.getBlock().breakNaturally();
+			//        			loc.getBlock().setType(BREAK_TYPE);
 			int i = 2;
 			while (i > 0){
 				loc.setY(loc.getY() - 1);
-				//            			loc.getBlock().breakNaturally();        			
+				//            			loc.getBlock().setType(BREAK_TYPE);        			
 				int x = -1;
 				int z = -1;
 				while(x <= 1){
@@ -325,7 +327,7 @@ public class Spleef extends JocLastStanding {
 						loc2.setZ(loc2.getZ() + z);
 						loc2.setX(loc2.getX() + x);
 						if (loc2.getBlock().getType() == Material.SNOW_BLOCK || loc2.getBlock().getType() == Material.AIR){
-							loc2.getBlock().breakNaturally();
+							loc2.getBlock().setType(BREAK_TYPE);
 							ItemStack itemstack = new ItemStack(Material.DIAMOND, 1); // A stack of diamonds  
 							world.dropItem(loc2, itemstack);
 						}else{
@@ -429,26 +431,26 @@ public class Spleef extends JocLastStanding {
 											Location blocmod = bloc.clone();
 											if (CoordX == false){
 												blocmod.setX(bloc.getX() + 1);
-												//blocmod.getBlock().breakNaturally();
+												//blocmod.getBlock().setType(BREAK_TYPE);
 												blocmod.getBlock().setType(Material.SAND);
 												blocmod.setX(bloc.getX() - 1);
-												//blocmod.getBlock().breakNaturally();
+												//blocmod.getBlock().setType(BREAK_TYPE);
 												blocmod.getBlock().setType(Material.SAND);
 											}else{
 												blocmod.setZ(bloc.getZ() + 1);
-												blocmod.getBlock().breakNaturally();
+												blocmod.getBlock().setType(BREAK_TYPE);
 												blocmod.setZ(bloc.getZ() - 1);
-												blocmod.getBlock().breakNaturally();
+												blocmod.getBlock().setType(BREAK_TYPE);
 											}        										
 										}else{
-											//bloc.getBlock().breakNaturally();
+											//bloc.getBlock().setType(BREAK_TYPE);
 											bloc.getBlock().setType(Material.SAND);
 										}
 										wood = !wood;
 									}
 									if (stack.getType() == Material.STONE_HOE){
 										utilitzat = true;
-										bloc.getBlock().breakNaturally();
+										bloc.getBlock().setType(BREAK_TYPE);
 										if (Utils.Possibilitat(30)){        								
 											int direcció = 1;
 											if (Utils.Possibilitat(50)){
@@ -460,9 +462,9 @@ public class Spleef extends JocLastStanding {
 											}else{
 												blocmod.setZ(bloc.getZ() + direcció);
 											}
-											blocmod.getBlock().breakNaturally();
+											blocmod.getBlock().setType(BREAK_TYPE);
 											ItemStack itemstack = new ItemStack(Material.STONE, 1); // A stack of diamonds  
-											world.dropItem(blocmod, itemstack);
+											//world.dropItem(blocmod, itemstack);
 										}
 									}
 								}
@@ -532,7 +534,7 @@ public class Spleef extends JocLastStanding {
 										Location blocmodp = bloc.clone();
 										Location blocmodn = bloc.clone();
 										Utils.BreakBlockLater(bloc.getBlock(), 1 * 9,true);
-										//bloc.getBlock().breakNaturally();
+										//bloc.getBlock().setType(BREAK_TYPE);
 										if (CoordX == false){
 											int i = 0;
 											while (i < amp){
@@ -581,7 +583,7 @@ public class Spleef extends JocLastStanding {
 									if (pass == 17){break;}
 									Location blocmodp = bloc.clone();
 									Location blocmodn = bloc.clone();
-									//bloc.getBlock().breakNaturally();
+									//bloc.getBlock().setType(BREAK_TYPE);
 									int delay = 2 * pass;
 									if(pass >= 16){
 										delay += 20;
@@ -624,23 +626,23 @@ public class Spleef extends JocLastStanding {
 									if (pass == 12){break;}
 									Location blocmodp = bloc.clone();
 									Location blocmodn = bloc.clone();
-									bloc.getBlock().breakNaturally();
+									bloc.getBlock().setType(BREAK_TYPE);
 									if (CoordX == false){
 										int i = 0;
 										while (i < amp){
 											blocmodp.setX(blocmodp.getX() + 1);    											
-											blocmodp.getBlock().breakNaturally();
+											blocmodp.getBlock().setType(BREAK_TYPE);
 											blocmodn.setX(blocmodn.getX() - 1);    											
-											blocmodn.getBlock().breakNaturally();
+											blocmodn.getBlock().setType(BREAK_TYPE);
 											i = i + 1;
 										}        											
 									}else{
 										int i = 0;
 										while (i < amp){
 											blocmodp.setZ(blocmodp.getZ() + 1);
-											blocmodp.getBlock().breakNaturally();
+											blocmodp.getBlock().setType(BREAK_TYPE);
 											blocmodn.setZ(blocmodn.getZ() - 1);
-											blocmodn.getBlock().breakNaturally();
+											blocmodn.getBlock().setType(BREAK_TYPE);
 											i = i + 1;
 										}     
 									}
@@ -665,13 +667,13 @@ public class Spleef extends JocLastStanding {
 				//        			if (distX > distZ){
 				//        				Location bloc = ploc.clone();
 				//        				while (bloc.getBlock().getType() == Material.SNOW_BLOCK){
-				//        					bloc.getBlock().breakNaturally();
+				//        					bloc.getBlock().setType(BREAK_TYPE);
 				//        					bloc.setX(bloc.getX() + 1);
 				//        				}
 				//        			}else{
 				//        				Location bloc = ploc.clone();
 				//        				while (bloc.getBlock().getType() == Material.SNOW_BLOCK){
-				//        					bloc.getBlock().breakNaturally();
+				//        					bloc.getBlock().setType(BREAK_TYPE);
 				//        					bloc.setZ(bloc.getZ() + 1);
 				//        				}
 				//        			}
