@@ -21,10 +21,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -464,11 +466,28 @@ public abstract class Joc extends MapaResetejable {
 	public boolean getDisplayHealthBar(){
 		return true;
 	}
+	public ItemStack getSnowLauncher(int amount){
+		ItemStack ball = new ItemStack(Material.SNOW_BALL);
+		ball.addUnsafeEnchantment(Enchantment.SILK_TOUCH, 1);
+		return Utils.setItemNameAndLore(ball, "Llançador de neu", "Et transporta a l'enemic que impacti");
+	}
 	@Override
 	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
 			Player damaged, Player damager, boolean ranged) {
 		// TODO Auto-generated method stub
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+		//-- SNOW LAUNCHER
+		if(ranged){
+			org.bukkit.entity.Entity proj = evt.getDamager();
+			if(proj instanceof Snowball){
+				Snowball ball = (Snowball) proj;
+				damaged.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 1, 0));
+				damaged.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, 0));
+				damager.teleport(damaged.getEyeLocation().add(0, 1, 0), TeleportCause.PLUGIN);
+				GUtils.healDamageable(damager, 4.5D);
+			}
+		}
+		//---
 		if (isSpectator(damager) || isSpectator(damaged)){evt.setCancelled(true);}
 		if(getDisplayHealthBar())updateHealthSuffix(damaged);
 		PlayerInfo i = getPlayerInfo(damaged);
