@@ -19,6 +19,7 @@ import org.bukkit.util.Vector;
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.events.skills.StatusEffect;
+import com.biel.lobby.utilities.events.skills.types.CooldownSkill;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
 
 public class DeflectorSkill extends InherentSkill {
@@ -32,7 +33,7 @@ public class DeflectorSkill extends InherentSkill {
 	@Override
 	public double getCDSeconds() {
 		// TODO Auto-generated method stub
-		return 0;
+		return 20;
 	}
 	@Override
 	public Material getMaterial() {
@@ -49,7 +50,8 @@ public class DeflectorSkill extends InherentSkill {
 	public String getDescription() {
 		// TODO Auto-generated method stub
 		String modifier1 = ChatColor.GREEN + "" + getDmgMultiplier() * 100 + ChatColor.WHITE;
-		return "Cada 5 cops el mal del següent cop rebota amplificat en un " + modifier1 + "%." ;
+		String modifier2 = ChatColor.GREEN + "" + 20 + ChatColor.WHITE;
+		return "Retorna un atac a l'enemic si no ha estat atacat durant els últims "+ modifier2 + "s amplificant-lo un" + modifier1 + "%." ;
 	}
 
 	private int getStacks(){
@@ -66,13 +68,12 @@ public class DeflectorSkill extends InherentSkill {
 		Player p = getPlayer();
 		boolean blk = p.isBlocking();
 		if(damaged != p)return;
-		DeflectorStatusEffect ef = getAssociatedEffect();
+		
 		//sendGlobalMessage(getName() + id +  ": " + evt.getEventName());
 		int markTicks = 20 * (9 + (blk ? 6 : 0));
 		//if(ef.getRemainingTicks() > markTicks - 10){return;}
-		ef.setRemainingTicks(markTicks);
 		
-		if(ef.getValue() >= ef.getMaxValue()){
+		if(tryUseCD()){
 			//H
 			PlayerInfo di = getPlayerInfo(damaged);
 			di.removeStatusEffect(DeflectorStatusEffect.class);
@@ -82,26 +83,14 @@ public class DeflectorSkill extends InherentSkill {
 			Vector dir = rawDir.normalize().multiply(-1.35).add(new Vector(0,0.42,0));
 			damager.setVelocity(dir);
 			//ENDH
-			ef.setValue(0);
-			ef.setModal(false);
-			//evt.setDamage(evt.getDamage() / 3);
-			ef.setRemainingTicks(0);
 			getWorld().playSound(damager.getLocation(), Sound.ZOMBIE_METAL, 1.2F, 0.8F);
 			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
 			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());   				
 
-		}else{
-			ef.setValue(ef.getValue() + 1 + (blk ? 1 : 0));
-			if(ef.getValue() >= ef.getMaxValue()){
-				damaged.playSound(damaged.getLocation(), Sound.ORB_PICKUP, 1, 1.3F);
-				ef.setModal(true);
-				ef.setModalRemainingTicks(20 * 4);
-			}else{
-			}			
 		}
 
 	}
-
+	
 	public double getDmgMultiplier() {
 		return 2.0;
 	}

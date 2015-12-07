@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -100,6 +101,13 @@ public class ArenaAllvAll extends JocScoreRace {
 		evt.getDrops().clear();
 		evt.setDeathMessage(killer.getName() + " ha matat a " + killed.getName() + " [+1]");
 		updateScoreBoards();
+	}
+	@Override
+	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager,
+			boolean ranged) {
+		// TODO Auto-generated method stub
+		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+		if(ranged)damager.getInventory().addItem(new ItemStack(Material.ARROW, 1));
 	}
 	@Override
 	protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {

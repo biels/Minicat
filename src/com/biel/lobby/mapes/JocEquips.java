@@ -71,7 +71,7 @@ public abstract class JocEquips extends Joc {
 	}
 	@Override
 	protected void customJocIniciat() {
-		ferEquipsEquilibrats();
+		if(false)ferEquipsEquilibrats();
 		anunciarEquips(null);	
 		fixarSpawns();
 		//establirColorsNoms();
@@ -483,17 +483,17 @@ public abstract class JocEquips extends Joc {
 	protected void donarItemsPreparatiusGenerals(final Player ply) {
 		super.donarItemsPreparatiusGenerals(ply);
 		PlayerInventory inventory = ply.getInventory();
-//		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOKSHELF), ChatColor.YELLOW + "Selecciona l'equip"), ply, new ItemButton.OptionClickEventHandler() {
-//			@Override
-//			public void onOptionClick(ItemButton.OptionClickEvent event) {
-//				if (!isEquipsBloquejats() || ply.isOp()){
-//					openTemSelectionMenu(ply, ply, "Unir-se a l'equip...");
-//				}else{
-//					ply.sendMessage("No pots seleccionar l'equip. Equips bloquejats.");
-//				}
-//			}
-//		});
-//		inventory.setItem(2, button.getItemStack());
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOKSHELF), ChatColor.YELLOW + "Selecciona l'equip"), ply, new ItemButton.OptionClickEventHandler() {
+			@Override
+			public void onOptionClick(ItemButton.OptionClickEvent event) {
+				if (!isEquipsBloquejats() || ply.isOp()){
+					openTemSelectionMenu(ply, ply, "Unir-se a l'equip...");
+				}else{
+					ply.sendMessage("No pots seleccionar l'equip. Equips bloquejats.");
+				}
+			}
+		});
+		inventory.setItem(2, button.getItemStack());
 		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.COMMAND), ChatColor.YELLOW + "Equips equilibrats"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {

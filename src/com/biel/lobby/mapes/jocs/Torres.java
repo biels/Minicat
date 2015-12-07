@@ -46,6 +46,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.Com;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
@@ -91,9 +92,12 @@ public class Torres extends JocEquips {
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
 		Equip e = obtenirEquip(ply);
-		items.add(new ItemStack(Material.IRON_SWORD, 1));		
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
+		PlayerInfo i = getPlayerInfo(ply);
+		int v = i.getValue();
+		items.add(new ItemStack((v > 125 ? Material.DIAMOND_SWORD : Material.IRON_SWORD), 1));
+		if(v > 140)items.add(new ItemStack(Material.DIAMOND_AXE, 1));
+		items.add((v > 60 ? new ItemStack(Material.DIAMOND_CHESTPLATE, 1) : Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e)));
+		items.add((v > 40 ? new ItemStack(Material.IRON_HELMET, 1) : Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e)));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
@@ -330,6 +334,13 @@ public class Torres extends JocEquips {
 		}
 
 	}
+	void givePoints(Player ply, int amount){
+		PlayerInfo i = getPlayerInfo(ply);
+		int newVal = i.getValue() + amount;
+		//GUtils.testPointUpDown(i.getValue(), i.getValue(), newVal);
+		i.setValue(newVal);
+		ply.setLevel(i.getValue());
+	}
 	@Override
 	protected void onPlayerInteract(PlayerInteractEvent evt, Player p) {
 		// TODO Auto-generated method stub
@@ -420,6 +431,7 @@ public class Torres extends JocEquips {
 				block.setType(Material.LAVA);
 				world.playSound(getHalfwayMiddle(), Sound.ENDERDRAGON_HIT, 150F, 1.1F);
 				sendGlobalMessage("Enllaç d'energia destruït!");
+				givePoints(p, 10);
 				comprovarGuanyador();
 			}			
 		}	
@@ -443,10 +455,11 @@ public class Torres extends JocEquips {
 
 			}
 		}
-		ItemStack arc = getTurretItem();
+		ItemStack arc = (GUtils.Possibilitat(64) ? getTurretItem() : new ItemStack(Material.TNT, 1));
 		if (killer != null) {
 			if (obtenirEquip(killer) != obtenirEquip(killed)) {
 				killer.getInventory().addItem(arc);
+				givePoints(killer, 3);
 			}
 		}    		
 
@@ -539,6 +552,7 @@ sendGlobalMessage("GA");
 		super.onBlockPlace(evt, blk);
 		boolean close = Equips.stream().anyMatch(e -> getInhibitors(e).stream().anyMatch(l -> blk.getLocation().distance(l) < 36));
 		if(blk.getType() == Material.TNT && !close)evt.setCancelled(false);
+		if(!evt.isCancelled())givePoints(evt.getPlayer(), 1);
 	}
 	//-- FI EVENT CHANNELING
 

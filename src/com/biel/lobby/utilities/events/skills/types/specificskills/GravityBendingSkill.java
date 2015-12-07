@@ -52,7 +52,7 @@ public class GravityBendingSkill extends InherentSkill {
 		String modifier1 = ChatColor.GREEN + "" + getModifier() + ChatColor.WHITE;
 		Double percentage = Math.round(getProtectionRatio() * 100 * 10) / 10D;
 		String percent = ChatColor.GREEN + "" + percentage + ChatColor.WHITE + "%";
-		return "Duplica el mal de caiguda que reben els enemics atacats en un interval de " + modifier1 + "s, robant tanta vida com mal extra faci";
+		return "Quadruplica el mal de caiguda que reben els enemics atacats en un interval de " + modifier1 + "s, robant tanta vida com mal extra faci";
 	}
 	@Override
 	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
@@ -92,7 +92,7 @@ public class GravityBendingSkill extends InherentSkill {
 		@Override
 		public String getName() {
 			// TODO Auto-generated method stub
-			return "Gravetat x2";
+			return "Gravetat x4";
 		}
 
 		@Override
@@ -106,7 +106,7 @@ public class GravityBendingSkill extends InherentSkill {
 			super.onPlayerDamage(evt, p);
 			if (evt.getCause() == DamageCause.FALL && p == getPlayer()) {
 				double dmg = evt.getDamage() + 1;
-				p.damage(dmg, getOwnerPlayer());
+				p.damage(dmg * 3, getOwnerPlayer());
 				Utils.healDamageable(getOwnerPlayer(), dmg * 1.1);
 				getWorld().playEffect(
 						getOwnerPlayer().getEyeLocation().add(0, -0.8, 0),
@@ -119,7 +119,7 @@ public class GravityBendingSkill extends InherentSkill {
 							Utils.NombreEntre(0, 8));
 					i = i - 1;
 				}
-				sendEffectMessage("x2 mal de caiguda");
+				sendEffectMessage("x4 mal de caiguda");
 			}
 		}
 	}

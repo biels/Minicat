@@ -66,7 +66,8 @@ public class LoginListener implements Listener {
 		ply.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
 		ply.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de rànquing basat en ELO. Ordres /elo i /top");
 		ply.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
-		ply.sendMessage(ChatColor.GOLD + "[MOLT AVIAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
+		ply.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
+		ply.sendMessage(ChatColor.AQUA + "[TELEGRAM] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
 
 		//		ply.setAllowFlight(true);
 		//		ply.setCanPickupItems(false);
@@ -105,14 +106,14 @@ public class LoginListener implements Listener {
 		//	          p.teleport(p.getWorld().getSpawnLocation());
 		//	        }
 		//	}
-//		final Player player = e.getEntity();
-//		Bukkit.getScheduler().scheduleSyncDelayedTask(lobby.getPlugin(), new Runnable(){ public void run() {
-//			if(player.isDead()){
-//				((CraftPlayer) player).getHandle().playerConnection.a(new PacketPlayInClientCommand(EnumClientCommand.PERFORM_RESPAWN));
-//			}
-//
-//
-//		}}, 5);
+		//		final Player player = e.getEntity();
+		//		Bukkit.getScheduler().scheduleSyncDelayedTask(lobby.getPlugin(), new Runnable(){ public void run() {
+		//			if(player.isDead()){
+		//				((CraftPlayer) player).getHandle().playerConnection.a(new PacketPlayInClientCommand(EnumClientCommand.PERFORM_RESPAWN));
+		//			}
+		//
+		//
+		//		}}, 5);
 	}
 	//	@EventHandler
 	//	public void autoRespawn(PlayerDeathEvent e)	{
@@ -169,27 +170,31 @@ public class LoginListener implements Listener {
 		} catch (Exception e) {
 			evt.setMotd(ChatColor.GREEN + "Carregant rànquing...");
 		}
-		
+
 	}
 	@EventHandler
 	public void onPlayerChatEvent(PlayerChatEvent evt) {
-		
+
 	}
 	@EventHandler
 	public void onPlayerChatEvent(AsyncPlayerChatEvent evt) {
 		String msg = evt.getMessage();
 		if(msg.contains("ch"))return;
-	
+		if (msg=="llagosta") msg = msg.replaceAll("llagosta", "la greixosta");
+		else msg = msg.replaceAll("[Ll]{1,}[Aa]{1,}[Gg]{1,}", "greix");
 		for (int i = 15; i > 0; i--) {
 			msg = msg.replaceAll("la" + StringUtils.repeat("g", i), "grei" + StringUtils.repeat("x", i));			
 		}
-		msg = msg.replaceAll("[Ll]{1,}[Aa]{1,}[Gg]{1,}", "greix");
+		
 		msg = msg.replaceAll("l.a.g", "g.r.e.i.x");
 		msg = msg.replaceAll("l a g", "g r e i x");
 		msg = msg.replaceAll("l ag ", "gr eix ");
 		msg = msg.replaceAll("l ag", "gr eix");
 		msg = msg.replaceAll("ping", "ping pong");
 		msg = msg.replaceAll("bug", "escarbat");
+		msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
+		msg = msg.replaceAll("En fi", "En fi (copyright JoniMega)");
+		msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
 		if(evt.getPlayer().getName().contains("amiguet"))msg = msg.replaceAll("calla", "sii soc molt grossa!");
 		evt.setMessage(msg);
 		boolean off = msg.contains("inves") || msg.contains("polla") || msg.contains("gilip") || msg.contains("tont") || msg.contains("retr") || msg.contains("retard");
@@ -205,7 +210,7 @@ public class LoginListener implements Listener {
 			if(Utils.Possibilitat(5))evt.setMessage("ehem.. anava a dir... millor callo xD");
 			if(Utils.Possibilitat(8))evt.setMessage("ja començo a perdre els papers, no em feu gaire cas jaja");
 		}
-		
+
 	}
 	@EventHandler
 	public void onEntityDamageEvent(EntityDamageEvent evt) {
@@ -230,5 +235,5 @@ public class LoginListener implements Listener {
 		}
 
 	}
-	
+
 }

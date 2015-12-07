@@ -47,7 +47,7 @@ public class BaseLunar extends JocScoreRace {
 		Potion p2 = new Potion(PotionType.INSTANT_HEAL);
 		p2.setSplash(true);
 		items.add(p2.toItemStack(1));
-		items.add(new ItemStack(Material.ARROW, 4));
+		items.add(new ItemStack(Material.ARROW, 50));
 		//Glass
 		items.add(Utils.createColoredArmor(Material.LEATHER_CHESTPLATE, Color.WHITE));
 		items.add(Utils.createColoredArmor(Material.LEATHER_LEGGINGS, Color.WHITE));

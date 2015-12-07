@@ -65,6 +65,7 @@ public abstract class Skill extends PlayerWorldEventBus {
 		sendPlayerMessage(p, ChatColor.DARK_AQUA + "[" + getName() + " ] > " + ChatColor.GRAY + message);
 	}
 	public PlayerInfo getPlayerInfo(Player p) {
+		if (player == null)return null;
 		return getGame().getPlayerInfo(p);
 	}
 	//-OLD-

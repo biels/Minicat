@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.persistence.Entity;
 import javax.xml.datatype.DatatypeConstants.Field;
 
 import org.bukkit.Bukkit;
@@ -20,7 +21,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,6 +34,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -38,6 +44,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -227,7 +234,7 @@ public abstract class Joc extends MapaResetejable {
 	protected void registerEloChange(Player p, double change){
 		PlayerData playerData = new PlayerData(p.getName());
 		playerData.addElo(change);
-		String cStr = (change > 0 ? ChatColor.DARK_GREEN + "+" : ChatColor.DARK_RED + "") + Double.toString(Math.round(change));
+		String cStr = (change > 0 ? ChatColor.DARK_GREEN + "+" : ChatColor.DARK_RED + "") + Double.toString(Math.round(change * 10)/10);
 		p.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + "(" + cStr  + ChatColor.WHITE + ")");
 	}
 	double getEloK(){
@@ -551,7 +558,7 @@ public abstract class Joc extends MapaResetejable {
 				attatchments.add(ChatColor.GREEN + "[No penalitzat]");
 			}
 		}else{
-			if(punishForLeaving != 0){
+			if(punishForLeaving != 0 && !isSpectator(ply)){
 				attatchments.add(ChatColor.RED + "[Penalitzat]");
 				punishPlayerElo(ply, punishForLeaving);
 			}			
@@ -561,9 +568,9 @@ public abstract class Joc extends MapaResetejable {
 		registerEloChange(ply, amount * -1);
 	}
 	public double getPunishForLeaving(Player ply){
-		double max_punish = 6 + getEloK() / 16;
+		double max_punish = 5 + getEloK() / 8;
 		double p = max_punish;
-		if(getGameProgressETA() < 0.2)p = 0;
+		if(getGameProgressETA() < 0.25)p = 0;
 		p = max_punish * getGameProgressETA();
 		if(getGameProgressETA() > 0.8)p = max_punish;
 		if(!JocEnMarxa() || getEloK() == 0 || getPlayers().size() <= 1)p = 0;
@@ -834,7 +841,25 @@ public abstract class Joc extends MapaResetejable {
 		if(v.getX() != 0 || v.getZ() != 0 || evt.getFrom().getYaw() != evt.getTo().getYaw())
 		i.setImmune(false);
 	}
-
+	
+	@Override
+	protected void onProjectileLaunch(ProjectileLaunchEvent evt, Projectile proj) {
+		// TODO Auto-generated method stub
+		super.onProjectileLaunch(evt, proj);
+		if(proj.getType() == EntityType.SPLASH_POTION){
+			ProjectileSource shooter = proj.getShooter();
+			if (shooter instanceof LivingEntity) {
+				Vector dir = ((LivingEntity)shooter).getLocation().getDirection();
+				proj.setVelocity(dir.multiply(5));
+			}
+		}
+	}
+	@Override
+	protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
+		// TODO Auto-generated method stub
+		super.onProjectileHit(evt, proj);
+		
+	}
 	public enum GameState {InGame, Preparing, WaitingForPlayers, Complete, Resetejant, Editant}
 	public GameState getGameState(){
 		if (EditMode){
@@ -1069,12 +1094,27 @@ public abstract class Joc extends MapaResetejable {
 			}
 			return false;
 		}
+		public boolean hasStatusEffect(String name){
+			for(StatusEffect e : effects){
+				String n = e.getName();
+				if (name.equals(n))return true;
+			}
+			return false;
+		}
 		@SuppressWarnings("unchecked")
 		public <T extends StatusEffect> T getStatusEffect(Class<T> type){
 			for(StatusEffect e : effects){
 				String name = e.getClass().getName();
 				String name2 = type.getName();
 				if (name.equals(name2))return (T) e;
+			}
+			return null;
+		}
+		@SuppressWarnings("unchecked")
+		public <T extends StatusEffect> T getStatusEffect(String name){
+			for(StatusEffect e : effects){
+				String n = e.getName();
+				if (name.equals(n))return (T) e;
 			}
 			return null;
 		}

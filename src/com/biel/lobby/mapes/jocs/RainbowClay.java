@@ -17,13 +17,19 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
@@ -37,8 +43,10 @@ import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
+import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
@@ -208,7 +216,10 @@ public class RainbowClay extends JocObjectius {
 		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.IRON_SWORD, 1));
-		items.add(new ItemStack(Material.DIAMOND_PICKAXE, 1));
+		ItemStack pickaxe = new ItemStack(Material.DIAMOND_PICKAXE, 1);
+		double balancingMultiplier = getBalancingMultiplier(e);
+		if(balancingMultiplier > 1)pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
+		items.add(pickaxe);
 		items.add(new ItemStack(Material.FLINT_AND_STEEL));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
@@ -217,12 +228,11 @@ public class RainbowClay extends JocObjectius {
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
 		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 		items.add(arc);
-		double balancingMultiplier = getBalancingMultiplier(e);
 		int arrows = (int) (50 * balancingMultiplier);
 		if(arrows > 64){arrows = 64;}
 		items.add(new ItemStack(Material.ARROW, arrows));
-		int ladders = (int) (16 * balancingMultiplier);
-		if(ladders > 64){arrows = 64;}
+		int ladders = (int) (32 * balancingMultiplier);
+		if(ladders > 64){ladders = 64;}
 		items.add(new ItemStack(Material.LADDER, ladders));
 		int block_amount = (int) (32 * balancingMultiplier);
 		if(block_amount > 64){block_amount = 64;}
@@ -242,7 +252,7 @@ public class RainbowClay extends JocObjectius {
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, (int) (30 * 10 * (m - 0.5)), 5, true), true);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 3, 1, true), true);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 20 * 30, 0, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 5, 0, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 5, 3, true), true);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, (int) (20 * 19 * m), 1, true), true);
 	}
 	@Override
@@ -387,6 +397,34 @@ public class RainbowClay extends JocObjectius {
 		}
 
 	}
+	@Override
+	protected void onBlockHitByProjectile(ProjectileHitEvent evt, Block b, Projectile proj) {
+		// TODO Auto-generated method stub
+		super.onBlockHitByProjectile(evt, b, proj);
+		//sendGlobalMessage("Pilotassa");
+		Material t = b.getType();
+		if(t == Material.GLASS || t == Material.STAINED_GLASS || t == Material.STAINED_GLASS_PANE || t == Material.THIN_GLASS || t == Material.GLOWSTONE){
+			b.setType(Material.AIR);
+			getWorld().playSound(b.getLocation(), Sound.GLASS, 15F, 1.2F);
+			proj.remove();
+			for(BlockFace f : BlockFace.values()){
+				if(GUtils.Possibilitat(58))continue;
+				Block relative = b.getRelative(f);
+				t = relative.getType();
+				if(t == Material.GLASS || t == Material.STAINED_GLASS || t == Material.STAINED_GLASS_PANE || t == Material.THIN_GLASS || t == Material.GLOWSTONE){
+					relative.setType(Material.AIR);
+				}
+			}
+		}
+	}
+	@Override
+	protected void onCreatureSpawn(CreatureSpawnEvent evt) {
+		// TODO Auto-generated method stub
+		super.onCreatureSpawn(evt);
+		if(evt.getEntityType() == EntityType.GHAST){
+			evt.getEntity().setMaxHealth(350);
+		}
+	}
 	private static String getBridgeToolName() {
 		return ChatColor.YELLOW + "Aixada del constructor";
 	}
@@ -468,7 +506,7 @@ public class RainbowClay extends JocObjectius {
 				inv.addItem(item);
 			}
 			if(Utils.Possibilitat(3)){		
-				ItemStack item = new ItemStack(Material.GOLD_HELMET, 1);
+				ItemStack item = new ItemStack(Material.IRON_HELMET, 1);
 				item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 7));
 				inv.addItem(item);
 			}
