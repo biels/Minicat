@@ -65,7 +65,11 @@ public class Dominion extends JocTeamDominion {
 		}
 		return controlPoints;
 	}
-
+	@Override
+	public boolean giveSnowLauncherOnKill() {
+		// TODO Auto-generated method stub
+		return true;
+	}
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
 		ArrayList<Equip> equips = new ArrayList<Equip>();

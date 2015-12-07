@@ -111,6 +111,11 @@ public class RainbowClay extends JocObjectius {
 		setGiveStartingItemsRespawn(true);
 		ProgTask();
 	}
+	@Override
+	public boolean giveSnowLauncherOnKill() {
+		// TODO Auto-generated method stub
+		return true;
+	}
 //	@Override
 //	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
 //		// TODO Auto-generated method stub
@@ -435,6 +440,7 @@ public class RainbowClay extends JocObjectius {
 		}
 		return null;
 	}
+	
 	public void ProgTask(){
 		tid = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run() {
