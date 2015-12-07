@@ -469,7 +469,11 @@ public abstract class Joc extends MapaResetejable {
 	public ItemStack getSnowLauncher(int amount){
 		ItemStack ball = new ItemStack(Material.SNOW_BALL);
 		ball.addUnsafeEnchantment(Enchantment.SILK_TOUCH, 1);
+		ball.setAmount(amount);
 		return Utils.setItemNameAndLore(ball, "Llançador de neu", "Et transporta a l'enemic que impacti");
+	}
+	public boolean giveSnowLauncherOnKill(){
+		return false;
 	}
 	@Override
 	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
@@ -533,6 +537,7 @@ public abstract class Joc extends MapaResetejable {
 		// TODO Auto-generated method stub
 		super.onPlayerDeathByPlayer(evt, killed, killer);
 		if(killed == killer)evt.setDeathMessage(ChatColor.YELLOW + killed.getName() + ChatColor.RED + " s'ha suïcidat");
+		if(giveSnowLauncherOnKill())killer.getInventory().addItem(getSnowLauncher(1));
 	}
 	public void allOnTheLobby(){
 		for (Player p : world.getPlayers()){

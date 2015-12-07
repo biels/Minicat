@@ -61,6 +61,11 @@ public class BaseLunar extends JocScoreRace {
 		return "BaseLunar";
 	}
 	@Override
+	public boolean giveSnowLauncherOnKill() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	@Override
 	protected void donarEfectesInicials(Player ply) {
 		// TODO Auto-generated method stub
 		super.donarEfectesInicials(ply);

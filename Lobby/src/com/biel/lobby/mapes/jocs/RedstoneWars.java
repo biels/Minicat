@@ -65,6 +65,11 @@ public class RedstoneWars extends JocEquips{
 		return items;
 	}
 	@Override
+	public boolean giveSnowLauncherOnKill() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	@Override
 	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
 		// TODO Auto-generated method stub
 		super.onPlayerDeathByPlayer(evt, killed, killer);
