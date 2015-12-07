@@ -33,14 +33,14 @@ public class EventBusManager {
 		if(buses.contains(bus)){
 			System.out.println("El canal d'eseveniments ja existeix @ " + bus.toString());
 		}else{
-			System.out.println("Afegit el canal d'esdeveniments a la cua " + bus.getClass().getName());
+			//System.out.println("Afegit el canal d'esdeveniments a la cua " + bus.getClass().getName());
 			toAdd.add(bus);
 		}
 	}
 	public synchronized void unregisterEventBus(EventBus bus){
 		if(buses.contains(bus)){
 			toRemove.add(bus);
-			System.out.println("Esborrat el canal d'esdeveniments " + bus.getClass().getName());
+			//System.out.println("Esborrat el canal d'esdeveniments " + bus.getClass().getName());
 		}else{
 			System.out.println("El canal d'eseveniments ja no existia");
 		}

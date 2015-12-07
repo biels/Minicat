@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Furnace;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
@@ -28,6 +30,7 @@ import org.bukkit.event.world.WorldEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.util.BlockIterator;
 
 import com.biel.BielAPI.Com;
 import com.biel.BielAPI.Utils.GUtils;
@@ -148,6 +151,27 @@ public class EventBus { //Bus d'esdeveniments del joc
 				Projectile proj = evt.getEntity();
 				LivingEntity shooter = (LivingEntity) proj.getShooter();
 				onProjectileHit(evt, proj);
+				//Block Hit
+				World world = entity.getWorld();
+
+				if((shooter instanceof Player)){
+					Player player = (Player)shooter;
+					BlockIterator iterator = new BlockIterator(world, proj.getLocation().toVector(), proj.getVelocity().normalize(), 0, 4);
+					Block hitBlock = null;
+
+					while(iterator.hasNext()) {
+						hitBlock = iterator.next();
+						// hitBlock.breakNaturally();
+						if(GUtils.isValidSolidBlock(hitBlock)){ break;}
+					}
+					if (hitBlock != null) {
+						onBlockHitByProjectile(evt, hitBlock, proj);
+					}
+
+				}
+
+			
+				//----
 			}
 			if (event instanceof EntityExplodeEvent){
 				EntityExplodeEvent evt = (EntityExplodeEvent)event;
@@ -322,6 +346,8 @@ public class EventBus { //Bus d'esdeveniments del joc
 	protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
 	}
 	protected void onProjectileLaunch(ProjectileLaunchEvent evt, Projectile proj) {
+	}
+	protected void onBlockHitByProjectile(ProjectileHitEvent evt, Block b, Projectile proj) {
 	}
 	protected void onEntityExplode(EntityExplodeEvent evt, Entity e) {
 	}

@@ -384,7 +384,7 @@ public class GUtils {
 		}
 		return ordered;
 	}
-	public static LivingEntity getNearestEntity(Location loc, ArrayList<LivingEntity> ents){
+	public static <T extends LivingEntity> T getNearestEntity(Location loc, ArrayList<T> ents){
 		if (ents.size() == 0){return null;}
 		LivingEntity nearest = ents.get(0);
 		double mindistance = nearest.getLocation().distance(loc);
@@ -395,7 +395,7 @@ public class GUtils {
 				nearest = e;
 			}
 		}
-		return nearest;
+		return (T) nearest;
 
 	}
 	public static ArrayList<LivingEntity> getNearbyEnemies(LivingEntity entity, double dist, boolean lineSight){

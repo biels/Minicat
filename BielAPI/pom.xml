@@ -3,13 +3,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>BielAPI</groupId>
 	<artifactId>BielAPI</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.5-SNAPSHOT</version>
 	<name>BielAPI</name>
 	<description>API base per aplicacions sobre spigot</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<versions.spigot-version>1.8.7-R0.1-SNAPSHOT</versions.spigot-version>
+		<versions.spigot-version>1.8.8-R0.1-SNAPSHOT</versions.spigot-version>
 		<versions.bungeecord-version>1.8-SNAPSHOT</versions.bungeecord-version>
 	</properties>
 
@@ -29,11 +29,11 @@
 	</repositories>
 	<dependencies>
 		<!--Spigot-API -->
-		<dependency>
+		<!--   <dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
 			<version>${versions.spigot-version}</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot</artifactId>
