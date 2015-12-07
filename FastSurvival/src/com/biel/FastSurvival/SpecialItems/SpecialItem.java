@@ -169,7 +169,7 @@ public class SpecialItem implements Listener{
 					return true;
 				}
 			}else{
-				Bukkit.broadcastMessage("NoID");
+				//Bukkit.broadcastMessage("NoID");
 			}
 		}
 		return false;

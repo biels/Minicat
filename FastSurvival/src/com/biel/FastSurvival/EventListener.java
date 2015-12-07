@@ -99,7 +99,7 @@ public class EventListener implements Listener {
 			Player p = evt.getPlayer();
 			//WG
 			Block blk = evt.getBlock();
-			if (p instanceof Player){
+			if (p != null){
 				if (!WGUtils.canBuild((Player)p, blk)){
 					return;
 				}
@@ -169,9 +169,9 @@ public class EventListener implements Listener {
 				}
 			}
 			//Bukkit.broadcastMessage("Msg0");
-			if (i.getItemMeta() == null){return;}
+			//if (i.getItemMeta() == null){return;} //< USED
 			//Bukkit.broadcastMessage("Msg1");
-			if (!i.getItemMeta().hasLore()){return;}
+			//if (!i.getItemMeta().hasLore()){return;} //< USED
 			if (MoonUtils.IsInMoon(p)){return;}
 			//Bukkit.broadcastMessage("Msg2");
 			if(isAxe(i)){
