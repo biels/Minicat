@@ -445,7 +445,7 @@ public class Parkour extends JocScoreCombo{
 		public void generateNextBubble(){
 			ParkourBubble b;
 			try {
-				b = getRandomBubbleType().newInstance();			
+				b = SingleBlockBubble.class.newInstance();			
 				b.generate();
 				if(bubbles.size() > 0){b.setEntryPoint(bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing()));}else{b.setEntryPoint(getForward().multiply(4));}
 				bubbles.add(b);
@@ -504,6 +504,10 @@ public class Parkour extends JocScoreCombo{
 			ArrayList<Material> materials = new ArrayList<Material>(); //Index matches with block 
 			Function<? super Vector, Material> materialGetter = v -> materials.get(blocks.indexOf(v));
 			
+			public ParkourBubble() {
+				super();
+				// TODO Auto-generated constructor stub
+			}
 			public abstract void generate();
 			public abstract double getMultiplier();
 			public Vector getEntryPoint() {
