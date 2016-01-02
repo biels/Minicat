@@ -1,5 +1,6 @@
 package com.biel.lobby.mapes.jocs;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -445,7 +446,7 @@ public class Parkour extends JocScoreCombo{
 		public void generateNextBubble(){
 			ParkourBubble b;
 			try {
-				b = SingleBlockBubble.class.newInstance();			
+				b = SingleBlockBubble.class.getConstructor(ParkourProvider.class).newInstance(this);			
 				b.generate();
 				if(bubbles.size() > 0){b.setEntryPoint(bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing()));}else{b.setEntryPoint(getForward().multiply(4));}
 				bubbles.add(b);
@@ -453,6 +454,18 @@ public class Parkour extends JocScoreCombo{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}			
