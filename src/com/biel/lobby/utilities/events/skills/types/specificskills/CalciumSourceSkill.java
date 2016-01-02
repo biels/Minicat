@@ -58,7 +58,7 @@ public class CalciumSourceSkill extends InherentSkill {
 			evt.setDamage(result);
 			evt.setDamage(evt.getDamage() - getModifier());
 			//playEffect(p);
-			sendSkillMessage("Reduït: " + Math.round((dmg - evt.getDamage()) * 10) / 10.0D);
+			//sendSkillMessage("Reduït: " + Math.round((dmg - evt.getDamage()) * 10) / 10.0D);
 		}
 	}
 

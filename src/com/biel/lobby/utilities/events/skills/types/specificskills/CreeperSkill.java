@@ -65,6 +65,7 @@ public class CreeperSkill extends InherentSkill {
 		// TODO Auto-generated method stub
 		super.onPlayerDeath(evt, killed);
 		if(killed != getPlayer())return;
+		if(getPlayer().getHealth() > 0)return;
 		int dist = 10;
 		Location c = killed.getEyeLocation();
 		ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(c, dist);
@@ -72,7 +73,7 @@ public class CreeperSkill extends InherentSkill {
 		getWorld().playSound(c, Sound.EXPLODE, 0.8F, 1.0F);
 		getWorld().playSound(c, Sound.CREEPER_HISS, 0.8F, 1.0F);
 		//evt.getDrops().add(new ItemStack(Material.))
-		Consumer<? super Player> action = p -> p.damage(2 + 40 / (c.distance(p.getEyeLocation())), killed);
+		Consumer<? super Player> action = p -> p.damage(2 + 32 / (c.distance(p.getEyeLocation())), killed);
 		Predicate<? super Player> predicate = p -> getGame().areEnemies(killed, p);
 		nearbyPlayers.stream().filter(predicate).forEach(action.andThen(p -> ((Entity) p).setFireTicks(40)));
 		

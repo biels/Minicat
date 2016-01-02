@@ -43,7 +43,7 @@ public class Dominion extends JocTeamDominion {
 			try {
 				name = pointNames[i];
 			} catch (Exception e) {
-				System.out.print("Falta especificar un nombre de punto de control");
+				System.out.print("Falta especificar un nom de punt de control");
 				name = "No_definit";
 			}
 			double radius;
