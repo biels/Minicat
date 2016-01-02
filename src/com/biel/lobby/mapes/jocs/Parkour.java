@@ -5,9 +5,13 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TooManyListenersException;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -17,6 +21,7 @@ import javax.persistence.TemporalType;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -26,8 +31,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Stairs;
 import org.bukkit.util.Vector;
 
+import com.biel.BielAPI.Utils.Pair;
 import com.biel.BielAPI.Utils.Title;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.BielAPI.events.WorldEventBus;
@@ -36,6 +43,7 @@ import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocScoreCombo;
 import com.biel.lobby.mapes.JocScoreRace;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
+import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
@@ -207,19 +215,27 @@ public class Parkour extends JocScoreCombo{
 
 			checkBufferBuildStreaming();
 		}
-		public class BubbleHandler{ // Currentblock = povider !!! - Check other bubbles and interpolate (lag/no detection) - Store position history (as vector)
+		public class BubbleHandler{ // Currentblock = provider !!! - Check other bubbles and interpolate (lag/no detection) - Store position history (as vector)
 			int providerBubbleIndex;
 			ZonedDateTime firstContactTime;
 			ZonedDateTime leaveTime;
 			ArrayList<Vector> positions = new ArrayList<Vector>();
+			ArrayList<CheckpointHandler> checkpointHandlers = new ArrayList<CheckpointHandler>();
 			Score score;
 			Hologram h;
 			public BubbleHandler(int providerBubbleIndex) {
 				super();
 				this.providerBubbleIndex = providerBubbleIndex;
+				fetchCheckpoints();
 			}
 			public ParkourBubble getBubble(){
 				return provider.getBubble(providerBubbleIndex);
+			}
+			public void fetchCheckpoints(){
+				int i = 0;
+				for(Checkpoint c : getBubble().getCheckpoints()){
+					checkpointHandlers.add(new CheckpointHandler(i++));
+				}
 			}
 			public boolean isTargeted(){
 				return handlers.indexOf(this) == targetBubbleIndex;
@@ -257,7 +273,8 @@ public class Parkour extends JocScoreCombo{
 				if(!i.isInGame()){teleportToEndingSpawn(getPlayer()); return;}
 				if(targetBubbleIndex > mapLength && i.isInGame()){
 					sendGlobalMessage(getPlayer().getName() + " ha arribat a la meta!");
-					teleportToEndingSpawn(getPlayer());
+					//teleportToEndingSpawn(getPlayer());
+					getPlayer().setGameMode(GameMode.SPECTATOR);
 					i.setInGame(false);
 					return;
 				}
@@ -287,7 +304,7 @@ public class Parkour extends JocScoreCombo{
 				Location location = getPlayer().getLocation();
 				positions.add(location.toVector());
 				//handleLocationCheckIn(getAvgPosition().toLocation(world));
-				handleLocationCheckIn(location);
+				handleLocationCheckIn(getAvgPosition().toLocation(getWorld()));
 				
 			}
 			public void handleLocationCheckIn(Location l){
@@ -297,45 +314,121 @@ public class Parkour extends JocScoreCombo{
 				//sendGlobalMessage("providerBubbleIndex: " + providerBubbleIndex);
 				//sendGlobalMessage("targetBubbleIndex: " + targetBubbleIndex);
 				//getWorld().playEffect(l, Effect.FLAME, 4);
+				
+				checkpointHandlers.forEach(ch -> ch.handleLocationCheckIn(l));
+				
 				if(l.getY() < getBubble().getLowestSurfaceY(startLocation) - 1){ // IMPORTANT UPFACTOR
 					registerFail(p);
 					return;
 				}
-				boolean isAboveBubble = getBubble().getSurfaceBlockList(startLocation).stream().mapToDouble(b -> b.getLocation().add(0.5, 0, 0.5).distance(l)).min().getAsDouble() < 1.3;
-						//.contains(l.getBlock());
-				boolean isInGroundContact = isAboveBubble; //&& ((LivingEntity)p).isOnGround();
-				if(firstContactTime == null && isInGroundContact){
-					//Register contact start
-					firstContactTime = ZonedDateTime.now();
-				}
-				if(firstContactTime != null && !isAboveBubble){
-					//RegisterLeave
-					leaveTime = ZonedDateTime.now();
-					Duration span = Duration.between(firstContactTime, leaveTime);
-					Score s = Score.N50;
-					long ms = span.toMillis();
-					//p.sendMessage("ms: " + ms);
-					double m = 1.18;
-					if(ms < 1200 * m)s = Score.N100;
-					if(ms < 800 * m)s = Score.N200;
-					if(ms < 400 * m)s = Score.N300;
-					if(ms < 250 * m)s = Score.C300;
-					advance(s);
-				}
-				if(firstContactTime != null && isAboveBubble){
+				//boolean isAboveBubble = getBubble().getSurfaceBlockList(startLocation).stream().mapToDouble(b -> b.getLocation().add(0.5, 0, 0.5).distance(l)).min().getAsDouble() < 1.3;
+
+				if(firstContactTime != null){
 					Duration span = Duration.between(firstContactTime, ZonedDateTime.now());
 					long ms = span.toMillis();
-					if(ms > 3000){
+					if(ms > 3000 * getBubble().getMultiplier()){
 						registerFail(p);
-						leaveTime = ZonedDateTime.now();						
+						setLeaveTime();						
 					}
 				}
+			}
+			protected void advanceBasedOnTime() {
+				Duration span = Duration.between(firstContactTime, leaveTime);
+				Score s = Score.N50;
+				long ms = span.toMillis();
+				//p.sendMessage("ms: " + ms);
+				double m = getBubble().getMultiplier();
+				if(ms < 1200 * m)s = Score.N100;
+				if(ms < 800 * m)s = Score.N200;
+				if(ms < 400 * m)s = Score.N300;
+				if(ms < 250 * m)s = Score.C300;
+				advance(s);
+			}
+			private void setLeaveTime() {
+				leaveTime = ZonedDateTime.now();
+			}
+			private void setFirstContactTime() {
+				firstContactTime = ZonedDateTime.now();
 			}
 			public void registerFail(Player p) {
 				p.teleport(getBubble().getFailTeleportPoint(startLocation));
 				advance(Score.FAIL);
 			}
-
+			//CHECKPOINT HANDLER
+			public class CheckpointHandler{
+				int checkpointIndex;
+				boolean completed;
+				boolean wasPlayerInsideRange = false;
+				Hologram h;
+				public CheckpointHandler(int checkpointIndex) {
+					super();
+					this.checkpointIndex = checkpointIndex;
+					createHolgram();
+				}
+				Checkpoint getCheckpoint(){
+					return getBubble().getCheckpoints().get(checkpointIndex);
+				}
+				public Vector getAbsoluteCheckpointPosition(){
+					return getBubble().getEntryPoint().add(getCheckpoint().position);
+				}
+				boolean isFirst(){
+					return checkpointIndex == 0;
+				}
+				boolean isLast(){
+					return checkpointIndex == getBubble().getCheckpoints().size() - 1;
+				}
+				boolean isAlone(){
+					return isFirst() && isLast();
+				}
+				void onEnter(){
+					if(isFirst())setFirstContactTime();
+					if(isLast())advanceBasedOnTime();
+					if(!isAlone())tryComplete();
+				}
+				void onLeave(){
+					tryComplete();
+				}
+				void tryComplete(){
+					if(!completed)complete();
+				}
+				void complete(){
+					//Completion code
+					setLeaveTime();
+					completed = true;
+				}
+				public void handleLocationCheckIn(Location l){ //Raise onEnter and onLeave events
+					Player p = getPlayer();
+					if(!getPlayers().contains(p))return;
+					//Somewhere call advance
+					//getWorld().playEffect(l, Effect.FLAME, 4);
+					boolean isPlayerInsideRange = getAbsoluteCheckpointPosition().distance(p.getLocation().toVector()) <= getCheckpoint().radius;
+					if(!wasPlayerInsideRange && isPlayerInsideRange){
+						onEnter();
+					}
+					if(wasPlayerInsideRange && !isPlayerInsideRange){
+						onLeave();
+					}
+					wasPlayerInsideRange = isPlayerInsideRange;
+				}
+				private Location getHologramLocation() {
+					return getAbsoluteCheckpointPosition().toLocation(getWorld()).add(0, 0.8, 0);
+				}
+				public void createHolgram(){
+					if (h != null){return;}
+					h = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
+				}
+				public void updateHologram(){
+					if (h == null){createHolgram();}
+					h.clearLines();
+					h.appendTextLine(getHologramDisplayText());
+				}
+				String getHologramDisplayText(){
+					if(isAlone())return ChatColor.DARK_GREEN + "" +'\u2B06' + ChatColor.DARK_RED + "" +'\u2B07';
+					if(isFirst())return ChatColor.DARK_GREEN + "" +'\u2B06';
+					if(isLast())return ChatColor.DARK_RED + "" +'\u2B07';
+					return ChatColor.GOLD + "+";
+				}
+			}
 		}
 	}
 	public class ParkourProvider{ //Single instnace
@@ -350,8 +443,37 @@ public class Parkour extends JocScoreCombo{
 			}
 		}
 		public void generateNextBubble(){
-			ParkourBubble b = new ParkourBubble();
-			
+			ParkourBubble b;
+			try {
+				b = getRandomBubbleType().newInstance();			
+				b.generate();
+				if(bubbles.size() > 0){b.setEntryPoint(bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing()));}else{b.setEntryPoint(getForward().multiply(4));}
+				bubbles.add(b);
+			} catch (InstantiationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
+		}
+		Class<? extends ParkourBubble> getRandomBubbleType(){
+			List<Pair<Class<? extends ParkourBubble>, Double>> registeredBubbleTypes = getRegisteredBubbleTypes();	
+			Collections.shuffle(registeredBubbleTypes);
+			int c = 0;
+			for(Pair<Class<? extends ParkourBubble>, Double> t : registeredBubbleTypes){
+				if(Utils.Possibilitat(t.getSecond(), 100 + 10 * registeredBubbleTypes.size()))return t.getFirst();
+				if(c > 50)return registeredBubbleTypes.get(0).getFirst();
+				c++;
+			}
+			return null;
+		}
+		List<Pair<Class<? extends ParkourBubble>, Double>> getRegisteredBubbleTypes(){
+			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<Pair<Class<? extends ParkourBubble>, Double>>();
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockBubble.class, 10D));
+			return r;
+		}
+		public Vector getRandomBubbleSpacing(){
 			Vector vert = new Vector(0, 0, 0);
 			if(Utils.Possibilitat(10))vert.setY(-1);
 			if(Utils.Possibilitat(8))vert.setY(-2);
@@ -360,9 +482,9 @@ public class Parkour extends JocScoreCombo{
 			if(Utils.Possibilitat(50))hor.multiply(-1);
 			if(Utils.Possibilitat(10))hor.multiply(2);
 			if(Utils.Possibilitat(70))hor.multiply(0);
-			if(bubbles.size() > 0){b.setCenter(bubbles.get(bubbles.size() - 1).getCenter().add(getForward().multiply(Utils.NombreEntre(3, 4))).add(vert).add(hor));}else{b.setCenter(getForward().multiply(4));}
-			b.generate();
-			bubbles.add(b);
+			Vector forward = getForward().multiply(Utils.NombreEntre(3,  4));			
+			return vert.add(hor).add(forward);
+			
 		}
 		//		public class ParkourModule{ //Set of bubbles
 		//			ArrayList<ParkourBubble> bubbles = new ArrayList<ParkourBubble>();
@@ -375,43 +497,101 @@ public class Parkour extends JocScoreCombo{
 		//			}
 		//		}
 
-		public class ParkourBubble{ //Single island on sky
-			Vector center; //Absolute - ISSUES
-			ArrayList<Vector> blocks = new ArrayList<Vector>();
-			public void generate(){
-				blocks.add(new Vector(0, 0, 0));
+		public abstract class ParkourBubble{ //Single island on sky
+			Vector entryPoint; //Absolute - ISSUES
+			ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
+			ArrayList<Vector> blocks = new ArrayList<Vector>(); //Index matches with material 
+			ArrayList<Material> materials = new ArrayList<Material>(); //Index matches with block 
+			Function<? super Vector, Material> materialGetter = v -> materials.get(blocks.indexOf(v));
+			
+			public abstract void generate();
+			public abstract double getMultiplier();
+			public Vector getEntryPoint() {
+				return entryPoint.clone();
 			}
-			public Vector getCenter() {
-				return center.clone();
+			/**
+			 * Sets the center relative to the stream starting point
+			 * @param center Absolute center within the stream
+			 */
+			public void setEntryPoint(Vector center) {
+				this.entryPoint = center;
 			}
-			public void setCenter(Vector center) {
-				this.center = center;
+			public Vector getAbsoluteExitPoint(){
+				return checkpoints.get(checkpoints.size() - 1).position;
 			}
-			public void buildAt(Location streamStartLocation){
-				for(Vector v : blocks){
-					streamStartLocation.clone().add(center).add(v).getBlock().setType(Material.QUARTZ_BLOCK);
-				}
+			public ArrayList<Checkpoint> getCheckpoints() {
+				return checkpoints;
+			}
+
+			public void buildAt(Location streamStartLocation) {
+				Predicate<? super Vector> filterSolid = v -> materialGetter.apply(v).isSolid();
+				Consumer<? super Vector> placeAction = v ->  streamStartLocation.clone().add(entryPoint).add(v).getBlock().setType(materialGetter.apply(v));
+				blocks.stream().filter(filterSolid).forEach(placeAction); //Solid blocks go first
+				blocks.stream().filter(filterSolid.negate()).forEach(placeAction);
 			}
 			public Location getFailTeleportPoint(Location streamStartLocation){
-				Location l = streamStartLocation.clone().add(center).add(0.5, 1, 0.5);
+				Location l = streamStartLocation.clone().add(entryPoint).add(0.5, 1, 0.5);
 				l.setPitch(0);
 				l.setYaw(270);
 				return l;
 			}
 			public List<Block> getBlockList(Location streamStartLocation){
-				return blocks.stream().map(v -> streamStartLocation.clone().add(center).add(v).getBlock()).collect(Collectors.toList());
+				return blocks.stream().map(v -> streamStartLocation.clone().add(entryPoint).add(v).getBlock()).collect(Collectors.toList());
 			}
 			public List<Block> getSurfaceBlockList(Location streamStartLocation){
 				List<Block> blockList = getBlockList(streamStartLocation);
-				return blockList.stream().map(b -> b.getRelative(BlockFace.UP)).filter(b -> !blockList.contains(b)).collect(Collectors.toList());
+				return blockList.stream().filter(b -> b.getType().isSolid()).map(b -> b.getRelative(BlockFace.UP)).filter(b -> !blockList.contains(b)).collect(Collectors.toList());
 			}
+			/**
+			 * @param streamStartLocation
+			 * @return The lowest Y coordinate
+			 */
 			public int getLowestSurfaceY(Location streamStartLocation){
 				List<Block> surfaceBlockList = getSurfaceBlockList(streamStartLocation);
 				return surfaceBlockList.stream().map(Block::getY).mapToInt(i -> i).min().getAsInt();
 			}
+			public class Checkpoint{
+				Vector position;
+				double radius;
+				public Checkpoint(Vector position, double radius) {
+					super();
+					this.position = position;
+					this.radius = radius;
+				}
+				public Checkpoint(Vector position) {
+					super();
+					this.position = position;
+					this.radius = 1.2D;
+				}
+			}
 		}
-		public class BasicBubble extends ParkourBubble{
+		public abstract class CenteredBubble extends ParkourBubble{
+			
+		}
+		public abstract class EntryExitBubble extends ParkourBubble{
+			Vector relEntry; //Relative
+			Vector relExit; //Relative
+			public Vector getEntry(boolean relative){
+				return (relative ? relEntry : getEntryPoint().add(relEntry));
+			}
+			public Vector getExit(boolean relative){
+				return (relative ? relExit : getEntryPoint().add(relExit));
+			}
+		}
+		public class SingleBlockBubble extends ParkourBubble{
+			//Single block with a torch
+			@Override
+			public void generate() {
+				blocks.add(new Vector(0, 0, 0));materials.add(Material.QUARTZ_BLOCK);		
+				blocks.add(new Vector(0, 1, 0));materials.add(Material.TORCH);
+				checkpoints.add(new Checkpoint(new Vector(0, 1, 0)));
+			}
 
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return 1.18;
+			}
 		}
 	}
 	@Override
