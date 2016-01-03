@@ -402,7 +402,7 @@ public class Parkour extends JocScoreCombo{
 					if(!getPlayers().contains(p))return;
 					//Somewhere call advance
 					//getWorld().playEffect(l, Effect.FLAME, 4);
-					boolean isPlayerInsideRange = getAbsoluteCheckpointPosition().distance(p.getLocation().toVector()) <= getCheckpoint().radius;
+					boolean isPlayerInsideRange = getAbsoluteCheckpointPosition().add(new Vector(0, 1.2, 0)).distance(p.getLocation().toVector()) <= getCheckpoint().radius;
 					if(!wasPlayerInsideRange && isPlayerInsideRange){
 						onEnter();
 					}
@@ -557,6 +557,8 @@ public class Parkour extends JocScoreCombo{
 			}
 			public List<Block> getSurfaceBlockList(Location streamStartLocation){
 				List<Block> blockList = getBlockList(streamStartLocation);
+				//blockList.stream().forEach(b -> b.setType(Material.GOLD_BLOCK)); //
+				//streamStartLocation.clone().add(entryPoint).getBlock().setType(Material.DIAMOND_BLOCK);
 				return blockList.stream().filter(b -> b.getType().isSolid()).map(b -> b.getRelative(BlockFace.UP)).filter(b -> !blockList.contains(b)).collect(Collectors.toList());
 			}
 			/**
@@ -601,7 +603,7 @@ public class Parkour extends JocScoreCombo{
 			public void generate() {
 				blocks.add(new Vector(0, 0, 0));materials.add(Material.QUARTZ_BLOCK);		
 				blocks.add(new Vector(0, 1, 0));materials.add(Material.TORCH);
-				checkpoints.add(new Checkpoint(new Vector(0, 1, 0)));
+				checkpoints.add(new Checkpoint(new Vector(0, 0, 0)));
 			}
 
 			@Override
