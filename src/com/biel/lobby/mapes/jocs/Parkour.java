@@ -1,6 +1,7 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -418,6 +419,7 @@ public class Parkour extends JocScoreCombo{
 					//Somewhere call advance
 					//getWorld().playEffect(l, Effect.FLAME, 4);
 					boolean isPlayerInsideRange = getAbsoluteCheckpointPosition().add(new Vector(0, 1.2, 0)).distance(p.getLocation().toVector()) <= getCheckpoint().radius;
+					
 					if(!wasPlayerInsideRange && isPlayerInsideRange){
 						onEnter();
 					}
@@ -438,7 +440,7 @@ public class Parkour extends JocScoreCombo{
 				public void updateHologram(){
 					if (ho == null){createHolgram();}
 					ho.clearLines();
-					ho.appendTextLine(getHologramDisplayText());					
+					ho.appendTextLine(MessageFormat.format("{1}{0}{2}", getHologramDisplayText(), isTargeted() ? "[" : "", isTargeted() ? "]" : ""));					
 				}
 				String getHologramDisplayText(){
 					if(completed)return ChatColor.GOLD + "o";
