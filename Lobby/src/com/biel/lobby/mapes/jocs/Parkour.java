@@ -482,17 +482,19 @@ public class Parkour extends JocScoreCombo{
 		Class<? extends ParkourBubble> getRandomBubbleType(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> registeredBubbleTypes = getRegisteredBubbleTypes();	
 			Collections.shuffle(registeredBubbleTypes);
-			int c = 0;
-			for(Pair<Class<? extends ParkourBubble>, Double> t : registeredBubbleTypes){
-				if(Utils.Possibilitat(t.getSecond(), 100 + 10 * registeredBubbleTypes.size()))return t.getFirst();
-				if(c > 50)return registeredBubbleTypes.get(0).getFirst();
-				c++;
-			}
-			return null;
+			return registeredBubbleTypes.get(0).getFirst();
+//			int c = 0;
+//			for(Pair<Class<? extends ParkourBubble>, Double> t : registeredBubbleTypes){
+//				if(Utils.Possibilitat(t.getSecond(), 100 + 10 * registeredBubbleTypes.size()))return t.getFirst();
+//				if(c > 50)return registeredBubbleTypes.get(0).getFirst();
+//				c++;
+//			}
+//			return null;
 		}
 		List<Pair<Class<? extends ParkourBubble>, Double>> getRegisteredBubbleTypes(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<Pair<Class<? extends ParkourBubble>, Double>>();
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockBubble.class, 10D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(ZigZagBubble.class, 10D));
 			return r;
 		}
 		public Vector getRandomBubbleSpacing(){
@@ -543,7 +545,7 @@ public class Parkour extends JocScoreCombo{
 				this.entryPoint = center;
 			}
 			public Vector getAbsoluteExitPoint(){
-				return checkpoints.get(checkpoints.size() - 1).position;
+				return checkpoints.get(checkpoints.size() - 1).position.clone();
 			}
 			public ArrayList<Checkpoint> getCheckpoints() {
 				return checkpoints;
