@@ -468,7 +468,7 @@ public class Parkour extends JocScoreCombo{
 					ho.appendTextLine(MessageFormat.format("{0}", getHologramDisplayText(), isTargeted() ? "[" : "", isTargeted() ? "]" : ""));					
 				}
 				String getHologramDisplayText(){
-					if(completed)return ChatColor.GOLD + "x" + Math.round(getCombo(getPlayer()) * 10) / 10;
+					if(completed)return ChatColor.GOLD + "x" + getCombo(getPlayer());
 					if(isAlone())return ChatColor.DARK_GREEN + "" +'\u2B07' + ChatColor.DARK_RED + "" +'\u2B06';
 					if(isFirst())return ChatColor.DARK_GREEN + "" +'\u2B07';
 					if(isLast())return ChatColor.DARK_RED + "" +'\u2B06';
