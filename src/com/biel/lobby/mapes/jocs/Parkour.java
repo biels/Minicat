@@ -74,6 +74,15 @@ public class Parkour extends JocScoreCombo{
 	public Vector getForward(){
 		return new Vector(1, 0, 0);
 	}
+	public Vector getUp(){
+		return new Vector(0, 1, 0);
+	}
+	public Vector getRight(){
+		return getForward().crossProduct(getUp());
+	}
+	public Vector getLeft(){
+		return getRight().multiply(-1);
+	}
 	public Vector getCenterize(){
 		return new Vector(0.5, 0.5, 0.5);
 	}
@@ -170,7 +179,7 @@ public class Parkour extends JocScoreCombo{
 		evt.setCancelled(true);
 	}
 	public class ParkourStream extends PlayerWorldEventBus { //One for each player
-		Location startLocation;
+		private Location startLocation;
 		ArrayList<BubbleHandler> handlers = new ArrayList<BubbleHandler>();
 		int targetBubbleIndex = 0;
 		int playerPosition = 0;
@@ -316,7 +325,7 @@ public class Parkour extends JocScoreCombo{
 				//sendGlobalMessage("targetBubbleIndex: " + targetBubbleIndex);
 				//getWorld().playEffect(l, Effect.FLAME, 4);
 				
-				checkpointHandlers.forEach(ch -> ch.handleLocationCheckIn(l));
+				checkpointHandlers.forEach(ch -> ch.handleCpLocationCheckIn(l));
 				
 				if(l.getY() < getBubble().getLowestSurfaceY(startLocation) - 1){ // IMPORTANT UPFACTOR
 					registerFail(p);
@@ -397,7 +406,7 @@ public class Parkour extends JocScoreCombo{
 					setLeaveTime();
 					completed = true;
 				}
-				public void handleLocationCheckIn(Location l){ //Raise onEnter and onLeave events
+				public void handleCpLocationCheckIn(Location l){ //Raise onEnter and onLeave events
 					Player p = getPlayer();
 					if(!getPlayers().contains(p))return;
 					//Somewhere call advance
@@ -446,7 +455,7 @@ public class Parkour extends JocScoreCombo{
 		public void generateNextBubble(){
 			ParkourBubble b;
 			try {
-				b = SingleBlockBubble.class.getConstructor(ParkourProvider.class).newInstance(this);			
+				b = ZigZagBubble.class.getConstructor(ZigZagBubble.class).newInstance(this);			
 				b.generate();
 				if(bubbles.size() > 0){b.setEntryPoint(bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing()));}else{b.setEntryPoint(getForward().multiply(4));}
 				bubbles.add(b);
@@ -511,7 +520,7 @@ public class Parkour extends JocScoreCombo{
 		//		}
 
 		public abstract class ParkourBubble{ //Single island on sky
-			Vector entryPoint; //Absolute - ISSUES
+			private Vector entryPoint; //Absolute - ISSUES
 			ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
 			ArrayList<Vector> blocks = new ArrayList<Vector>(); //Index matches with material 
 			ArrayList<Material> materials = new ArrayList<Material>(); //Index matches with block 
@@ -542,18 +551,18 @@ public class Parkour extends JocScoreCombo{
 
 			public void buildAt(Location streamStartLocation) {
 				Predicate<? super Vector> filterSolid = v -> materialGetter.apply(v).isSolid();
-				Consumer<? super Vector> placeAction = v ->  streamStartLocation.clone().add(entryPoint).add(v).getBlock().setType(materialGetter.apply(v));
+				Consumer<? super Vector> placeAction = v ->  streamStartLocation.clone().add(getEntryPoint()).add(v).getBlock().setType(materialGetter.apply(v));
 				blocks.stream().filter(filterSolid).forEach(placeAction); //Solid blocks go first
 				blocks.stream().filter(filterSolid.negate()).forEach(placeAction);
 			}
 			public Location getFailTeleportPoint(Location streamStartLocation){
-				Location l = streamStartLocation.clone().add(entryPoint).add(0.5, 1, 0.5);
+				Location l = streamStartLocation.clone().add(getEntryPoint()).add(0.5, 1, 0.5);
 				l.setPitch(0);
 				l.setYaw(270);
 				return l;
 			}
 			public List<Block> getBlockList(Location streamStartLocation){
-				return blocks.stream().map(v -> streamStartLocation.clone().add(entryPoint).add(v).getBlock()).collect(Collectors.toList());
+				return blocks.stream().map(v -> streamStartLocation.clone().add(getEntryPoint()).add(v).getBlock()).collect(Collectors.toList());
 			}
 			public List<Block> getSurfaceBlockList(Location streamStartLocation){
 				List<Block> blockList = getBlockList(streamStartLocation);
@@ -584,19 +593,6 @@ public class Parkour extends JocScoreCombo{
 				}
 			}
 		}
-		public abstract class CenteredBubble extends ParkourBubble{
-			
-		}
-		public abstract class EntryExitBubble extends ParkourBubble{
-			Vector relEntry; //Relative
-			Vector relExit; //Relative
-			public Vector getEntry(boolean relative){
-				return (relative ? relEntry : getEntryPoint().add(relEntry));
-			}
-			public Vector getExit(boolean relative){
-				return (relative ? relExit : getEntryPoint().add(relExit));
-			}
-		}
 		public class SingleBlockBubble extends ParkourBubble{
 			//Single block with a torch
 			@Override
@@ -610,6 +606,28 @@ public class Parkour extends JocScoreCombo{
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
 				return 1.18;
+			}
+		}
+		public class ZigZagBubble extends ParkourBubble{
+			//Single block with a torch
+			int n = Utils.NombreEntre(3, 7);
+			@Override
+			public void generate() {
+				for (int i = 0; i < n; i++) {
+					blocks.add(getForward().multiply(2 * i));materials.add(Material.QUARTZ_BLOCK);
+					blocks.add(getForward().multiply(2 * i + 1).add(getRight().multiply(2)));materials.add(Material.QUARTZ_BLOCK);
+					if(i < n - 1){
+						blocks.add(getForward().multiply(2 * i + 1).add(getUp()));materials.add(Material.FENCE);
+						blocks.add(getForward().multiply(2 * i + 2).add(getRight().multiply(2)).add(getUp()));materials.add(Material.FENCE);
+					}
+				}
+				blocks.stream().filter(b -> materialGetter.apply(b) == Material.QUARTZ_BLOCK).forEach(b -> checkpoints.add(new Checkpoint(b)));
+			}
+
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return 1.38 * n;
 			}
 		}
 	}
