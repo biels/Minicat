@@ -613,6 +613,7 @@ public class Parkour extends JocScoreCombo{
 				blocks.add(new Vector(0, 0, 0));materials.add(Material.QUARTZ_BLOCK);		
 				//blocks.add(new Vector(0, 1, 0));materials.add(Material.TORCH);
 				checkpoints.add(new Checkpoint(new Vector(0, 0, 0)));
+				checkpoints.add(new Checkpoint(new Vector(0, 0, 0)));
 			}
 
 			@Override
