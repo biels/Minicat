@@ -26,6 +26,7 @@ import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.LivingEntity;
@@ -57,7 +58,7 @@ public class Parkour extends JocScoreCombo{
 	ArrayList<ParkourStream> streams = new ArrayList<ParkourStream>();
 	ParkourProvider provider = new ParkourProvider();
 	int playerCount = 0;
-	int mapLength = 100;
+	int mapLength = 35;
 	@Override
 	public String getGameName() {
 		// TODO Auto-generated method stub
@@ -409,15 +410,16 @@ public class Parkour extends JocScoreCombo{
 				boolean isAlone(){
 					return isFirst() && isLast();
 				}
+				double getRelativePositionRatio(){
+					return ((double)checkpointIndex) / (getBubble().getCheckpoints().size() - 1);
+				}
 				void onEnter(){
 					if(isFirst())setFirstContactTime();
 					if(isLast())advanceBasedOnTime();
 					if(!isAlone())tryComplete();
-					sendGlobalMessage("Enter");
 				}
 				void onLeave(){
 					tryComplete();
-					sendGlobalMessage("Leave");
 
 				}
 				void tryComplete(){
@@ -428,6 +430,11 @@ public class Parkour extends JocScoreCombo{
 					setLeaveTime();
 					completed = true;
 					updateHologram();
+					incrementCombo(getPlayer(), 0.1);
+					playCompletionSound();
+				}
+				void playCompletionSound(){
+					getPlayer().playSound(getPlayer().getEyeLocation(), Sound.SLIME_WALK, 1F, (float) (0.5 + (1.5 * getRelativePositionRatio())));
 				}
 				public void handleCpLocationCheckIn(Location l){ //Raise onEnter and onLeave events
 					Player p = getPlayer();
@@ -456,14 +463,14 @@ public class Parkour extends JocScoreCombo{
 				public void updateHologram(){
 					if (ho == null){createHolgram();}
 					ho.clearLines();
-					ho.appendTextLine(MessageFormat.format("{1}{0}{2}", getHologramDisplayText(), isTargeted() ? "[" : "", isTargeted() ? "]" : ""));					
+					ho.appendTextLine(MessageFormat.format("{0}", getHologramDisplayText(), isTargeted() ? "[" : "", isTargeted() ? "]" : ""));					
 				}
 				String getHologramDisplayText(){
-					if(completed)return ChatColor.GOLD + "o";
+					if(completed)return ChatColor.GOLD + "+ x0.1";
 					if(isAlone())return ChatColor.DARK_GREEN + "" +'\u2B07' + ChatColor.DARK_RED + "" +'\u2B06';
 					if(isFirst())return ChatColor.DARK_GREEN + "" +'\u2B07';
 					if(isLast())return ChatColor.DARK_RED + "" +'\u2B06';
-					return ChatColor.GOLD + "+";
+					return ChatColor.GREEN + "+";
 				}
 			}
 		}
