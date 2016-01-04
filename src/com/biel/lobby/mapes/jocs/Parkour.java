@@ -360,7 +360,8 @@ public class Parkour extends JocScoreCombo{
 				}
 			}
 			protected void advanceBasedOnTime() {
-				if(firstContactTime == null)advance(Score.N100);
+				if(firstContactTime == null){advance(Score.N100);return;}
+				if(leaveTime == null)setLeaveTime();
 				Duration span = Duration.between(firstContactTime, leaveTime);
 				Score s = Score.N50;
 				long ms = span.toMillis();
