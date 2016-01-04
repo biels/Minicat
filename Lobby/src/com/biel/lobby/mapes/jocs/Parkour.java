@@ -382,6 +382,7 @@ public class Parkour extends JocScoreCombo{
 			}
 			public void registerFail(Player p) {
 				p.teleport(getBubble().getFailTeleportPoint(startLocation));
+				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.HORSE_ARMOR, 1F, 1.1F);
 				advance(Score.FAIL);
 			}
 			//CHECKPOINT HANDLER
@@ -435,8 +436,7 @@ public class Parkour extends JocScoreCombo{
 					playCompletionSound();
 				}
 				void playCompletionSound(){
-					//getPlayer().playSound(getPlayer().getEyeLocation(), Sound.HORSE_ARMOR, 1F, (float) (0.5 + (1.5 * getRelativePositionRatio())));
-					getPlayer().playSound(getPlayer().getEyeLocation(), Sound.HORSE_ARMOR, 1F, (float) (0.5 + (1.5 * getRelativePositionRatio())));
+					getPlayer().playSound(getPlayer().getEyeLocation(), Sound.WOOD_CLICK, 1F, (float) (0.5 + (1.5 * getRelativePositionRatio())));
 				}
 				public void handleCpLocationCheckIn(Location l){ //Raise onEnter and onLeave events
 					Player p = getPlayer();
