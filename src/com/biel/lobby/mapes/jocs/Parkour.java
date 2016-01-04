@@ -455,7 +455,7 @@ public class Parkour extends JocScoreCombo{
 		public void generateNextBubble(){
 			ParkourBubble b;
 			try {
-				b = ZigZagBubble.class.getConstructor(ZigZagBubble.class).newInstance(this);			
+				b = ZigZagBubble.class.getConstructor(ParkourProvider.class).newInstance(this);			
 				b.generate();
 				if(bubbles.size() > 0){b.setEntryPoint(bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing()));}else{b.setEntryPoint(getForward().multiply(4));}
 				bubbles.add(b);
