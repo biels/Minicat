@@ -675,13 +675,14 @@ public class Parkour extends JocScoreCombo{
 			public void generate() {
 				Vector c = getForward();
 				Vector d = getBackRightLeftRandom();
+				boolean counterClockwise = d == getLeft();
 				for (int i = 0; i < n; i++) {
 					Vector lc = c.clone().add(getUp().multiply(i));
 					blocks.add(lc);materials.add(Material.QUARTZ_BLOCK);
 					Vector dlc = lc.clone().add(d);
 					blocks.add(dlc);materials.add(Material.QUARTZ_BLOCK);
 					checkpoints.add(new Checkpoint(dlc));
-					d = GUtils.rotateVector(d, getUp(), Math.PI/2.0);
+					d = GUtils.rotateVector(d, getUp(), (Math.PI/2.0) * (counterClockwise ? -1 : 1));
 				}
 
 			}
