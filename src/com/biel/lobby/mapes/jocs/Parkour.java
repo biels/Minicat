@@ -245,7 +245,7 @@ public class Parkour extends JocScoreCombo{
 				int i = 0;
 				for(Checkpoint c : getBubble().getCheckpoints()){
 					checkpointHandlers.add(new CheckpointHandler(i++));
-					i++;
+					//sendGlobalMessage("Checkpoint handler created " + i);
 				}
 			}
 			public boolean isTargeted(){
@@ -344,6 +344,7 @@ public class Parkour extends JocScoreCombo{
 				}
 			}
 			protected void advanceBasedOnTime() {
+				if(firstContactTime == null)advance(Score.N100);
 				Duration span = Duration.between(firstContactTime, leaveTime);
 				Score s = Score.N50;
 				long ms = span.toMillis();
@@ -370,7 +371,7 @@ public class Parkour extends JocScoreCombo{
 				int checkpointIndex;
 				boolean completed;
 				boolean wasPlayerInsideRange = false;
-				Hologram h;
+				Hologram ho;
 				public CheckpointHandler(int checkpointIndex) {
 					super();
 					this.checkpointIndex = checkpointIndex;
@@ -380,7 +381,7 @@ public class Parkour extends JocScoreCombo{
 					return getBubble().getCheckpoints().get(checkpointIndex);
 				}
 				public Vector getAbsoluteCheckpointPosition(){
-					return getBubble().getEntryPoint().add(getCheckpoint().position);
+					return getBubble().getEntryPoint().add(startLocation.toVector()).add(getCheckpoint().position);
 				}
 				boolean isFirst(){
 					return checkpointIndex == 0;
@@ -395,9 +396,12 @@ public class Parkour extends JocScoreCombo{
 					if(isFirst())setFirstContactTime();
 					if(isLast())advanceBasedOnTime();
 					if(!isAlone())tryComplete();
+					sendGlobalMessage("Enter");
 				}
 				void onLeave(){
 					tryComplete();
+					sendGlobalMessage("Leave");
+
 				}
 				void tryComplete(){
 					if(!completed)complete();
@@ -423,22 +427,24 @@ public class Parkour extends JocScoreCombo{
 					wasPlayerInsideRange = isPlayerInsideRange;
 				}
 				private Location getHologramLocation() {
-					return getAbsoluteCheckpointPosition().toLocation(getWorld()).add(0, 0.8, 0);
+					return getAbsoluteCheckpointPosition().toLocation(getWorld()).add(0.5, 1.8, 0.5);
 				}
 				public void createHolgram(){
-					if (h != null){return;}
-					h = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
+					if (ho != null){return;}
+					//getHologramLocation().getBlock().setType(Material.GOLD_BLOCK);
+					ho = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
+					////sendGlobalMessage("Hologram created + "  + getHologramDisplayText());
 				}
 				public void updateHologram(){
-					if (h == null){createHolgram();}
-					h.clearLines();
-					h.appendTextLine(getHologramDisplayText());
+					if (ho == null){createHolgram();}
+					ho.clearLines();
+					ho.appendTextLine(getHologramDisplayText());					
 				}
 				String getHologramDisplayText(){
 					if(completed)return ChatColor.GOLD + "o";
-					if(isAlone())return ChatColor.DARK_GREEN + "" +'\u2B06' + ChatColor.DARK_RED + "" +'\u2B07';
-					if(isFirst())return ChatColor.DARK_GREEN + "" +'\u2B06';
-					if(isLast())return ChatColor.DARK_RED + "" +'\u2B07';
+					if(isAlone())return ChatColor.DARK_GREEN + "" +'\u2B07' + ChatColor.DARK_RED + "" +'\u2B06';
+					if(isFirst())return ChatColor.DARK_GREEN + "" +'\u2B07';
+					if(isLast())return ChatColor.DARK_RED + "" +'\u2B06';
 					return ChatColor.GOLD + "+";
 				}
 			}
@@ -561,7 +567,7 @@ public class Parkour extends JocScoreCombo{
 				blocks.stream().filter(filterSolid.negate()).forEach(placeAction);
 			}
 			public Location getFailTeleportPoint(Location streamStartLocation){
-				Location l = streamStartLocation.clone().add(getEntryPoint()).add(0.5, 1, 0.5);
+				Location l = streamStartLocation.clone().add(getAbsoluteExitPoint()).add(0.5, 1, 0.5);
 				l.setPitch(0);
 				l.setYaw(270);
 				return l;
@@ -603,7 +609,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public void generate() {
 				blocks.add(new Vector(0, 0, 0));materials.add(Material.QUARTZ_BLOCK);		
-				blocks.add(new Vector(0, 1, 0));materials.add(Material.TORCH);
+				//blocks.add(new Vector(0, 1, 0));materials.add(Material.TORCH);
 				checkpoints.add(new Checkpoint(new Vector(0, 0, 0)));
 			}
 
@@ -632,7 +638,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 1.38 * n;
+				return 5.38 * n  + 1;
 			}
 		}
 	}
