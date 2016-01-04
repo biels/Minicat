@@ -373,7 +373,7 @@ public class Parkour extends JocScoreCombo{
 				public CheckpointHandler(int checkpointIndex) {
 					super();
 					this.checkpointIndex = checkpointIndex;
-					createHolgram();
+					updateHologram();
 				}
 				Checkpoint getCheckpoint(){
 					return getBubble().getCheckpoints().get(checkpointIndex);
@@ -405,6 +405,7 @@ public class Parkour extends JocScoreCombo{
 					//Completion code
 					setLeaveTime();
 					completed = true;
+					updateHologram();
 				}
 				public void handleCpLocationCheckIn(Location l){ //Raise onEnter and onLeave events
 					Player p = getPlayer();
@@ -433,6 +434,7 @@ public class Parkour extends JocScoreCombo{
 					h.appendTextLine(getHologramDisplayText());
 				}
 				String getHologramDisplayText(){
+					if(completed)return ChatColor.GOLD + "o";
 					if(isAlone())return ChatColor.DARK_GREEN + "" +'\u2B06' + ChatColor.DARK_RED + "" +'\u2B07';
 					if(isFirst())return ChatColor.DARK_GREEN + "" +'\u2B06';
 					if(isLast())return ChatColor.DARK_RED + "" +'\u2B07';
@@ -455,7 +457,7 @@ public class Parkour extends JocScoreCombo{
 		public void generateNextBubble(){
 			ParkourBubble b;
 			try {
-				b = ZigZagBubble.class.getConstructor(ParkourProvider.class).newInstance(this);			
+				b = getRandomBubbleType().getConstructor(ParkourProvider.class).newInstance(this);			
 				b.generate();
 				if(bubbles.size() > 0){b.setEntryPoint(bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing()));}else{b.setEntryPoint(getForward().multiply(4));}
 				bubbles.add(b);
