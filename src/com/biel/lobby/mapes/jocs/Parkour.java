@@ -245,6 +245,7 @@ public class Parkour extends JocScoreCombo{
 				int i = 0;
 				for(Checkpoint c : getBubble().getCheckpoints()){
 					checkpointHandlers.add(new CheckpointHandler(i++));
+					i++;
 				}
 			}
 			public boolean isTargeted(){
@@ -570,9 +571,9 @@ public class Parkour extends JocScoreCombo{
 			}
 			public List<Block> getSurfaceBlockList(Location streamStartLocation){
 				List<Block> blockList = getBlockList(streamStartLocation);
-				//blockList.stream().forEach(b -> b.setType(Material.GOLD_BLOCK)); //
+				//blockList.stream().forEach(b -> b.setType(Material.GOLD_BLOCK)); //  ////.filter(b -> b.getType().isSolid())
 				//streamStartLocation.clone().add(entryPoint).getBlock().setType(Material.DIAMOND_BLOCK);
-				return blockList.stream().filter(b -> b.getType().isSolid()).map(b -> b.getRelative(BlockFace.UP)).filter(b -> !blockList.contains(b)).collect(Collectors.toList());
+				return blockList.stream().map(b -> b.getRelative(BlockFace.UP)).filter(b -> !blockList.contains(b)).collect(Collectors.toList());
 			}
 			/**
 			 * @param streamStartLocation
