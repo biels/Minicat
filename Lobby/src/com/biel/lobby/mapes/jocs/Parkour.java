@@ -545,7 +545,7 @@ public class Parkour extends JocScoreCombo{
 				this.entryPoint = center;
 			}
 			public Vector getAbsoluteExitPoint(){
-				return checkpoints.get(checkpoints.size() - 1).position.clone();
+				return getEntryPoint().add(checkpoints.get(checkpoints.size() - 1).position);
 			}
 			public ArrayList<Checkpoint> getCheckpoints() {
 				return checkpoints;
