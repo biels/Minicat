@@ -431,10 +431,12 @@ public class Parkour extends JocScoreCombo{
 					completed = true;
 					updateHologram();
 					incrementCombo(getPlayer(), 0.1);
+					updateScoreBoard(getPlayer());
 					playCompletionSound();
 				}
 				void playCompletionSound(){
-					getPlayer().playSound(getPlayer().getEyeLocation(), Sound.SLIME_WALK, 1F, (float) (0.5 + (1.5 * getRelativePositionRatio())));
+					//getPlayer().playSound(getPlayer().getEyeLocation(), Sound.HORSE_ARMOR, 1F, (float) (0.5 + (1.5 * getRelativePositionRatio())));
+					getPlayer().playSound(getPlayer().getEyeLocation(), Sound.HORSE_ARMOR, 1F, (float) (0.5 + (1.5 * getRelativePositionRatio())));
 				}
 				public void handleCpLocationCheckIn(Location l){ //Raise onEnter and onLeave events
 					Player p = getPlayer();
