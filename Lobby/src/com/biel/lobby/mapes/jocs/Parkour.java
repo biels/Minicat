@@ -321,7 +321,7 @@ public class Parkour extends JocScoreCombo{
 			public Vector getAvgPosition(){
 				Supplier<Stream<Vector>> streamSupplier =
 						() -> positions.stream()
-						.skip(Math.max(0, positions.size() - 5));
+						.skip(Math.max(0, positions.size() - 3));
 						if(streamSupplier.get().count() == 0)return getPlayer().getLocation().toVector();
 						return new Vector(
 								streamSupplier.get().mapToDouble(Vector::getX).average().getAsDouble(),
