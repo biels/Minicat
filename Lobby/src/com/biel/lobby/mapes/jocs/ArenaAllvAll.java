@@ -77,23 +77,23 @@ public class ArenaAllvAll extends JocScoreRace {
 		// TODO Auto-generated method stub
 		super.onPlayerDeathByPlayer(evt, killed, killer);
 		incrementScore(killer);
-		if (getSpree(killer) == 2){
+		if (getSpree(killer) == 1){
 			Potion p1 = new Potion(PotionType.SPEED);
 			p1.setSplash(true);
 			killer.getInventory().addItem(p1.toItemStack(1));
 		}
-		if (getSpree(killer) == 3){
+		if (getSpree(killer) == 2){
 			Potion p1 = new Potion(PotionType.POISON);
 			p1.setSplash(true);
 			killer.getInventory().addItem(p1.toItemStack(1));
 			getPlayerInfo(killer).addAdditionalSkill();
 		}
-		if (getSpree(killer) == 4){
+		if (getSpree(killer) == 3){
 			Potion p1 = new Potion(PotionType.REGEN);
 			p1.setSplash(true);
 			killer.getInventory().addItem(p1.toItemStack(1));
 		}
-		if (getSpree(killer) >= 5){
+		if (getSpree(killer) >= 4){
 			Potion p1 = new Potion(Utils.getRandomPotionType());
 			p1.setSplash(true);
 			killer.getInventory().addItem(p1.toItemStack(1));
