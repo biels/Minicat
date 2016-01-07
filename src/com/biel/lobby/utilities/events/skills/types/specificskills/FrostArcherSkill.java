@@ -1,6 +1,7 @@
 package com.biel.lobby.utilities.events.skills.types.specificskills;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -17,6 +18,8 @@ import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.events.skills.StatusEffect;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
+
+import be.maximvdw.featherboardcore.placeholders.ai;
 
 public class FrostArcherSkill extends InherentSkill {
 	private int stacks = 0;
@@ -107,7 +110,7 @@ public class FrostArcherSkill extends InherentSkill {
 		faces.add(BlockFace.EAST);
 		for (BlockFace face : faces){			
 			Block block = damaged.getLocation().getBlock().getRelative(face);
-			if (block.getType() != Material.AIR){
+			if (Arrays.asList(Material.AIR, Material.GRASS, Material.VINE).contains(block.getType())){
 				continue;
 			}
 			block.setType(Material.ICE);

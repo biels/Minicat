@@ -42,7 +42,7 @@ public class SpeedyArcher extends InherentSkill {
 		// TODO Auto-generated method stub
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
 		if(ranged && damager == getPlayer()){
-			int ticks = (int) (22 * 1 + 4 * Math.round(evt.getDamage()));
+			int ticks = (int) (22 * 1 + 5 * Math.round(evt.getDamage()));
 			damager.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 2));
 		}
 	}
