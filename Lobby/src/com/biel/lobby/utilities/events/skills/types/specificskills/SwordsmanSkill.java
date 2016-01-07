@@ -76,7 +76,7 @@ public class SwordsmanSkill extends InherentSkill {
 				//H
 				evt.setDamage(evt.getDamage() * getDmgMultiplier());
 				Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
-				Vector dir = rawDir.normalize().multiply(1.95).add(new Vector(0,0.42,0));
+				Vector dir = rawDir.normalize().multiply(1.95).add(new Vector(0,0.52,0));
 				damaged.setVelocity(dir);
 				damaged.playSound(damager.getLocation(), Sound.EAT, 1, 0.3F);
 				//ENDH

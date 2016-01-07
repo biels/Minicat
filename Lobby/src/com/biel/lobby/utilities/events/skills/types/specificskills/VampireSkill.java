@@ -55,10 +55,10 @@ public class VampireSkill extends InherentSkill{
 		// TODO Auto-generated method stub
 		super.onPlayerDeathByPlayer(evt, killed, killer);
 		//sendGlobalMessage("death");
-		
+		if(killer.getHealth() < 0.2 || killer.isDead())return;
 		boolean b = killed.getLocation().distance(killer.getLocation()) < 8.0;
 		//sendGlobalMessage("D: " + killer.getName() + " " + getPlayer().getName());
-		if (killer.getName().equals(getPlayer().getName()) && b){
+		if (killer.getName().equals(getPlayer().getName())){ //b
 			//sendGlobalMessage("Vampir effect");
 			Utils.healDamageable(getPlayer(), killer.getMaxHealth() * getProtectionRatio());
 			//getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) (20 * 2.8), 3));
