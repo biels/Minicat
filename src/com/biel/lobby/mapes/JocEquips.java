@@ -602,6 +602,10 @@ public abstract class JocEquips extends Joc {
 			Boolean same = areInSameTeam(damaged, damager);
 			if (same){evt.setCancelled(true);}
 		}
+		if(isUndeBaseProtection(damaged.getLocation().getBlock())){
+			damager.damage(evt.getDamage(), damaged);
+			Utils.healDamageable(damaged, (double) 5);
+		}
 	}
 	private boolean areInSameTeam(Player p1, Player p2) {
 		return obtenirEquip(p1).equals(obtenirEquip(p2));
