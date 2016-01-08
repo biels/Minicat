@@ -110,7 +110,7 @@ public class FrostArcherSkill extends InherentSkill {
 		faces.add(BlockFace.EAST);
 		for (BlockFace face : faces){			
 			Block block = damaged.getLocation().getBlock().getRelative(face);
-			if (Arrays.asList(Material.AIR, Material.GRASS, Material.VINE).contains(block.getType())){
+			if (!Arrays.asList(Material.AIR, Material.GRASS, Material.VINE).contains(block.getType())){
 				continue;
 			}
 			block.setType(Material.ICE);
