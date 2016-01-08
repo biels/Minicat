@@ -35,6 +35,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.material.Wool;
 import org.bukkit.util.Vector;
 
+import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.BielAPI.Utils.RecallUtils;
@@ -603,9 +604,10 @@ public abstract class JocEquips extends Joc {
 			if (same){evt.setCancelled(true);}
 		}
 		if(isUndeBaseProtection(damaged.getLocation().getBlock())){
-			damager.damage(evt.getDamage(), damaged);
+			//damager.damage(evt.getDamage(), damaged);
+			evt.setDamage(0);
 			Utils.healDamageable(damaged, (double) 5);
-			damager.setVelocity(new Vector(0, 3, 0));
+			damager.setVelocity(new Vector(0, GUtils.NombreEntre(0, 4), 0));
 			sendPlayerMessage(damager, ChatColor.GRAY + "Atac a la base no permès. El mal retorna a l'emisor, bon viatge.");
 		}
 	}
