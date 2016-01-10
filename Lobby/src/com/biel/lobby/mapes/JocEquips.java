@@ -51,7 +51,8 @@ import com.google.common.collect.Lists;
 public abstract class JocEquips extends Joc {
 	private boolean equipsBloquejats = false;
 	public ArrayList<Equip> Equips = new ArrayList<Equip>();
-
+	public enum TeamGenerationMode{DEFAULT, RANDOM, BALANCED, CUSTOM}
+	public TeamGenerationMode generationMode = TeamGenerationMode.DEFAULT;
 	public JocEquips() {
 		super();
 	}
@@ -72,7 +73,11 @@ public abstract class JocEquips extends Joc {
 	}
 	@Override
 	protected void customJocIniciat() {
-		if(false)ferEquipsEquilibrats();
+		if(generationMode == TeamGenerationMode.DEFAULT)ferEquipsEquilibrats();
+		if(generationMode == TeamGenerationMode.CUSTOM && getPlayersOutOfTeam().size() != 0){
+			sendGlobalMessage("Mode selecció d'equips personalitzats, siusplau, seleccioneu els vostres equips abans de començar la partida.");
+			anunciarEquips(null);
+		}
 		anunciarEquips(null);	
 		fixarSpawns();
 		//establirColorsNoms();
@@ -366,6 +371,7 @@ public abstract class JocEquips extends Joc {
 	public void resetTeams(){
 		initTeams();
 		sendGlobalMessage(ChatColor.DARK_BLUE + "Els equips han estat resetejats.");
+		generationMode = TeamGenerationMode.DEFAULT;
 	}
 	public Double getTeamSize(){
 		return (getPlayers().size() / (double) Equips.size());
@@ -384,12 +390,13 @@ public abstract class JocEquips extends Joc {
 			if(!reassignar && obtenirEquip(p) != null)continue;
 			if (next_team > Equips.size() - 1) {
 				next_team = 0;
-			}				
+			}
 			Equip eq = Equips.get(next_team);
 			if(eq.getPlayers().size() >= Math.ceil(getTeamSize()))continue;
 			establirEquipJugador(p, eq);
 			next_team++;			
 		}
+		generationMode = TeamGenerationMode.RANDOM;
 	}
 	public void ferEquipsEquilibrats(){
 		int cycles = 10 + getPlayers().size() * 25;
@@ -415,6 +422,7 @@ public abstract class JocEquips extends Joc {
 		final List<List<Player>> finalTeams = bestTeams;
 		if(finalTeams != null)finalTeams.forEach(t -> t.forEach(p -> establirEquipJugador(p, Equips.get(finalTeams.indexOf(t)))));
 		sendGlobalMessage("D: " + getAvgNumericDeviation());
+		generationMode = TeamGenerationMode.BALANCED;
 	}
 	public static double variance(List<Double> values){
 		double avg = values.stream().mapToDouble(v -> v).average().orElse(0);
@@ -461,6 +469,10 @@ public abstract class JocEquips extends Joc {
 				if (pos != 26){
 					Equip e = Equips.get(pos);
 					establirEquipJugador(ply, e);
+					if(generationMode != TeamGenerationMode.CUSTOM){
+						generationMode = TeamGenerationMode.CUSTOM;
+						sendGlobalMessage(ChatColor.YELLOW + ply.getName() + " ha seleccionat un equip. Mode selecció d'equips personalitzats, seleccioneu els vostres equips.");
+					}
 				}else{
 					ply.sendMessage("El mode espectador no està disponible");
 					event.setWillClose(false);
@@ -489,6 +501,7 @@ public abstract class JocEquips extends Joc {
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
 				if (!isEquipsBloquejats() || ply.isOp()){
 					openTemSelectionMenu(ply, ply, "Unir-se a l'equip...");
+					
 				}else{
 					ply.sendMessage("No pots seleccionar l'equip. Equips bloquejats.");
 				}
@@ -502,13 +515,20 @@ public abstract class JocEquips extends Joc {
 			}
 		});
 		inventory.setItem(3, button2.getItemStack());
-//		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.EMERALD_BLOCK), ChatColor.GREEN + "Netejar equips"), ply, new ItemButton.OptionClickEventHandler() {
-//			@Override
-//			public void onOptionClick(ItemButton.OptionClickEvent event) {
-//				resetTeams();
-//			}
-//		});
-		//inventory.setItem(4, button3.getItemStack());
+		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), ChatColor.YELLOW + "Equips aleatoris"), ply, new ItemButton.OptionClickEventHandler() {
+			@Override
+			public void onOptionClick(ItemButton.OptionClickEvent event) {
+				ferEquipsAleatoris(true);
+			}
+		});
+		inventory.setItem(4, button3.getItemStack());
+		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.EMERALD_BLOCK), ChatColor.GREEN + "Netejar equips"), ply, new ItemButton.OptionClickEventHandler() {
+			@Override
+			public void onOptionClick(ItemButton.OptionClickEvent event) {
+				resetTeams();
+			}
+		});
+		inventory.setItem(5, button4.getItemStack());
 //		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BONE), ChatColor.GREEN + "Establir equip"), ply, new ItemButton.OptionClickEventHandler() {
 //			@Override
 //			public void onOptionClick(ItemButton.OptionClickEvent event) {

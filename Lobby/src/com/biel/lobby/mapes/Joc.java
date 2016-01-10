@@ -485,8 +485,10 @@ public abstract class Joc extends MapaResetejable {
 			org.bukkit.entity.Entity proj = evt.getDamager();
 			if(proj instanceof Snowball){
 				Snowball ball = (Snowball) proj;
+				evt.setCancelled(true);
 				damaged.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 1, 0));
 				damaged.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, 0));
+				damaged.setVelocity(new Vector(0, 0.8, 0));
 				damager.teleport(damaged.getEyeLocation().add(0, 1, 0), TeleportCause.PLUGIN);
 				GUtils.healDamageable(damager, 4.5D);
 			}
