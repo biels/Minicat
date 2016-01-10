@@ -94,11 +94,13 @@ public class Torres extends JocEquips {
 		Equip e = obtenirEquip(ply);
 		PlayerInfo i = getPlayerInfo(ply);
 		int v = i.getValue();
-		items.add(new ItemStack((v > 125 ? Material.DIAMOND_SWORD : Material.IRON_SWORD), 1));
-		if(v > 140)items.add(new ItemStack(Material.DIAMOND_AXE, 1));
+		items.add(new ItemStack((v > 120 ? Material.DIAMOND_SWORD : Material.IRON_SWORD), 1));
+		//if(v > 140)items.add(new ItemStack(Material.DIAMOND_AXE, 1));
+		if(v > 140)items.add(getTurretItem());
 		items.add((v > 60 ? new ItemStack(Material.DIAMOND_CHESTPLATE, 1) : Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e)));
-		items.add((v > 40 ? new ItemStack(Material.IRON_HELMET, 1) : Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e)));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
+		items.add((v > 30 ? new ItemStack(Material.IRON_HELMET, 1) : Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e)));
+		items.add((v > 90 ? new ItemStack(Material.DIAMOND_BOOTS, 1) : Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e)));
+
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
 		arc.addEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
@@ -114,6 +116,7 @@ public class Torres extends JocEquips {
 		items.add(itemstack);
 		items.add(arc);
 		items.add(new ItemStack(Material.ARROW, 1));
+		items.add(new ItemStack(Material.FLINT_AND_STEEL, 1));
 		return items;
 	}
 	@Override
@@ -537,6 +540,7 @@ sendGlobalMessage("GA");
 				Material t = b.getType();
 				if(t == Material.GRASS || t == Material.DIRT || t == Material.GRAVEL)iterator.remove();
 			}
+			getPlayers().stream().filter(p -> p.getLocation().distance(e.getLocation()) < 10).forEach(p -> {p.damage(10); p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 8 * 20, 1));});
 		}
 
 	}
@@ -544,7 +548,11 @@ sendGlobalMessage("GA");
 	protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
 		// TODO Auto-generated method stub
 		super.onBlockBreak(evt, blk);
-		if(blk.getType() == Material.TNT)evt.setCancelled(false);
+		if(blk.getType() == Material.TNT){
+			evt.setCancelled(false);
+			evt.getPlayer().damage(6F);
+		}
+		
 	}
 	@Override
 	protected void onBlockPlace(BlockPlaceEvent evt, Block blk) {

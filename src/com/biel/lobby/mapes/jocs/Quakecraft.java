@@ -123,7 +123,7 @@ public class Quakecraft extends JocScoreRace {
 	}
 	private Location getOptimalSpawnLoc(Player pl) {
 		ArrayList<Location> locs = pMapaActual().ObtenirLocations("s", world); //Llista spawns
-		Location l = locs.stream().sorted((l1, l2) -> (int) (GUtils.getNearestEntity(l2, getEnemies(pl)).getLocation().distanceSquared(l2) - GUtils.getNearestEntity(l1, getEnemies(pl)).getLocation().distanceSquared(l1))).findFirst().get();
+		Location l = locs.stream().sorted((l1, l2) -> (int) (GUtils.getNearestEntity(l2, getEnemies(pl)).getLocation().distanceSquared(l2) - GUtils.getNearestEntity(l1, getEnemies(pl)).getLocation().distanceSquared(l1))).skip(Utils.NombreEntre(0, 3)).findFirst().get();
 		l.add(0, 2, 0);
 		return l;	
 	}

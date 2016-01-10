@@ -651,7 +651,7 @@ public class Parkour extends JocScoreCombo{
 		}
 		public class ZigZagBubble extends ParkourBubble{
 			//Single block with a torch
-			int n = Utils.NombreEntre(3, 7);
+			int n = Utils.NombreEntre(3, 6);
 			@Override
 			public void generate() {
 				for (int i = 0; i < n; i++) {
@@ -677,12 +677,16 @@ public class Parkour extends JocScoreCombo{
 			public void generate() {
 				Vector c = getForward();
 				Vector d = getBackRightLeftRandom();
+				int t = GUtils.NombreEntre(0, 2);
 				boolean counterClockwise = d == getLeft();
 				for (int i = 0; i < n; i++) {
 					Vector lc = c.clone().add(getUp().multiply(i));
 					blocks.add(lc);materials.add(Material.QUARTZ_BLOCK);
 					Vector dlc = lc.clone().add(d);
-					blocks.add(dlc);materials.add(Material.QUARTZ_BLOCK);
+					Material mat = Material.QUARTZ_BLOCK;
+					if(t == 1)mat = Material.LADDER;
+					if(t == 1)if(GUtils.Possibilitat(38))mat = Material.LADDER;
+					blocks.add(dlc);materials.add(mat);
 					checkpoints.add(new Checkpoint(dlc));
 					d = GUtils.rotateVector(d, getUp(), (Math.PI/2.0) * (!counterClockwise ? -1 : 1));
 				}

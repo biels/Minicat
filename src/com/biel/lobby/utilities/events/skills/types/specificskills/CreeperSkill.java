@@ -73,7 +73,7 @@ public class CreeperSkill extends InherentSkill {
 		getWorld().playSound(c, Sound.EXPLODE, 0.8F, 1.0F);
 		getWorld().playSound(c, Sound.CREEPER_HISS, 0.8F, 1.0F);
 		//evt.getDrops().add(new ItemStack(Material.))
-		Consumer<? super Player> action = p -> p.damage(2 + 30 / (c.distance(p.getEyeLocation())), killed);
+		Consumer<? super Player> action = p -> p.damage(2 + 6.5 / (c.distance(p.getEyeLocation())), killed); //TODO Add kill based modifier
 		Predicate<? super Player> predicate = p -> getGame().areEnemies(killed, p);
 		nearbyPlayers.stream().filter(predicate).forEach(action.andThen(p -> ((Entity) p).setFireTicks(40)));
 		
