@@ -133,7 +133,9 @@ public abstract class JocTeamDominion extends JocEquips {
 			EquipDominion ekd = (EquipDominion) obtenirEquip(killed);
 			if(ekr != null && ekd != null){
 				if(ekr != ekd){
-					int punishPoints = (int) Math.ceil(30 * Math.sqrt(ekd.getPercent() / 100) * getBalancingMultiplier(ekr));					
+					int basePunish = 14 - getPlayers().size();
+					if(basePunish < 0)basePunish = 0;
+					int punishPoints = (int) Math.ceil(basePunish * Math.sqrt(ekd.getPercent() / 100) * getBalancingMultiplier(ekr));					
 					ekd.setHealth(ekd.getHealth() - punishPoints);
 					if(punishPoints != 0)evt.setDeathMessage(evt.getDeathMessage() + ChatColor.GOLD + " [-" + Integer.toString(punishPoints) + "]");
 				}
