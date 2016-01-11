@@ -1215,6 +1215,7 @@ public abstract class Joc extends MapaResetejable {
 		}
 		lobbyProgressAnoouncerTick();
 		registerTimestamps(false);
+		s.tickPool();
 	}
 	public Long getHeartbeatCount() {
 		return heartbeatCount;
