@@ -27,9 +27,15 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	}
 	public abstract String getName();
 	public abstract String getDescription();
+	/**
+	 * @return The value associated with this effect. Set to -1 to disable.
+	 */
 	public double getValue() {
 		return value;
 	}
+	/**
+	 * @param value The new value to associate with this effect. Set to -1 to disable.
+	 */
 	public void setValue(double value) {
 		this.value = value;
 	}
@@ -53,6 +59,9 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	public void setType(StatusEffectType type) {
 		this.type = type;
 	}
+	/**
+	 * @return Whether the effect is modal or not.
+	 */
 	public boolean isModal() {
 		return modal;
 	}
@@ -90,6 +99,9 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 		}
 		return c;
 	}
+	/**
+	 * @return The display text. Override to change or override to null to disable. 
+	 */
 	public String getDisplayText() { //Per deshabilitar sobreescriure a null
 		String cdString = getRemainingSecondsString();
 		String valueString = getValueString();
@@ -136,11 +148,23 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	private static double getTickSpacing(){
 		return 20;
 	}
+	/**
+	 * @return Whether this element is marked for removal or it is still valid
+	 */
 	public boolean hasExpired(){
 		if(remainingTicks == -1)return false;
 		return remainingTicks <= 0;
 	}
+	/**
+	 * Sets remaining ticks to 0 thus removing this StatusEffect
+	 */
+	public void expire(){
+		setRemainingTicks(0);
+	}
 	//GAME-WRAPPING
+		/**
+		 * @return The underlying game instance
+		 */
 		protected Joc getGame(){
 			Mapa mapWherePlayerIs = Com.getPlugin().gest.getMapWherePlayerIs(getPlayer());
 			if(mapWherePlayerIs == null)return null;
@@ -164,7 +188,18 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 		protected void sendEffectMessage(Player p, String message){
 			sendPlayerMessage(p, ChatColor.DARK_AQUA + "{" + getName() + "} > " + ChatColor.GRAY + message);
 		}
+		/**
+		 * @param p The player to get the info from
+		 * @return Wraps the getPlayerInfo() method from the Game class
+		 */
 		public PlayerInfo getPlayerInfo(Player p) {
 			return getGame().getPlayerInfo(p);
 		}
+		/**
+		 * @return Gets the info of the player owning this Effect
+		 */
+		public PlayerInfo getPlayerInfo() {
+			return getGame().getPlayerInfo(getPlayer());
+		}
+		
 }

@@ -68,6 +68,9 @@ public abstract class Skill extends PlayerWorldEventBus {
 		if (player == null)return null;
 		return getGame().getPlayerInfo(p);
 	}
+	public PlayerInfo getPlayerInfo() {
+		return getPlayerInfo(getPlayer());
+	}
 	//-OLD-
 	public Material getMaterial(){
 		return Material.DIAMOND;

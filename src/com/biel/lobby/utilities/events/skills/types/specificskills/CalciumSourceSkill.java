@@ -36,7 +36,7 @@ public class CalciumSourceSkill extends InherentSkill {
 		return 2.25D;
 	}
 	public double getProtectionRatio(){
-		return 0.12D;
+		return 0.65D;
 	}
 	@Override
 	public String getDescription() {

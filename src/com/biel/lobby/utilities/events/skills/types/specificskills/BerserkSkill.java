@@ -44,7 +44,7 @@ public class BerserkSkill extends InherentSkill {
 
 	private static double getRatio() {
 		// TODO Auto-generated method stub
-		return 0.022;
+		return 0.023;
 	}
 	@Override
 	protected void onEntityDamageByEntity(EntityDamageByEntityEvent evt, Entity damaged, Entity damager) {
