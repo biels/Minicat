@@ -18,6 +18,18 @@ public abstract class CooldownSkill extends Skill {
 	public void resetCooldown(){
 		cdRemainingTicks = (int) (Math.round(getCDSeconds() * 20));
 	}
+	/**
+	 * Skips the entire cooldown
+	 */
+	public void skipCooldown(){
+		cdRemainingTicks = 0;
+	}
+	/** Skips part of the cooldown
+	 * @param m The multiplier used to skip part of the cooldown. To skip half of the remaining cooldown, set to 0.5
+	 */
+	public void skipCooldown(double m){
+		cdRemainingTicks = (int) (cdRemainingTicks * m);
+	}
 	public boolean isCDAvaliable(){
 		return cdRemainingTicks == 0;
 	}

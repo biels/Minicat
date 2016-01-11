@@ -14,6 +14,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.util.Vector;
 
 import com.biel.lobby.mapes.Joc.PlayerInfo;
@@ -50,8 +51,9 @@ public class DeflectorSkill extends InherentSkill {
 	public String getDescription() {
 		// TODO Auto-generated method stub
 		String modifier1 = ChatColor.GREEN + "" + getDmgMultiplier() * 100 + ChatColor.WHITE;
+		String modifier3 = ChatColor.GREEN + "" + getDmgMultiplier() * 100 + ChatColor.WHITE;
 		String modifier2 = ChatColor.GREEN + "" + 20 + ChatColor.WHITE;
-		return "Retorna un atac a l'enemic si no ha estat atacat durant els últims "+ modifier2 + "s amplificant-lo un" + modifier1 + "%." ;
+		return "Retorna un atac a l'enemic cada "+ modifier2 + "s amplificant-lo un" + modifier1 + "% " + "s o un" + modifier3 + "% si el jugador bloqueja amb l'espasa. L'efecte es restaura al matar.";
 	}
 
 	private int getStacks(){
@@ -61,57 +63,33 @@ public class DeflectorSkill extends InherentSkill {
 		stacks = value;
 	}
 	@Override
-	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
-			Player damaged, Player damager, boolean ranged) {
+	public void tick() {
 		// TODO Auto-generated method stub
-		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-		Player p = getPlayer();
-		boolean blk = p.isBlocking();
-		if(damaged != p)return;
-		
-		//sendGlobalMessage(getName() + id +  ": " + evt.getEventName());
-		int markTicks = 20 * (9 + (blk ? 6 : 0));
-		//if(ef.getRemainingTicks() > markTicks - 10){return;}
-		
+		super.tick();
 		if(tryUseCD()){
-			//H
-			PlayerInfo di = getPlayerInfo(damaged);
-			di.removeStatusEffect(DeflectorStatusEffect.class);
-			damager.damage(evt.getDamage() * getDmgMultiplier(), damaged);
-			evt.setCancelled(true);
-			Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
-			Vector dir = rawDir.normalize().multiply(-1.35).add(new Vector(0,0.42,0));
-			damager.setVelocity(dir);
-			//ENDH
-			getWorld().playSound(damager.getLocation(), Sound.ZOMBIE_METAL, 1.2F, 0.8F);
-			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
-			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());   				
-
+			getPlayerInfo().addStatusEffect(new DeflectorStatusEffect(getPlayer()));
 		}
-
 	}
-	
+	@Override
+	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
+		// TODO Auto-generated method stub
+		super.onPlayerDeathByPlayer(evt, killed, killer);
+		if(killer == getPlayer()){
+			skipCooldown();
+		}
+	}
 	public double getDmgMultiplier() {
-		return 2.0;
+		return 1.2;
 	}
-	public DeflectorStatusEffect getAssociatedEffect(){
-		DeflectorStatusEffect e;
-		PlayerInfo i = getPlayerInfo(getPlayer());
-		if(i.hasStatusEffect(DeflectorStatusEffect.class)){
-			e = i.getStatusEffect(DeflectorStatusEffect.class);
-		}else{
-			e = new DeflectorStatusEffect(getPlayer());
-			e.setValue(1);
-			i.addStatusEffect(e);
-		}
-		return e;
+	public double getDmgMultiplierBlk() {
+		return 2.35;
 	}
+
 	public class DeflectorStatusEffect extends StatusEffect{
 
 		public DeflectorStatusEffect(Player ply) {
 			super(ply);
-			setType(StatusEffectType.SKILL_TRAY);
-			setMaxValue(5);
+			setType(StatusEffectType.BUFF);
 		}
 
 		@Override
@@ -122,8 +100,31 @@ public class DeflectorSkill extends InherentSkill {
 		@Override
 		public String getDescription() {
 			// TODO Auto-generated method stub
-			return "Càrregues per poder retornar un atac";
+			return "El següent atac que rebis serà retornat";
 		}
-
+		@Override
+		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager,
+				boolean ranged) {
+			// TODO Auto-generated method stub
+			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+			//H
+			PlayerInfo di = getPlayerInfo(damaged);
+			//di.removeStatusEffect(DeflectorStatusEffect.class);
+			evt.setCancelled(true);
+			boolean blocking = getPlayer().isBlocking();
+			damager.damage(evt.getDamage() * (blocking ? getDmgMultiplierBlk() : getDmgMultiplier()), damaged);
+			Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
+			Vector dir = rawDir.normalize().multiply(-1.35).add(new Vector(0,0.42,0));
+			damager.setVelocity(dir);
+			//ENDH
+			getWorld().playSound(damager.getLocation(), Sound.ZOMBIE_METAL, 1.2F, 0.8F);
+			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
+			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());
+			if(blocking)getWorld().playEffect(damager.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
+			if(blocking)getWorld().playEffect(damaged.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
+			if(blocking)sendSkillMessage("Deflexió crítica!");
+			//Remove after use
+			expire();
+		}
 	}
 }
