@@ -98,6 +98,13 @@ public abstract class Joc extends MapaResetejable {
 		//Bukkit.broadcastMessage("Class Joc Constructor");		
 	}
 	@Override
+	protected void finalize() throws Throwable {
+		// TODO Auto-generated method stub
+		s.clear();
+		super.finalize();
+		System.out.println("La instància de " + getGameName() + " s'ha destruït");
+	}
+	@Override
 	public void initialize() {
 		super.initialize();
 		world.setPVP(false);
@@ -617,12 +624,7 @@ public abstract class Joc extends MapaResetejable {
 		return Duration.ofSeconds((long) Com.getDataAPI().getAvgGameLength(Com.getDataAPI().getGameId(getGameName())));
 		
 	}
-	@Override
-	protected void finalize() throws Throwable {
-		// TODO Auto-generated method stub
-		super.finalize();
-		//System.out.println("La instància de " + getGameName() + " s'ha destruït");
-	}
+	
 	double lastProgressETA = 0;
 	public void lobbyProgressAnoouncerTick(){
 		double gameProgressETA = getGameProgressETA() * 100;
@@ -1203,6 +1205,7 @@ public abstract class Joc extends MapaResetejable {
 		for(PlayerInfo i : InfoStorage){
 			i.ultraTick();
 		}
+		s.tickPool();
 	}
 	private void killHeartbeat(){
 		Bukkit.getServer().getScheduler().cancelTask(heartbeatId);
@@ -1215,7 +1218,6 @@ public abstract class Joc extends MapaResetejable {
 		}
 		lobbyProgressAnoouncerTick();
 		registerTimestamps(false);
-		s.tickPool();
 	}
 	public Long getHeartbeatCount() {
 		return heartbeatCount;

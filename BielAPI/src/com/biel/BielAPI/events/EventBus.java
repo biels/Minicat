@@ -45,6 +45,12 @@ public class EventBus { //Bus d'esdeveniments del joc
 	public void destroyEventBus(){
 		destroyed = true;
 	}
+	@Override
+	protected void finalize() throws Throwable {
+		// TODO Auto-generated method stub
+		destroyEventBus();
+		super.finalize();
+	}
 	public boolean isDestroyed() {
 		return destroyed;
 	}

@@ -34,7 +34,7 @@ public class DeflectorSkill extends InherentSkill {
 	@Override
 	public double getCDSeconds() {
 		// TODO Auto-generated method stub
-		return 20;
+		return 5;
 	}
 	@Override
 	public Material getMaterial() {
@@ -51,7 +51,7 @@ public class DeflectorSkill extends InherentSkill {
 	public String getDescription() {
 		// TODO Auto-generated method stub
 		String modifier1 = ChatColor.GREEN + "" + getDmgMultiplier() * 100 + ChatColor.WHITE;
-		String modifier3 = ChatColor.GREEN + "" + getDmgMultiplier() * 100 + ChatColor.WHITE;
+		String modifier3 = ChatColor.GREEN + "" + getDmgMultiplierBlk() * 100 + ChatColor.WHITE;
 		String modifier2 = ChatColor.GREEN + "" + 20 + ChatColor.WHITE;
 		return "Retorna un atac a l'enemic cada "+ modifier2 + "s amplificant-lo un" + modifier1 + "% " + "s o un" + modifier3 + "% si el jugador bloqueja amb l'espasa. L'efecte es restaura al matar.";
 	}
@@ -67,6 +67,7 @@ public class DeflectorSkill extends InherentSkill {
 		// TODO Auto-generated method stub
 		super.tick();
 		if(tryUseCD()){
+			//sendSkillMessage("Deflector");
 			getPlayerInfo().addStatusEffect(new DeflectorStatusEffect(getPlayer()));
 		}
 	}

@@ -36,6 +36,7 @@ public abstract class Skill extends PlayerWorldEventBus {
 	}
 	public void tick() {
 		//TICK!!
+		//Auto-destroy on game destroy
 	}
 	protected int getTickSpacing(){
 		return 20;
