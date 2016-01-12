@@ -92,7 +92,7 @@ public class GravityBendingSkill extends InherentSkill {
 		@Override
 		public String getName() {
 			// TODO Auto-generated method stub
-			return "Gravetat x4";
+			return "Gravetat x3";
 		}
 
 		@Override
@@ -119,7 +119,7 @@ public class GravityBendingSkill extends InherentSkill {
 							Utils.NombreEntre(0, 8));
 					i = i - 1;
 				}
-				sendEffectMessage("x4 mal de caiguda");
+				sendEffectMessage("x3 mal de caiguda");
 			}
 		}
 	}

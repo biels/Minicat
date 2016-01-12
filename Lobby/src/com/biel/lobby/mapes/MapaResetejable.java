@@ -193,7 +193,12 @@ public abstract class MapaResetejable extends Mapa {
 		if(m == MapMode.MULTIPLE)return new File(FolderMaps + "/" + getGameName() + "/" + getActiveMultipleMapName());
 		return null;
 	}
+	/**
+	 * @return The name of the current map. To get the game's name, please use getGameName().
+	 */
 	public String getActiveMultipleMapName() {
+		MapMode m = getMapMode();
+		if(m == MapMode.SINGLE)return getGameName();
 		return getMultiWorldList().get(multiMapId);
 	}
 	public Boolean getEditMode() {

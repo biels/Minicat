@@ -30,12 +30,18 @@ public abstract class CooldownSkill extends Skill {
 	public void skipCooldown(double m){
 		cdRemainingTicks = (int) (cdRemainingTicks * m);
 	}
+	protected int getCDRemainigTicks(){
+		return cdRemainingTicks;
+	}
+	protected double getCDRemainigSeconds(){
+		return cdRemainingTicks / (double) getTickSpacing();
+	}
 	public boolean isCDAvaliable(){
 		return cdRemainingTicks == 0;
 	}
 	private void doCDTick(){
 		if(cdRemainingTicks == 0)return;
-		if(cdRemainingTicks > 0)cdRemainingTicks -= getTickSpacing();
+		if(cdRemainingTicks > 0)cdRemainingTicks--;
 		if(cdRemainingTicks < 0)cdRemainingTicks = 0;
 	}
 	protected boolean tryUseCD(){

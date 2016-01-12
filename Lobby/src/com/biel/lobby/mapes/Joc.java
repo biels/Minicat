@@ -93,6 +93,8 @@ public abstract class Joc extends MapaResetejable {
 	private int heartbeatId = -1;
 	private Long announceCount = 0L;
 	private int announceId = -1;
+	private ArrayList<Integer> handledBukkitSchedulerTasks = new ArrayList<Integer>();
+	
 	public Joc() {
 		super();
 		//Bukkit.broadcastMessage("Class Joc Constructor");		
@@ -100,7 +102,8 @@ public abstract class Joc extends MapaResetejable {
 	@Override
 	protected void finalize() throws Throwable {
 		// TODO Auto-generated method stub
-		s.clear();
+		clearExternals();
+		
 		super.finalize();
 		System.out.println("La instància de " + getGameName() + " s'ha destruït");
 	}
@@ -113,6 +116,7 @@ public abstract class Joc extends MapaResetejable {
 		establirTempsInicial(); //Pre-game lobby time
 		registerSkills();
 		scheduleHeartbeat();
+		scheduleAnnouncer();
 	}
 	public void setDefaultGameRules(){
 		world.setGameRuleValue("doDaylightCycle", "false");
@@ -149,6 +153,20 @@ public abstract class Joc extends MapaResetejable {
 	public boolean JocEnMarxa(){
 		return JocIniciat && !JocFinalitzat;
 	}
+	/**
+	 * Method to clear external elements under any quit circumstance. For example this can be used to clear tasks;
+	 */
+	public void clearExternals(){
+		//Override to use
+		cancelAllTasks();
+		s.clear();
+	}
+	private void cancelAllTasks(){
+		handledBukkitSchedulerTasks.forEach(tId -> Bukkit.getScheduler().cancelTask(tId));
+	}
+	public void handleTask(int tId){
+		handledBukkitSchedulerTasks.add(tId);
+	}
 	private Long establirTempsInicial() {
 		return startTimeMillis = System.currentTimeMillis();
 	}
@@ -164,8 +182,7 @@ public abstract class Joc extends MapaResetejable {
 		//---
 		world.setPVP(false);
 		customJocFinalitzat();
-		killHeartbeat();
-		killAnnouncer();
+		clearExternals();
 		if(!won)matchData.registerEnd(-1); //Tie / no winner
 		registerTimestamps(true);
 		//---
@@ -495,8 +512,8 @@ public abstract class Joc extends MapaResetejable {
 				evt.setCancelled(true);
 				damaged.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 1, 0));
 				damaged.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, 0));
-				damaged.setVelocity(new Vector(0, 0.8, 0));
-				damager.teleport(damaged.getEyeLocation().add(0, 1, 0), TeleportCause.PLUGIN);
+				//damaged.setVelocity(new Vector(0, 0.1, 0));
+				damager.teleport(damaged.getEyeLocation().add(0, 0.5, 0), TeleportCause.PLUGIN);
 				GUtils.healDamageable(damager, 4.5D);
 			}
 		}
@@ -1199,6 +1216,7 @@ public abstract class Joc extends MapaResetejable {
 				ultraHeartbeat();
 			}
 		}, 1, 1);
+		handleTask(heartbeatId);
 	}
 	public void ultraHeartbeat(){
 		ultraHeartbeatCount++;
@@ -1237,13 +1255,15 @@ public abstract class Joc extends MapaResetejable {
 				announce();
 			}
 		}, 20 * 20, 20 * 75);
+		handleTask(announceId);
 	}
-	private void killAnnouncer(){
-		Bukkit.getServer().getScheduler().cancelTask(announceId);
-	}
+
 	public void announce(){
 		announceCount++;
+		String pref = "[" + Com.getMinicatString() + ChatColor.WHITE + "] > " + ChatColor.GRAY;
+		sendGlobalMessage(pref + "Joc: " + getGameName() + ", Mapa: " + getActiveMultipleMapName() + ", Progrés: " + getGameProgressETA());
 	}
+	
 	public Long getAnnounceCount() {
 		return announceCount;
 	}
