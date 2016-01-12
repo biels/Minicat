@@ -35,6 +35,9 @@ public class SkillPool {
 			skills.remove(bus);
 		}
 	}
+	public void clear(){
+		skills.clear();
+	}
 	public ArrayList<Skill> getSkillsForPlayer(Player ply){
 		ArrayList<Skill> r = new ArrayList<Skill>();
 		for(Skill s : skills){

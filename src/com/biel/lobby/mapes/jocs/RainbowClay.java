@@ -96,7 +96,7 @@ public class RainbowClay extends JocObjectius {
 		// TODO Auto-generated method stub
 
 	}
-
+	
 	@Override
 	protected void customJocFinalitzat() {
 		super.customJocFinalitzat();

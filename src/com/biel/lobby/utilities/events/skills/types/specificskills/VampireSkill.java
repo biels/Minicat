@@ -36,7 +36,7 @@ public class VampireSkill extends InherentSkill{
 	}
 	private static double getProtectionRatio() {
 		// TODO Auto-generated method stub
-		return 0.45;
+		return 0.30;
 	}
 
 	@Override
