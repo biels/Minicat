@@ -181,6 +181,9 @@ public class Com {
 		}
 		return l;
 	}
+	public static String getMinicatString(){
+		return ChatColor.YELLOW + "MINICAT";
+	}
 	public static void playMinicatAnimation(Player p){
 		ArrayList<String> f = new ArrayList<String>();
 		String bold = "";

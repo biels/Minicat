@@ -58,7 +58,6 @@ import com.biel.lobby.utilities.events.skills.Skill;
 import com.biel.lobby.utilities.events.skills.types.specificskills.CalciumSourceSkill;
 
 public class RainbowClay extends JocObjectius {
-	int tid;
 	public RainbowClay() {
 		super();
 
@@ -101,7 +100,6 @@ public class RainbowClay extends JocObjectius {
 	protected void customJocFinalitzat() {
 		super.customJocFinalitzat();
 		setBlockBreakPlace(false);
-		plugin.getServer().getScheduler().cancelTask(tid);
 	}
 
 	@Override
@@ -444,7 +442,7 @@ public class RainbowClay extends JocObjectius {
 	}
 	
 	public void ProgTask(){
-		tid = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+		int tId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run() {
 				if (getWorld() == null){return;}
 				Cuboid cub = pMapaActual().ObtenirCuboid("RegC", getWorld());
@@ -455,7 +453,8 @@ public class RainbowClay extends JocObjectius {
 					}
 				}
 			}
-		}, 20 * 8, 3 * 20 * 10); // *12
+		}, 20 * 8, 2 * 20 * 10); // *12
+		handleTask(tId);
 	}
 	
 	public void OmplirCofre(Block blk){

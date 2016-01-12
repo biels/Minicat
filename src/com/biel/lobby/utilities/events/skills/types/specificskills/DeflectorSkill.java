@@ -67,7 +67,7 @@ public class DeflectorSkill extends InherentSkill {
 		// TODO Auto-generated method stub
 		super.tick();
 		if(tryUseCD()){
-			//sendSkillMessage("Deflector");
+			sendSkillMessage("Deflector seconds: " + getCDRemainigSeconds());
 			getPlayerInfo().addStatusEffect(new DeflectorStatusEffect(getPlayer()));
 		}
 	}
