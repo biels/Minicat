@@ -346,6 +346,7 @@ public abstract class Joc extends MapaResetejable {
 		s.registerSkill(new SpeedyArcher(null));
 		s.registerSkill(new DiamondCoreSkill(null));
 		s.registerSkill(new CreeperSkill(null));
+		s.registerSkill(new ExternalCombustionEngine(null));
 	}
 	protected abstract ArrayList<ItemStack> getStartingItems(Player ply);
 	protected abstract void teletransportarTothom();
@@ -1057,8 +1058,6 @@ public abstract class Joc extends MapaResetejable {
 		}
 		public void ultraTick(){		
 			updateSpeedSlowPotionEffects();
-		}
-		public void tick(){
 			//getPlayer().sendMessage("Ping:" + ChatColor.GREEN + "" + CBUtils.getPing(getPlayer()));
 			for(StatusEffect e : effects){
 				e.tick();
@@ -1066,6 +1065,9 @@ public abstract class Joc extends MapaResetejable {
 			removeExpiredEffects();
 			updatePlayerActionBar();
 			//updateSpeedSlowPotionEffects();
+		}
+		public void tick(){
+			
 		}
 		public void updateSpeedSlowPotionEffects(){
 			//Bukkit.broadcastMessage("Done");

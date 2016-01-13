@@ -11,7 +11,7 @@ public abstract class CooldownSkill extends Skill {
 	private int cdRemainingTicks = 0; 
 	public CooldownSkill(Player ply) {
 		super(ply);
-		getAssociatedCDEffect(); //Initialize SE
+		//getAssociatedCDEffect(); //Initialize SE
 		// TODO Auto-generated constructor stub
 	}
 	public abstract double getCDSeconds();

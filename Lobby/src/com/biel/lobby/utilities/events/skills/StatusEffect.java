@@ -18,6 +18,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	private String ownerName;
 	private boolean modal = false;
 	private int modalRemainingTicks = -1; // -1 -> Never
+	private int ticksLived = 0;
 	public int id = Utils.NombreEntre(0, 100);
 	private StatusEffectType type = StatusEffectType.UNDEFINED;
 	public enum StatusEffectType{UNDEFINED, SKILL_TRAY, BUFF, DEBUFF}
@@ -123,20 +124,35 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 		}
 		return "";
 	}
+	/**
+	 * @return The remaining ticks for the effect to expire
+	 */
 	public int getRemainingTicks() {
 		return remainingTicks;
 	}
 	public void setRemainingTicks(int remainingTicks) {
 		this.remainingTicks = remainingTicks;
 	}
+	/**
+	 * @return The remaining seconds for the effect to expire
+	 */
 	public double getRemainingSeconds(){
 		return getRemainingTicks() / getTickSpacing();
+	}
+	public int getTicksLived() {
+		return ticksLived;
+	}
+	public boolean isNthTick(int nth){
+		return ticksLived % nth == 0;
 	}
 	@Override
 	public boolean isValid() {
 		// Quan arribi a 0 fora!
 		return remainingTicks == 0;
 	}
+	/**
+	 * Tick method called every tick (20 times a second) by ultraHeartbeat
+	 */
 	public void tick() {
 		if(remainingTicks == 0)return;
 		if(remainingTicks > 0)remainingTicks -= getTickSpacing();
@@ -144,12 +160,13 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 		if(modalRemainingTicks == 0)setModal(false);
 		if(modalRemainingTicks > 0)modalRemainingTicks -= getTickSpacing();
 		if(modalRemainingTicks < 0)modalRemainingTicks = 0;
+		ticksLived++;
 	}
 	private static double getTickSpacing(){
 		return 20;
 	}
 	/**
-	 * @return Whether this element is marked for removal or it is still valid
+	 * @return Whether this element is marked for removal or it is still valid, allowing -1 values to stay valid indefinitely
 	 */
 	public boolean hasExpired(){
 		if(remainingTicks == -1)return false;
