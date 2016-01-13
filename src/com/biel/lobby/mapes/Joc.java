@@ -1202,7 +1202,7 @@ public abstract class Joc extends MapaResetejable {
 	}
 	//	PVP
 	public Boolean areAllies(Player ply, Player ply2){
-		return false; //Default AllvAll
+		return ply.equals(ply2); //Default AllvAll
 	}
 	public Boolean areEnemies(Player ply, Player ply2){
 		return !areAllies(ply, ply2);
