@@ -149,6 +149,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	@Override
 	public boolean isValid() {
 		// TODO Auto-generated method stub
+		if(getGame() == null)return false;
 		return super.isValid() && !hasExpired() && getGame().getPlayers().contains(getPlayer());
 	}
 	/**
