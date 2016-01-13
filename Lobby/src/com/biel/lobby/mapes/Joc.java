@@ -1060,7 +1060,7 @@ public abstract class Joc extends MapaResetejable {
 			updateSpeedSlowPotionEffects();
 			//getPlayer().sendMessage("Ping:" + ChatColor.GREEN + "" + CBUtils.getPing(getPlayer()));
 			for(StatusEffect e : effects){
-				e.tick();
+				if(e.isValid())e.tick();
 			}
 			removeExpiredEffects();
 			updatePlayerActionBar();
