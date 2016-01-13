@@ -171,7 +171,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	 */
 	public boolean hasExpired(){
 		if(remainingTicks == -1)return false;
-		return remainingTicks <= 0;
+		return remainingTicks <= 0 && isValid();
 	}
 	/**
 	 * Sets remaining ticks to 0 thus removing this StatusEffect
