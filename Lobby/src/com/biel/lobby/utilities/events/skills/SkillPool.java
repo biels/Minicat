@@ -56,7 +56,7 @@ public class SkillPool {
 	}
 	public void tickPool(){ //Call from heartbeat
 		for(Skill s : skills){
-			s.tick();
+			if(s.isValid())s.tick();
 		}
 	}
 	public void registerSkill(Skill s){

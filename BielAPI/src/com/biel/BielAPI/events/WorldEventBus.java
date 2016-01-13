@@ -55,6 +55,7 @@ public class WorldEventBus extends EventBus {
 	}
 	@Override
 	protected Boolean verifyEvent(Event evt) {
+		if(!isValid())return false;
 		if (evt instanceof WorldEvent){
 			WorldEvent e = (WorldEvent)evt;
 			return e.getWorld() == getWorld();

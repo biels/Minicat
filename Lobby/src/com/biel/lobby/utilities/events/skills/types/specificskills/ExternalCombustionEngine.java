@@ -34,6 +34,7 @@ public class ExternalCombustionEngine extends InherentSkill {
 	public ExternalCombustionEngine(Player ply) {
 		super(ply);
 		// TODO Auto-generated constructor stub
+		resetCooldown();
 	}
 
 	@Override
@@ -116,21 +117,24 @@ public class ExternalCombustionEngine extends InherentSkill {
 		public void tick() {
 			// TODO Auto-generated method stub
 			super.tick();
-			//if(!isNthTick(2))return;
+			if(!isNthTick(10))return;
 			setValue(Math.max(0, Math.sqrt(livedTicks / 25 - 20)));
 			Player ply = getPlayer();
 			Location c = ply.getEyeLocation();
 			ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(c, 4.5);
-			getWorld().playEffect(c, Effect.MOBSPAWNER_FLAMES, 8);
+			if(isNthTick(15))getWorld().playEffect(ply.getLocation().add(0, -0.12, 0), Effect.MOBSPAWNER_FLAMES, 8);
 			//evt.getDrops().add(new ItemStack(Material.))
 			if(getValue() > 90 && getGame().getBlockBreakPlace() && isNthTick(20)){
 				Block block = getPlayer().getLocation().getBlock();
 				if(block.getType() != Material.AIR && GUtils.Possibilitat(getValue() - 80.0, 100.0));
 			}
+			if(getPlayer().getLocation().getBlock().getType() == Material.WATER){
+				expire();
+			}
 			Function<Player, Double> distFact = p -> 1 / c.distance(p.getEyeLocation());
-			Consumer<? super Player> dmgAction = p -> {p.damage((getValue() / 8) * distFact.apply(p)); setModalRemainingTicks(5);};
+			Consumer<? super Player> dmgAction = p -> {if(p.getHealth() > 2)p.damage((getValue() / 10) * (1 + distFact.apply(p)), p); setModalRemainingTicks(5);};
 			Predicate<? super Player> enemyCheck = p -> getGame().areEnemies(ply, p);
-			nearbyPlayers.stream().filter(enemyCheck).forEach(dmgAction
+			if(isNthTick(10))nearbyPlayers.stream().filter(enemyCheck).forEach(dmgAction
 					.andThen(p -> ((Entity) p).setFireTicks((getValue() > 50 ? 4 : 0)))
 					.andThen(p -> getWorld().playEffect(((LivingEntity) p).getEyeLocation().subtract(Utils.NombreEntre(-0.1, 0.1), Utils.NombreEntre(-1.8, 0.1), Utils.NombreEntre(-0.1, 0.1)), Effect.LARGE_SMOKE, 0))
 					.andThen(p -> getWorld().playSound(((LivingEntity) p).getEyeLocation(), Sound.FIRE_IGNITE,(float) (0.5 * distFact.apply((Player) p)), 1.05F))

@@ -6,8 +6,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
 
+import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.lobby.Com;
 import com.biel.lobby.Mapa;
@@ -43,6 +45,11 @@ public abstract class Skill extends PlayerWorldEventBus {
 	public void tick() {
 		//TICK!!
 		//Auto-destroy on game destroy
+	}
+	@Override
+	public boolean isValid() {
+		// TODO Auto-generated method stub
+		return super.isValid() && getPlayer().getWorld().equals(getWorld());
 	}
 	protected int getTickSpacing(){
 		return 20;

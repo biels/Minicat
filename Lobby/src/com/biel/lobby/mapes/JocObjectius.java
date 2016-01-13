@@ -159,9 +159,10 @@ public abstract class JocObjectius extends JocEquips {
 	public double getGameProgressETA() {
 		double totalObj = Equips.stream().map(e -> (EquipObjectius)e).map(e -> e.Objectius.size()).mapToInt(i->i).sum();
 		double objCompletionRatio = Equips.stream().map(e -> (EquipObjectius)e).map(e -> e.getCompletedObjectives().size()).mapToInt(i->i).sum() / totalObj;
-		Supplier<Stream<EquipObjectius>> sortedSt = () -> Equips.stream().map(e -> (EquipObjectius)e).sorted((e1, e2) -> Integer.compare(e1.getCompletedObjectives().size(), e2.getCompletedObjectives().size()));
-		double advantageRatio = sortedSt.get().skip(1).map(e -> e.getCompletedObjectives().size()).mapToInt(i->i).average().orElse(0) / sortedSt.get().findFirst().get().getCompletedObjectives().size();
-		return super.getGameProgressETA() * 0.4 + objCompletionRatio * 0.4 + advantageRatio * 0.2;
+		Supplier<Stream<EquipObjectius>> sortedSt = () -> Equips.stream().map(e -> (EquipObjectius)e).sorted((e2, e1) -> Integer.compare(e1.getCompletedObjectives().size(), e2.getCompletedObjectives().size()));
+		double advantageRatio = (sortedSt.get().findFirst().get().getCompletedObjectives().size() - sortedSt.get().skip(1).map(e -> e.getCompletedObjectives().size()).mapToInt(i->i).average().orElse(0)) / Math.max(sortedSt.get().findFirst().get().getObjectius().size() - 1, 1);
+		//System.out.println(Math.round(super.getGameProgressETA() * 100) + ", " + Math.round(objCompletionRatio * 100) + ", " + Math.round(advantageRatio * 100));
+		return super.getGameProgressETA() * 0.45 + objCompletionRatio * 0.5 + advantageRatio * 0.1; //EXCESS 5%
 	}
 
 	public class EquipObjectius extends Equip{

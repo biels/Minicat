@@ -3,6 +3,7 @@ package com.biel.lobby.utilities.events.skills;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 
 import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.lobby.Com;
@@ -147,8 +148,8 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	}
 	@Override
 	public boolean isValid() {
-		// Quan arribi a 0 fora!
-		return remainingTicks == 0;
+		// TODO Auto-generated method stub
+		return super.isValid() && !hasExpired() && getGame().getPlayers().contains(getPlayer());
 	}
 	/**
 	 * Tick method called every tick (20 times a second) by ultraHeartbeat
@@ -218,5 +219,10 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 		public PlayerInfo getPlayerInfo() {
 			return getGame().getPlayerInfo(getPlayer());
 		}
-		
+		//
+		@Override
+		protected Boolean verifyEvent(Event evt) {
+			// TODO Auto-generated method stub
+			return super.verifyEvent(evt);
+		}
 }
