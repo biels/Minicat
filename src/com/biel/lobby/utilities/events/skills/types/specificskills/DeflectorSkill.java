@@ -34,7 +34,7 @@ public class DeflectorSkill extends InherentSkill {
 	@Override
 	public double getCDSeconds() {
 		// TODO Auto-generated method stub
-		return 5;
+		return 20;
 	}
 	@Override
 	public Material getMaterial() {
@@ -66,9 +66,13 @@ public class DeflectorSkill extends InherentSkill {
 	public void tick() {
 		// TODO Auto-generated method stub
 		super.tick();
-		if(tryUseCD()){
-			sendSkillMessage("Deflector seconds: " + getCDRemainigSeconds());
-			getPlayerInfo().addStatusEffect(new DeflectorStatusEffect(getPlayer()));
+		PlayerInfo i = getPlayerInfo();
+		if(!i.hasStatusEffect(DeflectorStatusEffect.class)){	
+			if(tryUseCD()){
+				sendSkillMessage("Deflector seconds: " + getCDRemainigSeconds());
+				i.addStatusEffect(new DeflectorStatusEffect(getPlayer()));
+				//sendGlobalMessage(i.getStatusEffectsText());
+			}
 		}
 	}
 	@Override
@@ -90,7 +94,8 @@ public class DeflectorSkill extends InherentSkill {
 
 		public DeflectorStatusEffect(Player ply) {
 			super(ply);
-			setType(StatusEffectType.BUFF);
+			setType(StatusEffectType.SKILL_TRAY);
+			setRemainingTicks(80 * 20);
 		}
 
 		@Override

@@ -1,6 +1,8 @@
 package com.biel.lobby.mapes;
 
 import java.util.ArrayList;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -153,7 +155,14 @@ public abstract class JocObjectius extends JocEquips {
 		return c;
 	}
 
-
+	@Override
+	public double getGameProgressETA() {
+		double totalObj = Equips.stream().map(e -> (EquipObjectius)e).map(e -> e.Objectius.size()).mapToInt(i->i).sum();
+		double objCompletionRatio = Equips.stream().map(e -> (EquipObjectius)e).map(e -> e.getCompletedObjectives().size()).mapToInt(i->i).sum() / totalObj;
+		Supplier<Stream<EquipObjectius>> sortedSt = () -> Equips.stream().map(e -> (EquipObjectius)e).sorted((e1, e2) -> Integer.compare(e1.getCompletedObjectives().size(), e2.getCompletedObjectives().size()));
+		double advantageRatio = sortedSt.get().skip(1).map(e -> e.getCompletedObjectives().size()).mapToInt(i->i).average().orElse(0) / sortedSt.get().findFirst().get().getCompletedObjectives().size();
+		return super.getGameProgressETA() * 0.4 + objCompletionRatio * 0.4 + advantageRatio * 0.2;
+	}
 
 	public class EquipObjectius extends Equip{
 		ArrayList<Objectiu> Objectius =  new ArrayList<Objectiu>();

@@ -43,6 +43,7 @@ public abstract class CooldownSkill extends Skill {
 		if(cdRemainingTicks == 0)return;
 		if(cdRemainingTicks > 0)cdRemainingTicks--;
 		if(cdRemainingTicks < 0)cdRemainingTicks = 0;
+		//sendGlobalMessage("cdRemainingTicks: " + cdRemainingTicks);
 	}
 	protected boolean tryUseCD(){
 		boolean cdAvaliable = isCDAvaliable();

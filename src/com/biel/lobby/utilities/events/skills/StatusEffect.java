@@ -135,7 +135,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	@Override
 	public boolean isValid() {
 		// Quan arribi a 0 fora!
-		return remainingTicks > 0;
+		return remainingTicks == 0;
 	}
 	public void tick() {
 		if(remainingTicks == 0)return;
