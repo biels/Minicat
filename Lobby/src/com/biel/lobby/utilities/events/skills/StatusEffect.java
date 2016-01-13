@@ -140,7 +140,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	public void tick() {
 		if(remainingTicks == 0)return;
 		if(remainingTicks > 0)remainingTicks -= getTickSpacing();
-		if(remainingTicks < 0)remainingTicks = 0;
+		//if(remainingTicks < 0)remainingTicks = 0; //ALLOW -1 VALUES	
 		if(modalRemainingTicks == 0)setModal(false);
 		if(modalRemainingTicks > 0)modalRemainingTicks -= getTickSpacing();
 		if(modalRemainingTicks < 0)modalRemainingTicks = 0;

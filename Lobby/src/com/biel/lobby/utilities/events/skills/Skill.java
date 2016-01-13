@@ -25,7 +25,13 @@ public abstract class Skill extends PlayerWorldEventBus {
 		super(ply);
 		this.player = ply;
 	}
+	/**
+	 * @return The name of the skill
+	 */
 	public abstract String getName();
+	/**
+	 * @return The description of the skill
+	 */
 	public abstract String getDescription();
 	
 	public Player getPlayer() {
