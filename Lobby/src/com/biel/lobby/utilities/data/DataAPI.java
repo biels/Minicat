@@ -142,7 +142,7 @@ public class DataAPI {
 	}
 	public void setScore(int id, double newValue) { 
 		try {
-			PreparedStatement ps = connection.prepareStatement("UPDATE `players` SET `score`=? WHERE player_id=?");
+			PreparedStatement ps = connection.prepareStatement("UPDATE `players` SET `score`=?, `last_played`=NOW() WHERE player_id=?");
 			ps.setDouble(1, newValue);
 			ps.setInt(2, id);
 			ps.executeUpdate();
@@ -198,8 +198,8 @@ public class DataAPI {
 	}
 	public ArrayList<Integer> getRanking() {
 		ArrayList<Integer> r = new ArrayList<Integer>();
-		try {
-			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE elo!=1200 ORDER BY `elo` DESC;");
+		try { //TODO
+			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE TO_DAYS(TIMEDIFF(`last_played`, NOW())) > 4  ORDER BY `elo` DESC;");
 			ResultSet result = sql.executeQuery();
 			while(result.next()){
 				r.add(result.getInt("player_id"));

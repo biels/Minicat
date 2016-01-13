@@ -1106,6 +1106,7 @@ public abstract class Joc extends MapaResetejable {
 		}
 		public void removeStatusEffect(StatusEffect effect){
 			effects.remove(effect);
+			sendGlobalMessage(effect.getName());
 		}
 		public void removeStatusEffect(Class<? extends StatusEffect> type){
 			if(hasStatusEffect(type))effects.remove(getStatusEffect(type));
@@ -1261,7 +1262,7 @@ public abstract class Joc extends MapaResetejable {
 	public void announce(){
 		announceCount++;
 		String pref = "[" + Com.getMinicatString() + ChatColor.WHITE + "] > " + ChatColor.GRAY;
-		sendGlobalMessage(pref + "Joc: " + getGameName() + ", Mapa: " + getActiveMultipleMapName() + ", Progrés: " + getGameProgressETA());
+		sendGlobalMessage(pref + "Joc: " + getGameName() + ", Mapa: " + getActiveMultipleMapName() + ", Progrés: " + Math.round(getGameProgressETA() * 10 * 100)  / 10 + "%");
 	}
 	
 	public Long getAnnounceCount() {
