@@ -315,9 +315,11 @@ public class GestorMapes implements Listener{
 
 			if (map.getWorld().getPlayers().size() == 0){
 				//map.JocFinalitzat();
+				map.clearExternals();
 				map.deleteVirtualWorld();
 				Instàncies.remove(map);
 				map.destroyEventBus();
+				System.gc();
 				//map = null;
 				//Bukkit.broadcastMessage("Mapa esborrat!");
 			}
