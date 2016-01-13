@@ -50,14 +50,15 @@ public abstract class CooldownSkill extends Skill {
 		if(cdAvaliable)resetCooldown();
 		return cdAvaliable;
 	}
+	protected void applyAssociatedCDEffect(){
+		PlayerInfo i = getPlayerInfo(getPlayer());
+		if(!i.hasStatusEffect(getName()))i.addStatusEffect(new StatusEffectCD(getPlayer(), this));
+	}
 	protected StatusEffectCD getAssociatedCDEffect() {
 		if(getPlayer() == null)return null;
 		PlayerInfo i = getPlayerInfo(getPlayer());
-		if(i.hasStatusEffect(getName())){
-			return i.getStatusEffect(getName());
-		}else{
-			return new StatusEffectCD(getPlayer(), this);
-		}
+		applyAssociatedCDEffect();
+		return i.getStatusEffect(getName());
 	}
 	@Override
 	public void tick() {
