@@ -95,7 +95,7 @@ public class DeflectorSkill extends InherentSkill {
 		public DeflectorStatusEffect(Player ply) {
 			super(ply);
 			setType(StatusEffectType.SKILL_TRAY);
-			setRemainingTicks(80 * 20);
+			setRemainingTicks(-1);
 		}
 
 		@Override
