@@ -1,12 +1,13 @@
-package com.biel.lobby.utilities.events.skills;
+package com.biel.lobby.utilities.events.statuseffects;
 
 import org.bukkit.entity.Player;
 
 import com.biel.lobby.utilities.events.skills.types.CooldownSkill;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect.StatusEffectType;
 
-public class StatusEffectCD extends StatusEffect {
+public class CDStatusEffect extends StatusEffect {
 	CooldownSkill s;
-	public StatusEffectCD(Player ply, CooldownSkill s) {
+	public CDStatusEffect(Player ply, CooldownSkill s) {
 		super(ply);
 		this.s = s;
 		// TODO Auto-generated constructor stub
@@ -32,7 +33,7 @@ public class StatusEffectCD extends StatusEffect {
 			setType(StatusEffectType.BUFF);
 		}else {
 			setType(StatusEffectType.SKILL_TRAY);
-			setRemainingTicks((int) (s.getCDSeconds() * 20));
+			setRemainingTicks(s.getCDRemainigTicks());
 		}
 	}
 }

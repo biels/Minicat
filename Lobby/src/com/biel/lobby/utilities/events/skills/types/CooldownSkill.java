@@ -4,19 +4,24 @@ import org.bukkit.entity.Player;
 
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.events.skills.Skill;
-import com.biel.lobby.utilities.events.skills.StatusEffect;
-import com.biel.lobby.utilities.events.skills.StatusEffectCD;
+import com.biel.lobby.utilities.events.statuseffects.CDStatusEffect;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public abstract class CooldownSkill extends Skill {
 	private int cdRemainingTicks = 0; 
 	public CooldownSkill(Player ply) {
 		super(ply);
 		//getAssociatedCDEffect(); //Initialize SE
+		if(usingAssociatedCDEffect())resetCooldown();
 		// TODO Auto-generated constructor stub
 	}
 	public abstract double getCDSeconds();
+	public boolean usingAssociatedCDEffect(){
+		return false;
+	}
 	public void resetCooldown(){
 		cdRemainingTicks = (int) (Math.round(getCDSeconds() * 20));
+		if(usingAssociatedCDEffect())getAssociatedCDEffect();
 	}
 	/**
 	 * Skips the entire cooldown
@@ -30,10 +35,10 @@ public abstract class CooldownSkill extends Skill {
 	public void skipCooldown(double m){
 		cdRemainingTicks = (int) (cdRemainingTicks * m);
 	}
-	protected int getCDRemainigTicks(){
+	public int getCDRemainigTicks(){
 		return cdRemainingTicks;
 	}
-	protected double getCDRemainigSeconds(){
+	public double getCDRemainigSeconds(){
 		return cdRemainingTicks / (double) getTickSpacing();
 	}
 	public boolean isCDAvaliable(){
@@ -52,9 +57,9 @@ public abstract class CooldownSkill extends Skill {
 	}
 	protected void applyAssociatedCDEffect(){
 		PlayerInfo i = getPlayerInfo(getPlayer());
-		if(!i.hasStatusEffect(getName()))i.addStatusEffect(new StatusEffectCD(getPlayer(), this));
+		if(!i.hasStatusEffect(getName()))i.addStatusEffect(new CDStatusEffect(getPlayer(), this));
 	}
-	protected StatusEffectCD getAssociatedCDEffect() {
+	protected CDStatusEffect getAssociatedCDEffect() {
 		if(getPlayer() == null)return null;
 		PlayerInfo i = getPlayerInfo(getPlayer());
 		applyAssociatedCDEffect();

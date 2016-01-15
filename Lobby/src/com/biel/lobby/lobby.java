@@ -22,8 +22,8 @@ import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.data.DataAPI;
 import com.biel.lobby.utilities.data.PlayerData;
 
-
 public final class lobby extends JavaPlugin {
+	boolean ranked = true;
 	public GestorMapes gest;
 	public DataAPI dataAPI;
 	@SuppressWarnings("unused")
@@ -48,6 +48,13 @@ public final class lobby extends JavaPlugin {
 			//ObsidianDefenders joc = new ObsidianDefenders();
 			//joc.Join(ply);
 			gest.ObrirMenuMapes(ply);
+			return true;
+		}
+		if(cmd.getName().equalsIgnoreCase("r")){
+			//ObsidianDefenders joc = new ObsidianDefenders();
+			//joc.Join(ply);
+			ranked = !ranked;
+			Bukkit.broadcastMessage("Transferència d'elo " + (ranked ? "activada" : "desactivada"));
 			return true;
 		}
 		if(cmd.getName().equalsIgnoreCase("a")){
@@ -172,5 +179,7 @@ public final class lobby extends JavaPlugin {
 	public static Boolean isOnLobby(Player ply){
 		return getLobbyWorld().getPlayers().contains(ply);
 	}
-	
+	public boolean isInRankedMode(){
+		return ranked;
+	}
 }

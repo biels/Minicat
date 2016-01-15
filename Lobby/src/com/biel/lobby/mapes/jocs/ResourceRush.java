@@ -30,7 +30,7 @@ import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.JocTeamScoreRace;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.events.skills.StatusEffect;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public class ResourceRush extends JocTeamScoreRace {
 	ArrayList<Item> thrownItems = new ArrayList<Item>();

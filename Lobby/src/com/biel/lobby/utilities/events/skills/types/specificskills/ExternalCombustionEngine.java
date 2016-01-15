@@ -24,13 +24,12 @@ import org.bukkit.util.Vector;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.events.skills.StatusEffect;
 import com.biel.lobby.utilities.events.skills.types.CooldownSkill;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public class ExternalCombustionEngine extends InherentSkill {
 	private int stacks = 0;
-	int livedTicks  = 0;
 	public ExternalCombustionEngine(Player ply) {
 		super(ply);
 		// TODO Auto-generated constructor stub
@@ -40,7 +39,7 @@ public class ExternalCombustionEngine extends InherentSkill {
 	@Override
 	public double getCDSeconds() {
 		// TODO Auto-generated method stub
-		return 20;
+		return 5;
 	}
 	@Override
 	public Material getMaterial() {
@@ -73,12 +72,12 @@ public class ExternalCombustionEngine extends InherentSkill {
 		// TODO Auto-generated method stub
 		super.tick();
 		PlayerInfo i = getPlayerInfo();
+		
 		if(!i.hasStatusEffect(ExternalCombustionStatusEffect.class)){	
 			if(tryUseCD()){
 				i.addStatusEffect(new ExternalCombustionStatusEffect(getPlayer()));
 			}
 		}
-		livedTicks++;
 	}
 	@Override
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
@@ -118,7 +117,7 @@ public class ExternalCombustionEngine extends InherentSkill {
 			// TODO Auto-generated method stub
 			super.tick();
 			if(!isNthTick(10))return;
-			setValue(Math.max(0, Math.sqrt(livedTicks / 25 - 20)));
+			setValue(Math.max(0, Math.pow(getTicksLived(), 0.85) / 25 - getCDSeconds()));
 			Player ply = getPlayer();
 			Location c = ply.getEyeLocation();
 			ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(c, 4.5);
@@ -131,11 +130,16 @@ public class ExternalCombustionEngine extends InherentSkill {
 			if(getPlayer().getLocation().getBlock().getType() == Material.WATER){
 				expire();
 			}
+			Vector savedVelocity = ply.getVelocity();
 			Function<Player, Double> distFact = p -> 1 / c.distance(p.getEyeLocation());
-			Consumer<? super Player> dmgAction = p -> {if(p.getHealth() > 2)p.damage((getValue() / 10) * (1 + distFact.apply(p)), p); setModalRemainingTicks(5);};
+			Consumer<? super Player> dmgAction = p -> {if(p.getHealth() > 2) {
+				double dmg = (getValue() / 10) * (1 + distFact.apply(p));
+				p.damage(dmg, ply);
+				p.setVelocity(savedVelocity);
+			} setModalRemainingTicks(5);};
 			Predicate<? super Player> enemyCheck = p -> getGame().areEnemies(ply, p);
 			if(isNthTick(10))nearbyPlayers.stream().filter(enemyCheck).forEach(dmgAction
-					.andThen(p -> ((Entity) p).setFireTicks((getValue() > 50 ? 4 : 0)))
+					//.andThen(p -> ((Entity) p).setFireTicks((getValue() > 50 ? 4 : 0)))
 					.andThen(p -> getWorld().playEffect(((LivingEntity) p).getEyeLocation().subtract(Utils.NombreEntre(-0.1, 0.1), Utils.NombreEntre(-1.8, 0.1), Utils.NombreEntre(-0.1, 0.1)), Effect.LARGE_SMOKE, 0))
 					.andThen(p -> getWorld().playSound(((LivingEntity) p).getEyeLocation(), Sound.FIRE_IGNITE,(float) (0.5 * distFact.apply((Player) p)), 1.05F))
 					);
