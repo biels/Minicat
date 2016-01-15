@@ -68,8 +68,8 @@ import com.biel.lobby.utilities.data.MatchData;
 import com.biel.lobby.utilities.data.PlayerData;
 import com.biel.lobby.utilities.events.skills.Skill;
 import com.biel.lobby.utilities.events.skills.SkillPool;
-import com.biel.lobby.utilities.events.skills.StatusEffect;
 import com.biel.lobby.utilities.events.skills.types.specificskills.*;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 import com.connorlinfoot.actionbarapi.ActionBarAPI;
 
 
@@ -230,7 +230,7 @@ public abstract class Joc extends MapaResetejable {
 		return true;
 	}
 	protected boolean canBeRanked(){
-		return(segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 5) && getEloK() != 0);
+		return(segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 5) && getEloK() != 0 && Com.getPlugin().isInRankedMode());
 	}
 	protected void updateElo(ArrayList<Player> winners){
 		if(!canBeRanked()){

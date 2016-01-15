@@ -1,4 +1,4 @@
-package com.biel.lobby.utilities.events.skills;
+package com.biel.lobby.utilities.events.statuseffects;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -150,7 +150,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	public boolean isValid() {
 		// TODO Auto-generated method stub
 		if(getGame() == null)return false;
-		return super.isValid() && !hasExpired() && getGame().getPlayers().contains(getPlayer());
+		return super.isValid() && getGame().getPlayers().contains(getPlayer()) && (remainingTicks > 0 || remainingTicks == -1);
 	}
 	/**
 	 * Tick method called every tick (20 times a second) by ultraHeartbeat

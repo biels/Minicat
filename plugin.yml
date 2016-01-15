@@ -31,6 +31,9 @@ commands:
   s:
     description: Guarda el mapa.
     usage: /s
+  r:
+    description: (Des)Activa el mode ranked.
+    usage: /s
   elo:
     description: Mostra l'elo actual.
     usage: /s

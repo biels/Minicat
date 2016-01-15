@@ -16,8 +16,8 @@ import org.bukkit.util.Vector;
 
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.events.skills.StatusEffect;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 import be.maximvdw.featherboardcore.placeholders.ai;
 

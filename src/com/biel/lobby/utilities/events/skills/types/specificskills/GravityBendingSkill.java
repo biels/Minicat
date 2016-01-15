@@ -13,8 +13,8 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.events.skills.StatusEffect;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public class GravityBendingSkill extends InherentSkill {
 
