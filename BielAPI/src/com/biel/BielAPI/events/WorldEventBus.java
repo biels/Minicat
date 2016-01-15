@@ -79,7 +79,7 @@ public class WorldEventBus extends EventBus {
 				return ((Entity) holder).getWorld() == getWorld();
 			}
 		}
-		System.out.println("Event no verificat! @ WorldEventBus");
+		System.out.println(MessageFormat.format("Event no verificat: {0} @ WorldEventBus", evt.getEventName()));
 		return true;
 	}
 //	@Override
