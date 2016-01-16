@@ -20,6 +20,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	private boolean modal = false;
 	private int modalRemainingTicks = -1; // -1 -> Never
 	private int ticksLived = 0;
+	private AuraStatusEffect aura = null;
 	public int id = Utils.NombreEntre(0, 100);
 	private StatusEffectType type = StatusEffectType.UNDEFINED;
 	public enum StatusEffectType{UNDEFINED, SKILL_TRAY, BUFF, DEBUFF}
@@ -60,6 +61,13 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	}
 	public void setType(StatusEffectType type) {
 		this.type = type;
+	}
+	
+	public AuraStatusEffect getAura() {
+		return aura;
+	}
+	public void setAura(AuraStatusEffect aura) {
+		this.aura = aura;
 	}
 	/**
 	 * @return Whether the effect is modal or not.
@@ -179,6 +187,9 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	 */
 	public void expire(){
 		setRemainingTicks(0);
+	}
+	public void clearExternals(){
+		
 	}
 	//GAME-WRAPPING
 		/**

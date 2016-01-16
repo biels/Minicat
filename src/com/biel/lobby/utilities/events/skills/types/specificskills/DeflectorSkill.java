@@ -21,6 +21,8 @@ import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.events.skills.types.CooldownSkill;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
+import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
+import com.biel.lobby.utilities.events.statuseffects.AuraStatusEffect;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public class DeflectorSkill extends InherentSkill {
@@ -28,6 +30,10 @@ public class DeflectorSkill extends InherentSkill {
 
 	public DeflectorSkill(Player ply) {
 		super(ply);
+		if(ply == null)return;
+		PlayerInfo i = getPlayerInfo();
+		AuraStatusEffect aura = new AuraStatusEffect(getPlayer(), new AuraInfo(2.5, 8, 1, getItemStack()));
+		i.addStatusEffect(aura);
 		// TODO Auto-generated constructor stub
 	}
 	@Override
@@ -38,7 +44,7 @@ public class DeflectorSkill extends InherentSkill {
 	@Override
 	public double getCDSeconds() {
 		// TODO Auto-generated method stub
-		return 5;
+		return 10;
 	}
 	@Override
 	protected boolean getPlayerSpecificEventFiltering() {
@@ -75,7 +81,7 @@ public class DeflectorSkill extends InherentSkill {
 	public void tick() {
 		// TODO Auto-generated method stub
 		super.tick();
-		PlayerInfo i = getPlayerInfo();
+	
 		//		if(!i.hasStatusEffect(DeflectorStatusEffect.class)){	
 		//			if(tryUseCD()){
 		//				sendSkillMessage("Deflector seconds: " + getCDRemainigSeconds());
