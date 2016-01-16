@@ -1117,6 +1117,7 @@ public abstract class Joc extends MapaResetejable {
 			ArrayList<StatusEffect> toRemove = new ArrayList<StatusEffect>();
 			for(StatusEffect e : getStatusEffects()){
 				if (e.hasExpired()) {
+					e.clearExternals();
 					toRemove.add(e);
 				}
 			}
