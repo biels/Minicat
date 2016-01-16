@@ -77,7 +77,7 @@ public final class lobby extends JavaPlugin {
 					ply.sendMessage("No es troba el jugador.");
 					return false;
 				}
-				if (player.isOp()) {
+				if (ply.isOp()) {
 					Com.teleportPlayerToLobby(player);
 					player.sendMessage(ChatColor.GRAY + "Has estat transportat al lobby per "
 							+ ply.getName());

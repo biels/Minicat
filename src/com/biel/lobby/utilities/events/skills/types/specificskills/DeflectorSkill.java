@@ -31,9 +31,9 @@ public class DeflectorSkill extends InherentSkill {
 	public DeflectorSkill(Player ply) {
 		super(ply);
 		if(ply == null)return;
-		PlayerInfo i = getPlayerInfo();
-		AuraStatusEffect aura = new AuraStatusEffect(getPlayer(), new AuraInfo(2.5, 8, 1, getItemStack()));
-		i.addStatusEffect(aura);
+		//PlayerInfo i = getPlayerInfo();
+		//AuraStatusEffect aura = new AuraStatusEffect(getPlayer(), new AuraInfo(2.5, 8, 1, getItemStack()));
+		//i.addStatusEffect(aura);
 		// TODO Auto-generated constructor stub
 	}
 	@Override
@@ -44,7 +44,7 @@ public class DeflectorSkill extends InherentSkill {
 	@Override
 	public double getCDSeconds() {
 		// TODO Auto-generated method stub
-		return 10;
+		return 20;
 	}
 	@Override
 	protected boolean getPlayerSpecificEventFiltering() {
@@ -105,10 +105,9 @@ public class DeflectorSkill extends InherentSkill {
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
 		//H
 		//sendEffectMessage("Damage handled");
-		sendSkillMessage("Skill dmg handled");
 		if(!getPlayer().equals(damaged))return;
 		if(!tryUseCD())return;
-		sendSkillMessage("CD used");
+
 		//Checks
 		if(damager.equals(damaged))return;
 
