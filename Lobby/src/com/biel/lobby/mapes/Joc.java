@@ -69,6 +69,8 @@ import com.biel.lobby.utilities.data.PlayerData;
 import com.biel.lobby.utilities.events.skills.Skill;
 import com.biel.lobby.utilities.events.skills.SkillPool;
 import com.biel.lobby.utilities.events.skills.types.specificskills.*;
+import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
+import com.biel.lobby.utilities.events.statuseffects.AuraRendererStatusEffect;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 import com.connorlinfoot.actionbarapi.ActionBarAPI;
 
@@ -105,7 +107,7 @@ public abstract class Joc extends MapaResetejable {
 		clearExternals();
 		
 		super.finalize();
-		System.out.println("La instància de " + getGameName() + " s'ha destruït");
+		//System.out.println("La instància de " + getGameName() + " s'ha destruït");
 	}
 	@Override
 	public void initialize() {
@@ -974,6 +976,8 @@ public abstract class Joc extends MapaResetejable {
 		int blocksPlaced = 0;
 		int objectivesCompleted = 0;
 		ArrayList<StatusEffect> effects = new ArrayList<StatusEffect>();
+		private ArrayList<AuraInfo> auras = new ArrayList<AuraInfo>();
+		AuraRendererStatusEffect auraRenderer = null;
 		public int getSpree() {
 			return spree;
 		}
@@ -1056,6 +1060,30 @@ public abstract class Joc extends MapaResetejable {
 		public boolean isAFK(){
 			return getIdleTime().getSeconds() > 10;
 		}
+		public ArrayList<AuraInfo> getAuras() {
+			ArrayList<AuraInfo> aurasFull = new ArrayList<AuraInfo>();
+			aurasFull.addAll(auras);
+			aurasFull.addAll(getRealtimeAuras());
+			return aurasFull;
+		}
+		public ArrayList<AuraInfo> getRealtimeAuras(){
+			ArrayList<AuraInfo> a = new ArrayList<AuraInfo>();
+			if(isImmune())a.add(new AuraInfo("AFK", 8, 6, new ItemStack(Material.BARRIER, 1)));
+			return a;
+		}
+		public void setAuras(ArrayList<AuraInfo> auras) {
+			this.auras = auras;
+		}
+		public void clearAuras() {
+			auras.clear();
+		}
+		public void addAura(AuraInfo info){
+			
+			auras.add(info);
+		}
+		public void removeAura(String name){
+			auras.removeIf(a -> a.getName().equalsIgnoreCase(name));
+		}
 		public void ultraTick(){		
 			updateSpeedSlowPotionEffects();
 			//getPlayer().sendMessage("Ping:" + ChatColor.GREEN + "" + CBUtils.getPing(getPlayer()));
@@ -1067,8 +1095,15 @@ public abstract class Joc extends MapaResetejable {
 			//updateSpeedSlowPotionEffects();
 		}
 		public void tick(){
+			//if(!hasStatusEffect(AuraRendererStatusEffect.class))addStatusEffect(new AuraRendererStatusEffect(getPlayer()));
+		}
+		
+		//---------AURAS----------
+		public void renderAuras(){
 			
 		}
+		
+		//---------AURAS----------
 		public void updateSpeedSlowPotionEffects(){
 			//Bukkit.broadcastMessage("Done");
 			int speedPercentage = (int) Math.round(getSpeedModifier());
