@@ -17,6 +17,7 @@ import org.bukkit.util.Vector;
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
+import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 import be.maximvdw.featherboardcore.placeholders.ai;
@@ -96,6 +97,7 @@ public class FrostArcherSkill extends InherentSkill {
 				damager.playSound(damager.getLocation(), Sound.ORB_PICKUP, 1, 1);
 				ef.setModal(true);
 				ef.setModalRemainingTicks(20 * 4);
+				getPlayerInfo().addAura(new AuraInfo(getName(), 3, 5, getItemStack()));
 			}else{
 			}
 			
@@ -124,6 +126,8 @@ public class FrostArcherSkill extends InherentSkill {
 			Utils.BreakBlockLater(gblock, (int) (20 * getModifier()), false);
 		}
 		damaged.playSound(damager.getLocation(), Sound.BURP, 1, 0.5F);
+		//Remove aura
+		removeDefaultNamedAura();
 	}
 	public FrostArcherStatusEffect getAssociatedEffect(){
 		FrostArcherStatusEffect e;

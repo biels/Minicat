@@ -16,6 +16,7 @@ import com.biel.lobby.Mapa;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
+import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
 
 public abstract class Skill extends PlayerWorldEventBus {
 	private Player player;
@@ -53,6 +54,9 @@ public abstract class Skill extends PlayerWorldEventBus {
 	}
 	protected int getTickSpacing(){
 		return 20;
+	}
+	protected void removeDefaultNamedAura(){
+		getPlayerInfo().removeAura(getName());
 	}
 	//GAME-WRAPPING
 	protected Joc getGame(){

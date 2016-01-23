@@ -625,10 +625,10 @@ public abstract class JocEquips extends Joc {
 		}
 		if(isUndeBaseProtection(damaged.getLocation().getBlock())){
 			//damager.damage(evt.getDamage(), damaged);
+			Utils.healDamageable(damaged, evt.getDamage());
 			evt.setDamage(0);
-			Utils.healDamageable(damaged, (double) 5);
-			damager.setVelocity(new Vector(0, GUtils.NombreEntre(0, 4), 0));
-			sendPlayerMessage(damager, ChatColor.GRAY + "Atac a la base no permès. El mal retorna a l'emisor, bon viatge.");
+			//damager.setVelocity(new Vector(0, GUtils.NombreEntre(0, 4), 0));
+			//sendPlayerMessage(damager, ChatColor.GRAY + "Atac a la base no permès. El mal retorna a l'emisor, bon viatge.");
 		}
 	}
 	private boolean areInSameTeam(Player p1, Player p2) {
