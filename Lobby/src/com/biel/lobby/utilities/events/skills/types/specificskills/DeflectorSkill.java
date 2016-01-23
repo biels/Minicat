@@ -35,6 +35,7 @@ public class DeflectorSkill extends InherentSkill {
 		//AuraStatusEffect aura = new AuraStatusEffect(getPlayer(), new AuraInfo(2.5, 8, 1, getItemStack()));
 		//i.addStatusEffect(aura);
 		// TODO Auto-generated constructor stub
+		//getPlayerInfo().addAura(new AuraInfo("Defl", 1, 9, 1, getItemStack()));
 	}
 	@Override
 	public boolean usingAssociatedCDEffect() {
@@ -81,7 +82,7 @@ public class DeflectorSkill extends InherentSkill {
 	public void tick() {
 		// TODO Auto-generated method stub
 		super.tick();
-	
+
 		//		if(!i.hasStatusEffect(DeflectorStatusEffect.class)){	
 		//			if(tryUseCD()){
 		//				sendSkillMessage("Deflector seconds: " + getCDRemainigSeconds());
@@ -136,7 +137,18 @@ public class DeflectorSkill extends InherentSkill {
 	public double getDmgMultiplierBlk() {
 		return 2.35;
 	}
-
+	@Override
+	public void onCDAvaliable() {
+		// TODO Auto-generated method stub
+		super.onCDAvaliable();
+		getPlayerInfo().addAura(new AuraInfo(getName(), 4, getItemStack()));
+	}
+	@Override
+	public void onCDUse() {
+		// TODO Auto-generated method stub
+		super.onCDUse();
+		getPlayerInfo().removeAura(getName());
+	}
 	//	public class DeflectorStatusEffect extends StatusEffect{
 	//
 	//		public DeflectorStatusEffect(Player ply) {

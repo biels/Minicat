@@ -217,6 +217,7 @@ public class Spleef extends JocLastStanding {
 	@Override
 	protected synchronized void gameEvent(Event event) {
 		//Bukkit.broadcastMessage("EVENT");
+		super.gameEvent(event);
 		if (event instanceof BlockEvent){
 			Block blk = ((BlockEvent)event).getBlock();
 			Location loc = blk.getLocation();
@@ -264,7 +265,7 @@ public class Spleef extends JocLastStanding {
 			}
 			if (event instanceof ExplosionPrimeEvent){
 				ExplosionPrimeEvent evt = (ExplosionPrimeEvent)event;
-				evt.setRadius(7F);
+				evt.setRadius(6F);
 			}
 			if (event instanceof EntityExplodeEvent){
 				EntityExplodeEvent evt = (EntityExplodeEvent)event;

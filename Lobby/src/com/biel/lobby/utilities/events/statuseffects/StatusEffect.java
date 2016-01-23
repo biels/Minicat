@@ -188,6 +188,9 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	public void expire(){
 		setRemainingTicks(0);
 	}
+	/**
+	 * Called before effect removal
+	 */
 	public void clearExternals(){
 		
 	}

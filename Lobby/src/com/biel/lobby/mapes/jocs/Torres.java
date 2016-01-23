@@ -495,7 +495,7 @@ public class Torres extends JocEquips {
 		// TODO Auto-generated method stub
 		super.onPlayerFish(evt, p);
 		Player player = evt.getPlayer();
-sendGlobalMessage("GA");
+//sendGlobalMessage("GA");
 		Entity caught = evt.getCaught();
 		if (player.getItemInHand().getType() == Material.FISHING_ROD) {
 			//    			player.sendMessage(ChatColor.RED + "GET OVER HERE!");

@@ -53,6 +53,7 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("r")){
 			//ObsidianDefenders joc = new ObsidianDefenders();
 			//joc.Join(ply);
+			if(!args[0].equals("1")) return false;
 			ranked = !ranked;
 			Bukkit.broadcastMessage("Transferència d'elo " + (ranked ? "activada" : "desactivada"));
 			return true;

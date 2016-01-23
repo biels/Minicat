@@ -12,7 +12,7 @@ public abstract class CooldownSkill extends Skill {
 	public CooldownSkill(Player ply) {
 		super(ply);
 		//getAssociatedCDEffect(); //Initialize SE
-		if(usingAssociatedCDEffect())resetCooldown();
+		if(ply != null)resetCooldown();
 		// TODO Auto-generated constructor stub
 	}
 	public abstract double getCDSeconds();
@@ -20,20 +20,21 @@ public abstract class CooldownSkill extends Skill {
 		return false;
 	}
 	public void resetCooldown(){
-		cdRemainingTicks = (int) (Math.round(getCDSeconds() * 20));
+		setCdRemainingTicks((int) (Math.round(getCDSeconds() * 20)));
 		if(usingAssociatedCDEffect())getAssociatedCDEffect();
+		onCDUse();
 	}
 	/**
 	 * Skips the entire cooldown
 	 */
 	public void skipCooldown(){
-		cdRemainingTicks = 0;
+		setCdRemainingTicks(0);
 	}
 	/** Skips part of the cooldown
 	 * @param m The multiplier used to skip part of the cooldown. To skip half of the remaining cooldown, set to 0.5
 	 */
 	public void skipCooldown(double m){
-		cdRemainingTicks = (int) (cdRemainingTicks * m);
+		setCdRemainingTicks((int) (cdRemainingTicks * m));
 	}
 	public int getCDRemainigTicks(){
 		return cdRemainingTicks;
@@ -44,10 +45,17 @@ public abstract class CooldownSkill extends Skill {
 	public boolean isCDAvaliable(){
 		return cdRemainingTicks == 0;
 	}
+	
+	protected void setCdRemainingTicks(int cdRemainingTicks) {
+		if(cdRemainingTicks == 0){
+			onCDAvaliable();
+		}
+		this.cdRemainingTicks = cdRemainingTicks;
+	}
 	private void doCDTick(){
 		if(cdRemainingTicks == 0)return;
-		if(cdRemainingTicks > 0)cdRemainingTicks--;
-		if(cdRemainingTicks < 0)cdRemainingTicks = 0;
+		if(cdRemainingTicks > 0)setCdRemainingTicks(cdRemainingTicks - 1);
+		if(cdRemainingTicks < 0)setCdRemainingTicks(0);
 		//sendGlobalMessage("cdRemainingTicks: " + cdRemainingTicks);
 	}
 	protected boolean tryUseCD(){
@@ -64,6 +72,19 @@ public abstract class CooldownSkill extends Skill {
 		PlayerInfo i = getPlayerInfo(getPlayer());
 		applyAssociatedCDEffect();
 		return i.getStatusEffect(getName());
+	}
+	/**
+	 * Gets called when cd is up for use
+	 */
+	public void onCDAvaliable(){
+		
+	}
+	
+	/**
+	 * Gets called when the cooldown is used up
+	 */
+	public void onCDUse(){
+		
 	}
 	@Override
 	public void tick() {
