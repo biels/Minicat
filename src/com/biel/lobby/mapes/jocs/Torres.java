@@ -138,6 +138,15 @@ public class Torres extends JocEquips {
 	public ArrayList<Location> getInhibitors(Equip e) {
 		return pMapaActual().ObtenirLocations("inhibitors" + e.getId(), getWorld());
 	}
+	public enum TurretPreset{OUTER, INNER, INHIBITOR, NEXUS, LASER}
+	public TurretPreset getTurretPreset(int id){
+		String[] presets = pMapaActual().ObtenirLlista("Presets");
+		if(id < presets.length){
+			TurretPreset parsed = TurretPreset.valueOf(presets[id]);
+			if(parsed != null)return parsed;
+		}
+		return TurretPreset.OUTER;
+	}
 	@Override
 	protected void customJocIniciat() {
 		// TODO Auto-generated method stub
@@ -152,17 +161,25 @@ public class Torres extends JocEquips {
 			int tId = 0;
 			ArrayList<Location> obtenirLocations = pMapaActual().ObtenirLocations("torres" + eqStr, world);
 			while(tId < obtenirLocations.size()){
+				TurretPreset preset = getTurretPreset(tId);
 				Turret turr = Turret.createTurret(Com.getPlugin(), obtenirLocations.get(tId), null, this, obtenirEquip(eq), false, false);
-
+				
 				turr.Build();
 				turr.xp = 200;
 				turr.hasInventory = false;
-				if (tId == 0 || tId == 2){
-					turr.maxHpEscut = 30;
+				if (preset == TurretPreset.INHIBITOR || preset == TurretPreset.NEXUS){ //0, 2
+					turr.maxHpEscut = 10 + (preset == TurretPreset.NEXUS ? 30 : 0);
 					turr.getByTipus(TipusMillora.RESISTÈNCIA).lvl = 1;
 					turr.tempsEscut = 8;
 					turr.resetArmorCD();
 				}
+				if (preset == TurretPreset.LASER){ //0, 2
+					turr.getByTipus(TipusMillora.FOC).lvl = 1;
+					turr.hp = 900000;
+					turr.distAtac = turr.distAtac + 5;
+					turr.Atac = 12;
+				}
+
 //				if (tId == 1){
 //					turr.xp = 250;
 //					turr.distAtac = turr.distAtac + 3;
