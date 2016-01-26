@@ -72,7 +72,7 @@ public class FrostArcherSkill extends InherentSkill {
 		// TODO Auto-generated method stub
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
 		Player p = getPlayer();
-		if(damager != p)return;
+		if(damager != p || !getGame().areEnemies(damager, damaged))return;
 		FrostArcherStatusEffect ef = getAssociatedEffect();
 		//sendGlobalMessage(getName() + id +  ": " + evt.getEventName());
 		
@@ -182,7 +182,7 @@ public class FrostArcherSkill extends InherentSkill {
 		@Override
 		public String getDescription() {
 			// TODO Auto-generated method stub
-			return "Càrregues per poder empresonar un enemic";
+			return "Efecte de l'enllaç de gel";
 		}
 		@Override
 		protected void onBlockBreak(BlockBreakEvent evt, Block blk) {

@@ -1,6 +1,8 @@
 package com.biel.lobby.utilities.events.skills.types;
 
+import org.apache.commons.lang.IllegalClassException;
 import org.bukkit.ChatColor;
+import org.bukkit.Warning;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -17,15 +19,15 @@ public abstract class ItemAttatchedStackModeSkill extends ItemAttatchedModeSkill
 		return ItemAttatchedStackModeSkillTrayEffect.class;
 	}
 	public class StackSkillMode extends SkillMode{
-		int maxStacks;
+		private int maxStacks;
 
-		public StackSkillMode(String name, String description, ChatColor chatColor, int maxStacks) {
-			super(name, description, chatColor);
+		public StackSkillMode(int id, String name, String description, ChatColor chatColor, int maxStacks) {
+			super(id, name, description, chatColor);
 			this.maxStacks = maxStacks;
 		}
 
-		public StackSkillMode(String name, String description, int maxStacks) {
-			super(name, description);
+		public StackSkillMode(int id, String name, String description, int maxStacks) {
+			super(id, name, description);
 			this.maxStacks = maxStacks;
 		}
 
@@ -37,6 +39,26 @@ public abstract class ItemAttatchedStackModeSkill extends ItemAttatchedModeSkill
 			this.maxStacks = maxStacks;
 		}
 
+	}
+	@Override @Deprecated
+	public void registerMode(SkillMode mode) {
+		throw new IllegalClassException(StackSkillMode.class, SkillMode.class);
+	}
+	public void registerMode(StackSkillMode mode) {
+		// TODO Auto-generated method stub
+		super.registerMode(mode);
+	}
+	@Override
+	public void onModeSwitch(SkillMode newMode) {
+		// TODO Auto-generated method stub
+		super.onModeSwitch(newMode);
+		StackSkillMode m = (StackSkillMode) newMode;
+		getTrayEffect().setMaxValue(m.getMaxStacks());
+	}
+	@Override
+	protected ItemAttatchedStackModeSkillTrayEffect getTrayEffect() {
+		// TODO Auto-generated method stub
+		return (ItemAttatchedStackModeSkillTrayEffect) super.getTrayEffect();
 	}
 	@Override
 	public StackSkillMode getSelectedMode() {
@@ -50,9 +72,14 @@ public abstract class ItemAttatchedStackModeSkill extends ItemAttatchedModeSkill
 			// TODO Auto-generated constructor stub
 		}
 		@Override
-		public double getMaxValue() {
+		public void onMaxUp() {
 			// TODO Auto-generated method stub
-			return getSelectedMode().getMaxStacks();
+			getTrayEffect().setModalRemainingTicks(Integer.MAX_VALUE);
+		}
+		@Override
+		public void onMaxLose() {
+			// TODO Auto-generated method stub
+			getTrayEffect().setModalRemainingTicks(0);
 		}
 	}
 }

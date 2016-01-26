@@ -129,6 +129,7 @@ public abstract class JocScoreRace extends Joc {
 	public double getGameProgressETA() {
 		// TODO Auto-generated method stub
 		ArrayList<Player> w = getOrderedWinnerList();
+		if(w.size() == 0)return 0;
 		int best = getScore(w.get(0));
 		double bestToFinishRatio = best / (double)getFinishScore();
 		return super.getGameProgressETA() * 0.2 + bestToFinishRatio * 0.8;

@@ -1,7 +1,11 @@
 package com.biel.lobby.utilities.events.skills.types;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -12,7 +16,7 @@ import org.bukkit.inventory.PlayerInventory;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public abstract class ItemAttatchedModeSkill extends InherentSkill {
-	private ArrayList<SkillMode> modes;
+	private ArrayList<SkillMode> modes = new ArrayList<SkillMode>();
 	boolean knowsHowToUse= false;
 	boolean trayAdded = false;
 	int selectedMode = 0;
@@ -38,17 +42,21 @@ public abstract class ItemAttatchedModeSkill extends InherentSkill {
 		knowsHowToUse = true;
 	}
 	public class SkillMode{
+		private int id;
 		private String name;
 		private String description;
 		private ChatColor chatColor;
-		public SkillMode(String name, String description) {
+		
+		public SkillMode(int id, String name, String description) {
 			super();
+			this.id = id;
 			this.name = name;
 			this.description = description;
 		}
 		
-		public SkillMode(String name, String description, ChatColor chatColor) {
+		public SkillMode(int id, String name, String description, ChatColor chatColor) {
 			super();
+			this.id = id;
 			this.name = name;
 			this.description = description;
 			this.chatColor = chatColor;
@@ -71,7 +79,18 @@ public abstract class ItemAttatchedModeSkill extends InherentSkill {
 		}
 		public void setChatColor(ChatColor chatColor) {
 			this.chatColor = chatColor;
-		}		
+		}
+		@Override
+		public String toString() {
+			// TODO Auto-generated method stub
+			return MessageFormat.format("{0}{1}{2}: {3}", chatColor, name, ChatColor.WHITE, description);
+		}
+	}
+	public List<String> getModeFormattedList(){
+		return getModes().stream().map(m -> " + " + m.toString()).collect(Collectors.toList());
+	}
+	public String getModeList() {
+		return getModes().stream().map(m -> m.getChatColor() + m.getName() + ChatColor.WHITE).collect(Collectors.joining(", ", "[", "]"));//.collect(Collectors.joining(", ", "[", "]")));
 	}
 	//Wheel selection logic
 	public abstract boolean matchesItem(ItemStack i);
@@ -85,12 +104,13 @@ public abstract class ItemAttatchedModeSkill extends InherentSkill {
 		//When item in hand
 		PlayerInventory inv = getPlayer().getInventory();
 		ItemStack previousItem = inv.getContents()[evt.getPreviousSlot()];
-		if(matchesItem(previousItem)){
+		if(previousItem != null && matchesItem(previousItem)){
 			tellHowToUse();
-			addTrayEffectToPlayerIfNecessary();
+			getTrayEffect();
 		}
 		if(matchesItem(previousItem) && p.isSneaking()){
 			int increment = evt.getNewSlot() - evt.getPreviousSlot();
+			getPlayer().getInventory().setHeldItemSlot(evt.getPreviousSlot());
 			scroll(increment);
 		}
 	}
@@ -116,15 +136,17 @@ public abstract class ItemAttatchedModeSkill extends InherentSkill {
 	}
 	//Status effect
 	protected abstract Class<? extends ItemAttatchedModeSkillTrayEffect> getTrayEffectClass();
-	private void addTrayEffectToPlayerIfNecessary(){
+	protected ItemAttatchedModeSkillTrayEffect getTrayEffect(){
 		if(!trayAdded)getPlayerInfo(getPlayer()).addStatusEffect(getTrayEffectInstance());
 		trayAdded = true;
+		return getPlayerInfo(getPlayer()).getStatusEffect(getTrayEffectClass());
 	}
 	private ItemAttatchedModeSkillTrayEffect getTrayEffectInstance(){
 		try {
-			return getTrayEffectClass().getConstructor(ItemAttatchedModeSkill.class, Player.class).newInstance(this, getPlayer());
+			Constructor<?> constructor = getTrayEffectClass().getConstructors()[0];
+			return (ItemAttatchedModeSkillTrayEffect) constructor.newInstance(this, getPlayer());
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
+				| SecurityException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

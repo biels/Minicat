@@ -40,13 +40,37 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	 * @param value The new value to associate with this effect. Set to -1 to disable.
 	 */
 	public void setValue(double value) {
+		double oldValue = this.value;
+		boolean wasMaxed = isMaxed();
+		if(maxValue != -1){
+			if(value > maxValue)value = maxValue;
+			if(value < 0)value = maxValue;			
+		}
 		this.value = value;
+		tryTriggerOnMaxes(oldValue, wasMaxed);
 	}
+	private void tryTriggerOnMaxes(double oldValue, boolean wasMaxed) {
+		boolean canTrigger = getMaxValue() != -1 && getValue() != -1; 
+		if(!wasMaxed && isMaxed() && canTrigger)onMaxUp();
+		if(wasMaxed && !isMaxed() && canTrigger)onMaxLose();
+	}
+	/**
+	 * @return The max value. Set to -1 to disable.
+	 */
 	public double getMaxValue() {
 		return maxValue;
 	}
+	/**
+	 * @param maxValue Sets the max value. Set to -1 to disable.
+	 */
 	public void setMaxValue(double maxValue) {
+		double oldValue = this.value;
+		boolean wasMaxed = isMaxed();
 		this.maxValue = maxValue;
+		tryTriggerOnMaxes(oldValue, wasMaxed);
+	}
+	public boolean isMaxed(){
+		return getValue() == getMaxValue();
 	}
 	public Player getOwnerPlayer() {
 		if(ownerName == null)return null;
@@ -75,6 +99,9 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	public boolean isModal() {
 		return modal;
 	}
+	/**
+	 * @param modal Do not use externally for true
+	 */
 	public void setModal(boolean modal) {
 		this.modal = modal;
 		if(!modal)setModalRemainingTicks(-1); //-1 -> Never!
@@ -125,10 +152,10 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 		return "(" + (Math.round(getRemainingSeconds() * 10) / 10.0) + "s)";
 	}
 	public String getValueString() {
-		if(value != -1 && maxValue != -1){
+		if(value != -1 && getMaxValue() != -1){
 			return "(" + Math.round(getValue()) + "/" + Math.round(getMaxValue()) + ")";			
 		}
-		if(value != -1 && maxValue == -1){
+		if(value != -1 && getMaxValue() == -1){
 			return "(" + Math.round(getValue()) + ")";			
 		}
 		return "";
@@ -153,6 +180,12 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 	}
 	public boolean isNthTick(int nth){
 		return ticksLived % nth == 0;
+	}
+	public void onMaxUp(){
+		
+	}
+	public void onMaxLose(){
+		
 	}
 	@Override
 	public boolean isValid() {
