@@ -118,7 +118,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 		String modalHeading = "";
 		if(modal)modalHeading += ChatColor.BOLD;
 		String r = ChatColor.RESET + "" + getChatColor() + modalHeading + getName() + " " + valueString + " " + cdString;
-		return r.trim() + " id=" + id;
+		return r.trim(); //+ " id=" + id;
 	}
 	public String getRemainingSecondsString() {
 		if(remainingTicks == -1)return "";

@@ -196,7 +196,7 @@ public abstract class Skill extends PlayerWorldEventBus {
 	protected ItemStack getItemStack(){
 		ItemStack i = Utils.setItemNameAndLore(new ItemStack(getMaterial(), 1, getDamageValue(), getData()), getTierChatColor() + getName(), getLoreArr());
 		//ItemStack i = new ItemStack(getMaterial());
-		i.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, getTier());
+		i.addUnsafeEnchantment(Enchantment.DEPTH_STRIDER, getTier());
 		return i;//"[Line1]", "[Line2]", "Info{Current/Max}");
 	}
 	//-END-OLD-

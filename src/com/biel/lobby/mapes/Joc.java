@@ -1159,7 +1159,7 @@ public abstract class Joc extends MapaResetejable {
 			effects.removeAll(toRemove);
 		}
 		public String getStatusEffectsText(){
-			String t = "H: ";
+			String t = "";
 			for(StatusEffect e : effects){
 				String displayText = e.getDisplayText();
 				if(displayText != null){
