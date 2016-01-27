@@ -110,7 +110,7 @@ public class ExternalCombustionEngine extends InherentSkill {
 		@Override
 		public String getDescription() {
 			// TODO Auto-generated method stub
-			return "El següent atac que rebis serà retornat";
+			return "Inflingeix mal als enemics propers";
 		}
 		@Override
 		public void tick() {

@@ -10,6 +10,6 @@
 			<attribute name="javadoc_location" value="https://hub.spigotmc.org/javadocs/spigot/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/BielAPI-0.0.5-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/BielAPI-0.0.6-SNAPSHOT.jar" sourcepath="/BielAPI"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

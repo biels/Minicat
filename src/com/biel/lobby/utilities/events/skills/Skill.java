@@ -50,7 +50,7 @@ public abstract class Skill extends PlayerWorldEventBus {
 	@Override
 	public boolean isValid() {
 		// TODO Auto-generated method stub
-		return super.isValid() && getPlayer().getWorld().equals(getWorld());
+		return super.isValid() && getPlayer().getWorld().equals(getWorld()) && getGame() != null;
 	}
 	protected int getTickSpacing(){
 		return 20;
