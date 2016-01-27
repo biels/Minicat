@@ -95,8 +95,8 @@ public class Quakecraft extends JocScoreRace {
 	protected void donarEfectesInicials(Player ply) {
 		// TODO Auto-generated method stub
 		super.donarEfectesInicials(ply);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 3, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 2, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1, true), true);
 
 	}
 	@Override
