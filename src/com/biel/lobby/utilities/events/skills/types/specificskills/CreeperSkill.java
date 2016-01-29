@@ -77,7 +77,6 @@ public class CreeperSkill extends InherentSkill {
 		Predicate<? super Player> predicate = p -> getGame().areEnemies(killed, p);
 		nearbyPlayers.stream().filter(predicate).forEach(action.andThen(p -> ((Entity) p).setFireTicks(40)));
 		
-		
 	}
 	public void playEffect(Player p) {
 		for (int i = 0; i < 12; i++) {

@@ -44,7 +44,7 @@ public abstract class StatusEffect extends PlayerWorldEventBus {
 		boolean wasMaxed = isMaxed();
 		if(maxValue != -1){
 			if(value > maxValue)value = maxValue;
-			if(value < 0)value = maxValue;			
+			if(value < 0)value = 0;			
 		}
 		this.value = value;
 		tryTriggerOnMaxes(oldValue, wasMaxed);

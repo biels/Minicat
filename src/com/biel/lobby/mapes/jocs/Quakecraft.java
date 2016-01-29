@@ -248,7 +248,7 @@ public class Quakecraft extends JocScoreRace {
 						} catch (Exception e1) {
 
 						}
-						playRailgunEffect(shooter, l, true, false);
+						playRailgunEffect(shooter, l, true, true);
 						//							Score score = ScoreBoardManager.getObjective()
 						//									.getScore(shooter);
 						//							int scorepoint = score.getScore();

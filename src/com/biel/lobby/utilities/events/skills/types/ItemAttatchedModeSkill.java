@@ -62,6 +62,10 @@ public abstract class ItemAttatchedModeSkill extends InherentSkill {
 			this.chatColor = chatColor;
 		}
 
+		public int getId() {
+			return id;
+		}
+
 		public String getName() {
 			return name;
 		}
@@ -84,6 +88,23 @@ public abstract class ItemAttatchedModeSkill extends InherentSkill {
 		public String toString() {
 			// TODO Auto-generated method stub
 			return MessageFormat.format("{0}{1}{2}: {3}", chatColor, name, ChatColor.WHITE, description);
+		}
+		@Override
+		public boolean equals(Object obj) {
+			// TODO Auto-generated method stub
+			if(obj instanceof Integer){
+				return (Integer)obj == getId();
+			}
+			if(obj instanceof SkillMode){
+				return ((SkillMode) obj).getId() == getId();
+			}
+			return super.equals(obj);
+		}
+
+		@Override
+		public int hashCode() {
+			// TODO Auto-generated method stub
+			return getId();
 		}
 	}
 	public List<String> getModeFormattedList(){
