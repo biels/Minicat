@@ -347,8 +347,8 @@ public abstract class Joc extends MapaResetejable {
 		s.registerSkill(new BerserkSkill(null));
 		s.registerSkill(new SpeedyArcher(null));
 		s.registerSkill(new DiamondCoreSkill(null));
-		s.registerSkill(new CreeperSkill(null));
-		s.registerSkill(new ExternalCombustionEngine(null));
+		//s.registerSkill(new CreeperSkill(null));
+		//s.registerSkill(new ExternalCombustionEngine(null));
 		s.registerSkill(new CorinthianHelmetSkill(null));
 		s.registerSkill(new MagicArcherSkill(null));
 	}

@@ -116,8 +116,8 @@ public class ExternalCombustionEngine extends InherentSkill {
 		public void tick() {
 			// TODO Auto-generated method stub
 			super.tick();
-			if(!isNthTick(10))return;
-			setValue(Math.max(0, Math.pow(getTicksLived(), 0.85) / 25 - getCDSeconds()));
+			if(!isNthTick(20))return;
+			setValue(Math.max(0, Math.pow(getTicksLived(), 0.6) / (25 * 3) - getCDSeconds()));
 			Player ply = getPlayer();
 			Location c = ply.getEyeLocation();
 			ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(c, 4.5);
@@ -133,7 +133,7 @@ public class ExternalCombustionEngine extends InherentSkill {
 			Vector savedVelocity = ply.getVelocity();
 			Function<Player, Double> distFact = p -> 1 / c.distance(p.getEyeLocation());
 			Consumer<? super Player> dmgAction = p -> {if(p.getHealth() > 2) {
-				double dmg = (getValue() / 10) * (1 + distFact.apply(p));
+				double dmg = (getValue() / 10);// * (1 + distFact.apply(p));
 				p.damage(dmg, ply);
 				p.setVelocity(savedVelocity);
 			} setModalRemainingTicks(5);};
