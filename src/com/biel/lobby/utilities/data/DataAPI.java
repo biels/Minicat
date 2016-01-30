@@ -147,7 +147,6 @@ public class DataAPI {
 			ps.setInt(2, id);
 			ps.executeUpdate();
 			ps.close();
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -186,7 +185,7 @@ public class DataAPI {
 	}
 	public void setElo(int id, double newValue) {
 		try {
-			PreparedStatement ps = connection.prepareStatement("UPDATE `players` SET `elo`=? WHERE player_id=?");
+			PreparedStatement ps = connection.prepareStatement("UPDATE `players` SET `elo`=?, `last_played`=NOW() WHERE player_id=?");
 			ps.setDouble(1, newValue);
 			ps.setInt(2, id);
 			ps.executeUpdate();
