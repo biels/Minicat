@@ -49,17 +49,17 @@ public class Options {
 		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_POWDER), ChatColor.BLUE + "Instàncies [BETA]", ""), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				Com.getGest().openAllGamesMenu(event.getPlayer());			
+				Com.getGest().openAllGamesMenu(event.getPlayer());
 			}
 		});
 		inventory.setItem(5, button4.getItemStack());
-		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SAPLING), ChatColor.RED + "Fast" + ChatColor.GREEN + "Survival", "Servidor sense normes, mode de joc FastSurvival", "(Cercar FastSurvival al google)"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), MessageFormat.format("sync console bungee send {0} FastSurvival", event.getPlayer().getName()));			
-			}
-		});
-		inventory.setItem(6, button5.getItemStack());
+//		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SAPLING), ChatColor.RED + "Fast" + ChatColor.GREEN + "Survival", "Servidor sense normes, mode de joc FastSurvival", "(Cercar FastSurvival al google)"), ply, new ItemButton.OptionClickEventHandler() {
+//			@Override
+//			public void onOptionClick(ItemButton.OptionClickEvent event) {
+//				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), MessageFormat.format("sync console bungee send {0} FastSurvival", event.getPlayer().getName()));			
+//			}
+//		});
+//		inventory.setItem(6, button5.getItemStack());
 		if (ply.isOp()){
 			ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.LEVER), ChatColor.RED + "Reiniciar",  ChatColor.WHITE + "Reinicia el servidor.", ChatColor.WHITE + "Cal esperar uns 10-15s per tornar a entrar."), ply, new ItemButton.OptionClickEventHandler() {
 				@Override

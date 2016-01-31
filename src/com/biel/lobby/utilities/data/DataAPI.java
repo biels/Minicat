@@ -198,7 +198,7 @@ public class DataAPI {
 	public ArrayList<Integer> getRanking() {
 		ArrayList<Integer> r = new ArrayList<Integer>();
 		try { //TODO
-			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE TO_DAYS(TIMEDIFF(`last_played`, NOW())) > 4  ORDER BY `elo` DESC;");
+			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE TIMESTAMPDIFF(DAY, players.last_played, NOW()) < 15  ORDER BY `elo` DESC;");
 			ResultSet result = sql.executeQuery();
 			while(result.next()){
 				r.add(result.getInt("player_id"));
