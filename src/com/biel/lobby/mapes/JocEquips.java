@@ -514,21 +514,21 @@ public abstract class JocEquips extends Joc {
 				ferEquipsEquilibrats();
 			}
 		});
-		inventory.setItem(3, button2.getItemStack());
+		if(hasHostPrivilleges(ply))inventory.setItem(3, button2.getItemStack());
 		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), ChatColor.YELLOW + "Equips aleatoris"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
 				ferEquipsAleatoris(true);
 			}
 		});
-		inventory.setItem(4, button3.getItemStack());
+		if(hasHostPrivilleges(ply))inventory.setItem(4, button3.getItemStack());
 		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.EMERALD_BLOCK), ChatColor.GREEN + "Netejar equips"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
 				resetTeams();
 			}
 		});
-		inventory.setItem(5, button4.getItemStack());
+		if(hasHostPrivilleges(ply))inventory.setItem(5, button4.getItemStack());
 //		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BONE), ChatColor.GREEN + "Establir equip"), ply, new ItemButton.OptionClickEventHandler() {
 //			@Override
 //			public void onOptionClick(ItemButton.OptionClickEvent event) {

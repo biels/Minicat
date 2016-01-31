@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.Entity;
 import javax.xml.datatype.DatatypeConstants.Field;
@@ -84,6 +85,8 @@ public abstract class Joc extends MapaResetejable {
 	protected SkillPool s = new SkillPool();
 	protected MatchData matchData;
 	protected boolean won = false;
+	protected String host;
+	
 	//--Other--
 	private Boolean blockBreakPlace = false;
 	private Boolean giveStartingItemsRespawn = false;
@@ -293,6 +296,29 @@ public abstract class Joc extends MapaResetejable {
 	protected ArrayList<String> getGameInfo(Player p){
 		return null;
 	}
+	public void setHost(Player p){
+		boolean change = host == null;
+		host = p.getName();
+		if(change){
+			donarItemsInicials(p);
+			sendGlobalMessage(p.getName() + " és administrador de la partida");
+		}
+	}
+	public void setHost(String name){
+		host = name;
+	}
+	public boolean hasHostPrivilleges(Player p){
+		return host.equalsIgnoreCase(p.getName());
+	}
+	@Override
+	public void Join(Player ply) {
+		// TODO Auto-generated method stub
+		if(canJoin(ply)){
+			if(getPlayers().size() == 0)setHost(ply);			
+		}
+		super.Join(ply);
+	}
+	
 	@Override
 	public boolean canJoin(Player ply) {
 		switch (getGameState()){
@@ -606,8 +632,11 @@ public abstract class Joc extends MapaResetejable {
 	@Override
 	protected void customLeave(Player ply, List<String> attatchments) {
 		// TODO Auto-generated method stub
+		if(hasHostPrivilleges(ply) && getPlayers().size() > 1){
+			setHost(GUtils.getRandomListItem(getPlayers().stream().filter(p -> p!=ply).collect(Collectors.toList())));
+		}
 		double punishForLeaving = getPunishForLeaving(ply);
-		if(CBUtils.getPing(ply) > 1250){
+		if(CBUtils.getPing(ply) > 300){
 			attatchments.add(ChatColor.GOLD + "[Error de xarxa]");
 			if(punishForLeaving > 0){
 				attatchments.add(ChatColor.GREEN + "[No penalitzat]");
@@ -742,7 +771,7 @@ public abstract class Joc extends MapaResetejable {
 
 			}
 		});
-		inventory.setItem(0, button.getItemStack());
+		if(hasHostPrivilleges(ply))inventory.setItem(0, button.getItemStack());
 		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Wiki " + getGameName()), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
@@ -795,7 +824,7 @@ public abstract class Joc extends MapaResetejable {
 				menu.open(ply);
 			}
 		});
-		inventory.setItem(8, button2.getItemStack());
+		if(hasHostPrivilleges(ply))inventory.setItem(8, button2.getItemStack());
 		//		if (this instanceof JocEquips){
 		//			if (ply.isOp()){
 		//				Utils.donarItem(ply, Material.IRON_SPADE, ChatColor.RED + "Bloqueja el canvi d'equip");
