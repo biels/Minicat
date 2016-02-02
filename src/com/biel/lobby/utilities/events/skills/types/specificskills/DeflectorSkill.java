@@ -45,7 +45,7 @@ public class DeflectorSkill extends InherentSkill {
 	@Override
 	public double getCDSeconds() {
 		// TODO Auto-generated method stub
-		return 20;
+		return 35;
 	}
 	@Override
 	protected boolean getPlayerSpecificEventFiltering() {
@@ -128,7 +128,7 @@ public class DeflectorSkill extends InherentSkill {
 		if(blocking)getWorld().playEffect(damager.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
 		if(blocking)getWorld().playEffect(damaged.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
 
-		if(blocking)sendSkillMessage("Deflexió crítica!");
+		//if(blocking)sendSkillMessage("Deflexió crítica!");
 		//Remove after use
 	}
 	public double getDmgMultiplier() {

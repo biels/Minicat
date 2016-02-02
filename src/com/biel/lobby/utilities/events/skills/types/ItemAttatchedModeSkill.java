@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public abstract class ItemAttatchedModeSkill extends InherentSkill {
@@ -158,9 +159,11 @@ public abstract class ItemAttatchedModeSkill extends InherentSkill {
 	//Status effect
 	protected abstract Class<? extends ItemAttatchedModeSkillTrayEffect> getTrayEffectClass();
 	protected ItemAttatchedModeSkillTrayEffect getTrayEffect(){
-		if(!trayAdded)getPlayerInfo(getPlayer()).addStatusEffect(getTrayEffectInstance());
+		PlayerInfo i = getPlayerInfo(getPlayer());
+		if(!trayAdded)i.addStatusEffect(getTrayEffectInstance());
 		trayAdded = true;
-		return getPlayerInfo(getPlayer()).getStatusEffect(getTrayEffectClass());
+		if(!i.getStatusEffect(getTrayEffectClass()).isValid())sendGlobalMessage("non valid");
+		return i.getStatusEffect(getTrayEffectClass());
 	}
 	private ItemAttatchedModeSkillTrayEffect getTrayEffectInstance(){
 		try {
