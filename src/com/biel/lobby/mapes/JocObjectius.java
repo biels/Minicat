@@ -119,13 +119,12 @@ public abstract class JocObjectius extends JocEquips {
 		super.updateScoreBoard(ply);
 		if (JocIniciat && !JocFinalitzat){
 			ArrayList<String> list = new ArrayList<String>();
-			for (Equip e : Equips){
-				EquipObjectius eq = (EquipObjectius) e;
-				list.add(e.getChatColor() + "Equip " + e.getAdjectiu());
+			Equips.stream().map(e -> (EquipObjectius) e).sorted((e2, e1) -> Integer.compare(e1.getCompletedObjectives().size(), e2.getCompletedObjectives().size())).forEach(eq -> {
+				list.add(eq.getChatColor() + "Equip " + eq.getAdjectiu());
 				for (Objectiu obj : eq.getObjectius()){
 					list.add(obj.getScoreboardStatusLine());
 				}
-			}
+			});
 			ScoreBoardUpdater.setScoreBoard(ply, "Estadístiques", list, null);
 		}
 		if (JocFinalitzat){

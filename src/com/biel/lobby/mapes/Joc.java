@@ -455,6 +455,7 @@ public abstract class Joc extends MapaResetejable {
 		}
 		Utils.clearPlayer(ply);
 		donarItemsEspectador(ply);
+		updateScoreBoard(ply);
 		//ply.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 20 * 400, 0));
 		//ply.setAllowFlight(true);
 		//ply.setCanPickupItems(false);
