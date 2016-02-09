@@ -91,6 +91,7 @@ public abstract class Joc extends MapaResetejable {
 	private Boolean blockBreakPlace = false;
 	private Boolean giveStartingItemsRespawn = false;
 	private Boolean showPlayerHealthBar = true;
+	private Boolean isSnowLauncherEnabled = false;
 
 	private Long startTimeMillis = 0L;
 	private Long heartbeatCount = 0L;
@@ -523,6 +524,7 @@ public abstract class Joc extends MapaResetejable {
 		return true;
 	}
 	public ItemStack getSnowLauncher(int amount){
+		isSnowLauncherEnabled = true;
 		ItemStack ball = new ItemStack(Material.SNOW_BALL);
 		ball.addUnsafeEnchantment(Enchantment.SILK_TOUCH, 1);
 		ball.setAmount(amount);
@@ -531,6 +533,7 @@ public abstract class Joc extends MapaResetejable {
 	public boolean giveSnowLauncherOnKill(){
 		return false;
 	}
+	
 	@Override
 	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
 			Player damaged, Player damager, boolean ranged) {
@@ -541,12 +544,14 @@ public abstract class Joc extends MapaResetejable {
 			org.bukkit.entity.Entity proj = evt.getDamager();
 			if(proj instanceof Snowball){
 				Snowball ball = (Snowball) proj;
-				evt.setCancelled(true);
-				damaged.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 1, 0));
-				damaged.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, 0));
-				//damaged.setVelocity(new Vector(0, 0.1, 0));
-				damager.teleport(damaged.getEyeLocation().add(0, 0.5, 0), TeleportCause.PLUGIN);
-				GUtils.healDamageable(damager, 4.5D);
+				if (isSnowLauncherEnabled) { //TODO decide based on flag
+					evt.setCancelled(true);
+					damaged.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 1, 0));
+					damaged.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, 0));
+					//damaged.setVelocity(new Vector(0, 0.1, 0));
+					damager.teleport(damaged.getEyeLocation().add(0, 0.5, 0), TeleportCause.PLUGIN);
+					GUtils.healDamageable(damager, 4.8D);
+				}
 			}
 		}
 		//---
