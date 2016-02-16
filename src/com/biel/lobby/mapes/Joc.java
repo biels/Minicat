@@ -85,6 +85,7 @@ public abstract class Joc extends MapaResetejable {
 	protected SkillPool s = new SkillPool();
 	protected MatchData matchData;
 	protected boolean won = false;
+	protected boolean unfairFlag = false;
 	protected String host;
 	
 	//--Other--
@@ -236,7 +237,7 @@ public abstract class Joc extends MapaResetejable {
 		return true;
 	}
 	protected boolean canBeRanked(){
-		return(segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 5) && getEloK() != 0 && Com.getPlugin().isInRankedMode());
+		return(segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 20) && getEloK() != 0 && Com.getPlugin().isInRankedMode() && !unfairFlag);
 	}
 	protected void updateElo(ArrayList<Player> winners){
 		if(!canBeRanked()){
@@ -270,14 +271,43 @@ public abstract class Joc extends MapaResetejable {
 		p.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + "(" + cStr  + ChatColor.WHITE + ")");
 	}
 	double getEloK(){
-		int r = 22;
+		int r = 12;
 		if(pMapaActual().ExisteixPropietat("K")){
 			r = pMapaActual().ObtenirPropietatInt("K");
 		}
 		return r * getEloM();
 	}
+	
 	double getEloM(){
 		return 1;
+	}
+	protected void teleportToRandomSpawn(Player d) {
+		Location loc;
+		loc = getOptimalSpawnLoc(d);
+		d.teleport(loc);
+	}
+	public double getMinimumHeight(){
+		double r = 10.0;
+		if(pMapaActual().ExisteixPropietat("MinHeight")){
+			r = pMapaActual().ObtenirPropietatInt("MinHeight");
+		}
+		return r;
+	}
+	protected Location getRandomSpawnLoc(Player p) {
+		Location loc;
+		ArrayList<Location> locs = pMapaActual().ObtenirLocations("s", world);
+		//locs.stream().sorted((l1, l2) -> GUtils.getNearbyEnemies(l1, 40).size());
+		Collections.shuffle(locs);
+		Location l = locs.get(0);
+		l.add(0, 2, 0);
+		return l;
+	}
+	protected Location getOptimalSpawnLoc(Player pl) {
+		if(getPlayers().size() == 1)return getRandomSpawnLoc(pl);
+		ArrayList<Location> locs = pMapaActual().ObtenirLocations("s", world); //Llista spawns
+		Location l = locs.stream().sorted((l1, l2) -> (int) (GUtils.getNearestEntity(l2, getEnemies(pl)).getLocation().distanceSquared(l2) - GUtils.getNearestEntity(l1, getEnemies(pl)).getLocation().distanceSquared(l1))).skip(Utils.NombreEntre(0, 3)).findFirst().get();
+		l.add(0, 2, 0);
+		return l;	
 	}
 	public void sendGameInfo(){
 		for (Player p : getPlayers()){
@@ -298,7 +328,7 @@ public abstract class Joc extends MapaResetejable {
 		return null;
 	}
 	public void setHost(Player p){
-		boolean change = host == null;
+		boolean change = host != null;
 		host = p.getName();
 		if(change){
 			donarItemsInicials(p);
@@ -539,6 +569,7 @@ public abstract class Joc extends MapaResetejable {
 			Player damaged, Player damager, boolean ranged) {
 		// TODO Auto-generated method stub
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+		getPlayerInfo(damaged).setLastDamager(damager);
 		//-- SNOW LAUNCHER
 		if(ranged){
 			org.bukkit.entity.Entity proj = evt.getDamager();
@@ -655,6 +686,7 @@ public abstract class Joc extends MapaResetejable {
 		}
 	}
 	public void punishPlayerElo(Player ply, double amount){
+		unfairFlag = true;
 		registerEloChange(ply, amount * -1);
 	}
 	public double getPunishForLeaving(Player ply){
@@ -738,7 +770,7 @@ public abstract class Joc extends MapaResetejable {
 	}
 	public int segonsPerIniciar(){
 		int pOnLobby = lobby.getLobbyWorld().getPlayers().size();
-		int t = 12 + (pOnLobby * 2);
+		int t = 0 + (pOnLobby * 3);
 		Boolean anyOp = false;
 		for(Player p : getPlayers()){
 			if (p.isOp()){
@@ -746,7 +778,7 @@ public abstract class Joc extends MapaResetejable {
 			}
 		}
 		if (anyOp){
-			return t + 16;
+			return t + 1;
 		}
 		if(pOnLobby != 0){
 			return t;
@@ -1003,6 +1035,7 @@ public abstract class Joc extends MapaResetejable {
 		int additionalSkills = 0;
 		double speedModifier = 0;
 		boolean immune = true;
+		Player lastDamager = null;
 		ZonedDateTime lastMoveEvent = ZonedDateTime.now();
 		ZonedDateTime lastRespawnEvent = ZonedDateTime.now();
 		int kills = 0;
@@ -1066,6 +1099,12 @@ public abstract class Joc extends MapaResetejable {
 		}
 		public void setDamageDealt(double damageDealt) {
 			this.damageDealt = damageDealt;
+		}
+		public Player getLastDamager() {
+			return lastDamager;
+		}
+		public void setLastDamager(Player lastDamager) {
+			this.lastDamager = lastDamager;
 		}
 		public int getBlocksBroken() {
 			return blocksBroken;

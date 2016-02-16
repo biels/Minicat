@@ -102,7 +102,7 @@ public abstract class JocEquips extends Joc {
 	@Override
 	double getEloM() {
 		double m = 1 - Math.sqrt(getAvgNumericDeviation());
-		if(getAvgNumericDeviation() > 0.25)m = 0;
+		if(getAvgNumericDeviation() > 0.3)m = 0;
 		return m;
 	}
 	public double getAvgNumericDeviation() {
@@ -442,6 +442,7 @@ public abstract class JocEquips extends Joc {
 //		
 //	}
 	public double getBalancingMultiplier(Equip e){
+		if(e == null)return 0.1;
 		if(e.getPlayers().size() == 0)return 1;
 		return Math.round((((1D / (e.getPlayers().size() / getTeamSize())) + 1D) / 2D) * 100D) / 100D;
 	}

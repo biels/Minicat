@@ -80,7 +80,7 @@ public class BaseLunar extends JocScoreRace {
 		} 
 	}
 
-	private void teleportToRandomSpawn(Player d) {
+	protected void teleportToRandomSpawn(Player d) {
 		Location loc;
 		loc = getRandomSpawnLoc();
 		d.teleport(loc);

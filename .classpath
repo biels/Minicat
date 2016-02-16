@@ -11,5 +11,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/BielAPI-0.0.6-SNAPSHOT.jar" sourcepath="/BielAPI"/>
+	<classpathentry kind="lib" path="lib/LibsDisguises.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

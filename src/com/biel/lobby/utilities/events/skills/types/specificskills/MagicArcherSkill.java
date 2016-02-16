@@ -170,6 +170,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 				float power) {
 			// TODO Auto-generated method stub
 			super.onEntityShootBow(evt, e, bow, proj, power);
+			System.out.println("Shootbow: " + ((CraftPlayer) e).getName() + ", " + getPlayer().getName());
 			if(((CraftPlayer) e).getName().equalsIgnoreCase(getPlayer().getName())){
 				if(isMaxed()){
 					//Shoot with effect
