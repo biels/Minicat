@@ -32,6 +32,7 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -943,7 +944,7 @@ public class Turret extends EventBus {
 			}
 		}
 		int getCost(){
-			return (int) (Cost * Math.pow((((double)lvl + 1 + (upgradeLvlSum() / 4.0))), 1.8) / 2);
+			return (int) (Cost * Math.pow((((double)lvl + 1 + (upgradeLvlSum() / 4.0))), 1.2) / 2);
 		}
 		Boolean getMaxed(){
 			if (max == -1){return false;}

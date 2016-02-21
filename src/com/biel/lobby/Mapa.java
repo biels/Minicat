@@ -81,6 +81,7 @@ public abstract class Mapa extends WorldEventBus{
 		List<String> attatchments = new ArrayList<String>();
 		customLeave(ply, attatchments);
 		String endStr = StringUtils.join(attatchments, " ");
+		
 		Bukkit.broadcastMessage(ChatColor.YELLOW + ply.getName() + ChatColor.GRAY + " ha abandonat " + ChatColor.DARK_AQUA + getGameName() + " " + endStr);
 		
 	}

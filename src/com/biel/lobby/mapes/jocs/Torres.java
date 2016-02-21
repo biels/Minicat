@@ -171,6 +171,7 @@ public class Torres extends JocEquips {
 					turr.maxHpEscut = 10 + (preset == TurretPreset.NEXUS ? 30 : 0);
 					turr.getByTipus(TipusMillora.RESISTÈNCIA).lvl = 1;
 					turr.tempsEscut = 8;
+					turr.VelAtac = 10;
 					turr.resetArmorCD();
 				}
 				if (preset == TurretPreset.LASER){ //0, 2
@@ -505,7 +506,7 @@ public class Torres extends JocEquips {
 			//}
 
 		}
-		evt.setDamage(evt.getDamage() * 0.6);
+		evt.setDamage(evt.getDamage() * 0.35);
 	}
 	@Override
 	protected void onPlayerFish(PlayerFishEvent evt, Player p) {
@@ -557,7 +558,7 @@ public class Torres extends JocEquips {
 				Material t = b.getType();
 				if(t == Material.GRASS || t == Material.DIRT || t == Material.GRAVEL)iterator.remove();
 			}
-			getPlayers().stream().filter(p -> p.getLocation().distance(e.getLocation()) < 10).forEach(p -> {p.damage(10); p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 8 * 20, 1));});
+			getPlayers().stream().filter(p -> p.getLocation().distance(e.getLocation()) < 12).forEach(p -> {p.damage(10); p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 1 * 20, 1));});
 		}
 
 	}

@@ -223,7 +223,7 @@ public class RainbowClay extends JocObjectius {
 		double balancingMultiplier = getBalancingMultiplier(e);
 		if(balancingMultiplier > 1)pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
 		items.add(pickaxe);
-		int launchers = (int) (5 * balancingMultiplier);
+		int launchers = (int) (16 * balancingMultiplier);
 		if(launchers > 64)launchers = 64;
 		items.add(getSnowLauncher(launchers));
 		//items.add(new ItemStack(Material.FLINT_AND_STEEL));

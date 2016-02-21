@@ -168,6 +168,9 @@ public abstract class Joc extends MapaResetejable {
 		cancelAllTasks();
 		s.clear();
 	}
+	public void clearExternals(Player p){
+		
+	}
 	private void cancelAllTasks(){
 		handledBukkitSchedulerTasks.forEach(tId -> Bukkit.getScheduler().cancelTask(tId));
 	}
@@ -669,11 +672,11 @@ public abstract class Joc extends MapaResetejable {
 	@Override
 	protected void customLeave(Player ply, List<String> attatchments) {
 		// TODO Auto-generated method stub
-		if(hasHostPrivilleges(ply) && getPlayers().size() > 1){
+		if(hasHostPrivilleges(ply) && getPlayers().size() > 1 && !JocIniciat){
 			setHost(GUtils.getRandomListItem(getPlayers().stream().filter(p -> p!=ply).collect(Collectors.toList())));
 		}
 		double punishForLeaving = getPunishForLeaving(ply);
-		if(CBUtils.getPing(ply) > 300){
+		if(CBUtils.getPing(ply) > 400){
 			attatchments.add(ChatColor.GOLD + "[Error de xarxa]");
 			if(punishForLeaving > 0){
 				attatchments.add(ChatColor.GREEN + "[No penalitzat]");
@@ -690,13 +693,13 @@ public abstract class Joc extends MapaResetejable {
 		registerEloChange(ply, amount * -1);
 	}
 	public double getPunishForLeaving(Player ply){
-		double max_punish = 5 + getEloK() / 8;
+		double max_punish = 4.2 + getEloK() / 8 + getAvgGameLength().toHours() * 4;
 		double p = max_punish;
 		if(getGameProgressETA() < 0.25)p = 0;
-		p = max_punish * getGameProgressETA();
+		p = max_punish * (getGameProgressETA() - 0.2);
 		if(getGameProgressETA() > 0.8)p = max_punish;
 		if(!JocEnMarxa() || getEloK() == 0 || getPlayers().size() <= 1)p = 0;
-		return p;
+		return Math.max(0, p);
 	}
 	public double getGameProgressETA(){
 		if(!JocEnMarxa()){
