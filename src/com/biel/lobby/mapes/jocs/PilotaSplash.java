@@ -10,10 +10,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.JocScoreRace;
@@ -56,7 +59,13 @@ public class PilotaSplash extends JocScoreRace {
 		ItemStack item = new ItemStack(Material.SLIME_BALL, 1);
 		item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 2);
 		items.add(GUtils.setItemNameAndLore(item, "Puny de pilota", "Pilotassa"));
+		
 		return items;
+	}
+	public ItemStack getMagnusLauncherItem(){
+		ItemStack item = new ItemStack(Material.QUARTZ, 1);
+		item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 3);
+		return GUtils.setItemNameAndLore(item, "Efecte magnus", "Pilotassa");
 	}
 	@Override
 	protected int getBaseSkillUnlockerAmount() {
@@ -86,10 +95,35 @@ public class PilotaSplash extends JocScoreRace {
 		if(evt.getTo().getY() < getMinimumHeight()){
 			teleportToRandomSpawn(p);
 			Player k = getPlayerInfo(p).getLastDamager();
-			incrementScore(k);
-			resetSpree(p);
-			k.playSound(p.getLocation(), Sound.SLIME_ATTACK, 1F, 1.5F);			
-			k.playEffect(p.getEyeLocation(), Effect.POTION_SWIRL, 3);
+			if (k != null) {
+				incrementScore(k);
+				resetSpree(p);
+				k.playSound(p.getLocation(), Sound.SLIME_ATTACK, 1F, 1.5F);
+				k.playEffect(p.getEyeLocation(), Effect.POTION_SWIRL, 3);
+			}
+		}
+		//Magnus controller
+		//sendGlobalMessage(Double.toString(p.getVelocity().normalize().angle(new Vector(0, -1, 0))));
+		//add cd 
+		if(p.getVelocity().getY() < -0.19 && p.getVelocity().normalize().angle(new Vector(0, -1, 0)) < Math.PI / 5){
+			giveMagnusIfNecessary(p);
+		}else{
+			removeMagnusIfNecessary(p);
+		}
+	}
+	public void giveMagnusIfNecessary(Player p){
+		if(!p.getInventory().contains(getMagnusLauncherItem()))p.getInventory().addItem(getMagnusLauncherItem());
+	}
+	public void removeMagnusIfNecessary(Player p){
+		if(p.getInventory().contains(getMagnusLauncherItem()))p.getInventory().removeItem(getMagnusLauncherItem());
+	}
+	@Override
+	protected void onPlayerInteract(PlayerInteractEvent evt, Player p) {
+		// TODO Auto-generated method stub
+		super.onPlayerInteract(evt, p);
+		if(p.getItemInHand().equals(getMagnusLauncherItem())){
+			p.setVelocity(p.getLocation().getDirection().multiply(1.15).add(new Vector(0, 0.25, 0)));
+			p.playSound(p.getEyeLocation(), Sound.STEP_SAND, 1F, 0.9F);
 		}
 	}
 	@Override
@@ -99,21 +133,43 @@ public class PilotaSplash extends JocScoreRace {
 		incrementScore(killer);
 	}
 	@Override
+	protected void onPlayerRespawn(PlayerRespawnEvent evt, Player p) {
+		// TODO Auto-generated method stub
+		super.onPlayerRespawn(evt, p);
+		teleportToRandomSpawn(p);
+	}
+	@Override
 	protected void setSpree(Player ply, int value) {
 		// TODO Auto-generated method stub
 		super.setSpree(ply, value);
-//		SlimeWatcher w = (SlimeWatcher) DisguiseAPI.getDisguise(ply).getWatcher();
-//		w.setSize(value);		
+		SlimeWatcher w = (SlimeWatcher) DisguiseAPI.getDisguise(ply).getWatcher();
+		w.setSize((value > 1 ? 3 : 2));		
 	}
 	//Disguises
 	void applyDisguises(){
 		for(Player p : getPlayers()){
-//			MobDisguise d = new MobDisguise(DisguiseType.SLIME);
-//			d.setKeepDisguiseOnPlayerDeath(true);
-//			d.setKeepDisguiseOnPlayerLogout(false);
-//			SlimeWatcher w = (SlimeWatcher) d.getWatcher();
-//			w.setSize(1);
-//			DisguiseAPI.disguiseToAll(p, d);//DisguiseAPI.
+			MobDisguise d = new MobDisguise(DisguiseType.SLIME);
+			d.setKeepDisguiseOnPlayerDeath(true);
+			d.setKeepDisguiseOnPlayerLogout(false);
+			d.setHearSelfDisguise(false);
+			SlimeWatcher w = (SlimeWatcher) d.getWatcher();
+			w.setSize(2);
+			DisguiseAPI.disguiseEntity(p, d);//DisguiseAPI.
 		}
+	}
+	@Override
+	public void clearExternals() {
+		// TODO Auto-generated method stub
+		super.clearExternals();
+//		for(Player p : getPlayers()){
+//			DisguiseAPI.undisguiseToAll(p);			
+//		}
+	}
+	@Override
+	public void clearExternals(Player p) {
+		// TODO Auto-generated method stub
+		super.clearExternals(p);
+		DisguiseAPI.getDisguise(p).removeDisguise();
+		//DisguiseAPI.undisguiseToAll(p);	
 	}
 }
