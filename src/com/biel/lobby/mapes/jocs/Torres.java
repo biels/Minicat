@@ -506,7 +506,7 @@ public class Torres extends JocEquips {
 			//}
 
 		}
-		evt.setDamage(evt.getDamage() * 0.35);
+		evt.setDamage(evt.getDamage() * 0.6);
 	}
 	@Override
 	protected void onPlayerFish(PlayerFishEvent evt, Player p) {
@@ -620,7 +620,7 @@ public class Torres extends JocEquips {
 		void setEffect(Player plyr){
 			switch(tipus){
 			case DAMAGE:
-				plyr.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 34 * 20, 1, false), true);
+				plyr.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 34 * 20, 0, false), true);
 				//Bukkit.broadcastMessage(plyr.getName() + " té més dany!");
 				break;
 			case HEAL:
@@ -633,9 +633,9 @@ public class Torres extends JocEquips {
 				break;
 			case PROTECTION:
 				if (força == 3){
-					plyr.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,70 * 20, 3, false), true);
+					plyr.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 70 * 20, 3, false), true);
 				}else{
-					plyr.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE,38 * 20, 1, false), true);
+					plyr.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 38 * 20, 1, false), true);
 				}
 
 				break;
