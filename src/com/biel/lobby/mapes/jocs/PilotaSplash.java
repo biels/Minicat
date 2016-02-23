@@ -148,13 +148,13 @@ public class PilotaSplash extends JocScoreRace {
 	//Disguises
 	void applyDisguises(){
 		for(Player p : getPlayers()){
-			MobDisguise d = new MobDisguise(DisguiseType.SLIME);
-			d.setKeepDisguiseOnPlayerDeath(true);
-			d.setKeepDisguiseOnPlayerLogout(false);
-			d.setHearSelfDisguise(false);
-			SlimeWatcher w = (SlimeWatcher) d.getWatcher();
-			w.setSize(2);
-			DisguiseAPI.disguiseEntity(p, d);//DisguiseAPI.
+//			MobDisguise d = new MobDisguise(DisguiseType.SLIME);
+//			d.setKeepDisguiseOnPlayerDeath(true);
+//			d.setKeepDisguiseOnPlayerLogout(false);
+//			d.setHearSelfDisguise(false);
+//			SlimeWatcher w = (SlimeWatcher) d.getWatcher();
+//			w.setSize(2);
+//			DisguiseAPI.disguiseEntity(p, d);//DisguiseAPI.
 		}
 	}
 	@Override
@@ -169,7 +169,7 @@ public class PilotaSplash extends JocScoreRace {
 	public void clearExternals(Player p) {
 		// TODO Auto-generated method stub
 		super.clearExternals(p);
-		DisguiseAPI.getDisguise(p).removeDisguise();
-		//DisguiseAPI.undisguiseToAll(p);	
+//		DisguiseAPI.getDisguise(p).removeDisguise();
+//		DisguiseAPI.undisguiseToAll(p);	
 	}
 }
