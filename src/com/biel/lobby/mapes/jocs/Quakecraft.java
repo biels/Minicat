@@ -359,6 +359,7 @@ public class Quakecraft extends JocScoreRace {
 	}
 
 	public void addFrag(Player p, Player target, String weapon) {
+		if(!getPlayers().contains(target))return;
 		target.setHealth(0);
 		String verb = "rebentat";
 		if(p.getName().contains("amiguet") && Utils.Possibilitat(100 / new PlayerData(p).getRank()))verb = "greixetat";
