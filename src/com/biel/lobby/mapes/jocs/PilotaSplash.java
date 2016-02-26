@@ -142,8 +142,8 @@ public class PilotaSplash extends JocScoreRace {
 	protected void setSpree(Player ply, int value) {
 		// TODO Auto-generated method stub
 		super.setSpree(ply, value);
-		SlimeWatcher w = (SlimeWatcher) DisguiseAPI.getDisguise(ply).getWatcher();
-		w.setSize((value > 1 ? 3 : 2));		
+//		SlimeWatcher w = (SlimeWatcher) DisguiseAPI.getDisguise(ply).getWatcher();
+//		w.setSize((value > 1 ? 3 : 2));		
 	}
 	//Disguises
 	void applyDisguises(){

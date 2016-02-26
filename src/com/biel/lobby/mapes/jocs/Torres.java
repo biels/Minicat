@@ -71,7 +71,7 @@ public class Torres extends JocEquips {
 	@Override
 	protected void setCustomGameRules() {
 		// TODO Auto-generated method stub
-
+		world.setGameRuleValue("doTileDrops", "false");
 	}
 	@Override
 	protected void donarEfectesInicials(Player ply) {
