@@ -303,21 +303,7 @@ public class RainbowClay extends JocObjectius {
 		if(cub.contains(blk)){
 			evt.setCancelled(true);
 		}
-		if (blk.getType() != Material.HARD_CLAY && blk.getData() != 11) { 
-			//			if(blk.getType() == Material.BEACON){
-			//				for (Objectiu obj : obtenirObjectiusPly(ply)){
-			//					//Bukkit.broadcastMessage(Double.toString(obj.getLocation().distance(blk.getLocation())));
-			//					if (obj.getLocation().distance(blk.getLocation()) < 2){
-			//						obj.complete(ply);
-			//						
-			//					}
-			//					
-			//				}
-			//			}else{
-			//
-			//			}
-			//			//Bukkit.broadcastMessage("Retard!");
-		}else{
+		if (blk.getType() == Material.STAINED_CLAY && blk.getData() == 11 ) { 
 			evt.setCancelled(true);
 		}
 	}
