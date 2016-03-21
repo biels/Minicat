@@ -31,7 +31,7 @@ public class DataAPI {
 		String password = "minicat";
 		try {
 			connection = DriverManager.getConnection("jdbc:mysql://" + host
-					+ ":" + port + "/" + db, user, password);
+					+ ":" + port + "/" + db + "?autoReconnect=true", user, password);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
