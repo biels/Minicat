@@ -1,6 +1,8 @@
 package com.biel.lobby;
 
 import java.util.ArrayList;
+import java.util.stream.Stream;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -210,5 +212,11 @@ public class Com {
 			}, 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
 			i++;
 		}
+	}
+	public static Material getSkullIconMaterial(Player p){
+		Material m = Material.SKULL_ITEM;
+		if(Stream.of("amiguet", "pilota", "ball", "").anyMatch(s -> (p.getName().equalsIgnoreCase(s) || p.getName().contains(s))))
+			m = Material.SLIME_BALL;
+		return m;
 	}
 }
