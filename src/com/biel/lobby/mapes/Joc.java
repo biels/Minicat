@@ -1,6 +1,7 @@
 package com.biel.lobby.mapes;
 
 import java.lang.reflect.InvocationTargetException;import java.math.BigDecimal;
+import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.Entity;
 import javax.xml.datatype.DatatypeConstants.Field;
@@ -55,6 +57,7 @@ import com.biel.BielAPI.Utils.EloUtils;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
+import com.biel.BielAPI.Utils.IconMenu.OptionClickEvent;
 import com.biel.BielAPI.events.EventUtils;
 import com.biel.lobby.Com;
 import com.biel.lobby.lobby;
@@ -819,7 +822,6 @@ public abstract class Joc extends MapaResetejable {
 				anunciarWiki(event.getPlayer(), true);
 			}
 		});
-		inventory.setItem(6, button3.getItemStack());
 		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SKULL_ITEM), ChatColor.GREEN + "Afegir jugadors"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
@@ -854,7 +856,8 @@ public abstract class Joc extends MapaResetejable {
 				});
 
 				for(Player p : lobbyPlayers){
-					ItemStack stack = new ItemStack(Material.SKULL_ITEM, 1);
+					Material m = Com.getSkullIconMaterial(p);
+					ItemStack stack = new ItemStack(m, 1);
 					//stack.setAmount(eq.getPlayers().size());
 					menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),ChatColor.WHITE +  "Desde: lobby");
 				}
@@ -865,7 +868,54 @@ public abstract class Joc extends MapaResetejable {
 				menu.open(ply);
 			}
 		});
-		if(hasHostPrivilleges(ply))inventory.setItem(8, button2.getItemStack());
+		if(hasHostPrivilleges(ply))inventory.setItem(7, button2.getItemStack()); // AND isOp()
+		inventory.setItem(6, button3.getItemStack());
+		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SKULL_ITEM), ChatColor.GREEN + "Afegir jugadors"), ply, new ItemButton.OptionClickEventHandler() {
+			@Override
+			public void onOptionClick(ItemButton.OptionClickEvent event) {
+				final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
+				IconMenu menu = new IconMenu("Convida...", 27, new IconMenu.OptionClickEventHandler() {
+					@Override
+					public void onOptionClick(IconMenu.OptionClickEvent event) {
+						event.setWillClose(true);
+						//Obrir mapa
+						int pos = event.getPosition();
+						if (pos != 26){
+							Player pl = lobbyPlayers.get(pos);
+							if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+								inviteToGame(pl);
+							}else{
+								ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat.");
+							}
+
+						}else{
+							for(Player pl : lobbyPlayers){
+								if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+									inviteToGame(pl);
+								}else{
+									ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.getName() + ")");
+								}
+							}
+
+						}
+
+					}
+				});
+
+				for(Player p : lobbyPlayers){
+					Material m = Com.getSkullIconMaterial(p);
+					ItemStack stack = new ItemStack(m, 1);
+					//stack.setAmount(eq.getPlayers().size());
+					menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),ChatColor.WHITE +  "Des de: lobby");
+				}
+				
+				menu.setOption(26, new ItemStack(Material.SPONGE, 1), ChatColor.YELLOW + "Convidar tothom", ChatColor.WHITE + "Afegeix tots els jugadors del lobby a la partida actual");
+			
+
+				menu.open(ply);
+			}
+		});
+		if(hasHostPrivilleges(ply))inventory.setItem(8, button5.getItemStack());
 		//		if (this instanceof JocEquips){
 		//			if (ply.isOp()){
 		//				Utils.donarItem(ply, Material.IRON_SPADE, ChatColor.RED + "Bloqueja el canvi d'equip");
@@ -873,6 +923,25 @@ public abstract class Joc extends MapaResetejable {
 		//			Utils.donarItem(ply, Material.WOOL, ChatColor.GREEN + "Canvia d'equip");
 		//		}
 
+	}
+	public void inviteToGame(Player p){
+		IconMenu m = new IconMenu(getGameName() + " (" + host + ")", 9, new IconMenu.OptionClickEventHandler() {
+			
+			@Override
+			public void onOptionClick(OptionClickEvent event) {
+				Player ply = event.getPlayer();
+				if(event.getPosition() == 3){
+					Join(ply);
+				}
+				event.setWillClose(true);
+				event.setWillDestroy(true);
+			}
+		});
+		
+		m.setOption(2, new ItemStack(Material.EMERALD, 1), ChatColor.GREEN + "" + ChatColor.BOLD + "Entra", getActiveMultipleMapName());
+		m.setOption(8, new ItemStack(Material.REDSTONE, 1), ChatColor.RED + "" + ChatColor.BOLD + "Tanca", getActiveMultipleMapName());
+		
+		m.open(p);
 	}
 	public Boolean getBlockBreakPlace() {
 		return blockBreakPlace;
