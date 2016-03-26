@@ -31,7 +31,7 @@ public class PilotaSplash extends JocScoreRace {
 	@Override
 	protected int getFinishScore() {
 		// TODO Auto-generated method stub
-		return 20;
+		return 10 + getPlayers().size() * 2;
 	}
 
 	@Override
