@@ -418,7 +418,7 @@ public abstract class JocEquips extends Joc {
 		}
 		resetTeams();
 		long millis = Duration.between(startingTime, ZonedDateTime.now()).toMillis();
-		sendGlobalMessage(MessageFormat.format("Desviació típica: {0}, Temps: {1}ms, Cicles: {2}, ms/c:{3}", Math.sqrt(bestVariance), millis, cycles, Math.round(millis * 100/(double)cycles) / 100D));
+		sendGlobalMessage(MessageFormat.format("Desviació típica: {0}, Temps: {1}ms, Cicles: {2}, Vel:{3}ms/c", Math.sqrt(bestVariance), millis, cycles, Math.round(millis * 100/(double)cycles) / 100D));
 		final List<List<Player>> finalTeams = bestTeams;
 		if(finalTeams != null)finalTeams.forEach(t -> t.forEach(p -> establirEquipJugador(p, Equips.get(finalTeams.indexOf(t)))));
 		sendGlobalMessage("D: " + getAvgNumericDeviation());
@@ -500,11 +500,14 @@ public abstract class JocEquips extends Joc {
 		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOKSHELF), ChatColor.YELLOW + "Selecciona l'equip"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				if (!isEquipsBloquejats() || ply.isOp()){
+				if(!hasHostPrivilleges(event.getPlayer())){
+					event.getPlayer().sendMessage("No pots seleccionar l'equip. " + "Cal que l'administrador de la partida habiliti els equips personalitzats.");
+				}
+				if ((!isEquipsBloquejats() || ply.isOp())){
 					openTemSelectionMenu(ply, ply, "Unir-se a l'equip...");
 					
 				}else{
-					ply.sendMessage("No pots seleccionar l'equip. Equips bloquejats.");
+					event.getPlayer().sendMessage("No pots seleccionar l'equip. Equips bloquejats.");
 				}
 			}
 		});
