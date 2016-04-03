@@ -870,7 +870,7 @@ public abstract class Joc extends MapaResetejable {
 		});
 		if(hasHostPrivilleges(ply))inventory.setItem(7, button2.getItemStack()); // AND isOp()
 		inventory.setItem(6, button3.getItemStack());
-		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SKULL_ITEM), ChatColor.GREEN + "Afegir jugadors"), ply, new ItemButton.OptionClickEventHandler() {
+		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), ChatColor.GREEN + "Convidar jugadors"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
 				final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
@@ -930,7 +930,7 @@ public abstract class Joc extends MapaResetejable {
 			@Override
 			public void onOptionClick(OptionClickEvent event) {
 				Player ply = event.getPlayer();
-				if(event.getPosition() == 3){
+				if(event.getPosition() == 2){
 					Join(ply);
 				}
 				event.setWillClose(true);
