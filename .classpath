@@ -2,15 +2,15 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="lib/ActionBarAPI.jar"/>
+	<classpathentry kind="lib" path="lib/ActionBarAPI-1.4.2.jar"/>
 	<classpathentry kind="lib" path="lib/FeatherBoard.jar"/>
 	<classpathentry kind="lib" path="lib/HolographicDisplays.jar"/>
-	<classpathentry kind="lib" path="lib/spigot-1.8.8-R0.1-SNAPSHOT.jar">
+	<classpathentry kind="lib" path="lib/BielAPI-0.0.6-SNAPSHOT.jar" sourcepath="/BielAPI"/>
+	<classpathentry kind="lib" path="lib/LibsDisguises.jar"/>
+	<classpathentry kind="lib" path="lib/spigot-1.9.2.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="https://hub.spigotmc.org/javadocs/spigot/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/BielAPI-0.0.6-SNAPSHOT.jar" sourcepath="/BielAPI"/>
-	<classpathentry kind="lib" path="lib/LibsDisguises.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -296,7 +296,7 @@ public abstract class JocObjectius extends JocEquips {
 		}
 		public void playCompletionEffect(){
 			completer.getWorld().playEffect(location, Effect.MOBSPAWNER_FLAMES, 0);
-			completer.getWorld().playSound(location, Sound.WITHER_DEATH, 750F, 1.5F);
+			completer.getWorld().playSound(location, Sound.ENTITY_WITHER_DEATH, 750F, 1.5F);
 		}
 		public String getScoreboardStatusLine(){
 			if (isCompleted()){

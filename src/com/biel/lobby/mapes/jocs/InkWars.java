@@ -424,8 +424,8 @@ public class InkWars extends JocEquips {
 			ItemStack toolMaterial = getToolMaterial();
 			if(toolMaterial == null)return;
 			Utils.giveItemStack(toolMaterial, getPlayer());
-			getPlayer().playSound(getPlayer().getEyeLocation(), Sound.CHEST_OPEN, 1F, 1F);
-			getPlayer().playSound(getPlayer().getEyeLocation(), Sound.PISTON_EXTEND, 1F, 1F);
+			getPlayer().playSound(getPlayer().getEyeLocation(), Sound.BLOCK_CHEST_OPEN, 1F, 1F);
+			getPlayer().playSound(getPlayer().getEyeLocation(), Sound.BLOCK_PISTON_EXTEND, 1F, 1F);
 		}
 		public abstract ItemStack getToolMaterial();
 		public void reloadTick(){
@@ -436,7 +436,7 @@ public class InkWars extends JocEquips {
 				if(loadMaterial == null)return;
 				Utils.giveItemStack(loadMaterial, getPlayer());
 				getPlayer().updateInventory();
-				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.ITEM_PICKUP, 0.4F, 1F);
+				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_ITEM_PICKUP, 0.4F, 1F);
 				reloadTicks = 0;
 			}else{
 				reloadTicks += reloadTickIncrement();
@@ -566,8 +566,8 @@ public class InkWars extends JocEquips {
 		public void onWeaponHit(ProjectileHitEvent evt, Projectile proj, Block hitBlock, Block preHitBlock) {
 			if(proj instanceof Snowball){
 				Snowball s = (Snowball) proj;
-				getWorld().playSound(hitBlock.getLocation(), Sound.SLIME_ATTACK, 1, 1.1F);
-				getWorld().playSound(hitBlock.getLocation(), Sound.SLIME_WALK, 1, 1.1F);
+				getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_ATTACK, 1, 1.1F);
+				getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_JUMP, 1, 1.1F);
 				getWorld().playEffect(preHitBlock.getLocation(), Effect.SPLASH, 0);
 				paintRadius(preHitBlock.getLocation(), 1.1 + Math.sqrt(getWeaponLevel() * 0.75), 4 + getWeaponLevel() / 2.0);
 				for(Player p : Utils.getNearbyPlayers(preHitBlock.getLocation(), 1 + getWeaponLevel())){
@@ -652,8 +652,8 @@ public class InkWars extends JocEquips {
 						//Change target
 						targeted = damaged;
 						chargeTicks = 6 * 20; //Starting charges
-						damager.playSound(damaged.getEyeLocation(), Sound.FIRE_IGNITE, 1, (float) 1.2);
-						damaged.playSound(damaged.getEyeLocation(), Sound.ZOMBIE_REMEDY, 1, (float) 1.2);
+						damager.playSound(damaged.getEyeLocation(), Sound.BLOCK_FURNACE_FIRE_CRACKLE, 1, (float) 1.2);
+						damaged.playSound(damaged.getEyeLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1, (float) 1.2);
 						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
 						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
 						sendPlayerMessage(targeted, ChatColor.GRAY + getPlayer().getName() + " has tricked you to paint for him (6s)!");
@@ -692,7 +692,7 @@ public class InkWars extends JocEquips {
 					paintRadius(targeted.getEyeLocation(), Math.sqrt(4.5 + getWeaponLevel() * 0.25), Math.sqrt(4.5 + getWeaponLevel() * 0.3));
 					getWorld().playEffect(targeted.getEyeLocation(), Effect.INSTANT_SPELL, 4);
 					getWorld().playEffect(targeted.getEyeLocation(), Effect.CLOUD, 4);
-					getWorld().playSound(targeted.getEyeLocation(), Sound.FIREWORK_BLAST, 1, 1.2F);
+					getWorld().playSound(targeted.getEyeLocation(), Sound.ENTITY_FIREWORK_BLAST, 1, 1.2F);
 				}
 				if(chargeTicks <= 1){	//Because on chargeTicks=0 this object gets kicked from the memory		
 					InkWeapon targetedActiveWeapon = getPlayerInfo(targeted).getActiveWeapon();
@@ -813,14 +813,14 @@ public class InkWars extends JocEquips {
 					charges = 0;
 				}
 				evt.setDamage(0.25 + 0.1 * getWeaponLevel());
-				getWorld().playSound(damaged.getEyeLocation(), Sound.SLIME_ATTACK, 1, 1.1F + 0.4F * charges);
-				getWorld().playSound(damaged.getEyeLocation(), Sound.SLIME_WALK, 1, 1.1F + 0.4F * charges);
+				getWorld().playSound(damaged.getEyeLocation(), Sound.ENTITY_SLIME_ATTACK, 1, 1.1F + 0.4F * charges);
+				getWorld().playSound(damaged.getEyeLocation(), Sound.ENTITY_SLIME_JUMP, 1, 1.1F + 0.4F * charges);
 				paintRadius(damaged.getEyeLocation(), (0.25 + 0.1 * getWeaponLevel()) * charges, 2);
 				charges++;
 				if(charges > 3){
 					charges = 0;
 					damaged.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, (int) Math.round(20 * (5 + 0.6 * getWeaponLevel())), Math.round(getWeaponLevel() + 2 / 5)), true);
-					getWorld().playSound(damaged.getEyeLocation(), Sound.SWIM, 1, 1.25F);
+					getWorld().playSound(damaged.getEyeLocation(), Sound.ENTITY_GENERIC_SWIM, 1, 1.25F);
 				}
 			}else{evt.setCancelled(true);}
 		}

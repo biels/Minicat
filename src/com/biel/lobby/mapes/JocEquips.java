@@ -773,7 +773,7 @@ public abstract class JocEquips extends Joc {
 	void forcefieldKickOff(Player p, Location normalizedForcefield){
 		Location ploc = p.getLocation();
 		Vector vec = Utils.CrearVector(normalizedForcefield, ploc).normalize().add(new Vector(0, 1, 0)).normalize();
-		getWorld().playSound(ploc, Sound.IRONGOLEM_HIT, 1F, 2.2F);
+		getWorld().playSound(ploc, Sound.ENTITY_IRONGOLEM_HURT, 1F, 2.2F);
 		getWorld().playEffect(ploc, Effect.MOBSPAWNER_FLAMES, 3);
 		getWorld().playEffect(ploc.clone().add(new Vector(0, 1, 0)), Effect.MOBSPAWNER_FLAMES, 3);
 		//Kick

@@ -118,16 +118,16 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 			ItemStack nextit = null;
 			if (it.isSimilar(new ItemStack(Material.ENDER_PEARL))){
 				nextit = new ItemStack(Material.EYE_OF_ENDER);
-				w.playSound(sk.getEyeLocation(), Sound.ZOMBIE_WOOD, 2, (float) 1.1);
+				w.playSound(sk.getEyeLocation(), Sound.BLOCK_WOOD_STEP, 2, (float) 1.1);
 				teleportToEscape(sk);
 			}
 			if (it.isSimilar(new ItemStack(Material.EYE_OF_ENDER))){
 				nextit = getSpellItemStack(getNextSpell());
-				w.playSound(sk.getEyeLocation(), Sound.ZOMBIE_WOOD, (float) 2.5, (float) 1.55);
+				w.playSound(sk.getEyeLocation(), Sound.BLOCK_WOOD_BREAK, (float) 2.5, (float) 1.55);
 				//return;
 			}
 			if (nextit == null){ //Spell
-				w.playSound(sk.getEyeLocation(), Sound.ZOMBIE_WOODBREAK, (float) 2.5, (float) 1.2);
+				w.playSound(sk.getEyeLocation(), Sound.BLOCK_ANVIL_STEP, (float) 2.5, (float) 1.2);
 				//Teleport
 				
 				//DoSpell and back to ender pearl

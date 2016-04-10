@@ -486,14 +486,14 @@ public abstract class JocTeamDominion extends JocEquips {
 			for(Location l : Utils.getLocationsCircle(getCenter().add(0, 1, 0), radius / 2, 5)){
 				center.getWorld().playEffect(l, Effect.MOBSPAWNER_FLAMES, 0);
 			}	
-			center.getWorld().playSound(getCenter(), Sound.PISTON_EXTEND, 1F, 1F);
+			center.getWorld().playSound(getCenter(), Sound.BLOCK_PISTON_EXTEND, 1F, 1F);
 		}
 		@Override
 		public void playNeutralizeEffect() {
 			for(Location l : Utils.getLocationsCircle(getCenter().add(0, 1, 0), radius / 2, 5)){
 				center.getWorld().playEffect(l, Effect.SMOKE, 4);
 			}	
-			center.getWorld().playSound(getCenter(), Sound.PISTON_RETRACT, 1F, 1F);
+			center.getWorld().playSound(getCenter(), Sound.BLOCK_PISTON_CONTRACT, 1F, 1F);
 		}
 		@Override
 		public Location getHologramLocation() {

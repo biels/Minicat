@@ -599,7 +599,7 @@ public abstract class Joc extends MapaResetejable {
 			evt.setCancelled(true);
 			System.out.println(damaged.getName() + "is immune");
 			damager.sendMessage(ChatColor.GRAY + "El jugador " + damaged.getName() + " és invulnerable.");
-			getWorld().playSound(damager.getLocation(), Sound.ZOMBIE_METAL, 1.2F, 0.88F);
+			getWorld().playSound(damager.getLocation(), Sound.ENCHANT_THORNS_HIT, 1.2F, 0.88F);
 			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
 			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());   		
 		}
