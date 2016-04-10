@@ -338,7 +338,7 @@ public class RainbowClay extends JocObjectius {
 					if(cub.contains(to.getBlock())){
 						if(e == equip){
 							Vector vec = Utils.CrearVector(center, from).normalize().add(new Vector(0, 1, 0));
-							getWorld().playSound(to, Sound.IRONGOLEM_HIT, 1F, 2.2F);
+							getWorld().playSound(to, Sound.ENTITY_IRONGOLEM_HURT, 1F, 2.2F);
 							getWorld().playEffect(to, Effect.MOBSPAWNER_FLAMES, 3);
 							getWorld().playEffect(to.clone().add(new Vector(0, 1, 0)), Effect.MOBSPAWNER_FLAMES, 3);
 							if(cub.contains(from.getBlock()) && plyr.getVelocity().length() >= 1){
@@ -397,7 +397,7 @@ public class RainbowClay extends JocObjectius {
 		Material t = b.getType();
 		if(t == Material.GLASS || t == Material.STAINED_GLASS || t == Material.STAINED_GLASS_PANE || t == Material.THIN_GLASS || t == Material.GLOWSTONE){
 			b.setType(Material.AIR);
-			getWorld().playSound(b.getLocation(), Sound.GLASS, 15F, 1.2F);
+			getWorld().playSound(b.getLocation(), Sound.BLOCK_GLASS_BREAK, 15F, 1.2F);
 			proj.remove();
 			for(BlockFace f : BlockFace.values()){
 				if(GUtils.Possibilitat(58))continue;

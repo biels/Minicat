@@ -311,7 +311,7 @@ public class Torres extends JocEquips {
 						ply.setGameMode(GameMode.CREATIVE);
 					}
 				}
-				world.playSound(cry.getLocation(), Sound.AMBIENCE_CAVE, 30F, 3F);
+				world.playSound(cry.getLocation(), Sound.AMBIENT_CAVE, 30F, 3F);
 				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 					public void run() {
 						for(Player p : plugin.getServer().getOnlinePlayers()){
@@ -401,7 +401,7 @@ public class Torres extends JocEquips {
 								arrow.setFireTicks(200);
 								arrow.setVelocity(dir2.multiply(8));
 								i= i + 1;
-								world.playSound(spawnpoint, Sound.GLASS, 1, 1F);
+								world.playSound(spawnpoint, Sound.BLOCK_GLASS_BREAK, 1, 1F);
 							}
 						}
 					},temps * i1);
@@ -450,7 +450,7 @@ public class Torres extends JocEquips {
 			}
 			if (block.getType() == Material.BEACON){
 				block.setType(Material.LAVA);
-				world.playSound(getHalfwayMiddle(), Sound.ENDERDRAGON_HIT, 150F, 1.1F);
+				world.playSound(getHalfwayMiddle(), Sound.ENTITY_ENDERDRAGON_HURT, 150F, 1.1F);
 				sendGlobalMessage("Enllaç d'energia destruït!");
 				givePoints(p, 10);
 				comprovarGuanyador();

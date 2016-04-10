@@ -154,7 +154,7 @@ public class Quakecraft extends JocScoreRace {
 				//updateBar(p, tTransc, maxT);
 
 				if (tTransc >= getMaxT(p)) {
-					p.playSound(p.getLocation(), Sound.FIREWORK_LAUNCH, 1, 1);
+					p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_LAUNCH, 1, 1);
 					//						Main.nmsAccess.spawnFirework(p);
 					Arrow arrow = p.getWorld().spawn(p.getEyeLocation().add(direction),
 							Arrow.class);
@@ -166,7 +166,7 @@ public class Quakecraft extends JocScoreRace {
 							System.currentTimeMillis());
 					//railgunHitPlace(p, arrow);
 				}else{
-					p.playSound(p.getLocation(), Sound.WOOD_CLICK, 1, 1);
+					p.playSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1, 1);
 
 				}
 			}
@@ -369,7 +369,7 @@ public class Quakecraft extends JocScoreRace {
 						+ target.getName());
 		//"§7[§cQuake§7]: "
 		for (Player pl : getPlayers()) {
-			pl.playSound(pl.getLocation(), Sound.BLAZE_DEATH, 1, 1);
+			pl.playSound(pl.getLocation(), Sound.ENTITY_BLAZE_DEATH, 1, 1);
 		}
 	}
 	@Override

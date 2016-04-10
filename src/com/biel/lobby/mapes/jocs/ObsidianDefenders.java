@@ -176,11 +176,11 @@ public class ObsidianDefenders extends JocEquips {
 						}
 						pPlayer(damager).EstablirPropietat("PerfectBowHitCount", 1);
 
-						damager.playSound(damager.getLocation(), Sound.SPLASH2, 1, 0.5F);
+						damager.playSound(damager.getLocation(), Sound.ENTITY_GENERIC_SWIM, 1, 0.5F);
 					}else{
 						pPlayer(damager).IncrementarPropietat("PerfectBowHitCount");
 						if(crg == 5){
-							damager.playSound(damager.getLocation(), Sound.ORB_PICKUP, 1, 1);
+							damager.playSound(damager.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
 						}
 
 					}
@@ -213,11 +213,11 @@ public class ObsidianDefenders extends JocEquips {
 						}
 						pPlayer(damager).EstablirPropietat("StrongBowHitCount", 1);
 
-						damaged.playSound(damager.getLocation(), Sound.BURP, 1, 0.5F);
+						damaged.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_BURP, 1, 0.5F);
 					}else{
 						pPlayer(damager).IncrementarPropietat("StrongBowHitCount");
 						if(crg == 5){
-							damager.playSound(damager.getLocation(), Sound.ORB_PICKUP, 1, 1);
+							damager.playSound(damager.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
 						}
 
 					}
@@ -232,11 +232,11 @@ public class ObsidianDefenders extends JocEquips {
 						Vector dir = rawDir.normalize().multiply(2).add(new Vector(0,0.3,0));
 						damaged.setVelocity(dir);
 						pPlayer(damager).EstablirPropietat("StrongHitCount", 1);
-						damaged.playSound(damager.getLocation(), Sound.EAT, 1, 0.3F);
+						damaged.playSound(damager.getLocation(), Sound.ENTITY_GENERIC_EAT, 1, 0.3F);
 					}else{
 						pPlayer(damager).IncrementarPropietat("StrongHitCount");
 						if(crg == 5){
-							damaged.playSound(damager.getLocation(), Sound.HORSE_LAND, 1, 0.3F);
+							damaged.playSound(damager.getLocation(), Sound.ENTITY_HORSE_LAND, 1, 0.3F);
 						}
 					}
 					updateScoreBoard(damager);

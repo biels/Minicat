@@ -62,9 +62,9 @@ public class VampireSkill extends InherentSkill{
 			//sendGlobalMessage("Vampir effect");
 			Utils.healDamageable(getPlayer(), killer.getMaxHealth() * getProtectionRatio());
 			//getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) (20 * 2.8), 3));
-			getWorld().playSound(getPlayer().getEyeLocation(), Sound.DRINK, 1F, 1F);
-			getWorld().playSound(getPlayer().getEyeLocation(), Sound.DRINK, 2.0F, 0.8F);
-			getWorld().playSound(getPlayer().getEyeLocation(), Sound.EAT, 1.0F, 1.8F);
+			getWorld().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_GENERIC_DRINK, 1F, 1F);
+			getWorld().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_WITCH_DRINK, 2.0F, 0.8F);
+			getWorld().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_GENERIC_EAT, 1.0F, 1.8F);
 			Vector v = Utils.CrearVector(killer.getLocation(), killed.getLocation()).multiply(0.5D);
 			double max = 7;
 			for (int i = 0; i < max; i++) {

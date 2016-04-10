@@ -85,7 +85,7 @@ public class PilotaSplash extends JocScoreRace {
 		if(evt.getCause() == DamageCause.FALL){
 			evt.setCancelled(true);
 			GUtils.healDamageable(p, 1.0);
-			getWorld().playSound(p.getLocation(), (evt.getDamage() > 4 ? Sound.SLIME_WALK2 : Sound.SLIME_WALK), 1F, 1F);			
+			getWorld().playSound(p.getLocation(), (evt.getDamage() > 4 ? Sound.BLOCK_SLIME_HIT : Sound.BLOCK_SLIME_STEP), 1F, 1F);			
 		}
 	}
 	@Override
@@ -98,7 +98,7 @@ public class PilotaSplash extends JocScoreRace {
 			if (k != null) {
 				incrementScore(k);
 				resetSpree(p);
-				k.playSound(p.getLocation(), Sound.SLIME_ATTACK, 1F, 1.5F);
+				k.playSound(p.getLocation(), Sound.ENTITY_SLIME_ATTACK, 1F, 1.5F);
 				k.playEffect(p.getEyeLocation(), Effect.POTION_SWIRL, 3);
 			}
 		}
@@ -123,7 +123,7 @@ public class PilotaSplash extends JocScoreRace {
 		super.onPlayerInteract(evt, p);
 		if(p.getItemInHand().equals(getMagnusLauncherItem())){
 			p.setVelocity(p.getLocation().getDirection().multiply(1.15).add(new Vector(0, 0.25, 0)));
-			p.playSound(p.getEyeLocation(), Sound.STEP_SAND, 1F, 0.9F);
+			p.playSound(p.getEyeLocation(), Sound.BLOCK_SAND_STEP, 1F, 0.9F);
 		}
 	}
 	@Override

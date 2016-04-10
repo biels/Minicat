@@ -113,7 +113,7 @@ public class GravityBendingSkill extends InherentSkill {
 						Effect.HAPPY_VILLAGER, 0);
 				Location ploc = p.getLocation();
 				int i = Utils.NombreEntre(5, 10);
-				getWorld().playSound(ploc, Sound.FALL_BIG, 3F, 1F);
+				getWorld().playSound(ploc, Sound.ENTITY_PLAYER_SMALL_FALL, 3F, 1F);
 				while (i >= 0) {
 					getWorld().playEffect(ploc, Effect.SMOKE,
 							Utils.NombreEntre(0, 8));

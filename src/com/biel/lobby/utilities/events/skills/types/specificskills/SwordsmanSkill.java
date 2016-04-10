@@ -78,7 +78,7 @@ public class SwordsmanSkill extends InherentSkill {
 				Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
 				Vector dir = rawDir.normalize().multiply(1.98).add(new Vector(0,0.52,0));
 				damaged.setVelocity(dir);
-				damaged.playSound(damager.getLocation(), Sound.EAT, 1, 0.3F);
+				damaged.playSound(damager.getLocation(), Sound.ENTITY_GENERIC_EAT, 1, 0.3F);
 				//ENDH
 				copFort(damaged, damager);
 				ef.setValue(0);
@@ -90,7 +90,7 @@ public class SwordsmanSkill extends InherentSkill {
 		}else{
 			ef.setValue(ef.getValue() + 1);
 			if(ef.getValue() >= ef.getMaxValue()){
-				damager.playSound(damager.getLocation(), Sound.ORB_PICKUP, 1, 1);
+				damager.playSound(damager.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
 				ef.setModal(true);
 				ef.setModalRemainingTicks(20 * 4);
 			}else{

@@ -94,7 +94,7 @@ public class FrostArcherSkill extends InherentSkill {
 		}else{
 			ef.setValue(ef.getValue() + 1);
 			if(ef.getValue() >= ef.getMaxValue()){
-				damager.playSound(damager.getLocation(), Sound.ORB_PICKUP, 1, 1);
+				damager.playSound(damager.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
 				ef.setModal(true);
 				ef.setModalRemainingTicks(20 * 4);
 				getPlayerInfo().addAura(new AuraInfo(getName(), 3, 5, getItemStack()));
@@ -125,7 +125,7 @@ public class FrostArcherSkill extends InherentSkill {
 			gblock.setType(Material.GOLD_BLOCK);
 			Utils.BreakBlockLater(gblock, (int) (20 * getModifier()), false);
 		}
-		damaged.playSound(damager.getLocation(), Sound.BURP, 1, 0.5F);
+		damaged.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_BURP, 1, 0.5F);
 		//Remove aura
 		removeDefaultNamedAura();
 	}

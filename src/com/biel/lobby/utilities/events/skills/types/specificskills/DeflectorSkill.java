@@ -122,7 +122,7 @@ public class DeflectorSkill extends InherentSkill {
 		Vector dir = rawDir.normalize().multiply(-1.35).add(new Vector(0,0.42,0));
 		damager.setVelocity(dir);
 		//ENDH
-		getWorld().playSound(damager.getLocation(), Sound.ZOMBIE_METAL, 1.2F, 0.8F);
+		getWorld().playSound(damager.getLocation(), Sound.BLOCK_METAL_HIT, 1.2F, 0.8F);
 		getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
 		getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());
 		if(blocking)getWorld().playEffect(damager.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());

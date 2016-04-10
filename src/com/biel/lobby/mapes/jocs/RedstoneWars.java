@@ -107,7 +107,7 @@ public class RedstoneWars extends JocEquips{
 		super.onPlayerPickupItem(evt, p);
 		Item item = evt.getItem();
 		if(item.getItemStack().getType() == Material.REDSTONE){
-			p.playSound(p.getEyeLocation(), Sound.ORB_PICKUP, 1, 1.2F);
+			p.playSound(p.getEyeLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1.2F);
 			compactRedstone(p);
 		}
 	}
@@ -141,7 +141,7 @@ public class RedstoneWars extends JocEquips{
 				tnt.setDropItem(false);
 			});
 			blk.setType(Material.AIR);
-			getWorld().playSound(blk.getLocation(), Sound.ZOMBIE_REMEDY, 2, 1.15F);
+			getWorld().playSound(blk.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 2, 1.15F);
 		}
 	}
 	@Override
@@ -157,8 +157,8 @@ public class RedstoneWars extends JocEquips{
 		if(inv.contains(Material.REDSTONE, 9)){
 			inv.removeItem(new ItemStack(Material.REDSTONE, 9));
 			inv.addItem(new ItemStack(Material.REDSTONE_BLOCK, 1));
-			p.playSound(p.getEyeLocation(), Sound.CLICK, 1, 1.1F);
-			p.playSound(p.getEyeLocation(), Sound.WOOD_CLICK, 1, 1.1F);
+			p.playSound(p.getEyeLocation(), Sound.UI_BUTTON_CLICK, 1, 1.1F);
+			p.playSound(p.getEyeLocation(), Sound.BLOCK_WOOD_HIT, 1, 1.1F);
 		}
 	}
 	@Override
