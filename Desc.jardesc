@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="WINDOWS-1252" standalone="no"?>
 <jardesc>
-    <jar path="D:/Servers MC/Lobby/plugins/lobby.jar"/>
+    <jar path="D:/Servers MC/Lobby - 1.9/plugins/lobby.jar"/>
     <options buildIfNeeded="true" compress="true" descriptionLocation="/Lobby/Desc.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="true" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
     <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
     <selectedProjects/>
