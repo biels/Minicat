@@ -45,7 +45,6 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
-import com.biel.BielAPI.Utils.CustomEntityFirework;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.JocScoreRace;
 import com.biel.lobby.utilities.FireworkEffectPlayer;
@@ -297,7 +296,7 @@ public class Quakecraft extends JocScoreRace {
 			FireworkEffect r = b.build();
 			Player pArr[] = new Player[getPlayers().size()];
 			getPlayers().toArray(pArr);
-			CustomEntityFirework.spawn(l, r, pArr);
+			//CustomEntityFirework.spawn(l, r, pArr);
 //			fPlayer.playFirework(getWorld(), l, r);
 //			fPlayer.playFirework(getWorld(), l, r);
 //			fPlayer.playFirework(getWorld(), l, r);

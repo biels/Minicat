@@ -11,7 +11,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_9_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_10_R1.entity.CraftPlayer;
 import org.bukkit.FireworkEffect.Builder;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -28,7 +28,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.ColorConverter;
-import com.biel.BielAPI.Utils.CustomEntityFirework;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.Com;
 import com.biel.lobby.utilities.events.skills.types.ItemAttatchedModeSkill;
@@ -111,7 +110,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 						b.withColor(getColor(getSelectedMode().getChatColor()));
 						b.with(FireworkEffect.Type.BALL_LARGE);
 						FireworkEffect eff = b.build();
-						CustomEntityFirework.spawn(damaged.getEyeLocation(), eff, getAllPlayersArray());
+						//CustomEntityFirework.spawn(damaged.getEyeLocation(), eff, getAllPlayersArray());
 						
 					}
 					if(m.getId() == Mode.ENCHANCER.ordinal()){
@@ -122,7 +121,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 								b.withColor(getColor(getSelectedMode().getChatColor()));
 								b.with(FireworkEffect.Type.BALL);
 								FireworkEffect eff = b.build();
-								if(p != damaged)CustomEntityFirework.spawn(p.getEyeLocation(), eff, getAllPlayersArray());
+								//if(p != damaged)CustomEntityFirework.spawn(p.getEyeLocation(), eff, getAllPlayersArray());
 							}); //TODO Add kill based modifier
 						Predicate<? super Player> predicate = p -> getGame().areEnemies(damager, p);
 						ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(damaged.getLocation(), 12);
@@ -132,7 +131,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 						b.withColor(getColor(getSelectedMode().getChatColor()));
 						b.with(FireworkEffect.Type.BALL_LARGE);
 						FireworkEffect eff = b.build();
-						CustomEntityFirework.spawn(damaged.getEyeLocation(), eff, getAllPlayersArray());
+						//CustomEntityFirework.spawn(damaged.getEyeLocation(), eff, getAllPlayersArray());
 						
 					}
 					if(m.getId() == Mode.DRAINER.ordinal()){
@@ -147,7 +146,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 								b.withColor(getColor(getSelectedMode().getChatColor()));
 								b.with(FireworkEffect.Type.BALL);
 								FireworkEffect eff = b.build();
-								if(p != damaged)CustomEntityFirework.spawn(p.getEyeLocation(), eff, getAllPlayersArray());
+								//if(p != damaged)CustomEntityFirework.spawn(p.getEyeLocation(), eff, getAllPlayersArray());
 							}); //TODO Add kill based modifier
 						Predicate<? super Player> predicate = p -> getGame().areEnemies(damager, p);
 						ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(damaged.getLocation(), 16);
@@ -157,7 +156,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 						b.withColor(getColor(getSelectedMode().getChatColor()));
 						b.with(FireworkEffect.Type.BALL_LARGE);
 						FireworkEffect eff = b.build();
-						CustomEntityFirework.spawn(damaged.getEyeLocation(), eff, getAllPlayersArray());
+//						CustomEntityFirework.spawn(damaged.getEyeLocation(), eff, getAllPlayersArray());
 						
 					}
 					flyingEffect = false;
@@ -178,7 +177,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 					b.withColor(getColor(getSelectedMode().getChatColor()));
 					b.with(FireworkEffect.Type.BURST);
 					FireworkEffect eff = b.build();
-					CustomEntityFirework.spawn(proj.getLocation(), eff, getAllPlayersArray());
+					//CustomEntityFirework.spawn(proj.getLocation(), eff, getAllPlayersArray());
 					
 					setValue(0);
 					flyingEffect = true;
@@ -221,7 +220,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 								b.withColor(getColor(getSelectedMode().getChatColor()));
 								b.with(FireworkEffect.Type.BALL);
 								FireworkEffect eff = b.build();
-								CustomEntityFirework.spawn(p.getEyeLocation().add(0, -1, 0).add(v), eff, getAllPlayersArray());
+								//CustomEntityFirework.spawn(p.getEyeLocation().add(0, -1, 0).add(v), eff, getAllPlayersArray());
 							}); //TODO Add kill based modifier
 							Predicate<? super Player> predicate = p -> getGame().areEnemies(getPlayer(), p);
 							ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(focus, 16);
@@ -231,7 +230,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 							b.withColor(getColor(getSelectedMode().getChatColor()));
 							b.with(FireworkEffect.Type.BALL_LARGE);
 							FireworkEffect eff = b.build();
-							CustomEntityFirework.spawn(focus, eff, getAllPlayersArray());
+							//CustomEntityFirework.spawn(focus, eff, getAllPlayersArray());
 							
 						}
 						flyingEffect = false;
