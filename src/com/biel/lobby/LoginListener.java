@@ -162,7 +162,7 @@ public class LoginListener implements Listener {
 		//evt.setMotd(Integer.toString(games) + " partides en curs");
 		try {
 			int num = 5;
-			while(Com.getRankingString(num + 1).length() <= 140){
+			while(Com.getRankingString(num + 1).length() <= 140 && num <= 10){
 				num++;
 			}
 			String lastMotd = Com.getRankingString(num);

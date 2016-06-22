@@ -19,6 +19,7 @@ import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.data.DataAPI;
 import com.biel.lobby.utilities.data.PlayerData;
+import com.connorlinfoot.titleapi.TitleAPI;
 
 public class Com {
  //HIO
@@ -208,6 +209,7 @@ public class Com {
 					Title t = new Title(s, "", 0, 6, 0);
 					t.setTimingsToTicks();
 					t.send(p);
+					TitleAPI.sendTitle(p,0,6,0,s,Integer.toString(Bukkit.getOnlinePlayers().size()));
 				}
 			}, 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
 			i++;

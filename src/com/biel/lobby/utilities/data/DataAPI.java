@@ -81,6 +81,7 @@ public class DataAPI {
 	public String getPlayerName(int id) { 
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `username` FROM `players` WHERE player_id=?;");
+			connection.isValid(2000);
 			sql.setInt(1, id);
 			ResultSet result = sql.executeQuery();
 			result.next();
@@ -90,7 +91,7 @@ public class DataAPI {
 
 			return name;
 		} catch (SQLException e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 		return "[NotOnDB]";
 	}
