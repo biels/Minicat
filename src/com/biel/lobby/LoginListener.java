@@ -23,6 +23,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.potion.PotionEffect;
@@ -185,7 +186,7 @@ public class LoginListener implements Listener {
 		for (int i = 15; i > 0; i--) {
 			msg = msg.replaceAll("la" + StringUtils.repeat("g", i), "grei" + StringUtils.repeat("x", i));			
 		}
-		
+
 		msg = msg.replaceAll("l.a.g", "g.r.e.i.x");
 		msg = msg.replaceAll("l a g", "g r e i x");
 		msg = msg.replaceAll("l ag ", "gr eix ");
@@ -213,10 +214,19 @@ public class LoginListener implements Listener {
 
 	}
 	@EventHandler
+	public void onPlayerMove(PlayerMoveEvent evt) {
+		if (evt.getTo().getBlockY() < 60) {
+			Player ply = evt.getPlayer();
+			if (lobby.isOnLobby(ply)) {
+				Com.teleportPlayerToLobby(ply);
+			} 
+		}
+	}
+	@EventHandler
 	public void onEntityDamageEvent(EntityDamageEvent evt) {
 		if (evt.getEntity() instanceof Slime){
 			if(Utils.Possibilitat(100)){
-				evt.getEntity().teleport(Com.getLobbyWorld().getSpawnLocation().add(0, 3, 0));
+				//evt.getEntity().teleport(Com.getLobbyWorld().getSpawnLocation().add(0, 3, 0));
 			}
 		}
 		if (evt.getEntity() instanceof Player){
