@@ -684,8 +684,9 @@ public class Parkour extends JocScoreCombo{
 					blocks.add(lc);materials.add(Material.QUARTZ_BLOCK);
 					Vector dlc = lc.clone().add(d);
 					Material mat = Material.QUARTZ_BLOCK;
-					if(t == 1)mat = Material.LADDER;
-					if(t == 1)if(GUtils.Possibilitat(38))mat = Material.LADDER;
+					if(t == 1)mat = Material.IRON_FENCE;
+					if(t == 2)if(GUtils.Possibilitat(38))mat = Material.SLIME_BLOCK;
+					if(t == 3)if(GUtils.Possibilitat(60))mat = Material.PACKED_ICE;
 					blocks.add(dlc);materials.add(mat);
 					checkpoints.add(new Checkpoint(dlc));
 					d = GUtils.rotateVector(d, getUp(), (Math.PI/2.0) * (!counterClockwise ? -1 : 1));
