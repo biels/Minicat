@@ -169,6 +169,7 @@ public class Parkour extends JocScoreCombo{
 	public void ultraHeartbeat() {
 		// TODO Auto-generated method stub
 		super.ultraHeartbeat();
+		streams.removeIf(s -> !s.isValid());
 		streams.forEach(s -> s.ultraTick());
 	}
 	@Override
@@ -208,6 +209,10 @@ public class Parkour extends JocScoreCombo{
 		}
 		public Player getPlayer(){
 			return super.getPlayer();
+		}
+		public boolean isValid(){
+			//The player is still playing
+			return getPlayer() != null && getPlayers().contains(getPlayer());
 		}
 		public int getTargetBubbleIndex() {
 			return targetBubbleIndex;
@@ -658,7 +663,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 1;
+				return 1.1;
 			}
 		}
 		public class ZigZagBubble extends ParkourBubble{
@@ -680,7 +685,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 4 * n  + 1;
+				return 3 * n  + 1;
 			}
 		}
 		public class CrossBlockTowerBubble extends ParkourBubble{
@@ -690,7 +695,7 @@ public class Parkour extends JocScoreCombo{
 				Vector c = getForward();
 				Vector d = getBackRightLeftRandom();
 				if(!d.equals(getBackward()))n--;
-				int t = GUtils.NombreEntre(0, 2);
+				int t = GUtils.NombreEntre(-2, 2);
 				boolean counterClockwise = d.equals(getRight());
 				//sendGlobalMessage("ccw: " + counterClockwise);
 				for (int i = 0; i < n; i++) {
@@ -698,7 +703,7 @@ public class Parkour extends JocScoreCombo{
 					blocks.add(lc);materials.add((t == 1 ? Material.PACKED_ICE : Material.QUARTZ_BLOCK));
 					Vector dlc = lc.clone().add(d);
 					Material mat = Material.QUARTZ_BLOCK;
-					if(t == 1)if(GUtils.Possibilitat(38))mat = Material.IRON_FENCE;
+					if(t == 1)if(GUtils.Possibilitat(30))mat = Material.IRON_FENCE;
 					if(t == 2)if(GUtils.Possibilitat(60))mat = Material.PACKED_ICE;
 					blocks.add(dlc);materials.add(mat);
 					checkpoints.add(new Checkpoint(dlc));
