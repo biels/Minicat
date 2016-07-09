@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import javax.persistence.TemporalType;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
@@ -39,7 +40,6 @@ import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.Pair;
-import com.biel.BielAPI.Utils.Title;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.BielAPI.events.WorldEventBus;
 import com.biel.lobby.Com;
@@ -50,6 +50,7 @@ import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
+import com.connorlinfoot.titleapi.TitleAPI;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 
@@ -58,7 +59,7 @@ public class Parkour extends JocScoreCombo{
 	ArrayList<ParkourStream> streams = new ArrayList<ParkourStream>();
 	ParkourProvider provider = new ParkourProvider();
 	int playerCount = 0;
-	int mapLength = 35;
+	int mapLength = 50;
 	@Override
 	public String getGameName() {
 		// TODO Auto-generated method stub
@@ -289,12 +290,7 @@ public class Parkour extends JocScoreCombo{
 				createHolgram();
 			}
 			public void showScore (Score score){
-				Title title = new Title(score.getFormattedString(), ChatColor.DARK_AQUA + "x" + getCombo(getPlayer()) , 1,4,2);
-				//title.setTitleColor(ChatColor.RED);
-				//title.setSubtitleColor(ChatColor.GREEN);
-				title.setTimingsToTicks(); // IMPORTANT
-
-				title.send(getPlayer());
+				TitleAPI.sendTitle(getPlayer(),1,4,2,score.getFormattedString(),ChatColor.DARK_AQUA + "x" + getCombo(getPlayer()));
 			}
 			public void advance(Score score){
 				ParkourPlayerInfo i = getPlayerInfo(getPlayer());
@@ -662,7 +658,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 1.18;
+				return 1;
 			}
 		}
 		public class ZigZagBubble extends ParkourBubble{
@@ -684,28 +680,29 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 5.38 * n  + 1;
+				return 4 * n  + 1;
 			}
 		}
 		public class CrossBlockTowerBubble extends ParkourBubble{
-			int n = Utils.NombreEntre(3, 7);
+			int n = Utils.NombreEntre(0, 2) * 4 + 3;
 			@Override
 			public void generate() {
 				Vector c = getForward();
 				Vector d = getBackRightLeftRandom();
+				if(!d.equals(getBackward()))n--;
 				int t = GUtils.NombreEntre(0, 2);
-				boolean counterClockwise = d == getLeft();
+				boolean counterClockwise = d.equals(getRight());
+				//sendGlobalMessage("ccw: " + counterClockwise);
 				for (int i = 0; i < n; i++) {
 					Vector lc = c.clone().add(getUp().multiply(i));
-					blocks.add(lc);materials.add((t == 1 ? Material.IRON_FENCE : Material.QUARTZ_BLOCK));
+					blocks.add(lc);materials.add((t == 1 ? Material.PACKED_ICE : Material.QUARTZ_BLOCK));
 					Vector dlc = lc.clone().add(d);
 					Material mat = Material.QUARTZ_BLOCK;
-					if(t == 1)mat = Material.IRON_FENCE;
-					if(t == 2)if(GUtils.Possibilitat(38))mat = Material.SLIME_BLOCK;
-					if(t == 3)if(GUtils.Possibilitat(60))mat = Material.PACKED_ICE;
+					if(t == 1)if(GUtils.Possibilitat(38))mat = Material.IRON_FENCE;
+					if(t == 2)if(GUtils.Possibilitat(60))mat = Material.PACKED_ICE;
 					blocks.add(dlc);materials.add(mat);
 					checkpoints.add(new Checkpoint(dlc));
-					d = GUtils.rotateVector(d, getUp(), (Math.PI/2.0) * (!counterClockwise ? -1 : 1));
+					d = GUtils.rotateVector(d, getUp(), (Math.PI/2.0) * (counterClockwise ? 1 : -1));
 				}
 
 			}
@@ -713,7 +710,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 2.5 * n + 2;
+				return 1.6 * n + 0.5;
 			}
 
 		}

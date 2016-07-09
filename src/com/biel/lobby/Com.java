@@ -206,9 +206,6 @@ public class Com {
 			Bukkit.getScheduler().runTaskLater(getPlugin(), new Runnable() {
 				@Override
 				public void run() {
-					Title t = new Title(s, "", 0, 6, 0);
-					t.setTimingsToTicks();
-					t.send(p);
 					TitleAPI.sendTitle(p,0,6,0,s,Integer.toString(Bukkit.getOnlinePlayers().size()));
 				}
 			}, 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
