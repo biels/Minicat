@@ -493,7 +493,13 @@ public class Parkour extends JocScoreCombo{
 			try {
 				b = getRandomBubbleType().getConstructor(ParkourProvider.class).newInstance(this);			
 				b.generate();
-				if(bubbles.size() > 0){b.setEntryPoint(bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing()));}else{b.setEntryPoint(getForward().multiply(4));}
+				if(bubbles.size() > 0){
+					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing());
+					if(newEntryPoint.getBlockY() < 10)newEntryPoint.setY(10);		
+					b.setEntryPoint(newEntryPoint);
+				}else{
+					b.setEntryPoint(getForward().multiply(4));
+				}
 				bubbles.add(b);
 			} catch (InstantiationException e) {
 				// TODO Auto-generated catch block
@@ -518,6 +524,15 @@ public class Parkour extends JocScoreCombo{
 		Class<? extends ParkourBubble> getRandomBubbleType(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> registeredBubbleTypes = getRegisteredBubbleTypes();	
 			Collections.shuffle(registeredBubbleTypes);
+			double max = registeredBubbleTypes.stream().mapToDouble((p) -> p.getSecond()).sum();
+			int i = 0;
+			while (true) {
+				for (Pair<Class<? extends ParkourBubble>, Double> p : registeredBubbleTypes) {
+					if(Utils.Possibilitat(p.getSecond(), max)) return p.getFirst();
+				} 
+				i++;
+				if(i > 300)break;
+			}
 			return registeredBubbleTypes.get(0).getFirst();
 			//			int c = 0;
 			//			for(Pair<Class<? extends ParkourBubble>, Double> t : registeredBubbleTypes){
@@ -529,7 +544,7 @@ public class Parkour extends JocScoreCombo{
 		}
 		List<Pair<Class<? extends ParkourBubble>, Double>> getRegisteredBubbleTypes(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<Pair<Class<? extends ParkourBubble>, Double>>();
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockBubble.class, 10D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockBubble.class, 60D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(ZigZagBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(CrossBlockTowerBubble.class, 10D));
 
@@ -544,7 +559,7 @@ public class Parkour extends JocScoreCombo{
 			if(Utils.Possibilitat(50))hor.multiply(-1);
 			if(Utils.Possibilitat(10))hor.multiply(2);
 			if(Utils.Possibilitat(70))hor.multiply(0);
-			Vector forward = getForward().multiply(Utils.NombreEntre(3,  4));			
+			Vector forward = getForward().multiply(Utils.NombreEntre(2,  4));			
 			return vert.add(hor).add(forward);
 
 		}
@@ -681,7 +696,7 @@ public class Parkour extends JocScoreCombo{
 				boolean counterClockwise = d == getLeft();
 				for (int i = 0; i < n; i++) {
 					Vector lc = c.clone().add(getUp().multiply(i));
-					blocks.add(lc);materials.add(Material.QUARTZ_BLOCK);
+					blocks.add(lc);materials.add((t == 1 ? Material.IRON_FENCE : Material.QUARTZ_BLOCK));
 					Vector dlc = lc.clone().add(d);
 					Material mat = Material.QUARTZ_BLOCK;
 					if(t == 1)mat = Material.IRON_FENCE;
