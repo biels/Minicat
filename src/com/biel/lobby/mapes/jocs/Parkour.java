@@ -273,7 +273,7 @@ public class Parkour extends JocScoreCombo{
 			}
 			private Location getHologramLocation() {
 				// TODO Auto-generated method stub
-				return getBubble().getFailTeleportPoint(startLocation).add(0, 0.8, 0);
+				return getBubble().getFailTeleportPoint(startLocation).add(0, 1.6, 0);
 			}
 			public void createHolgram(){
 				if (h != null){return;}
@@ -416,10 +416,11 @@ public class Parkour extends JocScoreCombo{
 				}
 				void onEnter(){
 					if(isFirst())setFirstContactTime();
-					if(isLast())advanceBasedOnTime();
+					if(isLast() && !isAlone())advanceBasedOnTime();
 					if(!isAlone())tryComplete();
 				}
 				void onLeave(){
+					if(isAlone())advanceBasedOnTime();
 					tryComplete();
 
 				}
@@ -443,7 +444,7 @@ public class Parkour extends JocScoreCombo{
 					if(!getPlayers().contains(p))return;
 					//Somewhere call advance
 					//getWorld().playEffect(l, Effect.FLAME, 4);
-					boolean isPlayerInsideRange = getAbsoluteCheckpointPosition().add(new Vector(0, 1.2, 0)).distance(p.getLocation().toVector()) <= getCheckpoint().radius;
+					boolean isPlayerInsideRange = getAbsoluteCheckpointPosition().add(new Vector(0.5, 1.2, 0.5)).distance(p.getLocation().toVector()) <= getCheckpoint().radius;
 
 					if(!wasPlayerInsideRange && isPlayerInsideRange){
 						onEnter();
@@ -655,7 +656,7 @@ public class Parkour extends JocScoreCombo{
 				blocks.add(new Vector(0, 0, 0));materials.add(Material.QUARTZ_BLOCK);		
 				//blocks.add(new Vector(0, 1, 0));materials.add(Material.TORCH);
 				checkpoints.add(new Checkpoint(new Vector(0, 0, 0)));
-				checkpoints.add(new Checkpoint(new Vector(0, 0, 0)));
+				//checkpoints.add(new Checkpoint(new Vector(0, 0, 0)));
 			}
 
 			@Override
