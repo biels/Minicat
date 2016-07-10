@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
@@ -20,8 +22,11 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -35,8 +40,11 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.inventory.meta.ItemMeta.Spigot;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -124,9 +132,11 @@ public class Quakecraft extends JocScoreRace {
 		if(t >= 1600){return Utils.setItemNameAndLore(new ItemStack(Material.STONE_HOE), ChatColor.YELLOW + "Llança-pilotes", l);}
 		if(t >= 1400){return Utils.setItemNameAndLore(new ItemStack(Material.IRON_HOE), ChatColor.YELLOW + "Llançador de focs artificials", l);}
 		if(t >= 1200){return Utils.setItemNameAndLore(new ItemStack(Material.GOLD_HOE), ChatColor.YELLOW + "Railgun experimental", l);}
-		if(t >= 1000){return Utils.setItemNameAndLore(new ItemStack(Material.DIAMOND_HOE), ChatColor.AQUA + "Railgun", l);}
-		if(t > 550){return Utils.setItemNameAndLore(new ItemStack(Material.DIAMOND_HOE),  ChatColor.AQUA + "Ultimate Railgun", l);}
-		if(t <= 550){return Utils.setItemNameAndLore(new ItemStack(Material.DIAMOND_HOE), ChatColor.AQUA +"SUPER Railgun", l);}
+		ItemStack item = new ItemStack(Material.DIAMOND_HOE);
+		if(t >= 1000){return Utils.setItemNameAndLore(item, ChatColor.AQUA + "Railgun", l);}
+		if(t > 550){return Utils.setItemNameAndLore(item,  ChatColor.AQUA + "Ultimate Railgun", l);}
+		item.addEnchantment(Enchantment.ARROW_DAMAGE, 4);
+		if(t <= 550){return Utils.setItemNameAndLore(item, ChatColor.AQUA +"SUPER Railgun", l);}
 		return new ItemStack(Material.WOOD);
 	}
 	void updateRailgun(Player ply){
@@ -296,6 +306,12 @@ public class Quakecraft extends JocScoreRace {
 			FireworkEffect r = b.build();
 			Player pArr[] = new Player[getPlayers().size()];
 			getPlayers().toArray(pArr);
+			Firework firework = (Firework) getWorld().spawnEntity(l, EntityType.FIREWORK);
+			FireworkMeta fireworkMeta = firework.getFireworkMeta();
+			fireworkMeta.addEffect(r);
+			fireworkMeta.setPower(1);
+			firework.setFireworkMeta(fireworkMeta);
+			firework.detonate();
 			//CustomEntityFirework.spawn(l, r, pArr);
 //			fPlayer.playFirework(getWorld(), l, r);
 //			fPlayer.playFirework(getWorld(), l, r);
