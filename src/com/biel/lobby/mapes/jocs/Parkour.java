@@ -727,12 +727,14 @@ public class Parkour extends JocScoreCombo{
 						blocks.add(getRight().multiply(i - 1).add(getForward().multiply(j)));materials.add(Material.SLIME_BLOCK);
 					}
 				}
+				checkpoints.add(new Checkpoint(getForward(), 2.12));
 				Vector d = getForward().multiply(5).add(getUp().multiply(4));
 				for(int i = 0; i < 3; i++){
 					for (int j = 0; j < 2; j++){
 						blocks.add(getRight().multiply(i - 1).add(getForward().multiply(j)).add(d));materials.add(Material.QUARTZ_BLOCK);
 					}
 				}
+				checkpoints.add(new Checkpoint(d.clone().add(getForward()), 1.8));
 			}
 
 			@Override
