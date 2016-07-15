@@ -50,6 +50,7 @@ import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
+import com.biel.lobby.utilities.Vec;
 import com.connorlinfoot.titleapi.TitleAPI;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
@@ -549,6 +550,8 @@ public class Parkour extends JocScoreCombo{
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockBubble.class, 60D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(ZigZagBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(CrossBlockTowerBubble.class, 10D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockLineBubble.class, 10D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SlimeJumpBubble.class, 10D));
 
 			return r;
 		}
@@ -689,18 +692,53 @@ public class Parkour extends JocScoreCombo{
 				return 3 * n  + 1;
 			}
 		}
-		public class StraightMomentumLineBubble extends ParkourBubble{
-
+		public class SingleBlockLineBubble extends ParkourBubble{
+			int n = Utils.NombreEntre(4, 8);
 			@Override
 			public void generate() {
 				// TODO Auto-generated method stub
 				
+				for (int i = 0; i < n; i++){
+					Vector v = getForward().multiply(2 * i);
+					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
+					if (i % 2 == 0) checkpoints.add(new Checkpoint(v));
+				}
+			}
+			
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return n * 1.05 + 0.5;
+			}
+			
+		}
+		public class SlimeJumpBubble extends ParkourBubble{
+			@Override
+			public Vector getRandomBubbleSpacing() {
+				// TODO Auto-generated method stub
+				return getForward().multiply(2).add(new Vector(0,-6,0));
+			}
+
+			@Override
+			public void generate() {
+				// TODO Auto-generated method stub
+				for(int i = 0; i < 3; i++){
+					for (int j = 0; j < 3; j++){
+						blocks.add(getRight().multiply(i - 1).add(getForward().multiply(j)));materials.add(Material.SLIME_BLOCK);
+					}
+				}
+				Vector d = getForward().multiply(5).add(getUp().multiply(4));
+				for(int i = 0; i < 3; i++){
+					for (int j = 0; j < 2; j++){
+						blocks.add(getRight().multiply(i - 1).add(getForward().multiply(j)).add(d));materials.add(Material.QUARTZ_BLOCK);
+					}
+				}
 			}
 
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 0;
+				return 1.5;
 			}
 			
 		}
