@@ -689,6 +689,21 @@ public class Parkour extends JocScoreCombo{
 				return 3 * n  + 1;
 			}
 		}
+		public class StraightMomentumLineBubble extends ParkourBubble{
+
+			@Override
+			public void generate() {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			
+		}
 		public class CrossBlockTowerBubble extends ParkourBubble{
 			int n = Utils.NombreEntre(0, 2) * 4 + 3;
 			@Override
