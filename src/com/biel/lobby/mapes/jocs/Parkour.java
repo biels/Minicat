@@ -498,7 +498,7 @@ public class Parkour extends JocScoreCombo{
 				b.generate();
 				if(bubbles.size() > 0){
 					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(b.getRandomBubbleSpacing());
-					if(newEntryPoint.getBlockY() < 10)newEntryPoint.setY(10);		
+					if(newEntryPoint.getBlockY() < 5)newEntryPoint.setY(5);		
 					b.setEntryPoint(newEntryPoint);
 				}else{
 					b.setEntryPoint(getForward().multiply(4));
@@ -693,7 +693,7 @@ public class Parkour extends JocScoreCombo{
 			}
 		}
 		public class SingleBlockLineBubble extends ParkourBubble{
-			int n = Utils.NombreEntre(4, 8);
+			int n = Utils.NombreEntre(2, 4) * 2;
 			@Override
 			public void generate() {
 				// TODO Auto-generated method stub
@@ -716,7 +716,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public Vector getRandomBubbleSpacing() {
 				// TODO Auto-generated method stub
-				return getForward().multiply(2).add(new Vector(0,-6,0));
+				return getForward().multiply(2).add(new Vector(0,-12,0));
 			}
 
 			@Override
