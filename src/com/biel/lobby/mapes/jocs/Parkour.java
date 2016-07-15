@@ -496,7 +496,7 @@ public class Parkour extends JocScoreCombo{
 				b = getRandomBubbleType().getConstructor(ParkourProvider.class).newInstance(this);			
 				b.generate();
 				if(bubbles.size() > 0){
-					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing());
+					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(b.getRandomBubbleSpacing());
 					if(newEntryPoint.getBlockY() < 10)newEntryPoint.setY(10);		
 					b.setEntryPoint(newEntryPoint);
 				}else{
@@ -552,19 +552,7 @@ public class Parkour extends JocScoreCombo{
 
 			return r;
 		}
-		public Vector getRandomBubbleSpacing(){
-			Vector vert = new Vector(0, 0, 0);
-			if(Utils.Possibilitat(10))vert.setY(-1);
-			if(Utils.Possibilitat(8))vert.setY(-2);
-			if(Utils.Possibilitat(18))vert.setY(1);
-			Vector hor = new Vector(0, 1, 0).crossProduct(getForward()).normalize();
-			if(Utils.Possibilitat(50))hor.multiply(-1);
-			if(Utils.Possibilitat(10))hor.multiply(2);
-			if(Utils.Possibilitat(70))hor.multiply(0);
-			Vector forward = getForward().multiply(Utils.NombreEntre(2,  4));			
-			return vert.add(hor).add(forward);
-
-		}
+		
 		//		public class ParkourModule{ //Set of bubbles
 		//			ArrayList<ParkourBubble> bubbles = new ArrayList<ParkourBubble>();
 		//			Vector startPoint;
@@ -589,6 +577,19 @@ public class Parkour extends JocScoreCombo{
 			}
 			public abstract void generate();
 			public abstract double getMultiplier();
+			public Vector getRandomBubbleSpacing(){
+				Vector vert = new Vector(0, 0, 0);
+				if(Utils.Possibilitat(10))vert.setY(-1);
+				if(Utils.Possibilitat(8))vert.setY(-2);
+				if(Utils.Possibilitat(18))vert.setY(1);
+				Vector hor = new Vector(0, 1, 0).crossProduct(getForward()).normalize();
+				if(Utils.Possibilitat(50))hor.multiply(-1);
+				if(Utils.Possibilitat(10))hor.multiply(2);
+				if(Utils.Possibilitat(70))hor.multiply(0);
+				Vector forward = getForward().multiply(Utils.NombreEntre(2,  4));			
+				return vert.add(hor).add(forward);
+
+			}
 			public Vector getEntryPoint() {
 				return entryPoint.clone();
 			}
