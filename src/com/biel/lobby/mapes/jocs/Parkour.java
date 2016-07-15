@@ -50,6 +50,7 @@ import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
+import com.biel.lobby.utilities.Vec;
 import com.connorlinfoot.titleapi.TitleAPI;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
@@ -496,7 +497,7 @@ public class Parkour extends JocScoreCombo{
 				b = getRandomBubbleType().getConstructor(ParkourProvider.class).newInstance(this);			
 				b.generate();
 				if(bubbles.size() > 0){
-					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(getRandomBubbleSpacing());
+					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(b.getRandomBubbleSpacing());
 					if(newEntryPoint.getBlockY() < 10)newEntryPoint.setY(10);		
 					b.setEntryPoint(newEntryPoint);
 				}else{
@@ -549,22 +550,12 @@ public class Parkour extends JocScoreCombo{
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockBubble.class, 60D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(ZigZagBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(CrossBlockTowerBubble.class, 10D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockLineBubble.class, 10D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SlimeJumpBubble.class, 10D));
 
 			return r;
 		}
-		public Vector getRandomBubbleSpacing(){
-			Vector vert = new Vector(0, 0, 0);
-			if(Utils.Possibilitat(10))vert.setY(-1);
-			if(Utils.Possibilitat(8))vert.setY(-2);
-			if(Utils.Possibilitat(18))vert.setY(1);
-			Vector hor = new Vector(0, 1, 0).crossProduct(getForward()).normalize();
-			if(Utils.Possibilitat(50))hor.multiply(-1);
-			if(Utils.Possibilitat(10))hor.multiply(2);
-			if(Utils.Possibilitat(70))hor.multiply(0);
-			Vector forward = getForward().multiply(Utils.NombreEntre(2,  4));			
-			return vert.add(hor).add(forward);
-
-		}
+		
 		//		public class ParkourModule{ //Set of bubbles
 		//			ArrayList<ParkourBubble> bubbles = new ArrayList<ParkourBubble>();
 		//			Vector startPoint;
@@ -589,6 +580,19 @@ public class Parkour extends JocScoreCombo{
 			}
 			public abstract void generate();
 			public abstract double getMultiplier();
+			public Vector getRandomBubbleSpacing(){
+				Vector vert = new Vector(0, 0, 0);
+				if(Utils.Possibilitat(10))vert.setY(-1);
+				if(Utils.Possibilitat(8))vert.setY(-2);
+				if(Utils.Possibilitat(18))vert.setY(1);
+				Vector hor = new Vector(0, 1, 0).crossProduct(getForward()).normalize();
+				if(Utils.Possibilitat(50))hor.multiply(-1);
+				if(Utils.Possibilitat(10))hor.multiply(2);
+				if(Utils.Possibilitat(70))hor.multiply(0);
+				Vector forward = getForward().multiply(Utils.NombreEntre(2,  4));			
+				return vert.add(hor).add(forward);
+
+			}
 			public Vector getEntryPoint() {
 				return entryPoint.clone();
 			}
@@ -687,6 +691,56 @@ public class Parkour extends JocScoreCombo{
 				// TODO Auto-generated method stub
 				return 3 * n  + 1;
 			}
+		}
+		public class SingleBlockLineBubble extends ParkourBubble{
+			int n = Utils.NombreEntre(4, 8);
+			@Override
+			public void generate() {
+				// TODO Auto-generated method stub
+				
+				for (int i = 0; i < n; i++){
+					Vector v = getForward().multiply(2 * i);
+					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
+					if (i % 2 == 0) checkpoints.add(new Checkpoint(v));
+				}
+			}
+			
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return n * 1.05 + 0.5;
+			}
+			
+		}
+		public class SlimeJumpBubble extends ParkourBubble{
+			@Override
+			public Vector getRandomBubbleSpacing() {
+				// TODO Auto-generated method stub
+				return getForward().multiply(2).add(new Vector(0,-6,0));
+			}
+
+			@Override
+			public void generate() {
+				// TODO Auto-generated method stub
+				for(int i = 0; i < 3; i++){
+					for (int j = 0; j < 3; j++){
+						blocks.add(getRight().multiply(i - 1).add(getForward().multiply(j)));materials.add(Material.SLIME_BLOCK);
+					}
+				}
+				Vector d = getForward().multiply(5).add(getUp().multiply(4));
+				for(int i = 0; i < 3; i++){
+					for (int j = 0; j < 2; j++){
+						blocks.add(getRight().multiply(i - 1).add(getForward().multiply(j)).add(d));materials.add(Material.QUARTZ_BLOCK);
+					}
+				}
+			}
+
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return 1.5;
+			}
+			
 		}
 		public class CrossBlockTowerBubble extends ParkourBubble{
 			int n = Utils.NombreEntre(0, 2) * 4 + 3;
