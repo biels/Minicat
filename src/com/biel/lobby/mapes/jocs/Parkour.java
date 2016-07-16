@@ -557,7 +557,7 @@ public class Parkour extends JocScoreCombo{
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockLineBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SlimeJumpBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(GlassPaneLineBubble.class, 10D));
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SineWaveBubble.class, 400D));
+			//r.add(new Pair<Class<? extends ParkourBubble>, Double>(SineWaveBubble.class, 400D));
 			return r;
 		}
 		
