@@ -47,7 +47,6 @@ import com.biel.lobby.Com;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocScoreCombo;
 import com.biel.lobby.mapes.JocScoreRace;
-import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.GlassPaneLineBubble.SineWaveBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
 import com.biel.lobby.utilities.Cuboid;
@@ -812,27 +811,30 @@ public class Parkour extends JocScoreCombo{
 				// TODO Auto-generated method stub
 				return 4.5;
 			}
-			public class SineWaveBubble extends ParkourBubble{
-				int n = Utils.NombreEntre(1, 5);
-				int r = Utils.NombreEntre(5, 7);
-				@Override
-				public void generate() {
-					// TODO Auto-generated method stub
-					
-					for (double i = 0; i < Math.PI * r * n; i = i + (2 * r / (Math.PI * r * n))) {
-						double x = i;
-						double y = Math.sin(x) * r;
-						blocks.add(getForward().multiply(x).add(getLeft().multiply(y)));
-					}
-				}
-
-				@Override
-				public double getMultiplier() {
-					// TODO Auto-generated method stub
-					return  Math.PI * r * n / 4;
-				}
+			
+		}
+		public class SineWaveBubble extends ParkourBubble{
+			int n = Utils.NombreEntre(1, 5);
+			int r = Utils.NombreEntre(5, 7);
+			@Override
+			public void generate() {
+				// TODO Auto-generated method stub
 				
+				for (double i = 0; i < Math.PI * r * n; i = i + (2 * r / (Math.PI * r * n))) {
+					double x = i;
+					double y = Math.sin(x) * r;
+					Vector v = getForward().multiply(x).add(getLeft().multiply(y));
+					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
+					if(Math.abs(y) < 0.1)checkpoints.add(new Checkpoint(v));
+				}
 			}
+
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return  Math.PI * r * n / 4;
+			}
+			
 		}
 	}
 	
