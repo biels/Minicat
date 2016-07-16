@@ -1,6 +1,7 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.MalformedParameterizedTypeException;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -90,6 +91,9 @@ public class Parkour extends JocScoreCombo{
 	}
 	public Vector getLeft(){
 		return getRight().multiply(-1);
+	}
+	public Vector getZero(){
+		return new Vector(0,0,0);
 	}
 	public Vector getCenterize(){
 		return new Vector(0.5, 0.5, 0.5);
@@ -552,6 +556,7 @@ public class Parkour extends JocScoreCombo{
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(CrossBlockTowerBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockLineBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SlimeJumpBubble.class, 10D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(GlassPaneLineBubble.class, 10D));
 
 			return r;
 		}
@@ -775,7 +780,35 @@ public class Parkour extends JocScoreCombo{
 			}
 
 		}
+		public class GlassPaneLineBubble extends ParkourBubble{
+
+			@Override
+			public void generate() {
+				// TODO Auto-generated method stub
+				
+				blocks.add(getZero());materials.add(Material.QUARTZ_BLOCK);
+				checkpoints.add(new Checkpoint(getZero()));
+				for(int i = 1; i < 15; i++){
+					if (Utils.Possibilitat(80)){
+						blocks.add(getForward().multiply(i));materials.add(Material.STAINED_GLASS_PANE);
+						if (i % 3 == 0) checkpoints.add(new Checkpoint(getForward().multiply(i)));
+					}
+				}
+				Vector end = getForward().multiply(15);
+				blocks.add(end);materials.add(Material.QUARTZ_BLOCK);
+				checkpoints.add(new Checkpoint(end));
+			}
+
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return 4.5;
+			}
+		}
 	}
+	
+	
+		
 	@Override
 	public ParkourPlayerInfo getPlayerInfo(Player p) {
 		return getPlayerInfo(p, ParkourPlayerInfo.class);		
