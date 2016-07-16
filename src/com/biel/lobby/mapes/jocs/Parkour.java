@@ -47,6 +47,7 @@ import com.biel.lobby.Com;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocScoreCombo;
 import com.biel.lobby.mapes.JocScoreRace;
+import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.GlassPaneLineBubble.SineWaveBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
 import com.biel.lobby.utilities.Cuboid;
@@ -502,7 +503,7 @@ public class Parkour extends JocScoreCombo{
 				b.generate();
 				if(bubbles.size() > 0){
 					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(b.getRandomBubbleSpacing());
-					if(newEntryPoint.getBlockY() < 5)newEntryPoint.setY(5);		
+					//if(newEntryPoint.getBlockY() < 5)newEntryPoint.setY(5);		
 					b.setEntryPoint(newEntryPoint);
 				}else{
 					b.setEntryPoint(getForward().multiply(4));
@@ -557,7 +558,7 @@ public class Parkour extends JocScoreCombo{
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockLineBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SlimeJumpBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(GlassPaneLineBubble.class, 10D));
-
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SineWaveBubble.class, 400D));
 			return r;
 		}
 		
@@ -594,7 +595,7 @@ public class Parkour extends JocScoreCombo{
 				if(Utils.Possibilitat(50))hor.multiply(-1);
 				if(Utils.Possibilitat(10))hor.multiply(2);
 				if(Utils.Possibilitat(70))hor.multiply(0);
-				Vector forward = getForward().multiply(Utils.NombreEntre(2,  4));			
+				Vector forward = getForward().multiply(Utils.NombreEntre(3,  4));			
 				return vert.add(hor).add(forward);
 
 			}
@@ -752,6 +753,13 @@ public class Parkour extends JocScoreCombo{
 		public class CrossBlockTowerBubble extends ParkourBubble{
 			int n = Utils.NombreEntre(0, 2) * 4 + 3;
 			@Override
+			public Vector getRandomBubbleSpacing() {
+				// TODO Auto-generated method stub
+				Vector randomBubbleSpacing = super.getRandomBubbleSpacing();
+				randomBubbleSpacing.setY(0);
+				return randomBubbleSpacing;
+			}
+			@Override
 			public void generate() {
 				Vector c = getForward();
 				Vector d = getBackRightLeftRandom();
@@ -803,6 +811,27 @@ public class Parkour extends JocScoreCombo{
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
 				return 4.5;
+			}
+			public class SineWaveBubble extends ParkourBubble{
+				int n = Utils.NombreEntre(1, 5);
+				int r = Utils.NombreEntre(5, 7);
+				@Override
+				public void generate() {
+					// TODO Auto-generated method stub
+					
+					for (double i = 0; i < Math.PI * r * n; i = i + (2 * r / (Math.PI * r * n))) {
+						double x = i;
+						double y = Math.sin(x) * r;
+						blocks.add(getForward().multiply(x).add(getLeft().multiply(y)));
+					}
+				}
+
+				@Override
+				public double getMultiplier() {
+					// TODO Auto-generated method stub
+					return  Math.PI * r * n / 4;
+				}
+				
 			}
 		}
 	}
