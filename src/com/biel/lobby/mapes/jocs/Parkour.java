@@ -552,12 +552,12 @@ public class Parkour extends JocScoreCombo{
 		List<Pair<Class<? extends ParkourBubble>, Double>> getRegisteredBubbleTypes(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<Pair<Class<? extends ParkourBubble>, Double>>();
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockBubble.class, 60D));
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(ZigZagBubble.class, 10D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(ZigZagBubble.class, 8D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(CrossBlockTowerBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockLineBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SlimeJumpBubble.class, 10D));
 			r.add(new Pair<Class<? extends ParkourBubble>, Double>(GlassPaneLineBubble.class, 10D));
-			//r.add(new Pair<Class<? extends ParkourBubble>, Double>(SineWaveBubble.class, 400D));
+			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SineWaveBubble.class, 8D));
 			return r;
 		}
 		
@@ -706,7 +706,7 @@ public class Parkour extends JocScoreCombo{
 				for (int i = 0; i < n; i++){
 					Vector v = getForward().multiply(2 * i);
 					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
-					if (i % 2 == 0) checkpoints.add(new Checkpoint(v));
+					if (i % 1 == 0) checkpoints.add(new Checkpoint(v));
 				}
 			}
 			
@@ -814,25 +814,25 @@ public class Parkour extends JocScoreCombo{
 			
 		}
 		public class SineWaveBubble extends ParkourBubble{
-			int n = Utils.NombreEntre(1, 5);
-			int r = Utils.NombreEntre(4, 7);
+			int n = Utils.NombreEntre(1, 4);
+			int r = Utils.NombreEntre(3, 9);
 			@Override
 			public void generate() {
 				// TODO Auto-generated method stub
 				
-				for (double i = 0; i < Math.PI * r * n; i = i + 1) {
-					double x = i - (i % Math.PI) + (i % Math.PI) * Math.abs(Math.cos(i));
-					double y = Math.sin(x) * r;
+				for (double i = 0; i <= 2 * r * n; i = i + 1) {
+					double x = i;
+					double y = Math.sin(i * Math.PI / (2*r)) * r;
 					Vector v = getForward().multiply(x).add(getLeft().multiply(y));
 					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
-					if(Math.abs(y) < 0.5)checkpoints.add(new Checkpoint(v));
+					if(i % (r) == 0)checkpoints.add(new Checkpoint(v));
 				}
 			}
 
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return  Math.PI * r * n / 4;
+				return  Math.PI * r * n / 2.8;
 			}
 			
 		}
