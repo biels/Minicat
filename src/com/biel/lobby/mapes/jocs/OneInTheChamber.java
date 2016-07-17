@@ -2,6 +2,7 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -11,6 +12,7 @@ import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 
 import com.biel.lobby.mapes.JocScoreRace;
+import com.biel.lobby.utilities.Utils;
 
 public class OneInTheChamber extends JocScoreRace {
 
@@ -24,6 +26,25 @@ public class OneInTheChamber extends JocScoreRace {
 	public String getGameName() {
 		// TODO Auto-generated method stub
 		return "OneInTheChamber";
+	}
+	@Override
+	protected void teletransportarTothom() {
+		for (Player d : getPlayers()) {  // d gets successively each value in ar.
+			teleportToRandomSpawn(d);					
+		} 
+	}
+
+	protected void teleportToRandomSpawn(Player d) {
+		Location loc;
+		loc = getRandomSpawnLoc();
+		d.teleport(loc);
+	}
+
+	private Location getRandomSpawnLoc() {
+		Location loc;
+		ArrayList<Location> locs = pMapaActual().ObtenirLocations("arena", world);
+		loc = new Location(world, Utils.NombreEntre(locs.get(0).getBlockX(), locs.get(1).getBlockX()), locs.get(0).getY() + 1, Utils.NombreEntre(locs.get(0).getBlockZ(), locs.get(1).getBlockZ()));
+		return loc;
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply){
