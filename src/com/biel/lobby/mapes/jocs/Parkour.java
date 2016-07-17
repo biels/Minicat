@@ -815,17 +815,17 @@ public class Parkour extends JocScoreCombo{
 		}
 		public class SineWaveBubble extends ParkourBubble{
 			int n = Utils.NombreEntre(1, 5);
-			int r = Utils.NombreEntre(5, 7);
+			int r = Utils.NombreEntre(4, 7);
 			@Override
 			public void generate() {
 				// TODO Auto-generated method stub
 				
-				for (double i = 0; i < Math.PI * r * n; i = i + (2 * r / (Math.PI * r * n))) {
-					double x = i;
+				for (double i = 0; i < Math.PI * r * n; i = i + 1) {
+					double x = i - (i % Math.PI) + (i % Math.PI) * Math.abs(Math.cos(i));
 					double y = Math.sin(x) * r;
 					Vector v = getForward().multiply(x).add(getLeft().multiply(y));
 					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
-					if(Math.abs(y) < 0.1)checkpoints.add(new Checkpoint(v));
+					if(Math.abs(y) < 0.5)checkpoints.add(new Checkpoint(v));
 				}
 			}
 
