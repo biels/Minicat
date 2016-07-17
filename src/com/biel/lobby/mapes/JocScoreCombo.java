@@ -251,7 +251,7 @@ public abstract class JocScoreCombo extends Joc {
 
 					if (index == w.size() && w.size() >= 2){c = "" + ChatColor.RED;}
 					String name = p.getName();					
-					String finalString = c + StringUtils.abbreviate(name, 9);
+					String finalString = Rank.getRank(getPlayerInfo(p).getAccuracy()) + c + StringUtils.abbreviate(name, 8);
 					double combo = getCombo(p);
 					if (combo > 0){
 						//finalString += ChatColor.WHITE + " ("+ ChatColor.YELLOW + Integer.toString(spree) + ChatColor.WHITE + ")";
