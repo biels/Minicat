@@ -51,8 +51,11 @@ public abstract class JocScoreCombo extends Joc {
 
 		planificarReseteig(40 / (getPlayers().size() + 1));
 	}
+	public double getRankMultiplier(){
+		return 1;
+	}
 	public enum Rank{
-		SS(100), S(95), A(90), B(80), C(70), D(60), F(40), FF(5);
+		SS(99), S(95), A(90), B(80), C(70), D(60), F(40), FF(5);
 		private int value;
 
 		private Rank(int value) {
@@ -63,7 +66,7 @@ public abstract class JocScoreCombo extends Joc {
 			return value;
 		}
 		public static Rank getRank(double percent){
-			Rank r = Rank.D;
+			Rank r = Rank.FF;
 			for(Rank rank : Rank.values()){
 				if(percent > rank.getValue() && rank.getValue() > r.getValue())r = rank;
 			}
