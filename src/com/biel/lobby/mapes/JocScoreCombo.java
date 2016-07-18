@@ -51,9 +51,6 @@ public abstract class JocScoreCombo extends Joc {
 
 		planificarReseteig(40 / (getPlayers().size() + 1));
 	}
-	public double getRankMultiplier(){
-		return 1;
-	}
 	public enum Rank{
 		SS(99), S(95), A(90), B(80), C(70), D(60), F(40), FF(5);
 		private int value;
@@ -93,8 +90,10 @@ public abstract class JocScoreCombo extends Joc {
 			case SS:
 				c = ChatColor.YELLOW;
 			case F:
+				c = ChatColor.DARK_GRAY;
 				break;
 			case FF:
+				c = ChatColor.BLACK;
 				break;
 			default:
 				break;			
@@ -254,11 +253,11 @@ public abstract class JocScoreCombo extends Joc {
 
 					if (index == w.size() && w.size() >= 2){c = "" + ChatColor.RED;}
 					String name = p.getName();					
-					String finalString = Rank.getRank(getPlayerInfo(p).getAccuracy()) + c + StringUtils.abbreviate(name, 8);
+					String finalString = Rank.getRank(getPlayerInfo(p).getAccuracy()) + c + StringUtils.abbreviate(name, 5);
 					double combo = getCombo(p);
 					if (combo > 0){
 						//finalString += ChatColor.WHITE + " ("+ ChatColor.YELLOW + Integer.toString(spree) + ChatColor.WHITE + ")";
-						finalString += " (x"+ Double.toString(combo) + ")";
+						finalString += "(x"+ Double.toString(combo) + ")";
 
 					}
 					if (finalString.length() > 16){

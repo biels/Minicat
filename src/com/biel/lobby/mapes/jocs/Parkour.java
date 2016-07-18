@@ -61,7 +61,7 @@ public class Parkour extends JocScoreCombo{
 	ArrayList<ParkourStream> streams = new ArrayList<ParkourStream>();
 	ParkourProvider provider = new ParkourProvider();
 	int playerCount = 0;
-	int mapLength = 50;
+	int mapLength = 40;
 	@Override
 	public String getGameName() {
 		// TODO Auto-generated method stub
@@ -677,7 +677,7 @@ public class Parkour extends JocScoreCombo{
 		}
 		public class ZigZagBubble extends ParkourBubble{
 			//Single block with a torch
-			int n = Utils.NombreEntre(3, 6);
+			int n = Utils.NombreEntre(3, 5);
 			@Override
 			public void generate() {
 				for (int i = 0; i < n; i++) {
@@ -783,7 +783,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 1.6 * n + 0.5;
+				return 1.7 * n + 0.5;
 			}
 
 		}
@@ -809,7 +809,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return 4.5;
+				return 5.5;
 			}
 			
 		}
@@ -832,7 +832,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public double getMultiplier() {
 				// TODO Auto-generated method stub
-				return  Math.PI * r * n / 2.8;
+				return  Math.PI * r * n / 2;
 			}
 			
 		}
