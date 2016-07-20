@@ -257,7 +257,7 @@ public abstract class JocScoreCombo extends Joc {
 					double combo = getCombo(p);
 					if (combo > 0){
 						//finalString += ChatColor.WHITE + " ("+ ChatColor.YELLOW + Integer.toString(spree) + ChatColor.WHITE + ")";
-						finalString += "(x"+ Double.toString(combo) + ")";
+						finalString += "x"+ Double.toString(combo);
 
 					}
 					if (finalString.length() > 16){
