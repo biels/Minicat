@@ -1004,7 +1004,7 @@ public abstract class Joc extends MapaResetejable {
 		return true;
 	}
 	protected int getBaseSkillUnlockerAmount(){
-		return 2;
+		return 0; //TEMPORARILY DISABLED SKILLS BY DEFAULT, MAPS CAN STILL HAVE MANY SLOTS ENABLED IF THEY REQUEST SO @getBaseSkillUnlockerAmount()
 	}
 	@Override
 	protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {
