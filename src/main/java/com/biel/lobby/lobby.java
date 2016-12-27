@@ -1,7 +1,5 @@
 package com.biel.lobby;
 
-
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -12,7 +10,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-
 
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
@@ -45,17 +42,15 @@ public final class lobby extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 		Player ply = (Player) sender;
 		if(cmd.getName().equalsIgnoreCase("m")){
-			//ObsidianDefenders joc = new ObsidianDefenders();
-			//joc.Join(ply);
+
 			gest.ObrirMenuMapes(ply);
 			return true;
 		}
 		if(cmd.getName().equalsIgnoreCase("r")){
-			//ObsidianDefenders joc = new ObsidianDefenders();
-			//joc.Join(ply);
+
 			if(!args[0].equals("1")) return false;
 			ranked = !ranked;
-			Bukkit.broadcastMessage("TransferËncia d'elo " + (ranked ? "activada" : "desactivada"));
+			Bukkit.broadcastMessage("Transfer√®ncia d'elo " + (ranked ? "activada" : "desactivada"));
 			return true;
 		}
 		if(cmd.getName().equalsIgnoreCase("a")){
@@ -137,7 +132,7 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("elo")){
 			PlayerData playerData = new PlayerData(ply.getName());
 			if(playerData.getRank() == -1){
-				ply.sendMessage(ChatColor.GOLD + "Fes partides per determinar la teva posiciÛ");
+				ply.sendMessage(ChatColor.GOLD + "Fes partides per determinar la teva posici√≥");
 				return true;
 			}
 			ply.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + ChatColor.YELLOW + " #" + playerData.getRank()); 
@@ -147,18 +142,46 @@ public final class lobby extends JavaPlugin {
 			Com.displayRanking(ply);
 			return true;
 		}
+		
+		if(cmd.getName().equalsIgnoreCase("discord")){
+			// Autenticar el jugador amb discord.
+			
+			if (args.length == 1){
+				// Check if args[0] √©s un token valid
+				if(args[0].length() == 6) {
+					
+					try {
+						int token = Integer.parseInt(args[0]);
+						// TO DO: Query the server for auth. Send the user uuid
+						ply.sendMessage('Hola ;)');
+					} catch (NumberFormatException e) {
+						ply.sendMessage('Token no valid');
+					}
+					
+					return true;
+					
+				} else {
+					ply.sendMessage('Token no valid');	
+				}
+				
+			} else {
+				ply.sendMessage('Verificaci√≥ amb discord. Us de la comanda:' + ChatColor.GRAY + '/discord <token>');
+				return true;
+			}
+			
+		}
 
 		if(cmd.getName().equalsIgnoreCase("prog")){
 			Mapa m = Com.getGest().getMapWherePlayerIs(ply);
 			if(m != null){
 				if(m instanceof Joc){
 					Joc joc = (Joc) m;
-					ply.sendMessage("ProgrÈs estimat: " + Math.round(joc.getGameProgressETA() * 10000) / 100 + "%");
+					ply.sendMessage("Progr√©s estimat: " + Math.round(joc.getGameProgressETA() * 10000) / 100 + "%");
 				}else{
-					ply.sendMessage("Has d'estar en un joc per fer aixÚ");
+					ply.sendMessage("Has d'estar en un joc per fer aix√≤");
 				}
 			}else{
-				ply.sendMessage("Has d'estar en una partida per fer aixÚ");
+				ply.sendMessage("Has d'estar en una partida per fer aix√≤");
 			}
 			return true;
 		}
