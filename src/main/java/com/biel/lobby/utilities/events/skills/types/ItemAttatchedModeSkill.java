@@ -17,7 +17,7 @@ import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public abstract class ItemAttatchedModeSkill extends InherentSkill {
-	private ArrayList<SkillMode> modes = new ArrayList<SkillMode>();
+	private ArrayList<SkillMode> modes = new ArrayList<>();
 	boolean knowsHowToUse= false;
 	boolean trayAdded = false;
 	int selectedMode = 0;

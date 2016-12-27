@@ -2,7 +2,6 @@ package com.biel.lobby.mapes;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.inventory.ItemStack;
 
 public abstract class JocTeamDeathMatch extends JocTeamScoreRace{
 

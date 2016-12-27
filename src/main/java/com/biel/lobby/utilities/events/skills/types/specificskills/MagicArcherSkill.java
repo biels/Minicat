@@ -1,10 +1,8 @@
 package com.biel.lobby.utilities.events.skills.types.specificskills;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -15,7 +13,6 @@ import org.bukkit.craftbukkit.v1_10_R1.entity.CraftPlayer;
 import org.bukkit.FireworkEffect.Builder;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -24,13 +21,11 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.ColorConverter;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.Com;
-import com.biel.lobby.utilities.events.skills.types.ItemAttatchedModeSkill;
 import com.biel.lobby.utilities.events.skills.types.ItemAttatchedStackModeSkill;
 import com.biel.lobby.utilities.events.statuseffects.LifeDrainStatusEffect;
 
@@ -169,8 +164,8 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 				float power) {
 			// TODO Auto-generated method stub
 			super.onEntityShootBow(evt, e, bow, proj, power);
-			System.out.println("Shootbow: " + ((CraftPlayer) e).getName() + ", " + getPlayer().getName());
-			if(((CraftPlayer) e).getName().equalsIgnoreCase(getPlayer().getName())){
+			System.out.println("Shootbow: " + e.getName() + ", " + getPlayer().getName());
+			if(e.getName().equalsIgnoreCase(getPlayer().getName())){
 				if(isMaxed()){
 					//Shoot with effect
 					Builder b = FireworkEffect.builder();
@@ -200,43 +195,39 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 		protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
 			// TODO Auto-generated method stub
 			super.onProjectileHit(evt, proj);
-			Runnable runnable = new Runnable() {
-				
-				@Override
-				public void run() {
-					if(flyingEffect){
-						StackSkillMode m = getSelectedMode();
-						Location focus = proj.getLocation();
-						
-						if(m.getId() == Mode.REPULSOR.ordinal()){
-							Consumer<? super Player> action = (p -> {
-								//wither
-								Vector v = GUtils.CrearVector(focus, p.getEyeLocation()).normalize();
-								v.setY(0.1 + v.getY() / 3);
-								v.normalize().multiply(2.8);
-								p.setVelocity(v);
-								//Effect
-								Builder b = FireworkEffect.builder();
-								b.withColor(getColor(getSelectedMode().getChatColor()));
-								b.with(FireworkEffect.Type.BALL);
-								FireworkEffect eff = b.build();
-								//CustomEntityFirework.spawn(p.getEyeLocation().add(0, -1, 0).add(v), eff, getAllPlayersArray());
-							}); //TODO Add kill based modifier
-							Predicate<? super Player> predicate = p -> getGame().areEnemies(getPlayer(), p);
-							ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(focus, 16);
-							nearbyPlayers.stream().filter(predicate).forEach(action);
-							//Effect
-							Builder b = FireworkEffect.builder();
-							b.withColor(getColor(getSelectedMode().getChatColor()));
-							b.with(FireworkEffect.Type.BALL_LARGE);
-							FireworkEffect eff = b.build();
-							//CustomEntityFirework.spawn(focus, eff, getAllPlayersArray());
-							
-						}
-						flyingEffect = false;
-					}
-				}
-			};
+			Runnable runnable = () -> {
+                if(flyingEffect){
+                    StackSkillMode m = getSelectedMode();
+                    Location focus = proj.getLocation();
+
+                    if(m.getId() == Mode.REPULSOR.ordinal()){
+                        Consumer<? super Player> action = (p -> {
+                            //wither
+                            Vector v = GUtils.CrearVector(focus, p.getEyeLocation()).normalize();
+                            v.setY(0.1 + v.getY() / 3);
+                            v.normalize().multiply(2.8);
+                            p.setVelocity(v);
+                            //Effect
+                            Builder b = FireworkEffect.builder();
+                            b.withColor(getColor(getSelectedMode().getChatColor()));
+                            b.with(FireworkEffect.Type.BALL);
+                            FireworkEffect eff = b.build();
+                            //CustomEntityFirework.spawn(p.getEyeLocation().add(0, -1, 0).add(v), eff, getAllPlayersArray());
+                        }); //TODO Add kill based modifier
+                        Predicate<? super Player> predicate = p -> getGame().areEnemies(getPlayer(), p);
+                        ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(focus, 16);
+                        nearbyPlayers.stream().filter(predicate).forEach(action);
+                        //Effect
+                        Builder b = FireworkEffect.builder();
+                        b.withColor(getColor(getSelectedMode().getChatColor()));
+                        b.with(FireworkEffect.Type.BALL_LARGE);
+                        FireworkEffect eff = b.build();
+                        //CustomEntityFirework.spawn(focus, eff, getAllPlayersArray());
+
+                    }
+                    flyingEffect = false;
+                }
+            };
 			Bukkit.getScheduler().runTaskLater(Com.getPlugin(), runnable, 2);
 			
 		}

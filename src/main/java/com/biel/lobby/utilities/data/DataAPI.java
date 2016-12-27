@@ -5,14 +5,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.UUID;
 
 import org.bukkit.entity.Player;
 
 import com.biel.BielAPI.Utils.Pair;
-import com.biel.lobby.Com;
 import com.mysql.jdbc.Statement;
 
 public class DataAPI {
@@ -197,7 +194,7 @@ public class DataAPI {
 		}
 	}
 	public ArrayList<Integer> getRanking() {
-		ArrayList<Integer> r = new ArrayList<Integer>();
+		ArrayList<Integer> r = new ArrayList<>();
 		try { //TODO
 			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE TIMESTAMPDIFF(DAY, players.last_played, NOW()) < 15  ORDER BY `elo` DESC;");
 			ResultSet result = sql.executeQuery();
@@ -242,12 +239,12 @@ public class DataAPI {
 		return 0;
 	}
 	public ArrayList<Pair<String, Double>> getAutoRating() {
-		ArrayList<Pair<String, Double>> r = new ArrayList<Pair<String, Double>>();
+		ArrayList<Pair<String, Double>> r = new ArrayList<>();
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT name, time_list.total_time * 100 /  time_list.max_total_time AS auto_rating FROM	(SELECT games.game_id, games.name, (AVG(TIME_TO_SEC(TIMEDIFF(end_time, start_time))) * count(distinct(match_id))) AS total_time, count(*),count(distinct(match_id)), MAX(t.average) AS max_total_time FROM games, match_history, (SELECT games.game_id, (AVG(TIME_TO_SEC(TIMEDIFF(end_time, start_time))) * count(*)) AS average FROM match_history LEFT JOIN games ON(games.game_id = match_history.game_id) WHERE winner != -1 && start_time BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() && end_time IS NOT NULL GROUP BY match_history.game_id) AS t	WHERE(games.game_id = match_history.game_id) &&	winner != -1 && start_time BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() && end_time IS NOT NULL GROUP BY match_history.game_id) AS time_list ORDER BY auto_rating DESC;");
 			ResultSet result = sql.executeQuery();
 			while(result.next()){
-				r.add(new Pair<String, Double>(result.getString("name"), result.getDouble("auto_rating")));
+				r.add(new Pair<>(result.getString("name"), result.getDouble("auto_rating")));
 			}
 			sql.close();
 			result.close();

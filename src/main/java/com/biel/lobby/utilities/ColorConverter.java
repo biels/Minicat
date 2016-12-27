@@ -6,7 +6,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
 
-import com.google.common.collect.BiMap;
 import com.google.common.collect.Maps;
 
 public abstract class ColorConverter
@@ -129,7 +128,7 @@ public abstract class ColorConverter
 	{
 		// get rid of typical hex color cruft
 		if (hex.startsWith("#")) hex = hex.substring(1);
-		if (hex.indexOf("x") != -1) hex = hex.substring(hex.indexOf("x"));
+		if (hex.contains("x")) hex = hex.substring(hex.indexOf("x"));
 
 		// if the length isn't the standard 0xRRGGBB or 0xRGB, just quit
 		if (hex.length() != 6 && hex.length() != 3) return null;

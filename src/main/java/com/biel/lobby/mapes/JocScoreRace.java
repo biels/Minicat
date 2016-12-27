@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 
 public abstract class JocScoreRace extends Joc {
@@ -100,7 +99,7 @@ public abstract class JocScoreRace extends Joc {
 			int index = w.indexOf(p) + 1;
 			String msg = "";
 			String c = "";
-			if (true){c = "" + ChatColor.BLUE;}
+			c = "" + ChatColor.BLUE;
 			if (index <= 1){c = "" + ChatColor.GREEN;}
 			if (index <= 3){c = "" + ChatColor.YELLOW;}
 			if (index == w.size()){c = "" + ChatColor.RED;}
@@ -116,12 +115,9 @@ public abstract class JocScoreRace extends Joc {
 	}
 	public ArrayList<Player> getOrderedWinnerList(){
 		ArrayList<Player> arr = getPlayers();
-		Collections.sort(arr, new Comparator<Player>() {
-			@Override
-			public int compare(Player o1, Player o2) {
-				// TODO Auto-generated method stub
-				return (getScore(o2) - getScore(o1));
-			}	
+		arr.sort((o1, o2) -> {
+			// TODO Auto-generated method stub
+			return (getScore(o2) - getScore(o1));
 		});
 		return arr;
 	}
@@ -137,8 +133,8 @@ public abstract class JocScoreRace extends Joc {
 	@Override
 	protected void updateScoreBoard(Player ply) {
 		if (JocIniciat){
-			ArrayList<String> list = new ArrayList<String>();
-			ArrayList<Integer> values = new ArrayList<Integer>();
+			ArrayList<String> list = new ArrayList<>();
+			ArrayList<Integer> values = new ArrayList<>();
 			ArrayList<Player> w = getOrderedWinnerList();
 			if (w.size() > 0){
 				int best = getScore(w.get(0));
@@ -147,7 +143,7 @@ public abstract class JocScoreRace extends Joc {
 				for (Player p : w){
 					String c = "";
 					int index = w.indexOf(p) + 1;
-					if (true){c = "" + ChatColor.BLUE;}
+					c = "" + ChatColor.BLUE;
 					if (index <= 3){c = "" + ChatColor.YELLOW;}
 					if (index <= 1){c = "" + ChatColor.GREEN;}
 					

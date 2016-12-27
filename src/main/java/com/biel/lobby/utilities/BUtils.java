@@ -32,11 +32,11 @@ public class BUtils {
 		fillBlocks(blks, ms, null, chances);
 	}
 	public static void fillBlocks(List<Block> blks, Material m, byte data){
-		ArrayList<Material> ms = new ArrayList<Material>();
+		ArrayList<Material> ms = new ArrayList<>();
 
 		ms.add(m);
 		if (data != 0){
-			ArrayList<Byte> ds = new ArrayList<Byte>();
+			ArrayList<Byte> ds = new ArrayList<>();
 			ds.add(data);
 			fillBlocks(blks, ms, ds, null);
 		}else{
@@ -47,7 +47,7 @@ public class BUtils {
 		fillBlocks(blks, m, (byte)0);
 	}
 	public static ArrayList<Block> locListToBlock(List<Location> locs) {
-		ArrayList<Block> blks = new ArrayList<Block>();
+		ArrayList<Block> blks = new ArrayList<>();
 		for(Location l : locs){
 			blks.add(l.getBlock());
 		}

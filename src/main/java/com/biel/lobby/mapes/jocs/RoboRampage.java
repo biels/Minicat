@@ -2,20 +2,16 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FallingBlock;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
-import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -26,19 +22,15 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import com.biel.lobby.mapes.JocCooperatiu;
-import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability;
-import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
-import com.biel.lobby.utilities.Cuboid.CuboidDirection;
 import com.biel.lobby.utilities.Utils;
 
 public class RoboRampage extends JocCooperatiu {
 	int tid;
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		items.add(new ItemStack(Material.DIAMOND_SWORD, 1));
 		return items;
 	}
@@ -78,7 +70,7 @@ protected void setCustomGameRules() {
 		// TODO Auto-generated method stub
 		super.updateScoreBoard(ply);
 		if (JocIniciat){
-			ArrayList<String> list = new ArrayList<String>();
+			ArrayList<String> list = new ArrayList<>();
 			list.add(ChatColor.GREEN + "Ferralla:");
 			list.add(ChatColor.GREEN + Integer.toString(getMaxScrapHeight()) + " m");
 			//list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
@@ -94,8 +86,7 @@ protected void setCustomGameRules() {
 		}
 		Location obtenirLocation = getCenterOfBattle();
 		obtenirLocation.setY(0);
-		Cuboid cub = Utils.getCuboidCenteredOnBase(obtenirLocation, r, h, r); 
-		return cub;
+		return Utils.getCuboidCenteredOnBase(obtenirLocation, r, h, r);
 	}
 
 	private Location getCenterOfBattle() {
@@ -185,11 +176,7 @@ protected void setCustomGameRules() {
 		
 	}
 	public void ProgTask(){
-		tid = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-			public void run() {
-				spawnEnemy();
-			}
-		}, 1, 2 * 20); // *12
+		tid = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, () -> spawnEnemy(), 1, 2 * 20); // *12
 	}
 	@Override
 	protected void onBlockPlace(BlockPlaceEvent evt, Block blk) {

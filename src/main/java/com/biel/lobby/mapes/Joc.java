@@ -1,19 +1,12 @@
 package com.biel.lobby.mapes;
 
-import java.lang.reflect.InvocationTargetException;import java.math.BigDecimal;
-import java.text.MessageFormat;
+import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.persistence.Entity;
-import javax.xml.datatype.DatatypeConstants.Field;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -31,9 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -44,7 +34,6 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
@@ -61,16 +50,10 @@ import com.biel.BielAPI.Utils.IconMenu.OptionClickEvent;
 import com.biel.BielAPI.events.EventUtils;
 import com.biel.lobby.Com;
 import com.biel.lobby.lobby;
-import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.jocs.ResourceRush.ValueStatusEffect;
-import com.biel.lobby.mapes.jocs.ResourceRush.WeightStatusEffect;
 import com.biel.lobby.utilities.CBUtils;
-import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.data.DataAPI;
 import com.biel.lobby.utilities.data.MatchData;
 import com.biel.lobby.utilities.data.PlayerData;
-import com.biel.lobby.utilities.events.skills.Skill;
 import com.biel.lobby.utilities.events.skills.SkillPool;
 import com.biel.lobby.utilities.events.skills.types.specificskills.*;
 import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
@@ -83,8 +66,8 @@ import com.connorlinfoot.actionbarapi.ActionBarAPI;
 public abstract class Joc extends MapaResetejable {
 	protected Boolean JocIniciat = false;
 	protected Boolean JocFinalitzat = false;
-	ArrayList<Player> Espectadors = new ArrayList<Player>();
-	ArrayList<PlayerInfo> InfoStorage = new ArrayList<PlayerInfo>();
+	ArrayList<Player> Espectadors = new ArrayList<>();
+	ArrayList<PlayerInfo> InfoStorage = new ArrayList<>();
 	protected SkillPool s = new SkillPool();
 	protected MatchData matchData;
 	protected boolean won = false;
@@ -102,8 +85,7 @@ public abstract class Joc extends MapaResetejable {
 	private Long ultraHeartbeatCount = 0L;
 	private int heartbeatId = -1;
 	private Long announceCount = 0L;
-	private int announceId = -1;
-	private ArrayList<Integer> handledBukkitSchedulerTasks = new ArrayList<Integer>();
+    private ArrayList<Integer> handledBukkitSchedulerTasks = new ArrayList<>();
 	
 	public Joc() {
 		super();
@@ -213,7 +195,7 @@ public abstract class Joc extends MapaResetejable {
 		Bukkit.broadcastMessage(p.getName() + ChatColor.GRAY + " ha guanyat a " + ChatColor.YELLOW + getGameName());
 		matchData.registerEnd(p);
 		JocFinalitzat();
-		ArrayList<Player> wList = new ArrayList<Player>();
+		ArrayList<Player> wList = new ArrayList<>();
 		wList.add(p);
 		updateElo(wList);
 	}
@@ -250,11 +232,11 @@ public abstract class Joc extends MapaResetejable {
 			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al rànquing");
 			return;
 		}
-		ArrayList<Player> loosers = new ArrayList<Player>();
+		ArrayList<Player> loosers = new ArrayList<>();
 		getPlayers().forEach(p -> {if(!winners.contains(p))loosers.add(p);});
-		ArrayList<Double> elo_winners = new ArrayList<Double>();
+		ArrayList<Double> elo_winners = new ArrayList<>();
 		winners.forEach(p -> elo_winners.add(new PlayerData(p.getName()).getElo()));
-		ArrayList<Double> elo_loosers = new ArrayList<Double>();
+		ArrayList<Double> elo_loosers = new ArrayList<>();
 		loosers.forEach(p -> elo_loosers.add(new PlayerData(p.getName()).getElo()));
 		ArrayList<ArrayList<Double>> r = EloUtils.calculateEloGroupChange(elo_winners, elo_loosers, getEloK(), false);
 		r.get(0).forEach(e -> registerEloChange(winners.get(r.get(0).indexOf(e)), e));
@@ -265,7 +247,7 @@ public abstract class Joc extends MapaResetejable {
 			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al rànquing");
 			return;
 		}
-		ArrayList<Double> elo_winners = new ArrayList<Double>();
+		ArrayList<Double> elo_winners = new ArrayList<>();
 		orderedWinners.forEach(p -> elo_winners.add(new PlayerData(p.getName()).getElo()));
 		ArrayList<Double> r = EloUtils.calculateEloGroupChange(elo_winners, getEloK(), false);
 		r.forEach(e -> registerEloChange(orderedWinners.get(r.indexOf(e)), e));
@@ -469,13 +451,10 @@ public abstract class Joc extends MapaResetejable {
 		ItemButton.clearButtons(ply);
 		PlayerInventory inventory = ply.getInventory();
 		inventory.clear();
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_BLOCK), ChatColor.AQUA + "Càmera aleatòria"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				Player p = event.getPlayer();
-				teleportCameraRandomly(p);
-			}	
-		});
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_BLOCK), ChatColor.AQUA + "Càmera aleatòria"), ply, event -> {
+            Player p = event.getPlayer();
+            teleportCameraRandomly(p);
+        });
 		inventory.setItem(0, button.getItemStack());
 	}
 	private void teleportCameraRandomly(Player p) {
@@ -612,7 +591,7 @@ public abstract class Joc extends MapaResetejable {
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
 		// TODO Auto-generated method stub
 		super.onPlayerDeath(evt, killed);
-		ArrayList<ItemStack> rem = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> rem = new ArrayList<>();
 		List<ItemStack> drops = evt.getDrops();
 		for(ItemStack i : drops){
 			Material t = i.getType();
@@ -653,12 +632,7 @@ public abstract class Joc extends MapaResetejable {
 	}
 	public void planificarReseteig(int delay){
 		sendGlobalMessage(ChatColor.BLUE + "Esborrant el mapa en " + Double.toString(delay/20) + "s");
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(lobby.getPlugin(), new Runnable() {
-			@Override
-			public void run() {
-				allOnTheLobby();
-			}
-		}, delay);
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(lobby.getPlugin(), () -> allOnTheLobby(), delay);
 	}
 	@Override
 	protected void customJoin(Player ply){
@@ -725,24 +699,24 @@ public abstract class Joc extends MapaResetejable {
 	public void lobbyProgressAnoouncerTick(){
 		double gameProgressETA = getGameProgressETA() * 100;
 		float[] array = {10F, 25F, 50F, 75F, 90F, 100F, 110F, 120F, 130F, 150F, 175F, 200F, 300F};
-		for (int i = 0; i < array.length; i++) {
-			if(Utils.testPointUpDown(array[i], lastProgressETA, gameProgressETA)){
-				String status = "";
-				if(array[i] == 10F)status = "ha començat fa poc";
-				if(array[i] == 25F)status = "ha començat fa una estona";
-				if(array[i] == 50F)status = "va per la meitat aproximadament";
-				if(array[i] == 75F)status = "acabarà aviat";
-				if(array[i] == 90F)status = "és a l'etapa decisiva. Acabarà aviat.";
-				if(array[i] == 100F)status = "hauria d'acabar en breu";
-				if(array[i] >= 110F)status = "està durant més del previst";
-				if(array[i] >= 200F)status = "està durant el doble del previst";
-				if(array[i] >= 210F)status = "durarà tota l'eterinitat";
-				Com.sendLobbyMessage(ChatColor.GRAY + "La partida de " + ChatColor.DARK_AQUA + getGameName() + ChatColor.GRAY + " " + status);
-				if(array[i] >= 150){
-					sendGlobalMessage("És possible que la partida s'hagi estancat. En aquest cas, feu /l i començeu-ne una de nova.");
-				}
-			}
-		}
+        for (float anArray : array) {
+            if (Utils.testPointUpDown(anArray, lastProgressETA, gameProgressETA)) {
+                String status = "";
+                if (anArray == 10F) status = "ha començat fa poc";
+                if (anArray == 25F) status = "ha començat fa una estona";
+                if (anArray == 50F) status = "va per la meitat aproximadament";
+                if (anArray == 75F) status = "acabarà aviat";
+                if (anArray == 90F) status = "és a l'etapa decisiva. Acabarà aviat.";
+                if (anArray == 100F) status = "hauria d'acabar en breu";
+                if (anArray >= 110F) status = "està durant més del previst";
+                if (anArray >= 200F) status = "està durant el doble del previst";
+                if (anArray >= 210F) status = "durarà tota l'eterinitat";
+                Com.sendLobbyMessage(ChatColor.GRAY + "La partida de " + ChatColor.DARK_AQUA + getGameName() + ChatColor.GRAY + " " + status);
+                if (anArray >= 150) {
+                    sendGlobalMessage("És possible que la partida s'hagi estancat. En aquest cas, feu /l i començeu-ne una de nova.");
+                }
+            }
+        }
 		
 		lastProgressETA = gameProgressETA;
 	}
@@ -770,7 +744,7 @@ public abstract class Joc extends MapaResetejable {
 
 	}
 	protected void updateScoreBoards(){
-		getViewers().forEach(v -> updateScoreBoard(v));
+		getViewers().forEach(this::updateScoreBoard);
 	}
 	protected void updateScoreBoard(Player ply){
 		//sendGlobalMessage(ply.getName() + " actualitzat");
@@ -813,113 +787,90 @@ public abstract class Joc extends MapaResetejable {
 		ItemButton.clearButtons(ply);
 		PlayerInventory inventory = ply.getInventory();
 
-		ItemButton btnStartGame = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_ROD), ChatColor.GREEN + "Inicia la partida"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				iniciarCommand(event.getPlayer());
-
-			}
-		});
+		ItemButton btnStartGame = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_ROD), ChatColor.GREEN + "Inicia la partida"), ply, event -> iniciarCommand(event.getPlayer()));
 		if(hasHostPrivilleges(ply))inventory.setItem(0, btnStartGame.getItemStack());
-		ItemButton btnWiki = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Wiki " + getGameName()), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				anunciarWiki(event.getPlayer(), true);
-			}
-		});
-		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SKULL_ITEM), ChatColor.GREEN + "Afegir jugadors"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
-				IconMenu menu = new IconMenu("Afegeix...", 27, new IconMenu.OptionClickEventHandler() {
-					@Override
-					public void onOptionClick(IconMenu.OptionClickEvent event) {
-						//event.getPlayer().sendMessage("You have chosen " + event.getName());
-						event.setWillClose(true);
-						//Obrir mapa
-						int pos = event.getPosition();
-						if (pos != 26){
-							Player pl = lobbyPlayers.get(pos);
-							if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
-								Join(pl);
-							}else{
-								ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat.");
-							}
+		ItemButton btnWiki = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Wiki " + getGameName()), ply, event -> anunciarWiki(event.getPlayer(), true));
+		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SKULL_ITEM), ChatColor.GREEN + "Afegir jugadors"), ply, event -> {
+            final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
+            IconMenu menu = new IconMenu("Afegeix...", 27, event12 -> {
+//event.getPlayer().sendMessage("You have chosen " + event.getName());
+event12.setWillClose(true);
+//Obrir mapa
+int pos = event12.getPosition();
+if (pos != 26){
+Player pl = lobbyPlayers.get(pos);
+if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+Join(pl);
+}else{
+ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat.");
+}
 
-						}else{
-							for(Player pl : lobbyPlayers){
-								if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
-									Join(pl);
-								}else{
-									ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat (" + pl.getName() + ")");
-								}
-							}
+}else{
+for(Player pl : lobbyPlayers){
+if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+Join(pl);
+}else{
+ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat (" + pl.getName() + ")");
+}
+}
 
-						}
+}
 
-					}
-				});
+});
 
-				for(Player p : lobbyPlayers){
-					Material m = Com.getSkullIconMaterial(p);
-					ItemStack stack = new ItemStack(m, 1);
-					//stack.setAmount(eq.getPlayers().size());
-					menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),ChatColor.WHITE +  "Desde: lobby");
-				}
-				//if (AlgunMapaDisponible() == false){
-				menu.setOption(26, new ItemStack(Material.SPONGE, 1), ChatColor.YELLOW + "Afegir tots", ChatColor.WHITE + "Afegeix tots els jugadors del lobby a la partida actual");
-				//}
+            for(Player p : lobbyPlayers){
+                Material m = Com.getSkullIconMaterial(p);
+                ItemStack stack = new ItemStack(m, 1);
+                //stack.setAmount(eq.getPlayers().size());
+                menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),ChatColor.WHITE +  "Desde: lobby");
+            }
+            //if (AlgunMapaDisponible() == false){
+            menu.setOption(26, new ItemStack(Material.SPONGE, 1), ChatColor.YELLOW + "Afegir tots", ChatColor.WHITE + "Afegeix tots els jugadors del lobby a la partida actual");
+            //}
 
-				menu.open(ply);
-			}
-		});
+            menu.open(ply);
+        });
 		//if(hasHostPrivilleges(ply))inventory.setItem(7, button2.getItemStack()); // AND isOp()
 		inventory.setItem(6, btnWiki.getItemStack());
-		ItemButton btnInvitePlayers = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), ChatColor.GREEN + "Convidar jugadors"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
-				IconMenu menu = new IconMenu("Convida...", 27, new IconMenu.OptionClickEventHandler() {
-					@Override
-					public void onOptionClick(IconMenu.OptionClickEvent event) {
-						event.setWillClose(true);
-						//Obrir mapa
-						int pos = event.getPosition();
-						if (pos != 26){
-							Player pl = lobbyPlayers.get(pos);
-							if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
-								inviteToGame(pl);
-							}else{
-								ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat.");
-							}
+		ItemButton btnInvitePlayers = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), ChatColor.GREEN + "Convidar jugadors"), ply, event -> {
+            final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
+            IconMenu menu = new IconMenu("Convida...", 27, event1 -> {
+event1.setWillClose(true);
+//Obrir mapa
+int pos = event1.getPosition();
+if (pos != 26){
+Player pl = lobbyPlayers.get(pos);
+if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+inviteToGame(pl);
+}else{
+ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat.");
+}
 
-						}else{
-							for(Player pl : lobbyPlayers){
-								if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
-									inviteToGame(pl);
-								}else{
-									ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.getName() + ")");
-								}
-							}
+}else{
+for(Player pl : lobbyPlayers){
+if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+inviteToGame(pl);
+}else{
+ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.getName() + ")");
+}
+}
 
-						}
+}
 
-					}
-				});
+});
 
-				for(Player p : lobbyPlayers){
-					Material m = Com.getSkullIconMaterial(p);
-					ItemStack stack = new ItemStack(m, 1);
-					//stack.setAmount(eq.getPlayers().size());
-					menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),ChatColor.WHITE +  "Des de: lobby");
-				}
-				
-				menu.setOption(26, new ItemStack(Material.SPONGE, 1), ChatColor.YELLOW + "Convidar tothom", ChatColor.WHITE + "Afegeix tots els jugadors del lobby a la partida actual");
-			
+            for(Player p : lobbyPlayers){
+                Material m = Com.getSkullIconMaterial(p);
+                ItemStack stack = new ItemStack(m, 1);
+                //stack.setAmount(eq.getPlayers().size());
+                menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),ChatColor.WHITE +  "Des de: lobby");
+            }
 
-				menu.open(ply);
-			}
-		});
+            menu.setOption(26, new ItemStack(Material.SPONGE, 1), ChatColor.YELLOW + "Convidar tothom", ChatColor.WHITE + "Afegeix tots els jugadors del lobby a la partida actual");
+
+
+            menu.open(ply);
+        });
 		if(hasHostPrivilleges(ply))inventory.setItem(8, btnInvitePlayers.getItemStack());
 		//		if (this instanceof JocEquips){
 		//			if (ply.isOp()){
@@ -930,18 +881,14 @@ public abstract class Joc extends MapaResetejable {
 
 	}
 	public void inviteToGame(Player p){
-		IconMenu m = new IconMenu(getGameName() + " (" + host + ")", 9, new IconMenu.OptionClickEventHandler() {
-			
-			@Override
-			public void onOptionClick(OptionClickEvent event) {
-				Player ply = event.getPlayer();
-				if(event.getPosition() == 2){
-					Join(ply);
-				}
-				event.setWillClose(true);
-				event.setWillDestroy(true);
-			}
-		});
+		IconMenu m = new IconMenu(getGameName() + " (" + host + ")", 9, event -> {
+            Player ply = event.getPlayer();
+            if(event.getPosition() == 2){
+                Join(ply);
+            }
+            event.setWillClose(true);
+            event.setWillDestroy(true);
+        });
 		
 		m.setOption(2, new ItemStack(Material.EMERALD, 1), ChatColor.GREEN + "" + ChatColor.BOLD + "Entra", getActiveMultipleMapName());
 		m.setOption(8, new ItemStack(Material.REDSTONE, 1), ChatColor.RED + "" + ChatColor.BOLD + "Tanca", getActiveMultipleMapName());
@@ -1122,8 +1069,8 @@ public abstract class Joc extends MapaResetejable {
 		int blocksBroken = 0;
 		int blocksPlaced = 0;
 		int objectivesCompleted = 0;
-		ArrayList<StatusEffect> effects = new ArrayList<StatusEffect>();
-		private ArrayList<AuraInfo> auras = new ArrayList<AuraInfo>();
+		ArrayList<StatusEffect> effects = new ArrayList<>();
+		private ArrayList<AuraInfo> auras = new ArrayList<>();
 		AuraRendererStatusEffect auraRenderer = null;
 		public int getSpree() {
 			return spree;
@@ -1214,13 +1161,13 @@ public abstract class Joc extends MapaResetejable {
 			return getIdleTime().getSeconds() > 10;
 		}
 		public ArrayList<AuraInfo> getAuras() {
-			ArrayList<AuraInfo> aurasFull = new ArrayList<AuraInfo>();
+			ArrayList<AuraInfo> aurasFull = new ArrayList<>();
 			aurasFull.addAll(auras);
 			aurasFull.addAll(getRealtimeAuras());
 			return aurasFull;
 		}
 		public ArrayList<AuraInfo> getRealtimeAuras(){
-			ArrayList<AuraInfo> a = new ArrayList<AuraInfo>();
+			ArrayList<AuraInfo> a = new ArrayList<>();
 			if(isImmune())a.add(new AuraInfo("AFK", 8, 6, new ItemStack(Material.BARRIER, 1)));
 			return a;
 		}
@@ -1302,7 +1249,7 @@ public abstract class Joc extends MapaResetejable {
 			if(hasStatusEffect(type))effects.remove(getStatusEffect(type));
 		}
 		public void removeExpiredEffects(){
-			ArrayList<StatusEffect> toRemove = new ArrayList<StatusEffect>();
+			ArrayList<StatusEffect> toRemove = new ArrayList<>();
 			for(StatusEffect e : getStatusEffects()){
 				if (e.hasExpired()) {
 					e.clearExternals();
@@ -1399,15 +1346,12 @@ public abstract class Joc extends MapaResetejable {
 
 	//Heartbeat
 	private void scheduleHeartbeat(){
-		heartbeatId = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Com.getPlugin(), new Runnable() {
-			@Override
-			public void run() {
-				if (ultraHeartbeatCount % 20 == 0) {
-					heartbeat();
-				}
-				ultraHeartbeat();
-			}
-		}, 1, 1);
+		heartbeatId = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Com.getPlugin(), () -> {
+            if (ultraHeartbeatCount % 20 == 0) {
+                heartbeat();
+            }
+            ultraHeartbeat();
+        }, 1, 1);
 		handleTask(heartbeatId);
 	}
 	public void ultraHeartbeat(){
@@ -1441,12 +1385,7 @@ public abstract class Joc extends MapaResetejable {
 	// FI Heartbeat
 	//Heartbeat
 	private void scheduleAnnouncer(){
-		announceId = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Com.getPlugin(), new Runnable() {
-			@Override
-			public void run() {
-				announce();
-			}
-		}, 20 * 20, 20 * 75);
+        int announceId = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Com.getPlugin(), () -> announce(), 20 * 20, 20 * 75);
 		handleTask(announceId);
 	}
 

@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
 import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.JocObjectius.EquipObjectius;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 
 public abstract class JocTeamScoreRace extends JocEquips {
@@ -27,20 +26,17 @@ public abstract class JocTeamScoreRace extends JocEquips {
 	
 	public ArrayList<EquipScoreRace> getOrderedWinnerList(){
 		ArrayList<EquipScoreRace> arr = getSpecificTeams();
-		Collections.sort(arr, new Comparator<EquipScoreRace>() {
-			@Override
-			public int compare(EquipScoreRace o1, EquipScoreRace o2) {
-				// TODO Auto-generated method stub
-				return (o2.getScore() - o1.getScore());
-			}	
-		});
+		arr.sort((o1, o2) -> {
+            // TODO Auto-generated method stub
+            return (o2.getScore() - o1.getScore());
+        });
 		return arr;
 	}
 	@Override
 	protected void updateScoreBoard(Player ply) {
 		if (JocIniciat){
-			ArrayList<String> list = new ArrayList<String>();
-			ArrayList<Integer> values = new ArrayList<Integer>();
+			ArrayList<String> list = new ArrayList<>();
+			ArrayList<Integer> values = new ArrayList<>();
 			
 			for (Equip e : Equips){
 				EquipScoreRace eq = (EquipScoreRace)e;
@@ -67,7 +63,7 @@ public abstract class JocTeamScoreRace extends JocEquips {
 	}
 	
 	public ArrayList<EquipScoreRace> getSpecificTeams() {
-		ArrayList<EquipScoreRace> teams = new ArrayList<EquipScoreRace>();
+		ArrayList<EquipScoreRace> teams = new ArrayList<>();
 		for (Equip e :  Equips){
 			EquipScoreRace eq = (EquipScoreRace)e;
 			teams.add(eq);

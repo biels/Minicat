@@ -5,35 +5,23 @@ import java.util.Collections;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.command.defaults.ClearCommand;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-import org.fusesource.jansi.Ansi.Color;
 
 import com.biel.lobby.Com;
-import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocLastStanding;
-import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.JocObjectius.EquipObjectius;
-import com.biel.lobby.mapes.JocObjectius.Objectiu;
-import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
 public class TNTRun extends JocLastStanding {
-	ArrayList<Player> tntPlayers = new ArrayList<Player>();
-	ArrayList<Player> immunePlayers = new ArrayList<Player>();
+	ArrayList<Player> tntPlayers = new ArrayList<>();
+	ArrayList<Player> immunePlayers = new ArrayList<>();
 	int temps = 60;
 	int round = 0;
 	@Override
@@ -106,13 +94,11 @@ public class TNTRun extends JocLastStanding {
 			immunePlayers.add(ply);
 			ply.getInventory().setHelmet(new ItemStack(Material.QUARTZ_BLOCK));
 			ply.getInventory().setItem(8, new ItemStack(Material.QUARTZ_BLOCK));
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-				 public void run() {
-					 ply.getInventory().setHelmet(null);
-						ply.getInventory().clear(8);
-					 immunePlayers.remove(ply);
-				 }
-			}, 20 * 2);
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                ply.getInventory().setHelmet(null);
+                   ply.getInventory().clear(8);
+                immunePlayers.remove(ply);
+            }, 20 * 2);
 		}
 	}
 	void passarTNT(Player de, Player a){
@@ -184,37 +170,31 @@ public class TNTRun extends JocLastStanding {
 	int taskId = 0;
 	public void ProgTask(){
 		 
-		taskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-			 public void run() {
-				//time
-				 temps = temps - 1;
-				 if(Utils.Possibilitat(1)){
-					 if(Utils.Possibilitat(80)){
-						 hipervelocitat();
-					 }					 
-				 }
-				 updateScoreBoards();
-				 if (temps <= 0){
-					 plugin.getServer().getScheduler().cancelTask(taskId);
-					 endRound();
-				 }
-			 }
-		}, 20 * 2, 10);
+		taskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+           //time
+            temps = temps - 1;
+            if(Utils.Possibilitat(1)){
+                if(Utils.Possibilitat(80)){
+                    hipervelocitat();
+                }
+            }
+            updateScoreBoards();
+            if (temps <= 0){
+                plugin.getServer().getScheduler().cancelTask(taskId);
+                endRound();
+            }
+        }, 20 * 2, 10);
 	}
 	public void hipervelocitat(){
 		int secs = Utils.NombreEntre(2, 8);
 		updateEffects(true);
 		sendGlobalMessage(ChatColor.AQUA + "HIPERVELOCITAT! (" + Integer.toString(secs) + "s)" );
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			 public void run() {
-				updateEffects(false);
-			 }
-		}, 20 * 2);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> updateEffects(false), 20 * 2);
 	}
 	@Override
 	protected void updateScoreBoard(Player ply) {
 		if (JocIniciat && !JocFinalitzat){
-			ArrayList<String> list = new ArrayList<String>();
+			ArrayList<String> list = new ArrayList<>();
 			ChatColor col = ChatColor.DARK_GREEN;
 			if(temps <= 45){col = ChatColor.GREEN;}
 			if(temps <= 25){col = ChatColor.YELLOW;}

@@ -5,7 +5,6 @@ import org.bukkit.entity.Player;
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.events.skills.Skill;
 import com.biel.lobby.utilities.events.statuseffects.CDStatusEffect;
-import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public abstract class CooldownSkill extends Skill {
 	private int cdRemainingTicks = 0; 

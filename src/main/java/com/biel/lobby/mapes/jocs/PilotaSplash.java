@@ -21,11 +21,6 @@ import org.bukkit.util.Vector;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.JocScoreRace;
 
-import me.libraryaddict.disguise.DisguiseAPI;
-import me.libraryaddict.disguise.disguisetypes.DisguiseType;
-import me.libraryaddict.disguise.disguisetypes.MobDisguise;
-import me.libraryaddict.disguise.disguisetypes.watchers.SlimeWatcher;
-
 public class PilotaSplash extends JocScoreRace {
 
 	@Override
@@ -55,7 +50,7 @@ public class PilotaSplash extends JocScoreRace {
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		ItemStack item = new ItemStack(Material.SLIME_BALL, 1);
 		item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 2);
 		items.add(GUtils.setItemNameAndLore(item, "Puny de pilota", "Pilotassa"));

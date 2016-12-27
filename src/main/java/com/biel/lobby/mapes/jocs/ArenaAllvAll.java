@@ -11,7 +11,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
-import org.omg.CosNaming.IstringHelper;
 
 import com.biel.lobby.mapes.JocScoreRace;
 import com.biel.lobby.utilities.Utils;
@@ -31,7 +30,7 @@ public class ArenaAllvAll extends JocScoreRace {
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		items.add(new ItemStack(Material.WOOD_SWORD, 1));
 		items.add(new ItemStack(Material.BOW, 1));
 		Potion p1 = new Potion(PotionType.INSTANT_DAMAGE);

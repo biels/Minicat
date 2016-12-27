@@ -1,12 +1,9 @@
 package com.biel.lobby;
 
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -15,7 +12,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -30,8 +26,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.biel.BielAPI.Utils.GUtils;
-import com.biel.lobby.utilities.Options;
-import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
 public class LoginListener implements Listener {
@@ -46,8 +40,7 @@ public class LoginListener implements Listener {
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
-		Player ply = player;
-		String name = ply.getName();
+		String name = player.getName();
 		Com.getDataAPI().registerNewPlayer(player);
 		if(name.contains("lucas") || name.contains("pecas") || name.contains("pecas")){
 			return;
@@ -60,15 +53,15 @@ public class LoginListener implements Listener {
 			s.setCustomName("Pilota");
 			s.setCustomNameVisible(true);
 			s.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * Utils.NombreEntre(1, 9), 2));
-			ply.setPassenger(s);
+			player.setPassenger(s);
 			//s.setHealth(1);
 		}
-		Com.teleportPlayerToLobby(ply);
-		ply.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
-		ply.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de rànquing basat en ELO. Ordres /elo i /top");
-		ply.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
-		ply.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
-		ply.sendMessage(ChatColor.AQUA + "[TELEGRAM] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
+		Com.teleportPlayerToLobby(player);
+		player.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
+		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de rànquing basat en ELO. Ordres /elo i /top");
+		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
+		player.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
+		player.sendMessage(ChatColor.AQUA + "[TELEGRAM] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
 
 		//		ply.setAllowFlight(true);
 		//		ply.setCanPickupItems(false);
@@ -90,7 +83,7 @@ public class LoginListener implements Listener {
 		//		}
 	}
 	public ArrayList<String> getPilofrases(){
-		ArrayList<String> l = new ArrayList<String>();
+		ArrayList<String> l = new ArrayList<>();
 		l.add("Piloteta rodoneta");
 		l.add("La pizza, la pizza, es crema la pizza");
 		l.add("Piloteta boniquetaa");

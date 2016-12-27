@@ -8,12 +8,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
@@ -23,11 +21,9 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
@@ -35,13 +31,10 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.material.Wool;
 import org.bukkit.util.Vector;
 
-import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.BielAPI.Utils.RecallUtils;
 import com.biel.lobby.Com;
-import com.biel.lobby.lobby;
-import com.biel.lobby.mapes.JocObjectius.EquipObjectius;
 import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
@@ -50,7 +43,7 @@ import com.google.common.collect.Lists;
 
 public abstract class JocEquips extends Joc {
 	private boolean equipsBloquejats = false;
-	public ArrayList<Equip> Equips = new ArrayList<Equip>();
+	public ArrayList<Equip> Equips = new ArrayList<>();
 	public enum TeamGenerationMode{DEFAULT, RANDOM, BALANCED, CUSTOM}
 	public TeamGenerationMode generationMode = TeamGenerationMode.DEFAULT;
 	public JocEquips() {
@@ -118,12 +111,7 @@ public abstract class JocEquips extends Joc {
 		}
 	}
 	private void delayedUpdateHeadColors() {
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), new Runnable() {
-			@Override
-			public void run() {
-				updateHeadColors();
-			}
-		}, 20);
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> updateHeadColors(), 20);
 	}
 	protected void establirColorsNoms(){
 		for (Equip e : Equips){
@@ -135,18 +123,17 @@ public abstract class JocEquips extends Joc {
 	protected abstract ArrayList<Equip> getDesiredTeams();
 	@SuppressWarnings("unchecked")
 	protected ArrayList<Equip> getDesiredTeamsFromFile(){
-		ArrayList<Equip> teams = new ArrayList<Equip>();
+		ArrayList<Equip> teams = new ArrayList<>();
 		ArrayList<String> teamInfos = pMapaActual().ObtenirArray("e");
 		if(teamInfos.size() == 0)return null;
 		for(String s : teamInfos){
 			Class<? extends Equip> cls = getCustomTeamClass();
 			Constructor<?>[] constructors = cls.getConstructors();
-			for (int c = 0; c < constructors.length; c++) {
-				Constructor<?> constructor = constructors[c];				
+			for (Constructor<?> constructor : constructors) {
 				Class<?>[] parameterTypes = constructor.getParameterTypes();
 				String[] split = s.split(";");
-				if(parameterTypes.length - 1 != split.length)continue;
-				ArrayList<Object> initargs = new ArrayList<Object>();
+				if (parameterTypes.length - 1 != split.length) continue;
+				ArrayList<Object> initargs = new ArrayList<>();
 				initargs.add(this);
 				for (int i = 0; i < split.length; i++) {
 					String p = split[i];
@@ -154,14 +141,14 @@ public abstract class JocEquips extends Joc {
 					try {
 						//initargs.add(pType.cast(p));
 						Object arg = null;
-						if(pType.isEnum()){
-							@SuppressWarnings({ "rawtypes" })
+						if (pType.isEnum()) {
+							@SuppressWarnings({"rawtypes"})
 							Class<? extends Enum> eType = (Class<? extends Enum>) pType;
 							//eType.
 							arg = Enum.valueOf(eType, p);
 						}
-						
-						if(pType.equals(String.class)){
+
+						if (pType.equals(String.class)) {
 							arg = p;
 						}
 						initargs.add(arg);
@@ -175,16 +162,7 @@ public abstract class JocEquips extends Joc {
 					constructor.setAccessible(true);
 					//teams.add((Equip) constructor.newInstance(this, DyeColor.BLACK, DyeColor.BLUE, "D"));
 					teams.add((Equip) constructor.newInstance(initargs.toArray()));
-				} catch (InstantiationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (InvocationTargetException e) {
+				} catch (InstantiationException | InvocationTargetException | IllegalArgumentException | IllegalAccessException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -224,7 +202,7 @@ public abstract class JocEquips extends Joc {
 		}
 	}
 	public void establirEquipJugador(Player ply, Equip eq){
-		if (eq.getPlayers().contains(ply) == false){
+		if (!eq.getPlayers().contains(ply)){
 			for (Equip e : Equips){
 				if (e == eq){
 					e.addPlayer(ply);
@@ -306,7 +284,7 @@ public abstract class JocEquips extends Joc {
 		}
 	}
 	public Location getHalfwayMiddle(){
-		ArrayList<Vector> locs = new ArrayList<Vector>();
+		ArrayList<Vector> locs = new ArrayList<>();
 		for(Equip e : Equips){
 			locs.add(e.getTeamSpawnLocation().toVector());
 		}
@@ -322,8 +300,8 @@ public abstract class JocEquips extends Joc {
 	protected void updateScoreBoard(Player ply) {
 		super.updateScoreBoard(ply);
 		if (!JocIniciat){
-			ArrayList<String> list = new ArrayList<String>();
-			ArrayList<Integer> values = new ArrayList<Integer>();
+			ArrayList<String> list = new ArrayList<>();
+			ArrayList<Integer> values = new ArrayList<>();
 			for (Equip e : Equips){
 				list.add(e.getChatColor() + "Equip " + e.getAdjectiu());
 				values.add(e.getPlayers().size());
@@ -337,7 +315,7 @@ public abstract class JocEquips extends Joc {
 		for (Equip e : Equips){
 			//VS
 			String vsMsg = ChatColor.GOLD + "VS";
-			if (first == false){
+			if (!first){
 				message = message + vsMsg;
 				message = message + " ";
 			}
@@ -360,7 +338,7 @@ public abstract class JocEquips extends Joc {
 
 	}
 	public ArrayList<Player> getPlayersOutOfTeam(){
-		ArrayList<Player> outPlayers = new ArrayList<Player>();
+		ArrayList<Player> outPlayers = new ArrayList<>();
 		for (Player p : getPlayers()){
 			if (obtenirEquip(p) == null){
 				outPlayers.add(p);
@@ -379,7 +357,7 @@ public abstract class JocEquips extends Joc {
 	public void ferEquipsAleatoris(boolean reassignar){
 		if(Equips.size() == 0)return;
 		//if(reassignar){resetTeams();}
-		ArrayList<Player> players = new ArrayList<Player>(getPlayers());
+		ArrayList<Player> players = new ArrayList<>(getPlayers());
 		Collections.shuffle(players);
 		int next_team = 0;
 		int cycles = 0;
@@ -407,7 +385,7 @@ public abstract class JocEquips extends Joc {
 		double bestVariance = Double.NaN;
 		List<List<Player>> bestTeams = null;
 		for (int i = 0; i < cycles; i++) {
-			ArrayList<Player> players = new ArrayList<Player>(getPlayers());
+			ArrayList<Player> players = new ArrayList<>(getPlayers());
 			Collections.shuffle(players);
 			List<List<Player>> rTeams = Lists.partition(players, (int)(Math.ceil(players.size() / (double)Equips.size())));
 			double variance = variance(rTeams.stream().mapToDouble(t -> t.stream().mapToDouble(p -> new PlayerData(p).getElo()).sum()).boxed().collect(Collectors.toList()));
@@ -461,26 +439,23 @@ public abstract class JocEquips extends Joc {
 		}
 	}
 	void openTemSelectionMenu(final Player ply, final Player objPly, String title){
-		IconMenu menu = new IconMenu(title, 27, new IconMenu.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(IconMenu.OptionClickEvent event) {
-				event.setWillClose(true);
-				//Obrir mapa
-				int pos = event.getPosition();
-				if (pos != 26){
-					Equip e = Equips.get(pos);
-					establirEquipJugador(ply, e);
-					if(generationMode != TeamGenerationMode.CUSTOM){
-						generationMode = TeamGenerationMode.CUSTOM;
-						sendGlobalMessage(ChatColor.YELLOW + ply.getName() + " ha seleccionat un equip. Mode selecci� d'equips personalitzats, seleccioneu els vostres equips.");
-					}
-				}else{
-					ply.sendMessage("El mode espectador no est� disponible");
-					event.setWillClose(false);
-				}
+		IconMenu menu = new IconMenu(title, 27, event -> {
+            event.setWillClose(true);
+            //Obrir mapa
+            int pos = event.getPosition();
+            if (pos != 26){
+                Equip e = Equips.get(pos);
+                establirEquipJugador(ply, e);
+                if(generationMode != TeamGenerationMode.CUSTOM){
+                    generationMode = TeamGenerationMode.CUSTOM;
+                    sendGlobalMessage(ChatColor.YELLOW + ply.getName() + " ha seleccionat un equip. Mode selecci� d'equips personalitzats, seleccioneu els vostres equips.");
+                }
+            }else{
+                ply.sendMessage("El mode espectador no est� disponible");
+                event.setWillClose(false);
+            }
 
-			}
-		});
+        });
 		for(Equip eq : Equips){
 			Wool wool = new Wool(eq.getColor());
 			ItemStack stack = wool.toItemStack();
@@ -497,44 +472,28 @@ public abstract class JocEquips extends Joc {
 	protected void donarItemsPreparatiusGenerals(final Player ply) {
 		super.donarItemsPreparatiusGenerals(ply);
 		PlayerInventory inventory = ply.getInventory();
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOKSHELF), ChatColor.YELLOW + "Selecciona l'equip"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				if(!hasHostPrivilleges(event.getPlayer())){
-					event.getPlayer().sendMessage("No pots seleccionar l'equip. " + "Cal que l'administrador de la partida habiliti els equips personalitzats.");
-				}
-				if ((!isEquipsBloquejats() || ply.isOp())){
-					openTemSelectionMenu(ply, ply, "Unir-se a l'equip...");
-					
-				}else{
-					event.getPlayer().sendMessage("No pots seleccionar l'equip. Equips bloquejats.");
-				}
-			}
-		});
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOKSHELF), ChatColor.YELLOW + "Selecciona l'equip"), ply, event -> {
+            if(!hasHostPrivilleges(event.getPlayer())){
+                event.getPlayer().sendMessage("No pots seleccionar l'equip. " + "Cal que l'administrador de la partida habiliti els equips personalitzats.");
+            }
+            if ((!isEquipsBloquejats() || ply.isOp())){
+                openTemSelectionMenu(ply, ply, "Unir-se a l'equip...");
+
+            }else{
+                event.getPlayer().sendMessage("No pots seleccionar l'equip. Equips bloquejats.");
+            }
+        });
 		inventory.setItem(2, button.getItemStack());
-		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.COMMAND), ChatColor.YELLOW + "Equips equilibrats"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				ferEquipsEquilibrats();
-			}
-		});
+		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.COMMAND), ChatColor.YELLOW + "Equips equilibrats"), ply, event -> ferEquipsEquilibrats());
 		if(hasHostPrivilleges(ply))inventory.setItem(3, button2.getItemStack());
-		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), ChatColor.YELLOW + "Equips aleatoris + Inici"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				if(canBeStartedBy(ply, true)){
-					ferEquipsAleatoris(true);
-					JocIniciat();
-				}
-			}
-		});
+		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), ChatColor.YELLOW + "Equips aleatoris + Inici"), ply, event -> {
+            if(canBeStartedBy(ply, true)){
+                ferEquipsAleatoris(true);
+                JocIniciat();
+            }
+        });
 		if(hasHostPrivilleges(ply))inventory.setItem(4, button3.getItemStack());
-		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.EMERALD_BLOCK), ChatColor.GREEN + "Netejar equips"), ply, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				resetTeams();
-			}
-		});
+		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.EMERALD_BLOCK), ChatColor.GREEN + "Netejar equips"), ply, event -> resetTeams());
 		if(hasHostPrivilleges(ply))inventory.setItem(5, button4.getItemStack());
 //		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BONE), ChatColor.GREEN + "Establir equip"), ply, new ItemButton.OptionClickEventHandler() {
 //			@Override
@@ -581,7 +540,7 @@ public abstract class JocEquips extends Joc {
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.STONE_SWORD, 1));
 		items.add(new ItemStack(Material.IRON_PICKAXE, 1));
@@ -642,7 +601,7 @@ public abstract class JocEquips extends Joc {
 		return obtenirEquip(p1).equals(obtenirEquip(p2));
 	}
 	public class Equip{
-		ArrayList<String> Players = new ArrayList<String>();
+		ArrayList<String> Players = new ArrayList<>();
 		DyeColor color = DyeColor.GRAY;
 		String adjectiu = "";
 		public Equip(DyeColor color, String adj) {
@@ -676,7 +635,7 @@ public abstract class JocEquips extends Joc {
 			return Equips.indexOf(this);
 		}
 		public ArrayList<Player> getPlayers (){
-			ArrayList<Player> returnPlayers = new ArrayList<Player>();
+			ArrayList<Player> returnPlayers = new ArrayList<>();
 			for (String ply : Players){
 				Player newplayer = Bukkit.getPlayer(ply);
 				if(newplayer != null){
@@ -712,12 +671,7 @@ public abstract class JocEquips extends Joc {
 		public void giveRecallButton(Player ply){
 			ItemStack dBlk = new ItemStack(Material.DIAMOND_BLOCK);
 			dBlk.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
-			ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.GREEN + "Recall",  ChatColor.WHITE + "Torna el jugador a la base."), ply, new ItemButton.OptionClickEventHandler() {
-				@Override
-				public void onOptionClick(ItemButton.OptionClickEvent event) {
-					RecallUtils.startRecallTeleport(event.getPlayer(), getTeamSpawnLocation());
-				}
-			});
+			ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.GREEN + "Recall",  ChatColor.WHITE + "Torna el jugador a la base."), ply, event -> RecallUtils.startRecallTeleport(event.getPlayer(), getTeamSpawnLocation()));
 			PlayerInventory inventory = ply.getInventory();
 			inventory.setItem(8, button.getItemStack());
 		}

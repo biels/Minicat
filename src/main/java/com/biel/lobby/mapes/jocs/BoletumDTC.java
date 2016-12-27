@@ -8,7 +8,6 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -17,14 +16,13 @@ import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.JocObjectius.EquipObjectius;
 import com.biel.lobby.mapes.JocObjectius.Objectiu;
 import com.biel.lobby.mapes.JocObjectius.ObjectiuBlockBreak;
-import com.biel.lobby.mapes.JocObjectius.ObjectiuBlockChange;
 import com.biel.lobby.utilities.Utils;
 
 public class BoletumDTC extends JocObjectius {
 
 	@Override
 	protected ArrayList<Objectiu> getDesiredObjectivesTeam(EquipObjectius e) {
-		ArrayList<Objectiu> objectius = new ArrayList<Objectiu>();
+		ArrayList<Objectiu> objectius = new ArrayList<>();
 		//Bukkit.broadcastMessage("Cores" + Integer.toString(e.getId() + 1));
 		ArrayList<Location> coreLocs = pMapaActual().ObtenirLocations("Cores" + Integer.toString(e.getId() + 1), getWorld());
 		objectius.add(new ObjectiuBlockBreak("Core " + e.getAdjectiu(), coreLocs.get(0)));
@@ -33,7 +31,7 @@ public class BoletumDTC extends JocObjectius {
 
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new EquipObjectius(DyeColor.ORANGE, "taronja")); //Id 0
 		equips.add(new EquipObjectius(DyeColor.GREEN, "verd")); //Id 1
 		return equips;
@@ -59,7 +57,7 @@ public class BoletumDTC extends JocObjectius {
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.STONE_SWORD, 1));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds

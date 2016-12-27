@@ -1,10 +1,5 @@
 package com.biel.lobby.utilities.data;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-
 import org.bukkit.entity.Player;
 
 import com.biel.lobby.Com;

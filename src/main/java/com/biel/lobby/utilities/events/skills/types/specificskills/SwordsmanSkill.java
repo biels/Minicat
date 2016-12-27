@@ -1,20 +1,13 @@
 package com.biel.lobby.utilities.events.skills.types.specificskills;
 
-import java.util.ArrayList;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.util.Vector;
 
 import com.biel.lobby.mapes.Joc.PlayerInfo;
-import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 

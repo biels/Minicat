@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.PlayerDeathEvent;
 
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 
@@ -22,7 +21,7 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 		fillAliveTeams();
 	}
 	public void initAliveTeams() { //Init method
-		AliveTeamIDs = new ArrayList<Integer>();
+		AliveTeamIDs = new ArrayList<>();
 	}
 	public void fillAliveTeams() {
 		for(Equip e : Equips){
@@ -31,14 +30,14 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 		}
 	}
 	public ArrayList<Equip> getAliveTeams(){
-		ArrayList<Equip> r = new ArrayList<Equip>();
+		ArrayList<Equip> r = new ArrayList<>();
 		for(Equip e : Equips){
 			if(isAlive(e))r.add(e);
 		}
 		return r;
 	}
 	public void removeAlive(int id) {
-		ArrayList<Integer> temp = new ArrayList<Integer>();
+		ArrayList<Integer> temp = new ArrayList<>();
 		temp.add(id);
 		AliveTeamIDs.removeAll(temp);
 		//+ Cosetes
@@ -110,7 +109,7 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 	}
 	//Mix
 	public ArrayList<Player> getAlivePlayersTeam(Equip e){
-		ArrayList<Player> r = new ArrayList<Player>();
+		ArrayList<Player> r = new ArrayList<>();
 		for(Player p : e.getPlayers()){
 			if(isAlive(p))r.add(p);
 		}
@@ -122,8 +121,8 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 	@Override
 	protected void updateScoreBoard(Player ply) {
 		if (JocIniciat){
-			ArrayList<String> list = new ArrayList<String>();
-			ArrayList<Integer> values = new ArrayList<Integer>();
+			ArrayList<String> list = new ArrayList<>();
+			ArrayList<Integer> values = new ArrayList<>();
 			String t = getTimer();
 			for(Equip e : Equips){
 				list.add(isAlive(e) ? e.getDisplayName() : ChatColor.STRIKETHROUGH + e.getDisplayName());

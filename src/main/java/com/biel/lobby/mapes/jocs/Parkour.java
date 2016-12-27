@@ -1,64 +1,48 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.MalformedParameterizedTypeException;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.TooManyListenersException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.TemporalType;
-
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Stairs;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.Pair;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
-import com.biel.BielAPI.events.WorldEventBus;
 import com.biel.lobby.Com;
-import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocScoreCombo;
-import com.biel.lobby.mapes.JocScoreRace;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.Vec;
 import com.connorlinfoot.titleapi.TitleAPI;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 
 public class Parkour extends JocScoreCombo{
 
-	ArrayList<ParkourStream> streams = new ArrayList<ParkourStream>();
+	ArrayList<ParkourStream> streams = new ArrayList<>();
 	ParkourProvider provider = new ParkourProvider();
 	int playerCount = 0;
 	int mapLength = 40;
@@ -166,7 +150,7 @@ public class Parkour extends JocScoreCombo{
 			updateStartingPlatforms();
 		}
 		if(JocIniciat){
-			streams.forEach(s -> s.tick());
+			streams.forEach(ParkourStream::tick);
 			comprovarFinish();
 		}
 	}
@@ -175,7 +159,7 @@ public class Parkour extends JocScoreCombo{
 		// TODO Auto-generated method stub
 		super.ultraHeartbeat();
 		streams.removeIf(s -> !s.isValid());
-		streams.forEach(s -> s.ultraTick());
+		streams.forEach(ParkourStream::ultraTick);
 	}
 	@Override
 	protected void customJocIniciat() {
@@ -204,7 +188,7 @@ public class Parkour extends JocScoreCombo{
 	}
 	public class ParkourStream extends PlayerWorldEventBus { //One for each player
 		private Location startLocation;
-		ArrayList<BubbleHandler> handlers = new ArrayList<BubbleHandler>();
+		ArrayList<BubbleHandler> handlers = new ArrayList<>();
 		int targetBubbleIndex = 0;
 		int playerPosition = 0;
 		public ParkourStream(Player ply, Location startLocation) {
@@ -257,8 +241,8 @@ public class Parkour extends JocScoreCombo{
 			int providerBubbleIndex;
 			ZonedDateTime firstContactTime;
 			ZonedDateTime leaveTime;
-			ArrayList<Vector> positions = new ArrayList<Vector>();
-			ArrayList<CheckpointHandler> checkpointHandlers = new ArrayList<CheckpointHandler>();
+			ArrayList<Vector> positions = new ArrayList<>();
+			ArrayList<CheckpointHandler> checkpointHandlers = new ArrayList<>();
 			Score score;
 			Hologram h;
 			public BubbleHandler(int providerBubbleIndex) {
@@ -486,7 +470,7 @@ public class Parkour extends JocScoreCombo{
 	}
 	public class ParkourProvider{ //Single instnace
 		//		ParkourModule currentModule;
-		ArrayList<ParkourBubble> bubbles = new ArrayList<ParkourBubble>();
+		ArrayList<ParkourBubble> bubbles = new ArrayList<>();
 		public ParkourBubble getBubble(int index){
 			if(bubbles.size() > index){
 				return bubbles.get(index);
@@ -508,30 +492,15 @@ public class Parkour extends JocScoreCombo{
 					b.setEntryPoint(getForward().multiply(4));
 				}
 				bubbles.add(b);
-			} catch (InstantiationException e) {
+			} catch (InstantiationException | SecurityException | NoSuchMethodException | InvocationTargetException | IllegalArgumentException | IllegalAccessException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchMethodException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}			
+			}
 		}
 		Class<? extends ParkourBubble> getRandomBubbleType(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> registeredBubbleTypes = getRegisteredBubbleTypes();	
 			Collections.shuffle(registeredBubbleTypes);
-			double max = registeredBubbleTypes.stream().mapToDouble((p) -> p.getSecond()).sum();
+			double max = registeredBubbleTypes.stream().mapToDouble(Pair::getSecond).sum();
 			int i = 0;
 			while (true) {
 				for (Pair<Class<? extends ParkourBubble>, Double> p : registeredBubbleTypes) {
@@ -550,14 +519,14 @@ public class Parkour extends JocScoreCombo{
 			//			return null;
 		}
 		List<Pair<Class<? extends ParkourBubble>, Double>> getRegisteredBubbleTypes(){
-			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<Pair<Class<? extends ParkourBubble>, Double>>();
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockBubble.class, 60D));
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(ZigZagBubble.class, 8D));
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(CrossBlockTowerBubble.class, 10D));
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SingleBlockLineBubble.class, 10D));
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SlimeJumpBubble.class, 10D));
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(GlassPaneLineBubble.class, 10D));
-			r.add(new Pair<Class<? extends ParkourBubble>, Double>(SineWaveBubble.class, 8D));
+			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<>();
+			r.add(new Pair<>(SingleBlockBubble.class, 60D));
+			r.add(new Pair<>(ZigZagBubble.class, 8D));
+			r.add(new Pair<>(CrossBlockTowerBubble.class, 10D));
+			r.add(new Pair<>(SingleBlockLineBubble.class, 10D));
+			r.add(new Pair<>(SlimeJumpBubble.class, 10D));
+			r.add(new Pair<>(GlassPaneLineBubble.class, 10D));
+			r.add(new Pair<>(SineWaveBubble.class, 8D));
 			return r;
 		}
 		
@@ -574,9 +543,9 @@ public class Parkour extends JocScoreCombo{
 
 		public abstract class ParkourBubble{ //Single island on sky
 			private Vector entryPoint; //Absolute - ISSUES
-			ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
-			ArrayList<Vector> blocks = new ArrayList<Vector>(); //Index matches with material 
-			ArrayList<Material> materials = new ArrayList<Material>(); //Index matches with block 
+			ArrayList<Checkpoint> checkpoints = new ArrayList<>();
+			ArrayList<Vector> blocks = new ArrayList<>(); //Index matches with material
+			ArrayList<Material> materials = new ArrayList<>(); //Index matches with block
 			Function<? super Vector, Material> materialGetter = v -> materials.get(blocks.indexOf(v));
 
 			public ParkourBubble() {

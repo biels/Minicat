@@ -18,7 +18,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
@@ -33,7 +32,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		ItemStack itemStack3 = new ItemStack(Material.DIAMOND_SWORD);
 		itemStack3.addEnchantment(Enchantment.DAMAGE_ALL, 2);
 		items.add(itemStack3);
@@ -250,7 +249,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 		return null;
 	}
 	public ArrayList<Location> getValidCircleLocations(Location center, Double radius, int num){
-		ArrayList<Location> finalLocs = new ArrayList<Location>();
+		ArrayList<Location> finalLocs = new ArrayList<>();
 		ArrayList<Location> locs = Utils.getLocationsCircle(center, radius, 15);
 	    //center.getBlock().setType(Material.GOLD_BLOCK);
 		locs.add(getBossSpawnLoc());
@@ -289,7 +288,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 		}
 	}
 	public void dropLoot(Location center){
-		ArrayList<ItemStack> d = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> d = new ArrayList<>();
 		d.add(Utils.getRandomPotion());
 		//d.add(BowRecipeGenerator.getRandomBow(false));
 		d.add(new ItemStack(Material.ICE, 10));

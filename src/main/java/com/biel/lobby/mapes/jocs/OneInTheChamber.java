@@ -48,7 +48,7 @@ public class OneInTheChamber extends JocScoreRace {
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply){
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		items.add(new ItemStack(Material.IRON_SWORD));
 		items.add(new ItemStack(Material.BOW));
 		items.add(new ItemStack(Material.ARROW));

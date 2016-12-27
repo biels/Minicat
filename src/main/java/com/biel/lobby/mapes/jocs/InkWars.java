@@ -3,7 +3,6 @@ package com.biel.lobby.mapes.jocs;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.bukkit.Bukkit;
@@ -26,34 +25,25 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Wool;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.BlockIterator;
-import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
-import com.biel.lobby.Com;
-import com.biel.lobby.lobby;
-import com.biel.lobby.GestorMapes.ContenidorMapa;
 import com.biel.lobby.mapes.JocEquips;
-import com.biel.lobby.mapes.JocTeamScoreRace;
 import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.JocTeamScoreRace.EquipScoreRace;
-import com.biel.lobby.utilities.Cuboid;
-import com.biel.lobby.utilities.Matrix;
 import com.biel.lobby.utilities.Pair;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
 
 public class InkWars extends JocEquips {
-	HashMap<Block, Pair<String, Double>> highInkBlocks = new HashMap<Block, Pair<String, Double>>();
+	HashMap<Block, Pair<String, Double>> highInkBlocks = new HashMap<>();
 	@Override
 	public String getGameName() {
 		return "InkWars";
@@ -72,7 +62,7 @@ public class InkWars extends JocEquips {
 	}
 	@Override
 	protected ArrayList<String> getGameInfo(Player p) {
-		ArrayList<String> i = new ArrayList<String>();
+		ArrayList<String> i = new ArrayList<>();
 		i.add("You win by having more painted blocks than the enemy when the time ends");
 		i.add("You win by having more than 80% of the map painted");
 		i.add("In this map you level up every " + getBlockCountToLevelUp() + " effectively painted blocks");
@@ -101,7 +91,7 @@ public class InkWars extends JocEquips {
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
@@ -126,14 +116,14 @@ public class InkWars extends JocEquips {
 	protected void updateScoreBoard(Player ply) {
 		super.updateScoreBoard(ply);
 		if (JocIniciat && !JocFinalitzat){
-			ArrayList<String> list = new ArrayList<String>();
-			ArrayList<Integer> values = new ArrayList<Integer>();
+			ArrayList<String> list = new ArrayList<>();
+			ArrayList<Integer> values = new ArrayList<>();
 			for(Equip e : Equips){
 				try {
 					list.add(e.getAdjectiuColored());
 					EquipInkWars eq = (EquipInkWars)e;
 					values.add((int) Math.round(eq.getOwnedPercent()));
-				} catch (Exception e1) {
+				} catch (Exception ignored) {
 
 				}
 			}
@@ -281,7 +271,7 @@ public class InkWars extends JocEquips {
 	}
 	protected void processHighInkBlocks(){
 		//InkDecay
-		HashMap<Block, Pair<String, Double>> toPaint = new HashMap<Block, Pair<String, Double>>();
+		HashMap<Block, Pair<String, Double>> toPaint = new HashMap<>();
 		Iterator<Entry<Block, Pair<String, Double>>> iter = highInkBlocks.entrySet().iterator();
 		while (iter.hasNext()) {
 			Entry<Block, Pair<String, Double>> entry = iter.next();
@@ -303,18 +293,16 @@ public class InkWars extends JocEquips {
 					double d = b.getLocation().distance(r.getLocation());
 					Player p = Bukkit.getPlayer(entry.getValue().getFirst());
 					if(p != null){
-						toPaint.put(r, new Pair<String, Double>(p.getName(), ink * (Utils.Possibilitat(16) ? 1 : 1)));
+						toPaint.put(r, new Pair<>(p.getName(), ink * (Utils.Possibilitat(16) ? 1 : 1)));
 						entry.getValue().setSecond(entry.getValue().getSecond() / 4);
 					}
 				}
 			}
 		}
-		Iterator<Entry<Block, Pair<String, Double>>> iter2 = toPaint.entrySet().iterator();
-		while (iter2.hasNext()) {
-			Entry<Block, Pair<String, Double>> entry = iter2.next();
+		for (Entry<Block, Pair<String, Double>> entry : toPaint.entrySet()) {
 			Block b = entry.getKey();
 			Player p = Bukkit.getPlayer(entry.getValue().getFirst());
-			if(p != null){
+			if (p != null) {
 				InkWeapon w = getPlayerInfo(p).getActiveWeapon();
 				w.paintBlock(b, entry.getValue().getSecond());
 			}
@@ -331,28 +319,20 @@ public class InkWars extends JocEquips {
 		return null;
 	}
 	public void giveWeaponSelectionButton(Player p){
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.WORKBENCH), ChatColor.GOLD + "" + ChatColor.BOLD + "Weapon selector",  ChatColor.WHITE + "Opens weapon selection menu."), p, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				openWeaponSelectionMenu(event.getPlayer());
-			}
-		});
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.WORKBENCH), ChatColor.GOLD + "" + ChatColor.BOLD + "Weapon selector",  ChatColor.WHITE + "Opens weapon selection menu."), p, event -> openWeaponSelectionMenu(event.getPlayer()));
 		p.getInventory().addItem(button.getItemStack());
 	}
 	public void openWeaponSelectionMenu(Player p){
-		IconMenu menu = new IconMenu(ChatColor.RED + "Weapon selector " + Utils.NombreEntre(0, 100), 9, new IconMenu.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(IconMenu.OptionClickEvent event) {
-				event.setWillClose(true);
-				Player ply = event.getPlayer();
-				int i = event.getPosition();
-				if(i == 0)getPlayerInfo(ply).setActiveWeapon(new RollerInkWeapon(ply));
-				if(i == 1)getPlayerInfo(ply).setActiveWeapon(new BrushInkWeapon(ply));
-				if(i == 2)getPlayerInfo(ply).setActiveWeapon(new MachinegunInkWeapon(ply));
-				if(i == 3)getPlayerInfo(ply).setActiveWeapon(new EnderInkWeapon(ply));
-				sendTeamMessage(obtenirEquip(event.getPlayer()), event.getPlayer().getName() + " has selected " + event.getMenu().getOptionNames()[i]);
-			}
-		});
+		IconMenu menu = new IconMenu(ChatColor.RED + "Weapon selector " + Utils.NombreEntre(0, 100), 9, event -> {
+            event.setWillClose(true);
+            Player ply = event.getPlayer();
+            int i = event.getPosition();
+            if(i == 0)getPlayerInfo(ply).setActiveWeapon(new RollerInkWeapon(ply));
+            if(i == 1)getPlayerInfo(ply).setActiveWeapon(new BrushInkWeapon(ply));
+            if(i == 2)getPlayerInfo(ply).setActiveWeapon(new MachinegunInkWeapon(ply));
+            if(i == 3)getPlayerInfo(ply).setActiveWeapon(new EnderInkWeapon(ply));
+            sendTeamMessage(obtenirEquip(event.getPlayer()), event.getPlayer().getName() + " has selected " + event.getMenu().getOptionNames()[i]);
+        });
 		int weaponLevel = getPlayerInfo(p).getWeaponLevel();
 		String string = Integer.toString(weaponLevel);
 		String lvlString = ChatColor.GOLD + "" + ChatColor.BOLD + " [Level " + string + "]";
@@ -364,7 +344,7 @@ public class InkWars extends JocEquips {
 		menu.open(p);
 	}
 	public boolean isPaintable(Block b){ 
-		ArrayList<Material> p = new ArrayList<Material>();
+		ArrayList<Material> p = new ArrayList<>();
 		p.add(Material.WOOL);p.add(Material.STAINED_CLAY);p.add(Material.STAINED_GLASS);p.add(Material.STAINED_GLASS_PANE);
 		//		p.add(Material.STONE);p.add(Material.STONE);p.add(Material.STONE_B)
 		Material t = b.getType();
@@ -469,8 +449,7 @@ public class InkWars extends JocEquips {
 			boolean paintable = isPaintable(b);
 			if((paintable || forcedly) && isEnabled()){
 				EquipInkWars newOwnerTeam = obtenirEquip(getPlayer());
-				EquipInkWars e = newOwnerTeam;
-				DyeColor sc = e.getStrongColor();
+                DyeColor sc = newOwnerTeam.getStrongColor();
 				EquipInkWars oldOwnerTeam = getTeamOwningBlock(b);
 				if(oldOwnerTeam != newOwnerTeam && oldOwnerTeam != null){
 					if(highInkBlocks.containsKey(b)){
@@ -490,7 +469,7 @@ public class InkWars extends JocEquips {
 					highInkBlocks.remove(b);
 				}
 				if(oldOwnerTeam != newOwnerTeam)pInk = 0;
-				highInkBlocks.put(b, new Pair<String, Double>(getPlayer().getName(), (inkAmount / 3) + pInk / 2)); // 1:3 Tick ratio !!!
+				highInkBlocks.put(b, new Pair<>(getPlayer().getName(), (inkAmount / 3) + pInk / 2)); // 1:3 Tick ratio !!!
 			}
 		}
 		protected void paintRadius(Location c, double r, double inkAmount){
@@ -501,7 +480,7 @@ public class InkWars extends JocEquips {
 		}
 	}
 	abstract class ProjectileInkWeapon extends InkWeapon{
-		ArrayList<Projectile> onHoldProjectileList = new ArrayList<Projectile>();
+		ArrayList<Projectile> onHoldProjectileList = new ArrayList<>();
 		public ProjectileInkWeapon(Player ply) {
 			super(ply);
 

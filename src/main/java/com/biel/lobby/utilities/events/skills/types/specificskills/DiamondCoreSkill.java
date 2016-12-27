@@ -1,14 +1,12 @@
 package com.biel.lobby.utilities.events.skills.types.specificskills;
 
 import java.text.MessageFormat;
-import java.util.Iterator;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.inventory.ItemStack;
 
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;

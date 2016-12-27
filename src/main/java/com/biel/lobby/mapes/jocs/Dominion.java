@@ -31,7 +31,7 @@ public class Dominion extends JocTeamDominion {
 	}
 	@Override
 	protected ArrayList<ControlPoint> getDesiredControlPoints() {
-		ArrayList<ControlPoint> controlPoints = new ArrayList<ControlPoint>();
+		ArrayList<ControlPoint> controlPoints = new ArrayList<>();
 		ArrayList<Location> pointLocations = pMapaActual().ObtenirLocations("Points", world);
 		String[] pointNames = pMapaActual().ObtenirLlista("PointNames");
 		String[] pointRadiuses = pMapaActual().ObtenirLlista("PointRadiuses");
@@ -72,7 +72,7 @@ public class Dominion extends JocTeamDominion {
 	}
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new EquipDominion(DyeColor.RED, "vermell")); //Id 0
 		equips.add(new EquipDominion(DyeColor.GREEN, "verd")); //Id 1
 		return equips;
@@ -86,7 +86,7 @@ public class Dominion extends JocTeamDominion {
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.STONE_SWORD, 1));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds

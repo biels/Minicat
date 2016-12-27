@@ -69,7 +69,7 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("l")){
 			if (args.length == 1){
 				if(args[0] == "@" && ply.isOp()){
-					Bukkit.getOnlinePlayers().forEach(p -> Com.teleportPlayerToLobby(p));
+					Bukkit.getOnlinePlayers().forEach(Com::teleportPlayerToLobby);
 					Bukkit.broadcastMessage(ChatColor.GRAY + "Tots els jugadors han estat transportats al lobby");
 					return true;
 				}

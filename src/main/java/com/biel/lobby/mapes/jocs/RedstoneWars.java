@@ -10,7 +10,6 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -37,7 +36,7 @@ public class RedstoneWars extends JocEquips{
 	int chargeCount = 0;
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new Equip(DyeColor.RED, "vermell")); //Id 0
 		equips.add(new Equip(DyeColor.BLUE, "blau")); //Id 1
 		return equips;
@@ -45,7 +44,7 @@ public class RedstoneWars extends JocEquips{
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.IRON_SWORD, 1));
 		items.add(new ItemStack(Material.IRON_PICKAXE, 1));
@@ -97,7 +96,7 @@ public class RedstoneWars extends JocEquips{
 	public void heartbeat() {
 		// TODO Auto-generated method stub
 		super.heartbeat();
-		getPlayers().forEach(p -> compactRedstone(p));
+		getPlayers().forEach(this::compactRedstone);
 		if(JocIniciat && segonsTranscorreguts() % 80 == 0)placeBonusOnTheMiddle();
 		if(JocIniciat && segonsTranscorreguts() % 200 == 0)sendGlobalMessage(ChatColor.GREEN + "Nova habilitat disponible!");
 	}

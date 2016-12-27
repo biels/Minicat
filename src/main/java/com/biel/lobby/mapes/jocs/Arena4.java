@@ -7,15 +7,10 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.biel.lobby.lobby;
-import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocEquips;
-import com.biel.lobby.mapes.JocExtern;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 
 public class Arena4 extends JocEquips {
@@ -34,7 +29,7 @@ public class Arena4 extends JocEquips {
 
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new Arena4Equip(DyeColor.RED, "vermell", 3)); //Id 0
 		equips.add(new Arena4Equip(DyeColor.BLUE, "blau", 0)); //Id 1
 		equips.add(new Arena4Equip(DyeColor.GREEN, "verd", 1)); //Id 2
@@ -44,7 +39,7 @@ public class Arena4 extends JocEquips {
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		items.add(new ItemStack(Material.WOOD_SWORD));
 		return items;
 	}
@@ -68,8 +63,8 @@ public class Arena4 extends JocEquips {
 		}
 	}
 	void updateScoreboard(){
-		ArrayList<String> list = new ArrayList<String>();
-		ArrayList<Integer> nums = new ArrayList<Integer>();
+		ArrayList<String> list = new ArrayList<>();
+		ArrayList<Integer> nums = new ArrayList<>();
 		for (Equip e : Equips){
 			Arena4Equip eq = (Arena4Equip) e;
 			list.add(e.getChatColor() + "Equip " + e.getAdjectiu());

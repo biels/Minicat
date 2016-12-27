@@ -1,11 +1,9 @@
 package com.biel.lobby.utilities.events.skills;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -14,15 +12,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.biel.lobby.lobby;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
-import com.biel.lobby.GestorMapes.ContenidorMapa;
 import com.biel.lobby.utilities.Utils;
 
 public class SkillPool {
-	ArrayList<Skill> registered = new ArrayList<Skill>();
-	ArrayList<Skill> skills = new ArrayList<Skill>();
+	ArrayList<Skill> registered = new ArrayList<>();
+	ArrayList<Skill> skills = new ArrayList<>();
 	public boolean addSkill(Skill s){
 		if(!hasSkill(s.getPlayer(), s.getClass())){
 			skills.add(s);
@@ -39,7 +35,7 @@ public class SkillPool {
 		skills.clear();
 	}
 	public ArrayList<Skill> getSkillsForPlayer(Player ply){
-		ArrayList<Skill> r = new ArrayList<Skill>();
+		ArrayList<Skill> r = new ArrayList<>();
 		for(Skill s : skills){
 			String name = s.getPlayer().getName();
 			if(name.equals(ply.getName())){r.add(s);}
@@ -139,13 +135,10 @@ public class SkillPool {
 	public ItemButton getUnlockerButton(Player p, int n){
 		ItemStack dBlk = new ItemStack(Material.CHEST);
 		dBlk.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 1);
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.AQUA + "Habilitat #" + n,  ChatColor.WHITE + "Obre l'inventari de selecció d'habilitats", Integer.toString(n)), p, new ItemButton.OptionClickEventHandler() {
-			@Override
-			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				int data = (int) event.getData();
-				openSelectionMenu(event.getPlayer(), true, data);
-			}
-		});
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.AQUA + "Habilitat #" + n,  ChatColor.WHITE + "Obre l'inventari de selecció d'habilitats", Integer.toString(n)), p, event -> {
+            int data = (int) event.getData();
+            openSelectionMenu(event.getPlayer(), true, data);
+        });
 		button.setData(n);
 		return button;
 	}

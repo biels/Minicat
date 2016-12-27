@@ -15,7 +15,6 @@ import org.bukkit.projectiles.ProjectileSource;
 
 import com.biel.lobby.mapes.JocTeamDeathMatch;
 import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.JocObjectius.EquipObjectius;
 import com.biel.lobby.utilities.Utils;
 
 public class TeamDeathMatchJaneatorForest extends JocTeamDeathMatch {
@@ -28,7 +27,7 @@ public class TeamDeathMatchJaneatorForest extends JocTeamDeathMatch {
 
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new EquipScoreRace(DyeColor.RED, "vermell")); //Id 0
 		equips.add(new EquipScoreRace(DyeColor.BLUE, "blau")); //Id 1
 		return equips;
@@ -47,7 +46,7 @@ public class TeamDeathMatchJaneatorForest extends JocTeamDeathMatch {
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		double balancingMultiplier = getBalancingMultiplier(ply);
 		items.add(new ItemStack(Material.STONE_SWORD, 1));

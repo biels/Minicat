@@ -6,17 +6,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
 
-import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.lobby.Com;
 import com.biel.lobby.Mapa;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
 
 public abstract class Skill extends PlayerWorldEventBus {
 	private Player player;
@@ -144,7 +141,7 @@ public abstract class Skill extends PlayerWorldEventBus {
 				Double roundMaxValue = (double)Math.round(maxValue * 100) / 100;
 				s = s + "/" + Double.toString(roundMaxValue);
 				if (maxValue > 3){
-					Double ratio = (double) (value / maxValue);
+					Double ratio = value / maxValue;
 					ratio = ratio * 100;
 					Double percent = (double)Math.round(ratio * 10) / 10;
 					s = s + " - " + Double.toString(percent) + "%";
@@ -163,7 +160,7 @@ public abstract class Skill extends PlayerWorldEventBus {
 		return 0D;
 	}
 	public ArrayList<String> getDescLines() {
-		ArrayList<String> arr = new ArrayList<String>();
+		ArrayList<String> arr = new ArrayList<>();
 		String desc = getDescription();
 		int i = 0;
 		int lastBreak = 0;

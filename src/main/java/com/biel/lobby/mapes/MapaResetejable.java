@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
@@ -16,7 +15,6 @@ import org.bukkit.event.Event;
 import com.biel.lobby.Com;
 import com.biel.lobby.Mapa;
 import com.biel.lobby.utilities.GestorPropietats;
-import com.biel.lobby.utilities.Utils;
 
 
 public abstract class MapaResetejable extends Mapa {
@@ -89,21 +87,16 @@ public abstract class MapaResetejable extends Mapa {
 	}
 	//--MAP-MODE--
 	public boolean isWorld(File folder){
-		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<>();
 		if (!folder.exists()) return false;
-		File[] fileEntries = folder.listFiles(new FilenameFilter() {		
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.equals("region");
-			}
-		});
+		File[] fileEntries = folder.listFiles((dir, name) -> name.equals("region"));
 		return fileEntries.length != 0;
 	}
 	public MapMode getMapMode(){
 		return isWorld(getMapOriginFile()) ? MapMode.SINGLE : MapMode.MULTIPLE;
 	}
 	public ArrayList<String> getMultiWorldList(){
-		ArrayList<String> r = new ArrayList<String>();
+		ArrayList<String> r = new ArrayList<>();
 		if(getMapMode() == MapMode.MULTIPLE){
 			File folder = getMapOriginFile();
 			for(File f : folder.listFiles()){
@@ -122,7 +115,7 @@ public abstract class MapaResetejable extends Mapa {
 	}
 	//------------
 	public static ArrayList<String> getAllMapNames(){
-		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<>();
 		File folder = new File(FolderMaps);
 		if (!folder.exists()) {
 			folder.mkdir();
@@ -148,14 +141,11 @@ public abstract class MapaResetejable extends Mapa {
 	}
 	public void deleteVirtualWorld(){
 		Bukkit.unloadWorld(world, false);
-		Com.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), new Runnable() {
-
-			public void run() {
-				File worldLive = getLiveWorldFile();
-				deleteFolder(worldLive);
-				Bukkit.broadcastMessage("Mapa esborrat! - " + NomWorld);
-			}
-		}, 200L);
+		Com.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
+            File worldLive = getLiveWorldFile();
+            deleteFolder(worldLive);
+            Bukkit.broadcastMessage("Mapa esborrat! - " + NomWorld);
+        }, 200L);
 
 	}
 	public void save(){

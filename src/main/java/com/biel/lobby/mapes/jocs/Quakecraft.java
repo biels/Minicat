@@ -1,15 +1,8 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -21,14 +14,11 @@ import org.bukkit.FireworkEffect.Type;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
-import org.bukkit.entity.LeashHitch;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.block.Action;
@@ -40,20 +30,14 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.FireworkMeta;
-import org.bukkit.inventory.meta.ItemMeta.Spigot;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
-import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.JocScoreRace;
 import com.biel.lobby.utilities.FireworkEffectPlayer;
 import com.biel.lobby.utilities.Utils;
@@ -89,7 +73,7 @@ public class Quakecraft extends JocScoreRace {
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		items.add(new ItemStack(Material.WOOD_HOE, 1));
 		return items;
 	}
@@ -148,7 +132,7 @@ public class Quakecraft extends JocScoreRace {
 		i.clear();
 		i.addItem(railgun);
 	}
-	HashMap<String, Long> pReloadRocket = new HashMap<String, Long>();
+	HashMap<String, Long> pReloadRocket = new HashMap<>();
 	@Override
 	protected void onPlayerInteract(PlayerInteractEvent e, Player p) {
 		updateBar(p);
@@ -200,7 +184,7 @@ public class Quakecraft extends JocScoreRace {
 		}
 		long tTransc = System.currentTimeMillis()
 				- (pReloadRocket.get(p.getName()));
-		Float ratio = (float) ((float)tTransc / (float)getMaxT(p));
+		Float ratio = (float)tTransc / (float)getMaxT(p);
 		if (ratio > 1){ratio = 1F;}
 		//Bukkit.broadcastMessage(Float.toString(ratio));
 		//p.setExp(0);
@@ -234,9 +218,10 @@ public class Quakecraft extends JocScoreRace {
 					getWorld().playEffect(l, Effect.SMOKE, 5);
 					if (shooter == null){continue;}
 					if (target.getEntityId() != shooter.getEntityId()) {
+						//noinspection EmptyTryBlock
 						try {
 							//getWorld().createExplosion(l, 0, false);
-						} catch (Exception e1) {
+						} catch (Exception ignored) {
 
 						}
 						playRailgunEffect(shooter, l, true, true);
@@ -343,7 +328,7 @@ public class Quakecraft extends JocScoreRace {
 		if (e.getEntity() instanceof Arrow) {
 
 			if (e.getEntity().getShooter() instanceof Player) {
-				Player shooter = (Player) ((Arrow) e.getEntity())
+				Player shooter = (Player) e.getEntity()
 						.getShooter();
 				railgunHitPlace(shooter, proj);
 				proj.remove();
@@ -353,7 +338,7 @@ public class Quakecraft extends JocScoreRace {
 	private List<Entity> getAffectedEntities(Entity e, int depth, Double bRange) {
 		int origEntId = e.getEntityId();
 		List<Entity> nearbyEntities = e.getNearbyEntities(2.8 + bRange, 3.25 + bRange, 2.8 + bRange);
-		ArrayList<Entity> toAdd = new ArrayList<Entity>();
+		ArrayList<Entity> toAdd = new ArrayList<>();
 		for (Entity ent : nearbyEntities){
 			if (depth > 0){
 				if (ent.getEntityId() != origEntId && !ent.isDead() && ent.isValid()){

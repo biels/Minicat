@@ -13,7 +13,6 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -22,8 +21,6 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.event.Event;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -33,18 +30,13 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import com.biel.lobby.lobby;
-import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.JocObjectius.EquipObjectius;
-import com.biel.lobby.mapes.JocObjectius.Objectiu;
 import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
@@ -77,7 +69,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new Equip(DyeColor.RED, "vermell")); //Id 0
 		equips.add(new Equip(DyeColor.BLUE, "blau")); //Id 1
 		return equips;
@@ -85,7 +77,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.WOOD_SWORD, 1));
 		//		items.add(new ItemStack(Material.DIAMOND_PICKAXE, 1));
@@ -190,7 +182,7 @@ public class ObsidianDefenders extends JocEquips {
 				if(Ability.hasAbility(plugin, this, damager, AbilityType.ARQUER_DE_GEL) && evt.isCancelled() == false && ranged == true){
 					int crg = pPlayer(damager).ObtenirPropietatInt("StrongBowHitCount");
 					if(crg >= 6){
-						ArrayList <BlockFace> faces = new ArrayList <BlockFace>();
+						ArrayList <BlockFace> faces = new ArrayList<>();
 						faces.add(BlockFace.NORTH);
 						faces.add(BlockFace.SOUTH);
 						faces.add(BlockFace.WEST);
@@ -813,7 +805,7 @@ public class ObsidianDefenders extends JocEquips {
 			ItemStack item = new ItemStack(mat); 
 			ItemMeta meta = item.getItemMeta();
 			meta.setDisplayName(ChatColor.GREEN + Titol);
-			ArrayList<String> lore = new ArrayList<String>();
+			ArrayList<String> lore = new ArrayList<>();
 			lore.add(ChatColor.WHITE + Desc);
 			if (!Desc2.equals("<Descripció2>")){
 				lore.add(ChatColor.WHITE + Desc2);
@@ -844,7 +836,7 @@ public class ObsidianDefenders extends JocEquips {
 			return getPlayerAbilityTypes(plugin, j, plyr).contains(ab);
 		}
 		static ArrayList<AbilityType> getPlayerAbilityTypes(lobby plugin, ObsidianDefenders j, Player plyr){
-			ArrayList<AbilityType> lore = new ArrayList<AbilityType>();
+			ArrayList<AbilityType> lore = new ArrayList<>();
 			try {
 				lore.add(AbilityType.valueOf(j.pPlayer(plyr).ObtenirPropietat("Habilitat1")));
 				lore.add(AbilityType.valueOf(j.pPlayer(plyr).ObtenirPropietat("Habilitat2")));
@@ -879,7 +871,7 @@ public class ObsidianDefenders extends JocEquips {
 				ItemStack item = new ItemStack(Material.WOOD_SWORD);
 				ItemMeta meta = item.getItemMeta();
 				meta.setDisplayName("Habilitat " + Integer.toString(i));
-				ArrayList<String> lore = new ArrayList<String>();
+				ArrayList<String> lore = new ArrayList<>();
 				lore.add(Integer.toString(i));
 				meta.setLore(lore);
 				item.setItemMeta(meta);
@@ -893,7 +885,7 @@ public class ObsidianDefenders extends JocEquips {
 		// TODO Auto-generated method stub
 		super.updateScoreBoard(ply);
 		if (JocIniciat){
-			ArrayList<String> list = new ArrayList<String>();
+			ArrayList<String> list = new ArrayList<>();
 			list.add(ChatColor.GREEN + "Kills: " + pPlayer(ply).ObtenirPropietatInt("Assassinats"));
 			list.add(ChatColor.RED + "Morts: " + pPlayer(ply).ObtenirPropietatInt("Morts"));
 			list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));

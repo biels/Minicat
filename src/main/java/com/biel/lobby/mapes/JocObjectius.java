@@ -12,15 +12,11 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.inventory.ItemStack;
 
 import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.jocs.Arena4.Arena4Equip;
 import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 
@@ -118,7 +114,7 @@ public abstract class JocObjectius extends JocEquips {
 	protected void updateScoreBoard(Player ply) {
 		super.updateScoreBoard(ply);
 		if (JocIniciat && !JocFinalitzat){
-			ArrayList<String> list = new ArrayList<String>();
+			ArrayList<String> list = new ArrayList<>();
 			Equips.stream().map(e -> (EquipObjectius) e).sorted((e2, e1) -> Integer.compare(e1.getCompletedObjectives().size(), e2.getCompletedObjectives().size())).forEach(eq -> {
 				list.add(eq.getChatColor() + "Equip " + eq.getAdjectiu());
 				for (Objectiu obj : eq.getObjectius()){
@@ -128,8 +124,8 @@ public abstract class JocObjectius extends JocEquips {
 			ScoreBoardUpdater.setScoreBoard(ply, "Estadístiques", list, null);
 		}
 		if (JocFinalitzat){
-			ArrayList<String> list = new ArrayList<String>();
-			ArrayList<Integer> values = new ArrayList<Integer>();
+			ArrayList<String> list = new ArrayList<>();
+			ArrayList<Integer> values = new ArrayList<>();
 			for (Equip e : Equips){
 				EquipObjectius eq = (EquipObjectius) e;	
 				EquipObjectius eqEnemic = (EquipObjectius) obtenirEquipEnemic(e);	
@@ -165,7 +161,7 @@ public abstract class JocObjectius extends JocEquips {
 	}
 
 	public class EquipObjectius extends Equip{
-		ArrayList<Objectiu> Objectius =  new ArrayList<Objectiu>();
+		ArrayList<Objectiu> Objectius = new ArrayList<>();
 		public EquipObjectius(DyeColor color, String adj) {
 			super(color, adj);
 			//initObjectives();
@@ -182,7 +178,7 @@ public abstract class JocObjectius extends JocEquips {
 			Objectius = objectius;
 		}
 		public  ArrayList<Objectiu> getAliveObjectives(){
-			ArrayList<Objectiu> objs = new ArrayList<Objectiu>();
+			ArrayList<Objectiu> objs = new ArrayList<>();
 			for (Objectiu obj : Objectius){
 				if (obj.isCompleted() == false){
 					objs.add(obj);
@@ -191,7 +187,7 @@ public abstract class JocObjectius extends JocEquips {
 			return objs;
 		}
 		public  ArrayList<Objectiu> getCompletedObjectives(){
-			ArrayList<Objectiu> objs = new ArrayList<Objectiu>();
+			ArrayList<Objectiu> objs = new ArrayList<>();
 			for (Objectiu obj : Objectius){
 				if (obj.isCompleted() == true){
 					objs.add(obj);
@@ -200,7 +196,7 @@ public abstract class JocObjectius extends JocEquips {
 			return objs;
 		}
 		public  ArrayList<Objectiu> getCompletedObjectives(Player ply){
-			ArrayList<Objectiu> objs = new ArrayList<Objectiu>();
+			ArrayList<Objectiu> objs = new ArrayList<>();
 			for (Objectiu obj : getCompletedObjectives()){
 				if (obj.getCompleter() == ply){
 					objs.add(obj);
@@ -263,8 +259,7 @@ public abstract class JocObjectius extends JocEquips {
 			return completer;
 		}
 		public boolean canBeCompleted(Player p){
-			if(obtenirEquip(p).getId() == obtenirEquipObjectiu(this).getId()){return false;}
-			return true;
+			return obtenirEquip(p).getId() != obtenirEquipObjectiu(this).getId();
 		}
 		public void setCompleter(Player completer) {
 			this.completer = completer;

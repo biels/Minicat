@@ -1,61 +1,40 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
-import org.bukkit.material.Wool;
-import org.bukkit.metadata.MetadataValue;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
-import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
-import com.biel.lobby.lobby;
-import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.JocObjectius;
-import com.biel.lobby.mapes.jocs.Arena4.Arena4Equip;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.events.skills.Skill;
-import com.biel.lobby.utilities.events.skills.types.specificskills.CalciumSourceSkill;
 
 public class RainbowClay extends JocObjectius {
 	public RainbowClay() {
@@ -68,14 +47,14 @@ public class RainbowClay extends JocObjectius {
 	}
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new EquipObjectius(DyeColor.RED, "vermell")); //Id 0
 		equips.add(new EquipObjectius(DyeColor.BLUE, "blau")); //Id 1
 		return equips;
 	}
 	@Override
 	protected ArrayList<Objectiu> getDesiredObjectivesTeam(EquipObjectius e) {
-		ArrayList<Objectiu> objectius = new ArrayList<Objectiu>();
+		ArrayList<Objectiu> objectius = new ArrayList<>();
 		//Bukkit.broadcastMessage("Cores" + Integer.toString(e.getId() + 1));
 		ArrayList<Location> coreLocs = pMapaActual().ObtenirLocations("Cores" + Integer.toString(e.getId() + 1), getWorld());
 		objectius.add(new ObjectiuBlockBreak("Core " + e.getAdjectiu() + " L", coreLocs.get(0)));
@@ -216,7 +195,7 @@ public class RainbowClay extends JocObjectius {
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.IRON_SWORD, 1));
 		ItemStack pickaxe = new ItemStack(Material.DIAMOND_PICKAXE, 1);
@@ -428,18 +407,16 @@ public class RainbowClay extends JocObjectius {
 	}
 	
 	public void ProgTask(){
-		int tId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
-			public void run() {
-				if (getWorld() == null){return;}
-				Cuboid cub = pMapaActual().ObtenirCuboid("RegC", getWorld());
+		int tId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+            if (getWorld() == null){return;}
+            Cuboid cub = pMapaActual().ObtenirCuboid("RegC", getWorld());
 
-				for (Block bl : cub){
-					if (bl.getType() == Material.CHEST){
-						OmplirCofre(bl);
-					}
-				}
-			}
-		}, 20 * 8, 2 * 20 * 10); // *12
+            for (Block bl : cub){
+                if (bl.getType() == Material.CHEST){
+                    OmplirCofre(bl);
+                }
+            }
+        }, 20 * 8, 2 * 20 * 10); // *12
 		handleTask(tId);
 	}
 	

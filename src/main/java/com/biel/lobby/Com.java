@@ -11,7 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
-import com.biel.BielAPI.Utils.Title;
 import com.biel.lobby.utilities.CBUtils;
 import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.Options;
@@ -58,15 +57,12 @@ public class Com {
 		ScoreBoardUpdater.clearScoreBoard(p);
 		Options.giveStartingButtons(p);
 		p.getInventory().setHeldItemSlot(1);
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), new Runnable() {
-			@Override
-			public void run() {
-				setHeadColor(p, ChatColor.WHITE);
-				int rank = new PlayerData(p).getRank();
-				Utils.donarItemsPlayer(p, getRankEquipment(rank));
-				setSuffix(p, ColorConverter.chatToRaw(ChatColor.GRAY) + NBSP + ColorConverter.chatToRaw(ChatColor.YELLOW) + "#" + rank);
-			}
-		}, 2);
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
+            setHeadColor(p, ChatColor.WHITE);
+            int rank = new PlayerData(p).getRank();
+            Utils.donarItemsPlayer(p, getRankEquipment(rank));
+            setSuffix(p, ColorConverter.chatToRaw(ChatColor.GRAY) + NBSP + ColorConverter.chatToRaw(ChatColor.YELLOW) + "#" + rank);
+        }, 2);
 		playMinicatAnimation(p);
 	}
 	public static Boolean isOnLobby(Player ply){
@@ -93,7 +89,7 @@ public class Com {
 			int index = pIDs.indexOf(id) + 1;
 			String msg = "";
 			String c = "";
-			if (true){c = "" + ChatColor.BLUE;}
+			c = "" + ChatColor.BLUE;
 			if (index <= 10){c = "" + ChatColor.YELLOW;}
 			if (index <= 3){c = "" + ChatColor.GREEN;}
 			if (index <= 1){c = "" + ChatColor.AQUA;}
@@ -112,7 +108,7 @@ public class Com {
 		
 	}
 	public static String getRankingString(int num){
-		ArrayList<String> positions = new ArrayList<String>();
+		ArrayList<String> positions = new ArrayList<>();
 		ArrayList<Integer> pIDs = getDataAPI().getRanking();
 		int max = num;
 		//positions.add(ChatColor.BOLD + "");
@@ -121,7 +117,7 @@ public class Com {
 			int index = pIDs.indexOf(id) + 1;
 			String msg = "";
 			String c = "";
-			if (true){c = "" + ChatColor.BLUE;}
+			c = "" + ChatColor.BLUE;
 			if (index <= 10){c = "" + ChatColor.YELLOW;}
 			if (index <= 3){c = "" + ChatColor.GREEN;}
 			if (index <= 1){c = "" + ChatColor.AQUA;}
@@ -139,7 +135,7 @@ public class Com {
 		return String.join(", ", positions);
 	}
 	public static ArrayList<ItemStack> getRankEquipment(int r){
-		ArrayList<ItemStack> l = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> l = new ArrayList<>();
 		if(r == 1){
 			l.add(new ItemStack(Material.DIAMOND_HELMET));
 			l.add(new ItemStack(Material.DIAMOND_CHESTPLATE));
@@ -188,7 +184,7 @@ public class Com {
 		return ChatColor.YELLOW + "MINICAT";
 	}
 	public static void playMinicatAnimation(Player p){
-		ArrayList<String> f = new ArrayList<String>();
+		ArrayList<String> f = new ArrayList<>();
 		String bold = "";
 		f.add(ChatColor.WHITE + "" + bold + "MINICAT");
 		f.add(ChatColor.YELLOW + "" + bold + "M" + ChatColor.WHITE + "" + bold + "INICAT");
@@ -203,12 +199,7 @@ public class Com {
 		f.add(ChatColor.WHITE + "" + bold + "MINICAT");
 		int i = 0;
 		for (String s : f){
-			Bukkit.getScheduler().runTaskLater(getPlugin(), new Runnable() {
-				@Override
-				public void run() {
-					TitleAPI.sendTitle(p,0,6,0,s,Integer.toString(Bukkit.getOnlinePlayers().size()));
-				}
-			}, 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
+			Bukkit.getScheduler().runTaskLater(getPlugin(), () -> TitleAPI.sendTitle(p,0,6,0,s,Integer.toString(Bukkit.getOnlinePlayers().size())), 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
 			i++;
 		}
 	}

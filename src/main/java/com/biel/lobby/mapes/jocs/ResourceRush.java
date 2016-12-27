@@ -2,14 +2,11 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.Chest;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -19,13 +16,6 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 
-
-
-
-
-
-
-import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.JocTeamScoreRace;
 import com.biel.lobby.utilities.Cuboid;
@@ -33,10 +23,10 @@ import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public class ResourceRush extends JocTeamScoreRace {
-	ArrayList<Item> thrownItems = new ArrayList<Item>();
+	ArrayList<Item> thrownItems = new ArrayList<>();
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new EquipScoreRace(DyeColor.RED, "vermell")); //Id 0
 		equips.add(new EquipScoreRace(DyeColor.BLUE, "blau")); //Id 1
 		return equips;
@@ -111,7 +101,7 @@ public class ResourceRush extends JocTeamScoreRace {
 		}
 	}
 	public ArrayList<ItemStack> getChestStartingContents(int m){
-		ArrayList<ItemStack> r = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> r = new ArrayList<>();
 		r.add(new ItemStack(Material.LOG, 2 * m));
 		r.add(new ItemStack(Material.COAL, 4 * m));
 		r.add(new ItemStack(Material.COAL, 4 * m));

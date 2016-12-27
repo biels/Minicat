@@ -1,14 +1,12 @@
 package com.biel.lobby.utilities.events.skills.types.specificskills;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -19,8 +17,6 @@ import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
 import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
-
-import be.maximvdw.featherboardcore.placeholders.ai;
 
 public class FrostArcherSkill extends InherentSkill {
 	private int stacks = 0;
@@ -105,7 +101,7 @@ public class FrostArcherSkill extends InherentSkill {
 	}
 
 	public void empresonar(Player damaged, Player damager) {
-		ArrayList <BlockFace> faces = new ArrayList <BlockFace>();
+		ArrayList <BlockFace> faces = new ArrayList<>();
 		faces.add(BlockFace.NORTH);
 		faces.add(BlockFace.SOUTH);
 		faces.add(BlockFace.WEST);

@@ -18,7 +18,7 @@ public class PixelRift extends JocTeamDeathMatch {
 
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new EquipScoreRace(DyeColor.RED, "vermell")); //Id 0
 		equips.add(new EquipScoreRace(DyeColor.BLUE, "blau")); //Id 1
 		equips.add(new EquipScoreRace(DyeColor.GREEN, "verd")); //Id 2

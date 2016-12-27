@@ -3,17 +3,16 @@ package com.biel.lobby.utilities.events.statuseffects;
 import java.util.ArrayList;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.inventory.ItemStack;
 
 public class AuraRendererStatusEffect extends StatusEffect {
-	ArrayList<Item> hItems = new ArrayList<Item>();
+	ArrayList<Item> hItems = new ArrayList<>();
 	public AuraRendererStatusEffect(Player ply) {
 		super(ply);
 		// TODO Auto-generated constructor stub
@@ -41,7 +40,7 @@ public class AuraRendererStatusEffect extends StatusEffect {
 		}
 	}
 	private void despawnItems(){ //Despawn all at once
-		hItems.stream().forEach(i -> {i.remove();});
+		hItems.stream().forEach(Entity::remove);
 		hItems.clear();
 	}
 	private void reallocateItems(boolean hard){ //
@@ -75,7 +74,7 @@ public class AuraRendererStatusEffect extends StatusEffect {
 		return getLocationsCircle(getPlayer().getLocation(), (info.getRadius() > 0 ? info.getRadius() : getDefaultRadius(info)), info.getN(), getTicksLived() * Math.PI * 2 * (info.getSpeed() / (20 * 360)));
 	}
 	public static ArrayList<Location> getLocationsCircle(Location center, double radius, int n, double offset){
-		ArrayList<Location> locs = new ArrayList<Location>();
+		ArrayList<Location> locs = new ArrayList<>();
 		World world = center.getWorld();
 
 		for(int i = 0; i < n; i++){

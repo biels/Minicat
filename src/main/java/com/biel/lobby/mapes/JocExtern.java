@@ -13,7 +13,7 @@ public abstract class JocExtern extends Joc{
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		// TODO Auto-generated method stub
-		return new ArrayList<ItemStack>();
+		return new ArrayList<>();
 	}
 	
 	@Override

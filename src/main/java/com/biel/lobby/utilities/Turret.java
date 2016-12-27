@@ -1,17 +1,6 @@
 package com.biel.lobby.utilities;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.World;
-import org.bukkit.Material;
-
-import java.awt.List;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -21,18 +10,12 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.LargeFireball;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -40,15 +23,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.Potion;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
@@ -67,9 +44,9 @@ public class Turret extends EventBus {
 	final World world;
 	final Player creador;
 	Equip equip = null;
-	final ArrayList<Location> TurretBlocks = new ArrayList<Location>();
-	final ArrayList<Location> ArmorBlocks = new ArrayList<Location>();
-	private ArrayList<Millora> Millores = new ArrayList<Millora>();
+	final ArrayList<Location> TurretBlocks = new ArrayList<>();
+	final ArrayList<Location> ArmorBlocks = new ArrayList<>();
+	private ArrayList<Millora> Millores = new ArrayList<>();
 	int tirs = 0;
 	int tirsquim = 0;
 	public int xp = 0;
@@ -306,12 +283,12 @@ public class Turret extends EventBus {
 		ArmorBlocks.clear();
 		while (h >= 0){
 			Location iLoc = location.clone().add(new Vector(0,h,0));
-			ArrayList <Byte> dirs = new ArrayList <Byte>();
+			ArrayList <Byte> dirs = new ArrayList<>();
 			dirs.add((byte) 0x2);
 			dirs.add((byte) 0x3);
 			dirs.add((byte) 0x4);
 			dirs.add((byte) 0x5);
-			ArrayList <BlockFace> faces = new ArrayList <BlockFace>();
+			ArrayList <BlockFace> faces = new ArrayList<>();
 			faces.add(BlockFace.NORTH);
 			faces.add(BlockFace.SOUTH);
 			faces.add(BlockFace.WEST);
@@ -362,21 +339,19 @@ public class Turret extends EventBus {
 		//Bukkit.broadcastMessage("CD i!");
 		plugin.getServer().getScheduler().cancelTask(taskEscutId);
 		if (CD < 0){return;}
-		taskEscutId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
-			public void run() {
-				//Bukkit.broadcastMessage("CD acabat!");
+		taskEscutId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+            //Bukkit.broadcastMessage("CD acabat!");
 
-				hpEscut = maxHpEscut;
-				if (CheckArmor()){
-					world.playSound(location, Sound.BLOCK_PISTON_EXTEND, 3F, 1F);
-				}
+            hpEscut = maxHpEscut;
+            if (CheckArmor()){
+                world.playSound(location, Sound.BLOCK_PISTON_EXTEND, 3F, 1F);
+            }
 
-			}
-		}, CD * 20);
+        }, CD * 20);
 		//Bukkit.broadcastMessage("CD init: " + Integer.toString(CD));
 	}
 	public void randomPotionAttack(int attacks, int power){
-		ArrayList<Integer> chosen = new ArrayList<Integer>();
+		ArrayList<Integer> chosen = new ArrayList<>();
 		int count = 0;
 		while (count <= attacks){
 			int maxid = 2;
@@ -402,7 +377,7 @@ public class Turret extends EventBus {
 		if (built == false){return;}
 		if (id == 0){ //Harming
 
-			ArrayList <BlockFace> faces = new ArrayList <BlockFace>();
+			ArrayList <BlockFace> faces = new ArrayList<>();
 			faces.add(BlockFace.NORTH);
 			faces.add(BlockFace.SOUTH);
 			faces.add(BlockFace.WEST);
@@ -460,11 +435,7 @@ public class Turret extends EventBus {
 		potion.setShooter(creador);
 	}
 	public void tirarPoció(final Location loc, final PotionType type, int delay){
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			public void run() {
-				tirarPoció(loc, type);
-			}
-		}, delay);
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> tirarPoció(loc, type), delay);
 	}
 	public void checkIntegrity(){
 		if(built && canBuild()){
@@ -543,7 +514,7 @@ public class Turret extends EventBus {
 			}
 			ArrayList<LivingEntity> getTargets(){
 				double mindistance = distAtac;
-				ArrayList<LivingEntity> targets = new ArrayList<LivingEntity>();
+				ArrayList<LivingEntity> targets = new ArrayList<>();
 				for(Entity en : world.getEntities()) {
 					if (Targetable(en)){
 						double heightBonus = location.getY() - en.getLocation().getY();
@@ -566,31 +537,29 @@ public class Turret extends EventBus {
 				int shoots = 1 + getByTipus(TipusMillora.MECÀNICA).lvl;
 				int temps = 5;
 				while (i1 < shoots){
-					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-						public void run() {
-							int i = 0;
-							int espai = 32 - (getByTipus(TipusMillora.MECÀNICA).lvl * 4);
-							while (i <= 360){
-								float angle = i;
-								double toRadians = Math.PI / 180;
-								//Location locSpawn = plyr.getLocation().add(0,1,0);
-								Location spawnpoint = centerLoc.clone().add(new Location(world,Math.cos(angle * toRadians) + 0.5, 0, Math.sin(angle * toRadians) + 0.5));
+					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                        int i = 0;
+                        int espai = 32 - (getByTipus(TipusMillora.MECÀNICA).lvl * 4);
+                        while (i <= 360){
+                            float angle = i;
+                            double toRadians = Math.PI / 180;
+                            //Location locSpawn = plyr.getLocation().add(0,1,0);
+                            Location spawnpoint = centerLoc.clone().add(new Location(world,Math.cos(angle * toRadians) + 0.5, 0, Math.sin(angle * toRadians) + 0.5));
 
-								Vector dir2 = spawnpoint.toVector().subtract(centerLoc.toVector()).normalize().multiply(0.5);
-								Arrow arrow = (Arrow)world.spawnEntity(spawnpoint, EntityType.ARROW);
-								//Bukkit.broadcastMessage(Float.toString(plyr.getLocation().getYaw()));
-								//arrow.setShooter(creador);
-								//arrow.setItem(item)
-								arrow.setMetadata("Tower", new FixedMetadataValue(plugin, id));
-								arrow.setMetadata("Special", new FixedMetadataValue(plugin, true));
-								arrow.setFireTicks(200);
-								arrow.setVelocity(dir2.multiply(8));
-								i= i + espai;
+                            Vector dir2 = spawnpoint.toVector().subtract(centerLoc.toVector()).normalize().multiply(0.5);
+                            Arrow arrow = (Arrow)world.spawnEntity(spawnpoint, EntityType.ARROW);
+                            //Bukkit.broadcastMessage(Float.toString(plyr.getLocation().getYaw()));
+                            //arrow.setShooter(creador);
+                            //arrow.setItem(item)
+                            arrow.setMetadata("Tower", new FixedMetadataValue(plugin, id));
+                            arrow.setMetadata("Special", new FixedMetadataValue(plugin, true));
+                            arrow.setFireTicks(200);
+                            arrow.setVelocity(dir2.multiply(8));
+                            i= i + espai;
 
-							}
-							world.playSound(centerLoc, Sound.BLOCK_GLASS_BREAK, 1, 1F);
-						}
-					},temps * i1);
+                        }
+                        world.playSound(centerLoc, Sound.BLOCK_GLASS_BREAK, 1, 1F);
+                    },temps * i1);
 					i1 = i1 + 1;
 				}
 			}
@@ -948,7 +917,7 @@ public class Turret extends EventBus {
 		}
 		Boolean getMaxed(){
 			if (max == -1){return false;}
-			if (lvl + 1 <= max){return false;}else{return true;}
+			return lvl + 1 > max;
 		}
 
 		public void lvlUp(){
@@ -970,11 +939,7 @@ public class Turret extends EventBus {
 			}
 		}
 		Boolean possibleUpgrade(){
-			if (getCost() <= xp && getMaxed() == false){
-				return true;
-			}else{
-				return false;
-			}
+			return getCost() <= xp && getMaxed() == false;
 		}
 		ItemStack toItemStack(){
 			ItemStack itemstack = new ItemStack(material, 1); // A stack of diamonds
@@ -992,7 +957,7 @@ public class Turret extends EventBus {
 				displayName = name + ChatColor.BLUE + lvlStr;
 			}
 			meta.setDisplayName(color + displayName);
-			ArrayList<String> lore = new ArrayList<String>();
+			ArrayList<String> lore = new ArrayList<>();
 			lore.add(ChatColor.WHITE + Description);
 			if (getMaxed() == false){
 				lore.add(ChatColor.AQUA + "Cost: " + Integer.toString(getCost()) + " xp");

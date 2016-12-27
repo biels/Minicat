@@ -1,36 +1,26 @@
 package com.biel.lobby.utilities.events.skills.types.specificskills;
 
-import java.util.ArrayList;
-
 
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.util.Vector;
 
-import com.biel.lobby.mapes.Joc.PlayerInfo;
-import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.events.skills.types.CooldownSkill;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
 import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
-import com.biel.lobby.utilities.events.statuseffects.AuraStatusEffect;
-import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
 public class DeflectorSkill extends InherentSkill {
 	private int stacks = 0;
 
 	public DeflectorSkill(Player ply) {
 		super(ply);
-		if(ply == null)return;
+		if(ply == null) {
+		}
 		//PlayerInfo i = getPlayerInfo();
 		//AuraStatusEffect aura = new AuraStatusEffect(getPlayer(), new AuraInfo(2.5, 8, 1, getItemStack()));
 		//i.addStatusEffect(aura);

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
@@ -14,17 +13,15 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.inventory.ItemStack;
 
 import com.biel.lobby.Com;
-import com.biel.lobby.utilities.BUtils;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 
 public abstract class JocTeamDominion extends JocEquips {
-	public ArrayList<ControlPoint> ControlPoints = new ArrayList<ControlPoint>();
+	public ArrayList<ControlPoint> ControlPoints = new ArrayList<>();
 	public enum GameGoalType{CaptureAll, LifeDraining, ScoreRace}
 	@Override
 	protected void customJocIniciat() {
@@ -96,8 +93,8 @@ public abstract class JocTeamDominion extends JocEquips {
 	@Override
 	protected void updateScoreBoard(Player ply) {
 		if (JocIniciat){
-			ArrayList<String> list = new ArrayList<String>();
-			ArrayList<Integer> values = new ArrayList<Integer>();
+			ArrayList<String> list = new ArrayList<>();
+			ArrayList<Integer> values = new ArrayList<>();
 			list.add("[Màxim]");
 			values.add(Math.round(getMaxHealth()));
 			for(Equip e : Equips){
@@ -156,8 +153,8 @@ public abstract class JocTeamDominion extends JocEquips {
 		}
 		public void setHealth(Float health) {
 			float[] array = {10F, 25F, 50F, 75F, 90F, 95F};
-			for (int i = 0; i < array.length; i++) {
-				broadcastPoint(array[i], getPercent(), getPercent(health));
+			for (float anArray : array) {
+				broadcastPoint(anArray, getPercent(), getPercent(health));
 			}
 			this.health = health;
 			if(this.health < 0)this.health = 0F;
@@ -288,7 +285,7 @@ public abstract class JocTeamDominion extends JocEquips {
 				Equip ownerTeam = getOwnerTeam();
 				EquipDominion dominatingTeam = (EquipDominion) getDominatingTeam();				
 				boolean up = true;
-				up = tendency == 2 ? true : false;
+				up = tendency == 2;
 				Character c = (up ? '\u25B2' : '\u25BC');
 				ChatColor chatColor = dominatingTeam.getChatColor();
 				String multDisplay = "";
@@ -392,23 +389,16 @@ public abstract class JocTeamDominion extends JocEquips {
 					everyoneElsePower += group.size();
 				}
 			}
-			int result = domiatingTeamPower - everyoneElsePower;
-			return result;
+			return domiatingTeamPower - everyoneElsePower;
 		}
 		public ArrayList<ArrayList<Player>> getOrderedPlayerGroups(){
 			ArrayList<ArrayList<Player>> playerGroups = getPlayerGroups();
-			Collections.sort(playerGroups, new Comparator<ArrayList<Player>>(){
-				@Override
-				public int compare(ArrayList<Player> arg0,
-						ArrayList<Player> arg1) {
-					return Integer.compare(arg1.size(), arg0.size());
-				}
-			});
+			playerGroups.sort((arg0, arg1) -> Integer.compare(arg1.size(), arg0.size()));
 			return playerGroups;
 		}
 		public ArrayList<ArrayList<Player>> getPlayerGroups(){			
 			ArrayList<Player> standingPlayers = getStandingPlayers();
-			ArrayList<ArrayList<Player>> playerGroups = new ArrayList<ArrayList<Player>>();
+			ArrayList<ArrayList<Player>> playerGroups = new ArrayList<>();
 			for (Equip e : Equips){
 				@SuppressWarnings("unchecked")
 				ArrayList<Player> presentTeamPlayers = (ArrayList<Player>) standingPlayers.clone();
@@ -469,7 +459,7 @@ public abstract class JocTeamDominion extends JocEquips {
 		@Override
 		public ArrayList<Block> getEnvironmentBlocks() {
 			//return BUtils.locListToBlock(Utils.getSphereLocations(center.getBlock().getLocation(), radius, false));
-			return Utils.getCylBlocks(getCenter().getBlock().getLocation().add(0, -8, 0), Integer.valueOf((int) Math.round(radius)), (int)(5 * radius), true);
+			return Utils.getCylBlocks(getCenter().getBlock().getLocation().add(0, -8, 0), (int) Math.round(radius), (int)(5 * radius), true);
 		}
 
 		@Override
@@ -532,7 +522,7 @@ public abstract class JocTeamDominion extends JocEquips {
 		}
 		@SuppressWarnings("deprecation")
 		public ArrayList<Slice> getSlices(PhysicalControlPoint p){
-			ArrayList<Slice> slices = new ArrayList<Slice>();
+			ArrayList<Slice> slices = new ArrayList<>();
 			Equip ownerTeam = p.getOwnerTeam();
 			DyeColor color =  DyeColor.WHITE;
 			if (ownerTeam != null) {color = ownerTeam.getColor();}

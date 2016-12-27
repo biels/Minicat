@@ -6,12 +6,9 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import com.biel.lobby.utilities.Utils;
-import com.biel.lobby.utilities.events.skills.Skill;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
 
 public class VampireSkill extends InherentSkill{

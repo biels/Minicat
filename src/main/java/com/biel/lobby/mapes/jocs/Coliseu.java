@@ -1,9 +1,7 @@
 package com.biel.lobby.mapes.jocs;
 
-import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 
-import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocExtern;
 
 

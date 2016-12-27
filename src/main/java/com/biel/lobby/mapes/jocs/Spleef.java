@@ -5,15 +5,10 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -24,8 +19,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockEvent;
@@ -33,11 +26,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.Inventory;
@@ -47,9 +38,6 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import com.avaje.ebeaninternal.server.persist.Constant;
-import com.biel.lobby.lobby;
-import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocLastStanding;
 import com.biel.lobby.utilities.Utils;
 
@@ -93,7 +81,7 @@ public class Spleef extends JocLastStanding {
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		return items;
 	}
 
@@ -119,7 +107,7 @@ public class Spleef extends JocLastStanding {
 		}
 
 		public void run() {    	
-			timer.schedule (hourlyTask, 0l, 1000 * 5 + 58);
+			timer.schedule (hourlyTask, 0L, 1000 * 5 + 58);
 		}
 		Timer timer = new Timer ();
 		TimerTask hourlyTask = new TimerTask () {
@@ -133,11 +121,7 @@ public class Spleef extends JocLastStanding {
 					//	        		
 					Material mat = pala(vegades);
 
-					if (mat.name().contains("_SPADE")){
-						Hoe = false;
-					}else{
-						Hoe = true;
-					}
+                    Hoe = !mat.name().contains("_SPADE");
 					Inventory inv = d.getInventory();
 
 
@@ -271,7 +255,7 @@ public class Spleef extends JocLastStanding {
 				EntityExplodeEvent evt = (EntityExplodeEvent)event;
 				evt.setYield(8);
 				if (entity.getType() == EntityType.PRIMED_TNT){
-					ArrayList<Block> rem = new ArrayList<Block>();
+					ArrayList<Block> rem = new ArrayList<>();
 					for (Block b : evt.blockList()){
 						if (b.getType() != Material.SNOW_BLOCK){
 							rem.add(b);
@@ -400,18 +384,10 @@ public class Spleef extends JocLastStanding {
 				if (CoordX != null){
 					Boolean Signe = null;
 					if (CoordX == true){
-						if (loc.getBlockX() <= ploc.getBlockX()){
-							Signe = false;
-						}else{
-							Signe = true;
-						}
+                        Signe = loc.getBlockX() > ploc.getBlockX();
 					}
 					if (CoordX == false){
-						if (loc.getBlockZ() <= ploc.getBlockZ()){
-							Signe = false;
-						}else{
-							Signe = true;
-						}
+                        Signe = loc.getBlockZ() > ploc.getBlockZ();
 					}
 					if (Signe != null){
 						//Modificar terreny

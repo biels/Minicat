@@ -1,6 +1,5 @@
 package com.biel.lobby.utilities;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,13 +32,11 @@ import org.bukkit.metadata.Metadatable;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
 import com.biel.lobby.Com;
-import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips.Equip;
 public class Utils {
 
@@ -135,11 +132,7 @@ public class Utils {
 	}
 	public static boolean isArmor(ItemStack itemstack){
 		int slot = getArmorSlot(itemstack);
-		if(slot == -1){
-			return false;
-		}else{
-			return true;
-		}
+		return slot != -1;
 	}
 	public static void giveItemStack(ItemStack itemstack, Player d) {
 		boolean isArmor = isArmor(itemstack);
@@ -215,10 +208,7 @@ public class Utils {
 	}
 	public static boolean Possibilitat(double percentatge, double max){
 		double n = NombreEntre(0, max);
-		if (n <= percentatge){
-			return true;
-		}
-		return false;
+		return n <= percentatge;
 	}
 	public static boolean Possibilitat(int percentatge, int max){
 		return Possibilitat((double)percentatge, max);
@@ -246,7 +236,7 @@ public class Utils {
 		return null;
 	}
 	public static ArrayList<ItemStack> getInventoryPercent(Inventory inv, float percent){
-		ArrayList<ItemStack> list = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> list = new ArrayList<>();
 		for (ItemStack i : inv.getContents()){
 			if (i == null){continue;}
 			if (Utils.Possibilitat((int) percent)){
@@ -261,22 +251,20 @@ public class Utils {
 		return list;
 	}
 	public static void BreakBlockLater(final Block block, int delay, final boolean give){
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), new Runnable() {
-			public void run() {
-				if (give){
-					block.breakNaturally();
-				}else{
-					block.setType(Material.AIR);
-				}
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
+            if (give){
+                block.breakNaturally();
+            }else{
+                block.setType(Material.AIR);
+            }
 
-			}
-		}, delay);
+        }, delay);
 	}
 	public static GestorPropietats getpMapaFromWorld(World world){
 		return new GestorPropietats(world.getWorldFolder().getAbsolutePath()  + "/" + "pMapaActual.txt");
 	}
 	public static ArrayList<BlockFace> getFacesNSEW(){
-		ArrayList<BlockFace> facesNSEW = new ArrayList<BlockFace>();
+		ArrayList<BlockFace> facesNSEW = new ArrayList<>();
 		facesNSEW.add(BlockFace.NORTH);
 		facesNSEW.add(BlockFace.SOUTH);
 		facesNSEW.add(BlockFace.EAST);
@@ -284,7 +272,7 @@ public class Utils {
 		return facesNSEW;
 	}
 	public static ArrayList<BlockFace> getFacesVert(){
-		ArrayList<BlockFace> facesNSEW = new ArrayList<BlockFace>();
+		ArrayList<BlockFace> facesNSEW = new ArrayList<>();
 		facesNSEW.add(BlockFace.UP);
 		facesNSEW.add(BlockFace.DOWN);
 		return facesNSEW;
@@ -293,7 +281,7 @@ public class Utils {
 		return getAdjacentFaces(b, fToCheck, 1);
 	}
 	public static ArrayList<BlockFace> getAdjacentFaces(Block b, ArrayList<BlockFace> fToCheck, int dist){
-		ArrayList<BlockFace> faces = new ArrayList<BlockFace>();
+		ArrayList<BlockFace> faces = new ArrayList<>();
 		for (BlockFace f : fToCheck){
 			Block bl = b.getRelative(f);
 			if (bl.getType() == Material.LOG){faces.add(f);}
@@ -330,7 +318,7 @@ public class Utils {
 		return getLocationsCircle(center, radius, espai, 0, 360);
 	}
 	public static ArrayList<Location> getLocationsCircle(Location center, Double radius, int espai, int start, int end){
-		ArrayList<Location> locs = new ArrayList<Location>();
+		ArrayList<Location> locs = new ArrayList<>();
 		World world = center.getWorld();
 		int i = start; //0
 
@@ -348,7 +336,7 @@ public class Utils {
 		return locs;
 	}
 	public static ArrayList<Location> getSphereLocations(Location center, Double radius, boolean hollow){
-		ArrayList<Location> locs = new ArrayList<Location>();
+		ArrayList<Location> locs = new ArrayList<>();
 		World world = center.getWorld();
 		Cuboid c = getSquareCuboid(center, radius);
 		for (Block b : c.getBlocks()){
@@ -381,12 +369,11 @@ public class Utils {
 		return new Cuboid(center.clone().subtract(radius, radius, radius), center.clone().add(radius, radius, radius));
 	}
 	public static ArrayList<LivingEntity> ordrerEnitiesByProximity(Location loc, ArrayList<LivingEntity> ents){
-		ArrayList<LivingEntity> remaining = ents;
-		ArrayList<LivingEntity> ordered = new ArrayList<LivingEntity>();
-		while (remaining.size() > 0){
+		ArrayList<LivingEntity> ordered = new ArrayList<>();
+		while (ents.size() > 0){
 			LivingEntity nearestEntity = getNearestEntity(loc, ents);
 			ordered.add(nearestEntity);
-			remaining.remove(nearestEntity);
+			ents.remove(nearestEntity);
 		}
 		return ordered;
 	}
@@ -408,7 +395,7 @@ public class Utils {
 		return getNearbyEnemies(entity, entity.getLocation(), dist, lineSight);
 	}
 	public static ArrayList<LivingEntity> getNearbyEnemies(LivingEntity entity, Location center , double dist, boolean lineSight){
-		ArrayList<LivingEntity> ents = new ArrayList<LivingEntity>();
+		ArrayList<LivingEntity> ents = new ArrayList<>();
 		World world = entity.getWorld();
 		//Bukkit.broadcastMessage(Integer.toString(world.getEntities().size()));
 		for(Entity e : world.getEntitiesByClass(LivingEntity.class)){
@@ -424,7 +411,7 @@ public class Utils {
 		return ents;
 	}
 	public static ArrayList<LivingEntity> getNearbyEnemies(Location center, double dist){
-		ArrayList<LivingEntity> ents = new ArrayList<LivingEntity>();
+		ArrayList<LivingEntity> ents = new ArrayList<>();
 		for(Entity e : center.getWorld().getEntitiesByClass(LivingEntity.class)){
 			if (!(e instanceof LivingEntity)){break;}			
 			LivingEntity le = (LivingEntity) e;
@@ -437,7 +424,7 @@ public class Utils {
 		return ents;
 	}
 	public static ArrayList<Player> getNearbyPlayers(Location l, double dist){
-		ArrayList<Player> players = new ArrayList<Player>();
+		ArrayList<Player> players = new ArrayList<>();
 		for (Player ply : l.getWorld().getPlayers()){
 			//if(!ply.getUniqueId().equals(l.get)){
 			Location ploc = ply.getLocation();
@@ -483,7 +470,7 @@ public class Utils {
 		return getCuboidAround(loc, r, r, r);
 	}
 	public static ArrayList<Block> getCylBlocks(Location loc, int r, int height, Boolean fill){
-		ArrayList<Block> blks = new ArrayList<Block>();
+		ArrayList<Block> blks = new ArrayList<>();
 		int heightDone = 0;
 		while(heightDone < height){
 			Location center = loc.clone().add(new Vector(0,heightDone,0));
@@ -491,8 +478,8 @@ public class Utils {
 			for (Block b : c.getBlocks()){
 				double dist = b.getLocation().distance(center);
 				Boolean isValid = true;
-				if (fill == true){isValid = (dist <= r);}
-				if (fill == false){isValid = (dist == r);}
+				if (fill){isValid = (dist <= r);}
+				if (!fill){isValid = (dist == r);}
 				if (isValid){
 					//b.setType(mat);
 					blks.add(b);
@@ -550,7 +537,7 @@ public class Utils {
 		return p.toItemStack(1);
 	}
 	public static ArrayList<ItemStack> getBrewingItems(){
-		ArrayList<ItemStack> i = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> i = new ArrayList<>();
 		i.add(new ItemStack(Material.NETHER_WARTS));
 		i.add(new ItemStack(Material.GLOWSTONE));
 		i.add(new ItemStack(Material.REDSTONE));
@@ -564,7 +551,7 @@ public class Utils {
 	}
 	ArrayList<String> freadHumanReadableList(String text){
 		int lastIndex = 0;
-		ArrayList<String> parts = new ArrayList<String>();
+		ArrayList<String> parts = new ArrayList<>();
 		while(parts.size() < 3){
 			System.out.println(lastIndex);
 			if (lastIndex > text.length()){
@@ -587,7 +574,7 @@ public class Utils {
 		return parts;
 	}
 	public static ArrayList<String> readHumanReadableList(String text){
-		ArrayList<String> Tparts = new ArrayList<String>();
+		ArrayList<String> Tparts = new ArrayList<>();
 		String[] parts = text.split(",");
 		for (String cp : parts){
 			String[] cparts = cp.split(":");
@@ -613,8 +600,8 @@ public class Utils {
 	//	c.add("X");v.add(Integer.toString(l.getBlockX()));
 	//	return writeHumanReadableList(c, v);
 	public static String writeHumanReadableLocation(Location l, boolean world){
-		ArrayList<String> c = new ArrayList<String>();
-		ArrayList<String> v = new ArrayList<String>();
+		ArrayList<String> c = new ArrayList<>();
+		ArrayList<String> v = new ArrayList<>();
 		if (world){
 			c.add("W");v.add(l.getWorld().getName());
 		}
@@ -657,7 +644,7 @@ public class Utils {
 	//		return list;
 	//	}
 	public static ArrayList<Integer> getIntArrayFromStringArray(ArrayList<String> arr){
-		ArrayList<Integer> list = new ArrayList<Integer>();
+		ArrayList<Integer> list = new ArrayList<>();
 		for (String s : arr){
 			list.add(Integer.parseInt(s));
 		}
@@ -665,7 +652,7 @@ public class Utils {
 	}
 	@SuppressWarnings("unchecked")
 	public static <T> List<T> removeDuplicates(List<T> nearbyEntities) {
-		return Arrays.asList((T[]) new LinkedHashSet<T>(nearbyEntities).toArray());
+		return Arrays.asList((T[]) new LinkedHashSet<>(nearbyEntities).toArray());
 	}
 	public static boolean testPointUpDown(Float value, double oldValue,
 			double newValue) {
@@ -773,7 +760,7 @@ public class Utils {
 		return new Vector(xPrime, yPrime, zPrime);
 	}
 	public static ArrayList<Vector> geometricMedianReduce(ArrayList<Vector> points, int depth){
-		ArrayList<Vector> newPoints = new ArrayList<Vector>();
+		ArrayList<Vector> newPoints = new ArrayList<>();
 		for(Vector op1 : points){
 			for(Vector op2 : points){
 				Vector newV = CrearVector(op1, op2).multiply(0.5);

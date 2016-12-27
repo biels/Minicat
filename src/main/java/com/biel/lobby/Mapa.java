@@ -8,34 +8,14 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Note;
 import org.bukkit.World;
-import org.bukkit.WorldCreator;
-import org.bukkit.block.Block;
 import org.bukkit.entity.*;
-import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
-import org.bukkit.event.enchantment.*;
-import org.bukkit.event.entity.*;
-import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.event.world.*;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.projectiles.ProjectileSource;
 
 import com.biel.BielAPI.events.WorldEventBus;
-import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaContinu;
 import com.biel.lobby.mapes.MapaResetejable;
-import com.biel.lobby.utilities.ColorConverter;
-import com.biel.lobby.utilities.GestorPropietats;
-import com.biel.lobby.utilities.Utils;
 
 public abstract class Mapa extends WorldEventBus{
 	public lobby plugin;
@@ -52,11 +32,7 @@ public abstract class Mapa extends WorldEventBus{
 	}
 	public  abstract  String getGameName(); //GameName
 	protected Boolean isWorldLoaded(){
-		if (Bukkit.getWorld(NomWorld) != null){
-			return true;
-		}else{
-			return false;
-		}
+        return Bukkit.getWorld(NomWorld) != null;
 	}
 
 	public void Join(Player ply){
@@ -78,7 +54,7 @@ public abstract class Mapa extends WorldEventBus{
 	protected abstract void customJoin(Player ply);
 	protected abstract void customLeave(Player ply, List<String> attatchments);
 	public void Leave(Player ply){ // TODO
-		List<String> attatchments = new ArrayList<String>();
+		List<String> attatchments = new ArrayList<>();
 		customLeave(ply, attatchments);
 		String endStr = StringUtils.join(attatchments, " ");
 		
@@ -148,9 +124,9 @@ public abstract class Mapa extends WorldEventBus{
 			}
 
 			String[] children = sourceLocation.list();
-			for (int i=0; i<children.length; i++) {
-				copyDirectory(new File(sourceLocation, children[i]),
-						new File(targetLocation, children[i]));
+			for (String aChildren : children) {
+				copyDirectory(new File(sourceLocation, aChildren),
+						new File(targetLocation, aChildren));
 			}
 		} else {
 

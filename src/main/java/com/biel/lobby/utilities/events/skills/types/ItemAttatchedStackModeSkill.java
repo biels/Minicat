@@ -2,9 +2,7 @@ package com.biel.lobby.utilities.events.skills.types;
 
 import org.apache.commons.lang.IllegalClassException;
 import org.bukkit.ChatColor;
-import org.bukkit.Warning;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 public abstract class ItemAttatchedStackModeSkill extends ItemAttatchedModeSkill {
 

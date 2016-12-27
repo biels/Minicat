@@ -88,7 +88,7 @@ public class FireworkEffectPlayer {
          * Finally, we broadcast the entity effect then kill our fireworks object
          */
         // invoke with arguments
-        nms_world_broadcastEntityEffect.invoke(nms_world, new Object[] {nms_firework, (byte) 17});
+        nms_world_broadcastEntityEffect.invoke(nms_world, nms_firework, (byte) 17);
         // remove from the game
         fw.remove();
     }

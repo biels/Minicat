@@ -1,7 +1,6 @@
 package com.biel.lobby.utilities.data;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Player;
@@ -28,20 +27,20 @@ public class MatchData {
 		return registerStart(gameId, mapId, getTeamsString(instance));
 	}
 	public static String getTeamsString(Joc joc){ //1,2,3;3,5,4
-		ArrayList<ArrayList<Integer>> arr = new ArrayList<ArrayList<Integer>>();
+		ArrayList<ArrayList<Integer>> arr = new ArrayList<>();
 		if(joc instanceof JocEquips){
 			for(Equip e : ((JocEquips) joc).Equips){
-				ArrayList<Integer> t = new ArrayList<Integer>();
+				ArrayList<Integer> t = new ArrayList<>();
 				e.getPlayers().forEach(((p) -> t.add(new PlayerData(p).getId())));
 				arr.add(t);
 			}
 		}else{
-			ArrayList<Integer> t = new ArrayList<Integer>();
+			ArrayList<Integer> t = new ArrayList<>();
 			joc.getPlayers().forEach(((p) -> t.add(new PlayerData(p).getId())));
 			arr.add(t);
 		}
 		joc.getGameName();
-		ArrayList<String> teamStrings = new ArrayList<String>();
+		ArrayList<String> teamStrings = new ArrayList<>();
 		for(ArrayList<Integer> l : arr){teamStrings.add(StringUtils.join(l, ','));}		
 		return StringUtils.join(teamStrings, ';');
 	}

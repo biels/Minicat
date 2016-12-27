@@ -1,22 +1,18 @@
 package com.biel.lobby.mapes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 
 import com.biel.lobby.Com;
 import com.biel.lobby.mapes.Joc.PlayerInfo;
-import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 
 public abstract class JocScoreCombo extends Joc {
@@ -55,7 +51,7 @@ public abstract class JocScoreCombo extends Joc {
 		SS(99), S(95), A(90), B(80), C(70), D(60), F(40), FF(5);
 		private int value;
 
-		private Rank(int value) {
+		Rank(int value) {
 			this.value = value;
 		}
 
@@ -110,7 +106,7 @@ public abstract class JocScoreCombo extends Joc {
 		FAIL(0), N50(50), N100(100), N200(200), N300(300), C300(320);
 		private int value;
 
-		private Score(int value) {
+		Score(int value) {
 			this.value = value;
 		}
 
@@ -198,7 +194,7 @@ public abstract class JocScoreCombo extends Joc {
 		Player winner = orderedWinnerList.get(0);
 		sendGlobalMessage(ChatColor.GREEN + "" + ChatColor.BOLD + winner.getName() + " ha guanyat!");
 		if (getDisplayRanking()){displayRanking();}
-		getPlayers().forEach(p -> getPlayerInfo(p).getScoreFancyReport(ChatColor.WHITE).forEach(l -> p.sendMessage(l)));
+		getPlayers().forEach(p -> getPlayerInfo(p).getScoreFancyReport(ChatColor.WHITE).forEach(p::sendMessage));
 		getPlayers().forEach(p -> {p.getInventory().setHeldItemSlot(3); p.getInventory().setItem(3, getFancyBookReport());});
 		winGame(winner);
 	}
@@ -209,7 +205,7 @@ public abstract class JocScoreCombo extends Joc {
 			int index = w.indexOf(p) + 1;
 			String msg = "";
 			String c = "";
-			if (true){c = "" + ChatColor.BLUE;}
+			c = "" + ChatColor.BLUE;
 			if (index <= 1){c = "" + ChatColor.GREEN;}
 			if (index <= 3){c = "" + ChatColor.YELLOW;}
 			if (index == w.size()){c = "" + ChatColor.RED;}
@@ -225,20 +221,17 @@ public abstract class JocScoreCombo extends Joc {
 	}
 	public ArrayList<Player> getOrderedWinnerList(){
 		ArrayList<Player> arr = getPlayers();
-		Collections.sort(arr, new Comparator<Player>() {
-			@Override
-			public int compare(Player o1, Player o2) {
-				// TODO Auto-generated method stub
-				return (getScore(o2) - getScore(o1));
-			}	
+		arr.sort((o1, o2) -> {
+			// TODO Auto-generated method stub
+			return (getScore(o2) - getScore(o1));
 		});
 		return arr;
 	}
 	@Override
 	protected void updateScoreBoard(Player ply) {
 		if (JocIniciat){
-			ArrayList<String> list = new ArrayList<String>();
-			ArrayList<Integer> values = new ArrayList<Integer>();
+			ArrayList<String> list = new ArrayList<>();
+			ArrayList<Integer> values = new ArrayList<>();
 			ArrayList<Player> w = getOrderedWinnerList();
 			if (w.size() > 0){
 				int best = getScore(w.get(0));
@@ -247,7 +240,7 @@ public abstract class JocScoreCombo extends Joc {
 				for (Player p : w){
 					String c = "";
 					int index = w.indexOf(p) + 1;
-					if (true){c = "" + ChatColor.BLUE;}
+					c = "" + ChatColor.BLUE;
 					if (index <= 3){c = "" + ChatColor.YELLOW;}
 					if (index <= 1){c = "" + ChatColor.GREEN;}
 
@@ -295,7 +288,7 @@ public abstract class JocScoreCombo extends Joc {
 	}
 	public class JocScoreComboPlayerInfo extends PlayerInfo{
 		boolean inGame = true;
-		ArrayList<Score> scoreHistory = new ArrayList<Score>();
+		ArrayList<Score> scoreHistory = new ArrayList<>();
 		public JocScoreComboPlayerInfo() {
 			super();
 		}
@@ -303,7 +296,7 @@ public abstract class JocScoreCombo extends Joc {
 			return scoreHistory;
 		}		
 		public String getScoreInlineReport(){
-			ArrayList<String> pieces = new ArrayList<String>();
+			ArrayList<String> pieces = new ArrayList<>();
 			for(Score s : Score.values()){
 
 				pieces.add(getScoreTypeLabeled(s, ChatColor.WHITE));
@@ -315,7 +308,7 @@ public abstract class JocScoreCombo extends Joc {
 			return s.getFormattedString() + c + " x" + scoreTypeAmount;
 		}
 		public ArrayList<String> getScoreFancyReport(ChatColor c){
-			ArrayList<String> lines = new ArrayList<String>();
+			ArrayList<String> lines = new ArrayList<>();
 			String tab = "     ";
 			lines.add("Qualificació: " + Rank.getRank(getAccuracy()));
 			lines.add("Precisió: " + Math.round(getAccuracy() * 100)/100.0 + "%");

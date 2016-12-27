@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.ArrayList;
 
 import org.bukkit.*;
-import org.bukkit.entity.Player;
 
 public class GestorPropietats {
 	String Ruta = "";
@@ -13,7 +12,7 @@ public class GestorPropietats {
 	}
 	
 	private ArrayList<String> LlegirArxiuPropietats(){
-		ArrayList<String> Arr = new ArrayList<String>();
+		ArrayList<String> Arr = new ArrayList<>();
 		try{
 			// Open the file that is the first 
 			// command line parameter
@@ -39,7 +38,7 @@ public class GestorPropietats {
 		return ObtenirPropietats().contains(Nom);
 	}
 	public ArrayList<String> ObtenirPropietats(){
-		ArrayList<String> r = new ArrayList<String>();
+		ArrayList<String> r = new ArrayList<>();
 		for (String linia : LlegirArxiuPropietats()){
 			String[] parts = linia.split("=");
 			String part1 = parts[0]; // [Nom]=valor
@@ -77,7 +76,7 @@ public class GestorPropietats {
 				String[] parts = linia.split("=");
 				String part1 = parts[0]; // 004
 				//String part2 = parts[1]; // 034556
-				if (Nom.equals(part1) == true){
+				if (Nom.equals(part1)){
 					bw.write(Nom + "=" + valor);
 					bw.newLine();
 					fet = true;
@@ -86,7 +85,7 @@ public class GestorPropietats {
 					bw.newLine();
 				}
 			}
-			if (fet == false){
+			if (!fet){
 				bw.write(Nom + "=" + valor);
 				bw.newLine();
 			}
@@ -144,11 +143,11 @@ public class GestorPropietats {
 	}
 	public  ArrayList<Location> ObtenirLocations(String Nom, World world){
 	    int i = 0;	
-	    ArrayList<Location> Locs = new ArrayList<Location>();
+	    ArrayList<Location> Locs = new ArrayList<>();
 		while (true){
 			String Propietat =  Nom +  "_" + Integer.toString(i);
 			
-			if(ExisteixPropietat(Propietat) == false){break;}			
+			if(!ExisteixPropietat(Propietat)){break;}
 			Location p = ObtenirLocation(Propietat, world);
 			
 			Locs.add(p);
@@ -174,11 +173,11 @@ public class GestorPropietats {
 	}
 	public  ArrayList<String> ObtenirArray(String Nom){
 	    int i = 0;	
-	    ArrayList<String> props = new ArrayList<String>();
+	    ArrayList<String> props = new ArrayList<>();
 		while (true){
 			String Propietat =  Nom +  "_" + Integer.toString(i);
 			
-			if(ExisteixPropietat(Propietat) == false){break;}			
+			if(!ExisteixPropietat(Propietat)){break;}
 			String p = ObtenirPropietat(Propietat);
 			
 			props.add(p);
@@ -188,7 +187,7 @@ public class GestorPropietats {
 		return props;
 	}
 	public void EstablirCuboid(String Nom, Location loc1, Location loc2){
-		ArrayList<Location> locs = new ArrayList<Location>();
+		ArrayList<Location> locs = new ArrayList<>();
 		locs.add(loc1);
 		locs.add(loc2);
 		EstablirLocations(Nom, locs);

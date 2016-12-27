@@ -30,17 +30,14 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -51,17 +48,16 @@ import com.biel.lobby.Com;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.JocObjectius.EquipObjectius;
 import com.biel.lobby.utilities.Turret;
 import com.biel.lobby.utilities.Turret.TipusMillora;
 import com.biel.lobby.utilities.Utils;
 
 public class Torres extends JocEquips {
 	boolean debug = false;
-	public ArrayList<Turret> Turrets = new ArrayList<Turret>();
+	public ArrayList<Turret> Turrets = new ArrayList<>();
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
-		ArrayList<Equip> equips = new ArrayList<Equip>();
+		ArrayList<Equip> equips = new ArrayList<>();
 		equips.add(new Equip(DyeColor.RED, "vermell")); //Id 0
 		equips.add(new Equip(DyeColor.BLUE, "blau")); //Id 1
 		return equips;
@@ -90,7 +86,7 @@ public class Torres extends JocEquips {
 	}
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
 		PlayerInfo i = getPlayerInfo(ply);
 		int v = i.getValue();
@@ -109,7 +105,7 @@ public class Torres extends JocEquips {
 		ItemStack itemstack = new ItemStack(Material.ENCHANTED_BOOK, 1); // A stack of diamonds
 		ItemMeta meta = itemstack.getItemMeta();
 		meta.setDisplayName(ChatColor.BLUE + "Control remot");
-		ArrayList<String> lore = new ArrayList<String>();
+		ArrayList<String> lore = new ArrayList<>();
 		lore.add(ChatColor.WHITE + "Obre l'inventari de millores");
 		meta.setLore(lore);
 		itemstack.setItemMeta(meta);
@@ -234,7 +230,7 @@ public class Torres extends JocEquips {
 	public void heartbeat() {
 		// TODO Auto-generated method stub
 		super.heartbeat();
-		ArrayList<Turret> toRemove = new ArrayList<Turret>();
+		ArrayList<Turret> toRemove = new ArrayList<>();
 		for(Turret t : Turrets){
 			if(t.destroyed){
 				toRemove.add(t);
@@ -295,7 +291,7 @@ public class Torres extends JocEquips {
 			if (evt.isCancelled() == false){
 				ArrayList<Player> online = getPlayers();
 				ArrayList<Location> allLocs = Utils.getLocationsCircle(cry.getLocation(), 2.2, 10);
-				ArrayList<Location> locs = new ArrayList<Location>();
+				ArrayList<Location> locs = new ArrayList<>();
 				for (Location loc : allLocs){
 					if (loc.getBlock().getType() == Material.AIR){
 						locs.add(loc);
@@ -312,41 +308,33 @@ public class Torres extends JocEquips {
 					}
 				}
 				world.playSound(cry.getLocation(), Sound.AMBIENT_CAVE, 30F, 3F);
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-					public void run() {
-						for(Player p : plugin.getServer().getOnlinePlayers()){
-							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 5 * 20, 1, false), true);
-						} 
-					}
-				}, 1 * 20);
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-					public void run() {
-						for(Player p : plugin.getServer().getOnlinePlayers()){
-							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 4 * 20, 3, false), true);
-						} 
-					}
-				}, 25);
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-					public void run() {
-						for(Player p : plugin.getServer().getOnlinePlayers()){
-							p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3 * 20, 6, false), true);
-						} 
-					}
-				}, 30);
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-					public void run() {
-						for(Player p : plugin.getServer().getOnlinePlayers()){
-							if(obtenirEquip(p).getId() == equip){
-								p.sendMessage(ChatColor.BOLD + "" + ChatColor.RED + "Has perdut!");
-							}else{
-								p.sendMessage(ChatColor.BOLD + "" + ChatColor.GREEN + "Has guanyat!");
-							}
-							world.createExplosion(cry.getLocation(), 18F);
-							cry.remove();
+				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                    for(Player p : plugin.getServer().getOnlinePlayers()){
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 5 * 20, 1, false), true);
+                    }
+                }, 1 * 20);
+				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                    for(Player p : plugin.getServer().getOnlinePlayers()){
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 4 * 20, 3, false), true);
+                    }
+                }, 25);
+				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                    for(Player p : plugin.getServer().getOnlinePlayers()){
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3 * 20, 6, false), true);
+                    }
+                }, 30);
+				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                    for(Player p : plugin.getServer().getOnlinePlayers()){
+                        if(obtenirEquip(p).getId() == equip){
+                            p.sendMessage(ChatColor.BOLD + "" + ChatColor.RED + "Has perdut!");
+                        }else{
+                            p.sendMessage(ChatColor.BOLD + "" + ChatColor.GREEN + "Has guanyat!");
+                        }
+                        world.createExplosion(cry.getLocation(), 18F);
+                        cry.remove();
 
-						} 
-					}
-				}, 35);
+                    }
+                }, 35);
 
 			}
 
@@ -385,26 +373,24 @@ public class Torres extends JocEquips {
 				int shoots = 5;
 				int temps = 5;
 				while (i1 < shoots){
-					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-						public void run() {
-							int i = -3;
-							while (i <= 3){
-								float angle = plyr.getLocation().getYaw() + (7 * i) + 90;
-								double toRadians = Math.PI / 180;
-								//Location locSpawn = plyr.getLocation().add(0,1,0);
-								Location spawnpoint = plyr.getLocation().add(0,1.05,0).add(new Location(world,Math.cos(angle * toRadians), 0, Math.sin(angle * toRadians)));
+					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                        int i = -3;
+                        while (i <= 3){
+                            float angle = plyr.getLocation().getYaw() + (7 * i) + 90;
+                            double toRadians = Math.PI / 180;
+                            //Location locSpawn = plyr.getLocation().add(0,1,0);
+                            Location spawnpoint = plyr.getLocation().add(0,1.05,0).add(new Location(world,Math.cos(angle * toRadians), 0, Math.sin(angle * toRadians)));
 
-								Vector dir2 = spawnpoint.toVector().subtract(plyr.getLocation().add(0,1,0).toVector()).normalize().multiply(0.5);
-								Arrow arrow = (Arrow)world.spawnEntity(spawnpoint, EntityType.ARROW);
-								//Bukkit.broadcastMessage(Float.toString(plyr.getLocation().getYaw()));
-								arrow.setShooter(plyr);
-								arrow.setFireTicks(200);
-								arrow.setVelocity(dir2.multiply(8));
-								i= i + 1;
-								world.playSound(spawnpoint, Sound.BLOCK_GLASS_BREAK, 1, 1F);
-							}
-						}
-					},temps * i1);
+                            Vector dir2 = spawnpoint.toVector().subtract(plyr.getLocation().add(0,1,0).toVector()).normalize().multiply(0.5);
+                            Arrow arrow = (Arrow)world.spawnEntity(spawnpoint, EntityType.ARROW);
+                            //Bukkit.broadcastMessage(Float.toString(plyr.getLocation().getYaw()));
+                            arrow.setShooter(plyr);
+                            arrow.setFireTicks(200);
+                            arrow.setVelocity(dir2.multiply(8));
+                            i= i + 1;
+                            world.playSound(spawnpoint, Sound.BLOCK_GLASS_BREAK, 1, 1F);
+                        }
+                    },temps * i1);
 					i1 = i1 + 1;
 					stack.setDurability((short) (stack.getDurability() + 35));
 				}
@@ -668,17 +654,12 @@ public class Torres extends JocEquips {
 			}
 		}
 		void replaceItem(){
-			Com.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), new Runnable(){
-
-				@Override
-				public void run() {
-					ItemStack item = new ItemStack(getItem());
-					Item dropitem = world.dropItem(loc.clone().add(new Vector(0.5,1.1,0.5)), item);
-					dropitem.setVelocity(new Vector(0,0,0));
-					entityId = dropitem.getEntityId();
-				}
-
-			}, temps);
+			Com.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
+                ItemStack item = new ItemStack(getItem());
+                Item dropitem = world.dropItem(loc.clone().add(new Vector(0.5,1.1,0.5)), item);
+                dropitem.setVelocity(new Vector(0,0,0));
+                entityId = dropitem.getEntityId();
+            }, temps);
 		}
 		Material getItem(){
 			switch(tipus){
