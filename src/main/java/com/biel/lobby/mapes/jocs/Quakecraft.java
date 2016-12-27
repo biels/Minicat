@@ -415,8 +415,14 @@ public class Quakecraft extends JocScoreRace {
 		// TODO Auto-generated method stub
 		super.onPlayerMove(evt, p);
 		updateBar(p);
+		
+		if(evt.getTo().getY() < 0){
+			p.setHealth(0);
+		}
 
 	}
+
+	
 	@Override
 	protected void onPlayerMoveDistributed(PlayerMoveEvent evt, Player p) {
 		// TODO Auto-generated method stub
