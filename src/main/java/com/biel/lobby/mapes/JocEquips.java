@@ -75,7 +75,7 @@ public abstract class JocEquips extends Joc {
 	protected void customJocIniciat() {
 		if(generationMode == TeamGenerationMode.DEFAULT)ferEquipsEquilibrats();
 		if(generationMode == TeamGenerationMode.CUSTOM && getPlayersOutOfTeam().size() != 0){
-			sendGlobalMessage("Mode selecció d'equips personalitzats, siusplau, seleccioneu els vostres equips abans de començar la partida.");
+			sendGlobalMessage("Mode selecciï¿½ d'equips personalitzats, siusplau, seleccioneu els vostres equips abans de comenï¿½ar la partida.");
 			anunciarEquips(null);
 		}
 		anunciarEquips(null);	
@@ -232,7 +232,7 @@ public abstract class JocEquips extends Joc {
 					e.removePlayer(ply);
 				}
 			}
-			sendGlobalMessage(ply.getName() + " és a l'equip " + eq.getChatColor() + eq.getAdjectiu());
+			sendGlobalMessage(ply.getName() + " ï¿½s a l'equip " + eq.getChatColor() + eq.getAdjectiu());
 			updateScoreBoards();
 			ScoreBoardUpdater.updateTeamScore(this);
 			updateHeadColor(ply);
@@ -252,7 +252,7 @@ public abstract class JocEquips extends Joc {
 
 		}
 		if(JocIniciat){
-			//Bukkit.broadcastMessage("Alerta: " + name + " no és a cap equip! -- Null");
+			//Bukkit.broadcastMessage("Alerta: " + name + " no ï¿½s a cap equip! -- Null");
 		}
 		return null;
 	}
@@ -418,7 +418,7 @@ public abstract class JocEquips extends Joc {
 		}
 		resetTeams();
 		long millis = Duration.between(startingTime, ZonedDateTime.now()).toMillis();
-		sendGlobalMessage(MessageFormat.format("Desviació típica: {0}, Temps: {1}ms, Cicles: {2}, Vel:{3}ms/c", Math.sqrt(bestVariance), millis, cycles, Math.round(millis * 100/(double)cycles) / 100D));
+		sendGlobalMessage(MessageFormat.format("Desviaciï¿½ tï¿½pica: {0}, Temps: {1}ms, Cicles: {2}, Vel:{3}ms/c", Math.sqrt(bestVariance), millis, cycles, Math.round(millis * 100/(double)cycles) / 100D));
 		final List<List<Player>> finalTeams = bestTeams;
 		if(finalTeams != null)finalTeams.forEach(t -> t.forEach(p -> establirEquipJugador(p, Equips.get(finalTeams.indexOf(t)))));
 		sendGlobalMessage("D: " + getAvgNumericDeviation());
@@ -472,10 +472,10 @@ public abstract class JocEquips extends Joc {
 					establirEquipJugador(ply, e);
 					if(generationMode != TeamGenerationMode.CUSTOM){
 						generationMode = TeamGenerationMode.CUSTOM;
-						sendGlobalMessage(ChatColor.YELLOW + ply.getName() + " ha seleccionat un equip. Mode selecció d'equips personalitzats, seleccioneu els vostres equips.");
+						sendGlobalMessage(ChatColor.YELLOW + ply.getName() + " ha seleccionat un equip. Mode selecciï¿½ d'equips personalitzats, seleccioneu els vostres equips.");
 					}
 				}else{
-					ply.sendMessage("El mode espectador no està disponible");
+					ply.sendMessage("El mode espectador no estï¿½ disponible");
 					event.setWillClose(false);
 				}
 
@@ -519,10 +519,13 @@ public abstract class JocEquips extends Joc {
 			}
 		});
 		if(hasHostPrivilleges(ply))inventory.setItem(3, button2.getItemStack());
-		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), ChatColor.YELLOW + "Equips aleatoris"), ply, new ItemButton.OptionClickEventHandler() {
+		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), ChatColor.YELLOW + "Equips aleatoris + Inici"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
-				ferEquipsAleatoris(true);
+				if(canBeStartedBy(ply, true)){
+					ferEquipsAleatoris(true);
+					JocIniciat();
+				}
 			}
 		});
 		if(hasHostPrivilleges(ply))inventory.setItem(4, button3.getItemStack());
@@ -632,7 +635,7 @@ public abstract class JocEquips extends Joc {
 			Utils.healDamageable(damaged, evt.getDamage());
 			evt.setDamage(0);
 			//damager.setVelocity(new Vector(0, GUtils.NombreEntre(0, 4), 0));
-			//sendPlayerMessage(damager, ChatColor.GRAY + "Atac a la base no permès. El mal retorna a l'emisor, bon viatge.");
+			//sendPlayerMessage(damager, ChatColor.GRAY + "Atac a la base no permï¿½s. El mal retorna a l'emisor, bon viatge.");
 		}
 	}
 	private boolean areInSameTeam(Player p1, Player p2) {
@@ -722,7 +725,7 @@ public abstract class JocEquips extends Joc {
 			sendTeamMessage(this, text);
 		}
 	}
-	//	CAMPS DE FORÇA -- SUPER-FORCEFIELD
+	//	CAMPS DE FORï¿½A -- SUPER-FORCEFIELD
 	boolean isForcefieldEnabled(){
 		return pMapaActual().ExisteixPropietat("ProtectionRadius");
 	}
@@ -759,7 +762,7 @@ public abstract class JocEquips extends Joc {
 	void keepAwayFromForcefields(Player p){
 		//Sempre que estigui activat...
 		if (!isForcefieldEnabled()){return;}
-		//Mirar si està en algun forcefield enemic
+		//Mirar si estï¿½ en algun forcefield enemic
 		int radius = getProtectionRadius();
 		ArrayList<Location> enemyForcefields = getTeamForcefields(obtenirEquipEnemic(p));
 		for (Location forcefieldOrigin : enemyForcefields){

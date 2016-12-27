@@ -792,17 +792,21 @@ public abstract class Joc extends MapaResetejable {
 
 		return 5;
 	}
+	public boolean canBeStartedBy(Player ply, boolean message){
+        //Jugadors al lobby
+        //Admins a la partida
+        int r = segonsPerIniciar() - segonsTranscorreguts();
+        if (r <= 0 || ply.isOp()){
+            return true;
+        }else{
+            if(message)ply.sendMessage("Cal esperar almenys " + ChatColor.YELLOW + Integer.toString(r) + ChatColor.WHITE + "s per iniciar la partida" );
+            return false;
+        }
+    }
 	public void iniciarCommand(Player ply){
-		//Jugadors al lobby
-		//Admins a la partida
-		int r = segonsPerIniciar() - segonsTranscorreguts();
-		if (r <= 0 || ply.isOp()){
-			JocIniciat();
-		}else{
-			ply.sendMessage("Cal esperar almenys " + ChatColor.YELLOW + Integer.toString(r) + ChatColor.WHITE + "s per iniciar la partida" );
-
-		}
-
+		if(canBeStartedBy(ply, true)){
+		    JocIniciat();
+        }
 	}
 	protected void donarItemsPreparatiusGenerals(final Player ply){
 		ItemButton.clearButtons(ply);
