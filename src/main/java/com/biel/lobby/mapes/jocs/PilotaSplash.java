@@ -43,7 +43,6 @@ public class PilotaSplash extends JocScoreRace {
 	public void JocIniciat() {
 		// TODO Auto-generated method stub
 		super.JocIniciat();
-		applyDisguises();
 	}
 	@Override
 	protected void donarEfectesInicials(Player ply) {
@@ -144,18 +143,6 @@ public class PilotaSplash extends JocScoreRace {
 		super.setSpree(ply, value);
 //		SlimeWatcher w = (SlimeWatcher) DisguiseAPI.getDisguise(ply).getWatcher();
 //		w.setSize((value > 1 ? 3 : 2));		
-	}
-	//Disguises
-	void applyDisguises(){
-		for(Player p : getPlayers()){
-//			MobDisguise d = new MobDisguise(DisguiseType.SLIME);
-//			d.setKeepDisguiseOnPlayerDeath(true);
-//			d.setKeepDisguiseOnPlayerLogout(false);
-//			d.setHearSelfDisguise(false);
-//			SlimeWatcher w = (SlimeWatcher) d.getWatcher();
-//			w.setSize(2);
-//			DisguiseAPI.disguiseEntity(p, d);//DisguiseAPI.
-		}
 	}
 	@Override
 	public void clearExternals() {
