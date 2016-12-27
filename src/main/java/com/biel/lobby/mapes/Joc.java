@@ -808,15 +808,15 @@ public abstract class Joc extends MapaResetejable {
 		ItemButton.clearButtons(ply);
 		PlayerInventory inventory = ply.getInventory();
 
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_ROD), ChatColor.GREEN + "Inicia la partida"), ply, new ItemButton.OptionClickEventHandler() {
+		ItemButton btnStartGame = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_ROD), ChatColor.GREEN + "Inicia la partida"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
 				iniciarCommand(event.getPlayer());
 
 			}
 		});
-		if(hasHostPrivilleges(ply))inventory.setItem(0, button.getItemStack());
-		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Wiki " + getGameName()), ply, new ItemButton.OptionClickEventHandler() {
+		if(hasHostPrivilleges(ply))inventory.setItem(0, btnStartGame.getItemStack());
+		ItemButton btnWiki = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Wiki " + getGameName()), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
 				anunciarWiki(event.getPlayer(), true);
@@ -868,9 +868,9 @@ public abstract class Joc extends MapaResetejable {
 				menu.open(ply);
 			}
 		});
-		if(hasHostPrivilleges(ply))inventory.setItem(7, button2.getItemStack()); // AND isOp()
-		inventory.setItem(6, button3.getItemStack());
-		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), ChatColor.GREEN + "Convidar jugadors"), ply, new ItemButton.OptionClickEventHandler() {
+		//if(hasHostPrivilleges(ply))inventory.setItem(7, button2.getItemStack()); // AND isOp()
+		inventory.setItem(6, btnWiki.getItemStack());
+		ItemButton btnInvitePlayers = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), ChatColor.GREEN + "Convidar jugadors"), ply, new ItemButton.OptionClickEventHandler() {
 			@Override
 			public void onOptionClick(ItemButton.OptionClickEvent event) {
 				final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
@@ -915,7 +915,7 @@ public abstract class Joc extends MapaResetejable {
 				menu.open(ply);
 			}
 		});
-		if(hasHostPrivilleges(ply))inventory.setItem(8, button5.getItemStack());
+		if(hasHostPrivilleges(ply))inventory.setItem(8, btnInvitePlayers.getItemStack());
 		//		if (this instanceof JocEquips){
 		//			if (ply.isOp()){
 		//				Utils.donarItem(ply, Material.IRON_SPADE, ChatColor.RED + "Bloqueja el canvi d'equip");
