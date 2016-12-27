@@ -16,6 +16,9 @@ commands:
   m:
     description: Mostra l'inventari del teletransportador.
     usage: /m
+  discord:
+    description: Discord AUTH
+    usage: /discord <token>
   a:
     description: Mostra l'inventari del teletransportador.
     usage: /m
