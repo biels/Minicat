@@ -301,7 +301,8 @@ public class Spleef extends JocLastStanding {
 				PlayerMoveEvent evt = (PlayerMoveEvent)event;
 				if (p.getLocation().getBlockY() < 6 && JocIniciat == true){
 					p.getInventory().clear();
-					removeIfAlive(p); 		 
+					removeIfAlive(p);
+					p.setHealth(20);
 				}		
 
 			}
@@ -453,15 +454,15 @@ public class Spleef extends JocLastStanding {
 										utilitzat = true;
 										bloc.getBlock().setType(BREAK_TYPE);
 										if (Utils.Possibilitat(30)){        								
-											int direcció = 1;
+											int direcciÃ³ = 1;
 											if (Utils.Possibilitat(50)){
-												direcció = -1;
+												direcciÃ³ = -1;
 											}        								
 											Location blocmod = bloc.clone();
 											if (CoordX == false){
-												blocmod.setX(bloc.getX() + direcció);
+												blocmod.setX(bloc.getX() + direcciÃ³);
 											}else{
-												blocmod.setZ(bloc.getZ() + direcció);
+												blocmod.setZ(bloc.getZ() + direcciÃ³);
 											}
 											blocmod.getBlock().setType(BREAK_TYPE);
 											ItemStack itemstack = new ItemStack(Material.STONE, 1); // A stack of diamonds  
