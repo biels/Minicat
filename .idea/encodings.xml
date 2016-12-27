@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/Joc.java" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/Torres.java" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/Turret.java" charset="ISO-8859-1" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/VampireSkill.java" charset="ISO-8859-1" />
+    <file url="PROJECT" charset="windows-1252" />
+  </component>
+</project>

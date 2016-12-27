@@ -438,6 +438,7 @@ public class Torres extends JocEquips {
 							admin.updateChildStats();
 							turr.linkCreador = true;
 						}
+						turr.setHp((int) (15 * getBalancingMultiplier(plyr)));
 						turr.Build();
 						turr.Attack();
 						if (turr.built && debug == false) {
