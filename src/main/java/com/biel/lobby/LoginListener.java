@@ -49,45 +49,9 @@ public class LoginListener implements Listener {
 		Player ply = player;
 		String name = ply.getName();
 		Com.getDataAPI().registerNewPlayer(player);
-		if(name.contains("lucas") || name.contains("pecas") || name.contains("pecas")){
-			return;
-		}
-		if(name.contains("amiguet") || name.equalsIgnoreCase("amiguet")){
-			World w = lobby.getLobbyWorld();			
-			Slime s = (Slime) w.spawnEntity(w.getSpawnLocation().add(0, 2, 0), EntityType.SLIME);
-			String pilofrase = GUtils.getRandomListItem(getPilofrases());
-			Com.sendLobbyMessage(pilofrase);
-			s.setCustomName("Pilota");
-			s.setCustomNameVisible(true);
-			s.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * Utils.NombreEntre(1, 9), 2));
-			ply.setPassenger(s);
-			//s.setHealth(1);
-		}
 		Com.teleportPlayerToLobby(ply);
-		ply.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
-		ply.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de rànquing basat en ELO. Ordres /elo i /top");
-		ply.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
-		ply.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
-		ply.sendMessage(ChatColor.AQUA + "[TELEGRAM] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
-
-		//		ply.setAllowFlight(true);
-		//		ply.setCanPickupItems(false);
-		//		ply.setFlying(true);
-		//		if(ply.getName().equalsIgnoreCase("123dani") || ply.getName().equalsIgnoreCase("adria")){
-		//			event.setJoinMessage(ChatColor.RED + "" + ChatColor.BOLD + "Un faggot s'ha connectat");
-		//		}
-		//		if(ply.getName().equalsIgnoreCase("Martinosky")){
-		//			event.setJoinMessage(ChatColor.BLUE + "" + ChatColor.BOLD + "El RUC s'ha connectat");
-		//		}
-		//		if(ply.getName().equalsIgnoreCase("amiguet")){
-		//			event.setJoinMessage("La pilota ha rodolat");
-		//		}
-		////		if(ply.getName().equalsIgnoreCase("_tor3k4_")){
-		////			event.setJoinMessage(ChatColor.RED + "" + ChatColor.BOLD + "OC.TC rules (Toni OP)");
-		////		}
-		//		if(ply.getName().equalsIgnoreCase("BielCAT")){
-		//			event.setJoinMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "El creador s'ha connectat!");
-		//		}
+		ply.sendMessage(ChatColor.AQUA + "[Tip] Pots fer /l per tornar al lobby en qualsevol moment.");
+		ply.sendMessage(ChatColor.AQUA + "[Telegram] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
 	}
 	public ArrayList<String> getPilofrases(){
 		ArrayList<String> l = new ArrayList<String>();
@@ -96,7 +60,7 @@ public class LoginListener implements Listener {
 		l.add("Piloteta boniquetaa");
 		l.add("Ma, manassa; pilota, pilotassa");
 		l.add("Roll da ball!!");
-		l.add("Amigüet");
+		l.add("AmigÃ¼et");
 		return l;
 	}
 	@EventHandler
@@ -169,12 +133,8 @@ public class LoginListener implements Listener {
 			String lastMotd = Com.getRankingString(num);
 			evt.setMotd(lastMotd);
 		} catch (Exception e) {
-			evt.setMotd(ChatColor.GREEN + "Carregant rànquing...");
+			evt.setMotd(ChatColor.GREEN + "Carregant rÃ nquing...");
 		}
-
-	}
-	@EventHandler
-	public void onPlayerChatEvent(PlayerChatEvent evt) {
 
 	}
 	@EventHandler
@@ -193,7 +153,7 @@ public class LoginListener implements Listener {
 		msg = msg.replaceAll("l ag", "gr eix");
 		msg = msg.replaceAll("ping", "ping pong");
 		msg = msg.replaceAll("bug", "escarbat");
-		msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
+		msg = msg.replaceAll("en fi", "en fi (copyright JoniMega)");
 		msg = msg.replaceAll("En fi", "En fi (copyright JoniMega)");
 		msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
 		if(evt.getPlayer().getName().contains("amiguet"))msg = msg.replaceAll("calla", "sii soc molt grossa!");
@@ -201,7 +161,7 @@ public class LoginListener implements Listener {
 		boolean off = msg.contains("inves") || msg.contains("polla") || msg.contains("gilip") || msg.contains("tont") || msg.contains("retr") || msg.contains("retard");
 		if(off){
 			if(Com.isOnLobby(evt.getPlayer())){
-				if(Utils.Possibilitat(100))evt.setMessage("quin server més guai!!");
+				if(Utils.Possibilitat(100))evt.setMessage("quin server mÃ©s guai!!");
 				if(Utils.Possibilitat(60))evt.setMessage("com mola el server!");
 				if(Utils.Possibilitat(10))evt.setMessage("sou els millors!!");
 			}else{
@@ -209,7 +169,7 @@ public class LoginListener implements Listener {
 				if(Utils.Possibilitat(40))evt.setMessage("bona partida!! :D");
 			}
 			if(Utils.Possibilitat(5))evt.setMessage("ehem.. anava a dir... millor callo xD");
-			if(Utils.Possibilitat(8))evt.setMessage("ja començo a perdre els papers, no em feu gaire cas jaja");
+			if(Utils.Possibilitat(8))evt.setMessage("ja comenÃ§o a perdre els papers, no em feu gaire cas jaja");
 		}
 
 	}
