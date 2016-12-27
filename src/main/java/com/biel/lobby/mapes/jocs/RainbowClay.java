@@ -225,6 +225,7 @@ public class RainbowClay extends JocObjectius {
 		items.add(pickaxe);
 		int launchers = (int) (8 * balancingMultiplier);
 		if(launchers > 64)launchers = 64;
+		if(launchers < ) launchers = 8;
 		items.add(getSnowLauncher(launchers));
 		//items.add(new ItemStack(Material.FLINT_AND_STEEL));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
@@ -306,6 +307,10 @@ public class RainbowClay extends JocObjectius {
 		if (blk.getType() == Material.STAINED_CLAY && blk.getData() == 11 ) { 
 			evt.setCancelled(true);
 		}
+		
+		if (blk.getType() == Material.MOB_SPAWNER) { 
+			evt.setCancelled(true);
+		
 	}
 
 	@Override
