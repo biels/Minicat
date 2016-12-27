@@ -223,8 +223,9 @@ public class RainbowClay extends JocObjectius {
 		double balancingMultiplier = getBalancingMultiplier(e);
 		if(balancingMultiplier > 1)pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
 		items.add(pickaxe);
-		int launchers = (int) (16 * balancingMultiplier);
+		int launchers = (int) (8 * balancingMultiplier);
 		if(launchers > 64)launchers = 64;
+		if(launchers < ) launchers = 8;
 		items.add(getSnowLauncher(launchers));
 		//items.add(new ItemStack(Material.FLINT_AND_STEEL));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
@@ -306,6 +307,10 @@ public class RainbowClay extends JocObjectius {
 		if (blk.getType() == Material.STAINED_CLAY && blk.getData() == 11 ) { 
 			evt.setCancelled(true);
 		}
+		
+		if (blk.getType() == Material.MOB_SPAWNER) { 
+			evt.setCancelled(true);
+		
 	}
 
 	@Override
@@ -477,7 +482,7 @@ public class RainbowClay extends JocObjectius {
 				if(Utils.Possibilitat(10)){hoe = Material.IRON_HOE;}
 				if(Utils.Possibilitat(8)){hoe = Material.DIAMOND_HOE;}
 				
-				inv.addItem(Utils.setItemNameAndLore(new ItemStack(hoe, 1), getBridgeToolName(), "Col·loca automàticament els blocs formant un passadís"));
+				inv.addItem(Utils.setItemNameAndLore(new ItemStack(hoe, 1), getBridgeToolName(), "ColÂ·loca automÃ ticament els blocs formant un passadÃ­s"));
 			}
 //			if(Utils.Possibilitat(2)){
 //				inv.addItem(new ItemStack(Material.TNT, 1));
