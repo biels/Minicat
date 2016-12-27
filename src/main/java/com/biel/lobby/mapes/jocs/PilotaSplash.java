@@ -102,6 +102,10 @@ public class PilotaSplash extends JocScoreRace {
 				k.playEffect(p.getEyeLocation(), Effect.POTION_SWIRL, 3);
 			}
 		}
+		// Prevenir que el jugador "voli"
+		if(evt.getTo().getY() > 85){
+			teleportToRandomSpawn(p);
+		}
 		//Magnus controller
 		//sendGlobalMessage(Double.toString(p.getVelocity().normalize().angle(new Vector(0, -1, 0))));
 		//add cd 
