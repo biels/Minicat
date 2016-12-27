@@ -1,0 +1,19 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+archivesBaseName = 'minicat'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+jar {
+
+}
+
+dependencies {
+    compile  'log4j:log4j:1.2.16'
+    compile 'BielAPI:BielAPI:0.0.8-SNAPSHOT'
+    compile fileTree(dir: 'lib', include: '*.jar')
+}

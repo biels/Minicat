@@ -2,7 +2,7 @@ name: lobby
 main: com.biel.lobby.lobby
 depend:
 - BielAPI
-version: 1.25
+version: 1.3
 commands:
   prova:
     description: Prova.
