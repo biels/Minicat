@@ -43,7 +43,7 @@ public class RainbowClay extends JocObjectius {
 	}
 	@Override
 	public String getGameName() {
-		return "RainbowClay";
+		return "Rainbow Clay";
 	}
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
@@ -93,132 +93,54 @@ public class RainbowClay extends JocObjectius {
 		// TODO Auto-generated method stub
 		return true;
 	}
-//	@Override
-//	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
-//		// TODO Auto-generated method stub
-//		super.onPlayerDeath(evt, killed);
-//		ArrayList<ItemStack> startingItems = getStartingItems(killed);
-//		evt.getDrops().removeAll(startingItems);
-//		ArrayList<ItemStack> rem = new ArrayList<ItemStack>();
-//		for(ItemStack i : evt.getDrops()){
-//			Material t = i.getType();
-//			boolean cname = false; 
-//			if(i.hasItemMeta()){
-//				cname = i.getItemMeta().hasDisplayName();
-//			}
-//			for(ItemStack starti : startingItems){
-//				if (i.getType() == starti.getType()){
-//					ItemStack remi = i.clone();
-//					remi.setAmount(starti.getAmount());
-//					rem.add(remi);
-//				}
-//			}
-//			//			boolean valid = (t == Material.WOOL || t == Material.TNT || t == Material.DIAMOND || cname);
-//			//			if(valid){
-//			//				rem.add(i);
-//			//			}
-//		}
-//		evt.getDrops().removeAll(rem);
-//		//		evt.getDrops().clear();
-//		//		//evt.getDrops().add(new ItemStack(Material.DIAMOND));
-//		//		evt.getDrops().addAll(rem);
-//
-//	}
 	@Override
-	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed,
-			Player killer) {
-		// TODO Auto-generated method stub
+	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
+	
 		super.onPlayerDeathByPlayer(evt, killed, killer);
 
-//		double distance = killed.getLocation().distance(killer.getLocation());
-//		boolean lluny = distance > 50;
-//		if (lluny){
-//			evt.setDeathMessage(killed.getName() + " ha estat assassinat per " + killer.getName() + " desde "+ Long.toString(Math.round(distance)) +" blocs");
-//		}
-//		if (!lluny && !isPlayerLookingAtAnother(killed, killer)){
-//			evt.setDeathMessage(killed.getName() + " ha estat assassinat per l'esquena per " + killer.getName());
-//
-//		}
-
-	}
-
-	public static boolean isPlayerLookingAtAnother(Player p1, Player p2)
-	{
-		boolean isLooking = false;
-		Location loc = lookAt(p1.getLocation(), p2.getLocation());
-		Location loc1 = p1.getLocation();
-		int yaw1 = (int)Math.floor(loc.getYaw());
-		int yaw2 = (int)Math.floor(loc1.getYaw());
-		int pitch1 = (int)Math.floor(loc.getPitch());
-		int pitch2 = (int)Math.floor(loc1.getPitch());
-		if(yaw1 == yaw2 && pitch1 == pitch2)
-		{
-			isLooking = true;
-		}
-		return isLooking;
-	}
-	public static Location lookAt(Location loc, Location lookat)
-	{
-
-		loc = loc.clone();
-
-		double dx = lookat.getX() - loc.getX();
-		double dy = lookat.getY() - loc.getY();
-		double dz = lookat.getZ() - loc.getZ();
-
-		if(dx != 0)
-		{
-			if(dx < 0)
-			{
-				loc.setYaw((float)(1.5 * Math.PI));
-			}
-			else
-			{
-				loc.setYaw((float)(0.5 * Math.PI));
-			}
-			loc.setYaw(loc.getYaw() - (float)Math.atan(dz / dx));
-		}
-		else if(dz < 0)
-		{
-			loc.setYaw((float)Math.PI);
+		double distance = killed.getLocation().distance(killer.getLocation());
+		if (distance > 10){
+			evt.setDeathMessage(killed.getName() + " ha estat assassinat per " + killer.getName() + " desde "+ Long.toString(Math.round(distance)) +" blocs");
 		}
 
-		double dxz = Math.sqrt(Math.pow(dx, 2) + Math.pow(dz, 2));
-
-		loc.setPitch((float)-Math.atan(dy / dxz));
-
-		loc.setYaw(-loc.getYaw() * 180f / (float)Math.PI);
-		loc.setPitch(loc.getPitch() * 180f / (float)Math.PI);
-
-		return loc;
 	}
 
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
+		
 		ArrayList<ItemStack> items = new ArrayList<>();
-		Equip e = obtenirEquip(ply);
+		
+		Equip equip = obtenirEquip(ply);
+		
 		items.add(new ItemStack(Material.IRON_SWORD, 1));
 		ItemStack pickaxe = new ItemStack(Material.DIAMOND_PICKAXE, 1);
-		double balancingMultiplier = getBalancingMultiplier(e);
-		if(balancingMultiplier > 1)pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
-		items.add(pickaxe);
-		int launchers = (int) (16 * balancingMultiplier);
-		if(launchers > 64)launchers = 64;
-		items.add(getSnowLauncher(launchers));
-		//items.add(new ItemStack(Material.FLINT_AND_STEEL));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
-		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
+		
+		ItemStack arc = new ItemStack(Material.BOW, 1); 
 		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 		items.add(arc);
+		
+		double balancingMultiplier = getBalancingMultiplier(e);
+		if(balancingMultiplier > 1) pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
+		items.add(pickaxe);
+		
+		int launchers = (int) (8 * balancingMultiplier);
+		if(launchers > 64)launchers = 64;
+		if(launchers < 0) launchers = 8;
+		items.add(getSnowLauncher(launchers));
+		
+		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, equip));
+		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, equip));
+		items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, equip));
+		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, equip));
+		
 		int arrows = (int) (50 * balancingMultiplier);
 		if(arrows > 64){arrows = 64;}
 		items.add(new ItemStack(Material.ARROW, arrows));
+		
 		int ladders = (int) (50 * balancingMultiplier);
 		if(ladders > 64){ladders = 64;}
 		items.add(new ItemStack(Material.LADDER, ladders));
+		
 		int block_amount = (int) (45 * balancingMultiplier);
 		if(block_amount > 64){block_amount = 64;}
 		if (obtenirEquip(ply).getId() == 0){
@@ -226,9 +148,12 @@ public class RainbowClay extends JocObjectius {
 		}else{
 			items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 10));
 		}
+		
 		items.add(new ItemStack(Material.WEB, 1));
+		
 		return items;
 	}
+	
 	@Override
 	protected void donarEfectesInicials(Player ply) {
 		// TODO Auto-generated method stub
@@ -240,70 +165,92 @@ public class RainbowClay extends JocObjectius {
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 5, 3, true), true);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, (int) (20 * 19 * m), 1, true), true);
 	}
+	
 	@Override
 	protected void onBlockPlace(BlockPlaceEvent evt, Block blk) {
-		// TODO Auto-generated method stub
-		super.onBlockPlace(evt, blk);
+
 		Player ply = evt.getPlayer();
-		//Bukkit.broadcastMessage(Boolean.toString(evt.isCancelled()));
+		
 		Cuboid cub = pMapaActual().ObtenirCuboid("RegC", getWorld());
+		
 		if(cub.contains(blk)){
 			evt.setCancelled(true);
 		}
 		if (blk.getType() == Material.OBSIDIAN){
 			evt.setCancelled(true);
-			evt.getPlayer().damage(15);
+			evt.getPlayer().getInventory().getItemInHand().setAmount(0);
+
 		}
-		//		if (blk.getType() == Material.WOOL){
-		//			
-		//			for (Objectiu obj : obtenirObjectiusPly(ply)){
-		//				Bukkit.broadcastMessage(Double.toString(obj.getLocation().distance(blk.getLocation())));
-		//				if (obj.getLocation().distance(blk.getLocation()) < 2){
-		//					Wool wool = new Wool(DyeColor.getByWoolData(blk.getData()));
-		//	    			Location blkLoc = blk.getLocation();
-		//	    			if(wool.getColor().getWoolData() == ((DyeColor) obj.getInfo()).getWoolData()){
-		//	    				obj.complete(ply);
-		//	    			}else{
-		//	    				evt.setCancelled(true);
-		//	    			}
-		//					
-		//				}
-		//				
-		//			}
-		//		}
 	}
+	
 	@Override
 	protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
-		// TODO Auto-generated method stub
-		super.onBlockBreak(evt, blk);
+
 		Player ply = evt.getPlayer();
 
 		Cuboid cub = pMapaActual().ObtenirCuboid("RegC", getWorld());
+		
+		Equip equip = obtenirEquip(ply);
+		
 		if(cub.contains(blk)){
 			evt.setCancelled(true);
 		}
 		if (blk.getType() == Material.STAINED_CLAY && blk.getData() == 11 ) { 
 			evt.setCancelled(true);
 		}
+		
+		// Prevent chest destroy
+		if (blk.getType() == Material.CHEST) { 
+			
+			// Check if the chest is on a base
+			
+			if (equip.getId() == 1) {
+				
+				// Blau ha destruir, check for red
+				Location spawn = pMapaActual().ObtenirLocation("base0", getWorld());
+				
+			} else {
+				
+				// Vermell ha destruit, check for blue
+				Location spawn = pMapaActual().ObtenirLocation("base1", getWorld());
+			
+			}
+			
+			Cuboid base = new Cuboid(spawn.add(10, 5, 2), spawn.add(-10, -5, -2));
+			
+			if(base.contains(blk)) {
+				TextComponent message = new TextComponent("\nNo pots destruir els cofres enemics\n");
+				message.setColor(ChatColor.RED);
+				message.setUnderline(true);
+
+				ply.sendMessage(message);
+				
+				evt.setCancelled(true);
+			}
+			
+
+		}	
+		
 	}
 
 	@Override
 	protected void onPlayerMove(PlayerMoveEvent evt, Player P) {
 		// TODO Auto-generated method stub
-		super.onPlayerMove(evt, P);
+		
 		Player ply = evt.getPlayer();
-		if(isSpectator(ply))return;
+		
+		if(isSpectator(ply)) return;
+		
 		if (JocIniciat){
-			Player plyr =  evt.getPlayer();
+			
+			Player plyr = evt.getPlayer();
 
 			Location to = evt.getTo();
 			Location from = evt.getFrom();
 
 			int equip = obtenirEquip(ply).getId() + 1;
-			if (ply.getLocation().getY() < 102){
-				ply.setFireTicks(5000);
-			}
-			if (ply.getLocation().getY() < 60){
+
+			if (ply.getLocation().getY() < 100){
 				ply.damage(10000);
 			}
 
@@ -401,7 +348,7 @@ public class RainbowClay extends JocObjectius {
 	}
 	public ItemStack getPlaceableItemStack(Player ply){
 		for (ItemStack i : ply.getInventory()){
-			if(i.getType().isSolid()){return i;}
+			if(i.getType().isSolid() && i.getType() !== Material.WOOL){return i;}
 		}
 		return null;
 	}
@@ -454,7 +401,7 @@ public class RainbowClay extends JocObjectius {
 				if(Utils.Possibilitat(10)){hoe = Material.IRON_HOE;}
 				if(Utils.Possibilitat(8)){hoe = Material.DIAMOND_HOE;}
 				
-				inv.addItem(Utils.setItemNameAndLore(new ItemStack(hoe, 1), getBridgeToolName(), "Col·loca automàticament els blocs formant un passadís"));
+				inv.addItem(Utils.setItemNameAndLore(new ItemStack(hoe, 1), getBridgeToolName(), "Colï¿½loca automï¿½ticament els blocs formant un passadï¿½s"));
 			}
 //			if(Utils.Possibilitat(2)){
 //				inv.addItem(new ItemStack(Material.TNT, 1));
