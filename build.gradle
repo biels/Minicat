@@ -6,6 +6,9 @@ version = '1.0-SNAPSHOT'
 repositories {
     mavenCentral()
     mavenLocal()
+    maven{
+        url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
 }
 
 jar {
@@ -15,5 +18,6 @@ jar {
 dependencies {
     compile  'log4j:log4j:1.2.16'
     compile 'BielAPI:BielAPI:0.0.8-SNAPSHOT'
+    compile 'org.spigotmc:spigot-api:1.10-R0.1-SNAPSHOT'
     compile fileTree(dir: 'lib', include: '*.jar')
 }
