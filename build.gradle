@@ -10,6 +10,9 @@ repositories {
         //Repository url is ok, but server seems to be (temporarily, 02/01/17) serving wrong content
         url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
     }
+    maven{
+        url 'http://ci.playmc.cc/plugin/repository/everything/'
+    }
 }
 
 jar {
@@ -20,6 +23,7 @@ dependencies {
 
     //Enable if you have BielAPI installed on maven local
     //compile 'BielAPI:BielAPI:0.0.8-SNAPSHOT'
+    compile 'com.nametagedit:nametagedit:4.1.0'
     compile fileTree(dir: 'lib', include: '*.jar')
     //Enable to use automatic download, when avaliable
     //compile 'org.spigotmc:spigot-api:1.10-R0.1-SNAPSHOT'

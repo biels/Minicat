@@ -72,5 +72,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="Gradle: com.nametagedit:nametagedit:4.1.0" level="project" />
   </component>
 </module>
