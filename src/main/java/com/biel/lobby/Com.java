@@ -3,6 +3,7 @@ package com.biel.lobby;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
+import com.nametagedit.plugin.NametagEdit;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -75,10 +76,12 @@ public class Com {
 		setHeadColor(ply, ColorConverter.chatToRaw(color));
 	}
 	public static void setHeadColor(Player ply, String color){
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ne prefix " + ply.getName() + " " + color);
+		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ne prefix " + ply.getName() + " " + color);
+		NametagEdit.getApi().setPrefix(ply, color);
 	}
 	public static void setSuffix(Player ply, String suffix){
-		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ne suffix " + ply.getName() + " " + suffix);
+		//Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ne suffix " + ply.getName() + " " + suffix);
+		NametagEdit.getApi().setSuffix(ply, suffix);
 	}
 	public static void displayRanking(Player p){
 		if(Com.getDataAPI().isInDatalessMode()){
