@@ -6,18 +6,24 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import org.bukkit.entity.Player;
 
 import com.biel.BielAPI.Utils.Pair;
 import com.mysql.jdbc.Statement;
 
-public class DataAPI {
 
+public class DataAPI {
+	boolean datalessMode = false;
+	Logger logger = Logger.getLogger("DataAPI");
 	public DataAPI() {
 
 	}
 
+	public boolean isInDatalessMode() {
+		return datalessMode;
+	}
 	public Connection connection;
 
 	void openConnection() {
@@ -30,11 +36,13 @@ public class DataAPI {
 			connection = DriverManager.getConnection("jdbc:mysql://" + host
 					+ ":" + port + "/" + db + "?autoReconnect=true", user, password);
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+			datalessMode = true;
+			logger.warning("Could not connect to database, switching to off-server datalessMode mode.");
 		}
 	}
 	public void repairConnection(){
-		if(connection == null)openConnection();
+		if(connection == null && !datalessMode)openConnection();
 	}
 	public void closeConnection() {
 		try {
@@ -46,6 +54,7 @@ public class DataAPI {
 	
 	public void registerNewPlayer(Player player) {
 		repairConnection();
+		if(datalessMode)return;
 		double avgElo = getAvgElo();
 		if(getPlayerId(player.getName()) > 0)return;
 		try {
@@ -59,7 +68,11 @@ public class DataAPI {
 			e.printStackTrace();
 		}
 	}
-	public int getPlayerId(String player) { 
+	public int getPlayerId(String player) {
+		if(datalessMode){
+			logger.warning("Tried to translate player name to id in dataless mode");
+			return -1;
+		}
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE username=?;");
 			sql.setString(1, player);
@@ -77,6 +90,9 @@ public class DataAPI {
 	}
 	public String getPlayerName(int id) { 
 		try {
+			if(datalessMode){
+				return "Player" + id;
+			}
 			PreparedStatement sql = connection.prepareStatement("SELECT `username` FROM `players` WHERE player_id=?;");
 			connection.isValid(2000);
 			sql.setInt(1, id);
@@ -93,7 +109,9 @@ public class DataAPI {
 		return "[NotOnDB]";
 	}
 	public double getMoney(int id) {
-
+		if(datalessMode){
+			return 0.0;
+		}
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `money` FROM `players` WHERE player_id=?;");
 			sql.setInt(1, id);
@@ -109,7 +127,11 @@ public class DataAPI {
 		}
 		return 0;
 	}
-	public void setMoney(int id, double newValue) { 
+	public void setMoney(int id, double newValue) {
+		if(datalessMode){
+			logger.info("New value for money of player " + id + " would be " + newValue);
+			return;
+		}
 		try {
 			PreparedStatement ps = connection.prepareStatement("UPDATE `players` SET `money`=? WHERE player_id=?");
 			ps.setDouble(1, newValue);
@@ -122,7 +144,9 @@ public class DataAPI {
 		}
 	}
 	public double getScore(int id) {
-
+		if(datalessMode){
+			return 0;
+		}
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `score` FROM `players` WHERE player_id=?;");
 			sql.setInt(1, id);
@@ -138,7 +162,11 @@ public class DataAPI {
 		}
 		return 0;
 	}
-	public void setScore(int id, double newValue) { 
+	public void setScore(int id, double newValue) {
+		if(datalessMode){
+			logger.info("New value for score of player " + id + " would be " + newValue);
+			return;
+		}
 		try {
 			PreparedStatement ps = connection.prepareStatement("UPDATE `players` SET `score`=?, `last_played`=NOW() WHERE player_id=?");
 			ps.setDouble(1, newValue);
@@ -150,7 +178,9 @@ public class DataAPI {
 		}
 	}
 	public double getElo(int id) {
-
+		if(datalessMode){
+			return 1200;
+		}
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `elo` FROM `players` WHERE player_id=?;");
 			sql.setInt(1, id);
@@ -167,6 +197,9 @@ public class DataAPI {
 		return 0;
 	}
 	public double getAvgElo() {
+		if(datalessMode){
+			return 1200;
+		}
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT AVG(elo) FROM players;");
 			ResultSet result = sql.executeQuery();
@@ -182,6 +215,10 @@ public class DataAPI {
 		return 0;
 	}
 	public void setElo(int id, double newValue) {
+		if(datalessMode){
+			logger.info("New value for elo of player " + id + " would be " + newValue);
+			return;
+		}
 		try {
 			PreparedStatement ps = connection.prepareStatement("UPDATE `players` SET `elo`=?, `last_played`=NOW() WHERE player_id=?");
 			ps.setDouble(1, newValue);
@@ -195,6 +232,10 @@ public class DataAPI {
 	}
 	public ArrayList<Integer> getRanking() {
 		ArrayList<Integer> r = new ArrayList<>();
+		if(datalessMode){
+			logger.warning("Tried to get ranking in dataless mode.");
+			return r;
+		}
 		try { //TODO
 			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE TIMESTAMPDIFF(DAY, players.last_played, NOW()) < 15  ORDER BY `elo` DESC;");
 			ResultSet result = sql.executeQuery();
@@ -211,6 +252,7 @@ public class DataAPI {
 	//GAME
 	private void registerNewGame(String name) { //Gamemode
 		repairConnection();
+		if(datalessMode)return;
 		try {
 			PreparedStatement ps = connection.prepareStatement("INSERT INTO `games` (`name`) VALUES (?);");
 			ps.setString(1, name);
@@ -221,7 +263,8 @@ public class DataAPI {
 			//e.printStackTrace();
 		}
 	}
-	public int getGameId(String name) { 
+	public int getGameId(String name) {
+		if(datalessMode)return (int) (Math.random() * 100000);
 		registerNewGame(name);
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `game_id` FROM `games` WHERE name=?;");
@@ -240,6 +283,10 @@ public class DataAPI {
 	}
 	public ArrayList<Pair<String, Double>> getAutoRating() {
 		ArrayList<Pair<String, Double>> r = new ArrayList<>();
+		if(datalessMode){
+			logger.warning("Tried to access automatic rating while in dataless mode.");
+			return r;
+		}
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT name, time_list.total_time * 100 /  time_list.max_total_time AS auto_rating FROM	(SELECT games.game_id, games.name, (AVG(TIME_TO_SEC(TIMEDIFF(end_time, start_time))) * count(distinct(match_id))) AS total_time, count(*),count(distinct(match_id)), MAX(t.average) AS max_total_time FROM games, match_history, (SELECT games.game_id, (AVG(TIME_TO_SEC(TIMEDIFF(end_time, start_time))) * count(*)) AS average FROM match_history LEFT JOIN games ON(games.game_id = match_history.game_id) WHERE winner != -1 && start_time BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() && end_time IS NOT NULL GROUP BY match_history.game_id) AS t	WHERE(games.game_id = match_history.game_id) &&	winner != -1 && start_time BETWEEN DATE_SUB(NOW(), INTERVAL 1 MONTH) AND NOW() && end_time IS NOT NULL GROUP BY match_history.game_id) AS time_list ORDER BY auto_rating DESC;");
 			ResultSet result = sql.executeQuery();
@@ -255,6 +302,7 @@ public class DataAPI {
 	}
 	//MAP
 	private void registerNewMap(String name, int gameId) { //Gamemode
+		if(datalessMode)return;
 		repairConnection();
 		try {
 			PreparedStatement ps = connection.prepareStatement("INSERT INTO `maps` (`game_id`, `map_name`) VALUES (?, ?);");
@@ -267,8 +315,9 @@ public class DataAPI {
 			//e.printStackTrace();
 		}
 	}
-	public int getMapId(String name, int gameId) { 
+	public int getMapId(String name, int gameId) {
 		registerNewMap(name, gameId);
+		if(datalessMode)return -1;
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `game_id` FROM `maps` WHERE map_name=?;");
 			sql.setString(1, name);
@@ -286,6 +335,7 @@ public class DataAPI {
 	}
 	//MATCH 
 	public MatchData registerMatchStart(int gameId, int mapId, String teams) {
+		if(datalessMode)return new DatalessMatchData();
 		repairConnection();
 		try {
 			PreparedStatement ps = connection.prepareStatement(
@@ -307,6 +357,7 @@ public class DataAPI {
 		return null;
 	}
 	public void registerMatchEnd(int matchId, int winner) {
+		if(datalessMode)return;
 		repairConnection();
 		try {
 			PreparedStatement ps = connection.prepareStatement( //UPDATE `minicat`.`match_history` SET `end_time`=NOW(), `winner`='4' WHERE `match_id`='1';
@@ -321,6 +372,7 @@ public class DataAPI {
 		}
 	}
 	public double getAvgGameLength(int gameId) {
+		if(datalessMode)return 60*30;
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT AVG(TIME_TO_SEC(TIMEDIFF(end_time, start_time))) FROM match_history WHERE game_id=? && winner != -1 && end_time IS NOT NULL;");
 			sql.setInt(1, gameId);
@@ -338,6 +390,7 @@ public class DataAPI {
 	}
 	//TIMESTAMP
 	public void registerTimestamp(int matchId, int playerId, int frameId, int kills, int deaths, double damageDealt, boolean isAlive, int itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree) { //Gamemode
+		if(datalessMode)return;
 		repairConnection();
 		try {
 			PreparedStatement ps = connection.prepareStatement("INSERT INTO `player_match_timestamps` "

@@ -153,6 +153,10 @@ public class LoginListener implements Listener {
 	@EventHandler
 	public void onPing(ServerListPingEvent evt) {
 		int games = lobby.getPlugin().gest.getAllInstances().size();
+		if(Com.getDataAPI().isInDatalessMode()){
+			evt.setMotd(ChatColor.GOLD + "Minicat " + ChatColor.RED + "[dev mode]");
+			return;
+		}
 		//evt.setMotd(Integer.toString(games) + " partides en curs");
 		try {
 			int num = 5;

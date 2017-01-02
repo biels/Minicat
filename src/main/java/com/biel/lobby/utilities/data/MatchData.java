@@ -19,6 +19,7 @@ public class MatchData {
 		this.id = id;
 	}
 	public static MatchData registerStart(int gameId, int mapId, String teams){
+		if(Com.getDataAPI().isInDatalessMode())return new DatalessMatchData();
 		return Com.getDataAPI().registerMatchStart(gameId, mapId, teams);
 	}
 	public static MatchData registerStart(Joc instance){

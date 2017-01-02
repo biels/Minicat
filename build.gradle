@@ -18,7 +18,6 @@ jar {
 
 dependencies {
 
-    compile  'log4j:log4j:1.2.16'
     //Enable if you have BielAPI installed on maven local
     //compile 'BielAPI:BielAPI:0.0.8-SNAPSHOT'
     compile fileTree(dir: 'lib', include: '*.jar')

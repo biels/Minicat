@@ -81,6 +81,10 @@ public class Com {
 		Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ne suffix " + ply.getName() + " " + suffix);
 	}
 	public static void displayRanking(Player p){
+		if(Com.getDataAPI().isInDatalessMode()){
+			p.sendMessage("El rànquing no es pot visualitzar en mode sense dades");
+			return;
+		}
 		ArrayList<Integer> pIDs = getDataAPI().getRanking();
 		p.sendMessage("-----Rànquing global-----");
 		int max = 10;
@@ -108,6 +112,9 @@ public class Com {
 		
 	}
 	public static String getRankingString(int num){
+		if(Com.getDataAPI().isInDatalessMode()){
+			return "[Not Avaliable]";
+		}
 		ArrayList<String> positions = new ArrayList<>();
 		ArrayList<Integer> pIDs = getDataAPI().getRanking();
 		int max = num;
