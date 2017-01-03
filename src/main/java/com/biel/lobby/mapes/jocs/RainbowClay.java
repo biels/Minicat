@@ -454,7 +454,7 @@ public class RainbowClay extends JocObjectius {
 				if(Utils.Possibilitat(10)){hoe = Material.IRON_HOE;}
 				if(Utils.Possibilitat(8)){hoe = Material.DIAMOND_HOE;}
 				
-				inv.addItem(Utils.setItemNameAndLore(new ItemStack(hoe, 1), getBridgeToolName(), "Col·loca automàticament els blocs formant un passadís"));
+				inv.addItem(Utils.setItemNameAndLore(new ItemStack(hoe, 1), getBridgeToolName(), "ColÂ·loca automÃ ticament els blocs formant un passadÃ­s"));
 			}
 //			if(Utils.Possibilitat(2)){
 //				inv.addItem(new ItemStack(Material.TNT, 1));
