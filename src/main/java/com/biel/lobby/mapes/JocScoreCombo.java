@@ -310,8 +310,8 @@ public abstract class JocScoreCombo extends Joc {
 		public ArrayList<String> getScoreFancyReport(ChatColor c){
 			ArrayList<String> lines = new ArrayList<>();
 			String tab = "     ";
-			lines.add("Qualificació: " + Rank.getRank(getAccuracy()));
-			lines.add("Precisió: " + Math.round(getAccuracy() * 100)/100.0 + "%");
+			lines.add("QualificaciÃ³: " + Rank.getRank(getAccuracy()));
+			lines.add("PrecisiÃ³: " + Math.round(getAccuracy() * 100)/100.0 + "%");
 			lines.add("Punts: " + getScore(getPlayer()));
 			lines.add(getScoreTypeLabeled(Score.N300, c) + tab + getScoreTypeLabeled(Score.C300, c));
 			lines.add(getScoreTypeLabeled(Score.N200, c) + tab + getScoreTypeLabeled(Score.N100, c));

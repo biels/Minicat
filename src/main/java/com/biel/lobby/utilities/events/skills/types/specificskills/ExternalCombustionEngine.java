@@ -43,7 +43,7 @@ public class ExternalCombustionEngine extends InherentSkill {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Combustió externa";
+		return "CombustiÃ³ externa";
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class ExternalCombustionEngine extends InherentSkill {
 		String modifier1 = ChatColor.GREEN + "" + getDmgMultiplier() * 100 + ChatColor.WHITE;
 		String modifier3 = ChatColor.GREEN + "" + getDmgMultiplierBlk() * 100 + ChatColor.WHITE;
 		String modifier2 = ChatColor.GREEN + "" + 20 + ChatColor.WHITE;
-		return "Inflingeix mal als enemics propers. L'efecte escala amb el temps i es reinicialitza al morir. L'efecte no s'aplica immediatament al reaparèixer.";
+		return "Inflingeix mal als enemics propers. L'efecte escala amb el temps i es reinicialitza al morir. L'efecte no s'aplica immediatament al reaparÃ¨ixer.";
 	}
 
 	private int getStacks(){
@@ -99,7 +99,7 @@ public class ExternalCombustionEngine extends InherentSkill {
 		@Override
 		public String getName() {
 			// TODO Auto-generated method stub
-			return "Combustió externa";
+			return "CombustiÃ³ externa";
 		}
 		@Override
 		public String getDescription() {

@@ -164,7 +164,7 @@ public class ResourceRush extends JocTeamScoreRace {
 		super.onPlayerPickupItem(evt, p);
 		double dmg = getMaterialValue(evt.getItem().getItemStack().getType()) / 2;
 		evt.getPlayer().damage(dmg, evt.getItem());
-		sendPlayerMessage(p, ChatColor.GRAY + "Agafar ítems del terra inflingeix un mal proporcional al seu valor");
+		sendPlayerMessage(p, ChatColor.GRAY + "Agafar Ã­tems del terra inflingeix un mal proporcional al seu valor");
 	}
 	public void fillResourceSources(){
 		for(Location l : pMapaActual().ObtenirLocations("Recursos")){

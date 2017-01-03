@@ -85,11 +85,11 @@ public class Com {
 	}
 	public static void displayRanking(Player p){
 		if(Com.getDataAPI().isInDatalessMode()){
-			p.sendMessage("El r‡nquing no es pot visualitzar en mode sense dades");
+			p.sendMessage("El r√†nquing no es pot visualitzar en mode sense dades");
 			return;
 		}
 		ArrayList<Integer> pIDs = getDataAPI().getRanking();
-		p.sendMessage("-----R‡nquing global-----");
+		p.sendMessage("-----R√†nquing global-----");
 		int max = 10;
 		for (Integer id : pIDs){
 			PlayerData data = new PlayerData(id);

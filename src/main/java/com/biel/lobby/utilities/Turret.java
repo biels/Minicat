@@ -324,9 +324,9 @@ public class Turret extends EventBus {
 		ArmorBlocks.clear();
 	}
 	public void resetArmorCD(){
-		//Bukkit.broadcastMessage("CD r! : " + Integer.toString(getByTipus(TipusMillora.RESIST»NCIA).lvl) );
+		//Bukkit.broadcastMessage("CD r! : " + Integer.toString(getByTipus(TipusMillora.RESIST√àNCIA).lvl) );
 		if (built == false){setArmorCD(-1); return;}
-		if (getByTipus(TipusMillora.RESIST»NCIA).lvl > 0){
+		if (getByTipus(TipusMillora.RESIST√àNCIA).lvl > 0){
 			//Bukkit.broadcastMessage("CD ir!");
 			int cd = tempsEscut;
 			if (damaged == false){
@@ -389,7 +389,7 @@ public class Turret extends EventBus {
 				while (count <= range){
 					Block block = iLoc.getBlock().getRelative(face);
 					Location loc = block.getLocation().clone();
-					tirarPociÛ(loc, PotionType.INSTANT_DAMAGE, (3 * count) + 1 + delayOffSet);
+					tirarPoci√≥(loc, PotionType.INSTANT_DAMAGE, (3 * count) + 1 + delayOffSet);
 					iLoc = loc;
 					count++;
 				}
@@ -403,7 +403,7 @@ public class Turret extends EventBus {
 			if (espai <= 8){espai = 8;}
 			ArrayList<Location> locs = Utils.getLocationsCircle(location.clone(), (double) radius, espai);
 			for (Location loc : locs){
-				tirarPociÛ(loc, PotionType.POISON, delayOffSet);
+				tirarPoci√≥(loc, PotionType.POISON, delayOffSet);
 				//loc.getBlock().setType(Material.COBBLESTONE);
 			}
 		}
@@ -414,13 +414,13 @@ public class Turret extends EventBus {
 			if (espai <= 5){espai = 5;}
 			ArrayList<Location> locs = Utils.getLocationsCircle(location.clone(), (double) radius, espai);
 			for (Location loc : locs){
-				tirarPociÛ(loc, PotionType.WEAKNESS, delayOffSet + (count * 2));
+				tirarPoci√≥(loc, PotionType.WEAKNESS, delayOffSet + (count * 2));
 				count++;
 			}
 		}
 	}
-	public void tirarPociÛ(Location loc, PotionType type){
-		//Bukkit.broadcastMessage("P0ciÛ");
+	public void tirarPoci√≥(Location loc, PotionType type){
+		//Bukkit.broadcastMessage("P0ci√≥");
 		World world = Bukkit.getServer().getWorlds().get(0);
 		Location spawnpoint = location.clone().add(new Location(world, 0.5, 3.2, 0.5));
 		Vector rawDir = loc.toVector().subtract(spawnpoint.toVector());
@@ -434,8 +434,8 @@ public class Turret extends EventBus {
 		potion.setItem(stack1);
 		potion.setShooter(creador);
 	}
-	public void tirarPociÛ(final Location loc, final PotionType type, int delay){
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> tirarPociÛ(loc, type), delay);
+	public void tirarPoci√≥(final Location loc, final PotionType type, int delay){
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> tirarPoci√≥(loc, type), delay);
 	}
 	public void checkIntegrity(){
 		if(built && canBuild()){
@@ -451,13 +451,13 @@ public class Turret extends EventBus {
 				checkIntegrity();
 				LivingEntity target = getTarget();
 				if (target != null){
-					if (tirs >= 12 && getByTipus(TipusMillora.MEC¿NICA).lvl > 0){
+					if (tirs >= 12 && getByTipus(TipusMillora.MEC√ÄNICA).lvl > 0){
 						AtacEspecial();
 						tirs = 0;
 						return;
 					}
-					if (tirsquim >= 3 && getByTipus(TipusMillora.QUÕMICA).lvl > 0 ){//getTargets().size() > 4
-						int lvl = getByTipus(TipusMillora.QUÕMICA).lvl;
+					if (tirsquim >= 3 && getByTipus(TipusMillora.QU√çMICA).lvl > 0 ){//getTargets().size() > 4
+						int lvl = getByTipus(TipusMillora.QU√çMICA).lvl;
 						randomPotionAttack((int) (1 + Math.rint(lvl/3)), lvl * 3 + 1);
 						tirsquim = 0;
 						return;
@@ -534,12 +534,12 @@ public class Turret extends EventBus {
 
 				final Location centerLoc = location.clone().add(0, 1.5, 0);
 				int i1 = 0;
-				int shoots = 1 + getByTipus(TipusMillora.MEC¿NICA).lvl;
+				int shoots = 1 + getByTipus(TipusMillora.MEC√ÄNICA).lvl;
 				int temps = 5;
 				while (i1 < shoots){
 					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                         int i = 0;
-                        int espai = 32 - (getByTipus(TipusMillora.MEC¿NICA).lvl * 4);
+                        int espai = 32 - (getByTipus(TipusMillora.MEC√ÄNICA).lvl * 4);
                         while (i <= 360){
                             float angle = i;
                             double toRadians = Math.PI / 180;
@@ -846,7 +846,7 @@ public class Turret extends EventBus {
 		}
 	}
 
-	public enum TipusMillora {MAL, VELOCITAT_ATAC, FOC, DIST_ATAC, RESIST»NCIA, QUÕMICA, MEC¿NICA, MAGNETISME, APRENENTATGE};
+	public enum TipusMillora {MAL, VELOCITAT_ATAC, FOC, DIST_ATAC, RESIST√àNCIA, QU√çMICA, MEC√ÄNICA, MAGNETISME, APRENENTATGE};
 	public class Millora{
 		String name;
 		String Description;
@@ -863,7 +863,7 @@ public class Turret extends EventBus {
 			material = Material.IRON_AXE;
 			Cost = 25;
 			break;
-			case VELOCITAT_ATAC:  name = "Rec‡rrega r‡pida";
+			case VELOCITAT_ATAC:  name = "Rec√†rrega r√†pida";
 			Description = "+10% Velocitat d'atac";
 			Cost = 38;
 			material = Material.FEATHER;
@@ -875,23 +875,23 @@ public class Turret extends EventBus {
 			Cost = 70;
 			max = 1;
 			break;
-			case DIST_ATAC:  name = "Dist‡ncia atac";
+			case DIST_ATAC:  name = "Dist√†ncia atac";
 			Description = "+2 blocs dist. atac";
 			material = Material.BOW;
 			Cost = 30;
 			break;
-			case RESIST»NCIA:  name = "Escut protector";
+			case RESIST√àNCIA:  name = "Escut protector";
 			Description = "-4s Regen. Escut, +6Hp escut, +2Hp";
 			material = Material.IRON_CHESTPLATE;
 			Cost = 42;
 			max = 20;
 			break;
-			case QUÕMICA:  name = "QuÌmica";
+			case QU√çMICA:  name = "Qu√≠mica";
 			Description = "Habilitats amb pocions";
 			material = Material.BREWING_STAND_ITEM;
 			Cost = 50;
 			break;
-			case MEC¿NICA:  name = "Mec‡nica avanÁada";
+			case MEC√ÄNICA:  name = "Mec√†nica avan√ßada";
 			Description = "Habilitats especials cada 10 tirs";
 			material = Material.PISTON_BASE;
 			Cost = 100;
@@ -903,7 +903,7 @@ public class Turret extends EventBus {
 			Cost = 22;
 			break;
 			case APRENENTATGE:  name = "Aprenentatge";
-			Description = "x2 punts d'experiËncia";
+			Description = "x2 punts d'experi√®ncia";
 			material = Material.BOOK;
 			Cost = 75;
 			break;
@@ -928,7 +928,7 @@ public class Turret extends EventBus {
 				xp = xp - getCost();
 			}
 			lvl = lvl + 1;
-			acciÛlvlUp();
+			acci√≥lvlUp();
 			if(isAdmin){
 				updateChildStats();
 			}
@@ -967,7 +967,7 @@ public class Turret extends EventBus {
 			itemstack.setItemMeta(meta);
 			return itemstack;
 		}
-		public void acciÛlvlUp() {
+		public void acci√≥lvlUp() {
 			switch (tipus) {
 			case MAL: 
 				Atac = Atac + 2;
@@ -984,10 +984,10 @@ public class Turret extends EventBus {
 			case FOC:  
 				foc = true;
 				break;
-			case DIST_ATAC:  name = "Dist‡ncia atac";
+			case DIST_ATAC:  name = "Dist√†ncia atac";
 			distAtac = distAtac + 2;
 			break;
-			case RESIST»NCIA:  
+			case RESIST√àNCIA:  
 				maxHpEscut = maxHpEscut + 6;
 				hp = hp + 2;
 				tempsEscut = tempsEscut - 4;
@@ -995,7 +995,7 @@ public class Turret extends EventBus {
 					tempsEscut = 10;
 				}
 				break;
-			case MEC¿NICA:  
+			case MEC√ÄNICA:  
 
 				break;
 			case MAGNETISME:  

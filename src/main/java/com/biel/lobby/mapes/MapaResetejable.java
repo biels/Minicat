@@ -168,7 +168,7 @@ public abstract class MapaResetejable extends Mapa {
 				e.printStackTrace();
 			}
 		}else{
-			Bukkit.broadcastMessage("Ha fallat l'operació: No hi ha el mode d'edició activat");
+			Bukkit.broadcastMessage("Ha fallat l'operaciÃ³: No hi ha el mode d'ediciÃ³ activat");
 		}
 	}
 	private File getLiveWorldFile() {
@@ -196,7 +196,7 @@ public abstract class MapaResetejable extends Mapa {
 	}
 	public void setEditMode(Boolean editMode) {
 		EditMode = editMode;
-		sendGlobalMessage("Mode edició = " + Boolean.toString(editMode));
+		sendGlobalMessage("Mode ediciÃ³ = " + Boolean.toString(editMode));
 	}
 	public GestorPropietats pMapaActual(){
 		return new GestorPropietats(getLiveWorldFolder() + "/" + "pMapaActual.txt");

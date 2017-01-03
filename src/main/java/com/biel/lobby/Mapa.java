@@ -37,7 +37,7 @@ public abstract class Mapa extends WorldEventBus{
 
 	public void Join(Player ply){
 		if (!canJoin(ply)){
-			ply.sendMessage("AcciÛ inv‡lida: no pots entrar");
+			ply.sendMessage("Acci√≥ inv√†lida: no pots entrar");
 			return;
 		}
 		ply.teleport(world.getSpawnLocation(), TeleportCause.PLUGIN);
@@ -114,7 +114,7 @@ public abstract class Mapa extends WorldEventBus{
 		if(this instanceof MapaContinu){
 			return TipusMapa.Continu;
 		}
-		Bukkit.broadcastMessage("El mapa Ès de tipus indeterminat");
+		Bukkit.broadcastMessage("El mapa √©s de tipus indeterminat");
 		return null;
 	}
 	public void copyDirectory(File sourceLocation , File targetLocation) throws IOException {

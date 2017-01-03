@@ -245,7 +245,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 				return t;
 			}
 		}
-		//sen("Habilitat no v‡lida.");
+		//sen("Habilitat no v√†lida.");
 		return null;
 	}
 	public ArrayList<Location> getValidCircleLocations(Location center, Double radius, int num){

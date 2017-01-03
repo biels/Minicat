@@ -240,7 +240,7 @@ public class ObsidianDefenders extends JocEquips {
 					double finaldmg = evt.getDamage() * 0.85;
 					evt.setDamage(finaldmg);
 					if(debug){
-						Bukkit.broadcastMessage("Mal reduït: " + Double.toString(evt.getDamage() - finaldmg) + " - " + dmgm * 100 +"%");
+						Bukkit.broadcastMessage("Mal reduÃ¯t: " + Double.toString(evt.getDamage() - finaldmg) + " - " + dmgm * 100 +"%");
 					}
 				}
 				if (obtenirEquip(damaged).getId() == obtenirEquip(damager).getId()){
@@ -278,7 +278,7 @@ public class ObsidianDefenders extends JocEquips {
 		if (evt.getEntity() instanceof Player && evt.getDamager() instanceof IronGolem) {
 			IronGolem golem = (IronGolem)evt.getDamager();
 			Player player = (Player)evt.getEntity();
-			if(Ability.hasAbility(plugin, this, player, AbilityType.PROTECCIÓ_IMPACTE)){
+			if(Ability.hasAbility(plugin, this, player, AbilityType.PROTECCIÃ“_IMPACTE)){
 				evt.setDamage(evt.getDamage() / 2);
 			}
 		}
@@ -376,7 +376,7 @@ public class ObsidianDefenders extends JocEquips {
 
 			Long milliseconds = Calendar.getInstance().getTimeInMillis();
 			Long millisecondsAntics = Long.parseLong(pTemp().ObtenirPropietat("Explo"));
-			//Bukkit.broadcastMessage("Diferència: " + Long.toString(milliseconds - millisecondsAntics));    			
+			//Bukkit.broadcastMessage("DiferÃ¨ncia: " + Long.toString(milliseconds - millisecondsAntics));    			
 			if (milliseconds - millisecondsAntics <= 1000 * 2){
 				String prop = pTemp().ObtenirPropietat("ExploPlayer");
 				if (prop.equals(0) == false){
@@ -598,7 +598,7 @@ public class ObsidianDefenders extends JocEquips {
 				for(Player p : obtenirEquip(plyr).getPlayers()){
 					p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 15 * 20, 1, false), true);				
 				}
-				plyr.sendMessage("El teu equip és invisible durant 15 segons.");
+				plyr.sendMessage("El teu equip Ã©s invisible durant 15 segons.");
 				inv.removeItem(new ItemStack(stack.getType()));
 			}
 			if (stack.getType() == Material.BLAZE_POWDER){    				
@@ -646,7 +646,7 @@ public class ObsidianDefenders extends JocEquips {
 				//				
 				//				//ControllableMob<Zombie> mob = ControllableMobs.assign(slime);
 				//				//mob.getActions()
-				//				Bukkit.broadcastMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha fet apareixer un assasí!");
+				//				Bukkit.broadcastMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha fet apareixer un assasÃ­!");
 				//				inv.removeItem(new ItemStack(stack.getType(), 1));
 			}
 		}    		
@@ -687,8 +687,8 @@ public class ObsidianDefenders extends JocEquips {
 			CREEPER,
 			ARQUER_PERFECTE,
 			ARQUER_DE_GEL,
-			PROTECCIÓ_IMPACTE,
-			PIROTÈCNIC,
+			PROTECCIÃ“_IMPACTE,
+			PIROTÃˆCNIC,
 			ESQUELET_FORT,
 			CONTROL_GRAVETAT,
 			DESTRUCTOR,
@@ -697,27 +697,27 @@ public class ObsidianDefenders extends JocEquips {
 		static ItemStack Icona(lobby plugin, ObsidianDefenders j, Player plyr, AbilityType habilitat){
 			Material mat = Material.WOOD;
 			String Titol = "<Nom>";
-			String Desc = "<Descripció>";
-			String Desc2 = "<Descripció2>";
+			String Desc = "<DescripciÃ³>";
+			String Desc2 = "<DescripciÃ³2>";
 			boolean disp = false;
 			//-----------
 			switch(habilitat){
 			case ESPADATXI:
 				mat = Material.IRON_SWORD;
-				Titol = "Espadatxí";
+				Titol = "EspadatxÃ­";
 				Desc = "Augmenta l'atac cada 6 cops d'espasa";
 				Desc2 = "i els enemics volen pels aires";
 				disp = true;
 				break;
 			case REGENERACIO_AUGMENTADA:
 				mat = Material.SAPLING;
-				Titol = "Regeneració augmentada";
-				Desc = "x3 Regeneració passiva x2 cost de menjar";
+				Titol = "RegeneraciÃ³ augmentada";
+				Desc = "x3 RegeneraciÃ³ passiva x2 cost de menjar";
 				disp = true;
 				break;
 			case RESISTENCIA:
 				mat = Material.DIAMOND;
-				Titol = "Resistència";
+				Titol = "ResistÃ¨ncia";
 				Desc = "Redueix el mal d'enemics un";
 				Desc2 ="10% + 8% per enemic proper (8 blocs)";	
 				disp = true;
@@ -742,15 +742,15 @@ public class ObsidianDefenders extends JocEquips {
 				Desc = "- 3 mal per caiguda";
 				disp = true;
 				break;
-			case PIROTÈCNIC:
+			case PIROTÃˆCNIC:
 				mat = Material.FIREWORK;
-				Titol = "Pirotècnic";
-				Desc = "+ 35 % força explosions";
+				Titol = "PirotÃ¨cnic";
+				Desc = "+ 35 % forÃ§a explosions";
 				disp = true;
 				break;
-			case PROTECCIÓ_IMPACTE:
+			case PROTECCIÃ“_IMPACTE:
 				mat = Material.IRON_CHESTPLATE;
-				Titol = "Protecció d'impacte";
+				Titol = "ProtecciÃ³ d'impacte";
 				Desc = "-50% mal rebut del golem de ferro";
 				disp = true;
 				break;
@@ -787,13 +787,13 @@ public class ObsidianDefenders extends JocEquips {
 				mat = Material.COMMAND;
 				Titol = "Comandant";
 				Desc = "Augmenta el mal dels aliats propers un";
-				Desc2 =	"12% i comença amb items addicionals";
+				Desc2 =	"12% i comenÃ§a amb items addicionals";
 				disp = false;
 				break;
 			case CREEPER:
 				mat = Material.TNT;
 				Titol = "Creeper";
-				Desc = "Explotes al morir(0.8F). La força augmenta";
+				Desc = "Explotes al morir(0.8F). La forÃ§a augmenta";
 				Desc2 =	"0.5F per cada enemic que hagis matat.";
 				disp = true;
 				break;
@@ -807,7 +807,7 @@ public class ObsidianDefenders extends JocEquips {
 			meta.setDisplayName(ChatColor.GREEN + Titol);
 			ArrayList<String> lore = new ArrayList<>();
 			lore.add(ChatColor.WHITE + Desc);
-			if (!Desc2.equals("<Descripció2>")){
+			if (!Desc2.equals("<DescripciÃ³2>")){
 				lore.add(ChatColor.WHITE + Desc2);
 			}
 			if (hasAbility(plugin, j, plyr, habilitat)){
@@ -890,12 +890,12 @@ public class ObsidianDefenders extends JocEquips {
 			list.add(ChatColor.RED + "Morts: " + pPlayer(ply).ObtenirPropietatInt("Morts"));
 			list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
 			if(Ability.hasAbility(plugin, this, ply, AbilityType.ESPADATXI)){
-				list.add(ChatColor.BLUE + "Espadatxí: " + pPlayer(ply).ObtenirPropietatInt("StrongHitCount"));
+				list.add(ChatColor.BLUE + "EspadatxÃ­: " + pPlayer(ply).ObtenirPropietatInt("StrongHitCount"));
 			}
 			if(Ability.hasAbility(plugin, this, ply, AbilityType.ARQUER_DE_GEL)){
 				list.add(ChatColor.BLUE + "Arquer de gel: " + pPlayer(ply).ObtenirPropietatInt("StrongBowHitCount"));
 			}
-			ScoreBoardUpdater.setScoreBoard(ply, "Estadístiques", list, null);
+			ScoreBoardUpdater.setScoreBoard(ply, "EstadÃ­stiques", list, null);
 		}
 	}
 	@Override
@@ -943,20 +943,20 @@ public class ObsidianDefenders extends JocEquips {
 						if (inv.contains(Material.GOLD_SWORD) == true){
 							explo = explo + (explo * 0.20F);
 						}
-						if(Ability.hasAbility(plugin, this, player, AbilityType.PIROTÈCNIC)){
+						if(Ability.hasAbility(plugin, this, player, AbilityType.PIROTÃˆCNIC)){
 							explo = explo + (explo * 0.35F);
 						}
 						world.createExplosion(loc.getX(), loc.getY(), loc.getZ(), explo, false, false);
-						if (pTemp().ObtenirPropietat("ForçaExplo").equals(Float.toString(explo)) == false){
-							player.sendMessage("Força de les fletxes explosives: " + Float.toString(explo));
-							pTemp().EstablirPropietat("ForçaExplo", Float.toString(explo));
+						if (pTemp().ObtenirPropietat("ForÃ§aExplo").equals(Float.toString(explo)) == false){
+							player.sendMessage("ForÃ§a de les fletxes explosives: " + Float.toString(explo));
+							pTemp().EstablirPropietat("ForÃ§aExplo", Float.toString(explo));
 						}
 						ItemStack itemstack = new ItemStack(Material.GOLD_NUGGET, 1); // A stack of diamonds
 						world.dropItem(loc, itemstack).setVelocity(new Vector(0,0,0));
 						//Automal
 						double hp = player.getHealth();
 						if (hp == 20){
-							player.sendMessage(ChatColor.GRAY + "Disparar fletxes explosives et treu 1 cor per explosió fins a mig cor. La força de les fletxes explosives varia amb la teva vida (20 hp - 100%, 1 hp 5%");
+							player.sendMessage(ChatColor.GRAY + "Disparar fletxes explosives et treu 1 cor per explosiÃ³ fins a mig cor. La forÃ§a de les fletxes explosives varia amb la teva vida (20 hp - 100%, 1 hp 5%");
 						}
 						hp = hp - 2;
 						if (hp <= 0){

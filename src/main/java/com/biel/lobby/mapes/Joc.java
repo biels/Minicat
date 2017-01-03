@@ -97,7 +97,7 @@ public abstract class Joc extends MapaResetejable {
 		clearExternals();
 		
 		super.finalize();
-		//System.out.println("La inst‡ncia de " + getGameName() + " s'ha destruÔt");
+		//System.out.println("La inst√†ncia de " + getGameName() + " s'ha destru√Øt");
 	}
 	@Override
 	public void initialize() {
@@ -122,7 +122,7 @@ public abstract class Joc extends MapaResetejable {
 	}
 	protected abstract void setCustomGameRules();
 	public void JocIniciat(){
-		if (JocIniciat){Bukkit.broadcastMessage("S'ha intentat iniciar una partida que ja estava iniciada. OperaciÛ anul∑lada!"); return;}
+		if (JocIniciat){Bukkit.broadcastMessage("S'ha intentat iniciar una partida que ja estava iniciada. Operaci√≥ anul¬∑lada!"); return;}
 		Bukkit.broadcastMessage(ChatColor.RED + "Partida iniciada!");
 		JocIniciat = true;
 		//---
@@ -172,7 +172,7 @@ public abstract class Joc extends MapaResetejable {
 		return (int) (tempsTranscorregut() / 1000);
 	}
 	public void JocFinalitzat(){
-		if (!JocIniciat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que no havia comenÁat."); return;}
+		if (!JocIniciat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que no havia comen√ßat."); return;}
 		if (JocFinalitzat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que ja havia acabat."); return;}
 		//---
 		world.setPVP(false);
@@ -229,7 +229,7 @@ public abstract class Joc extends MapaResetejable {
 	}
 	protected void updateElo(ArrayList<Player> winners){
 		if(!canBeRanked()){
-			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al r‡nquing");
+			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al r√†nquing");
 			return;
 		}
 		ArrayList<Player> loosers = new ArrayList<>();
@@ -244,7 +244,7 @@ public abstract class Joc extends MapaResetejable {
 	}
 	protected void updateEloOrdered(ArrayList<Player> orderedWinners){
 		if(!canBeRanked()){
-			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al r‡nquing");
+			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al r√†nquing");
 			return;
 		}
 		ArrayList<Double> elo_winners = new ArrayList<>();
@@ -320,7 +320,7 @@ public abstract class Joc extends MapaResetejable {
 		host = p.getName();
 		if(change){
 			donarItemsInicials(p);
-			sendGlobalMessage(p.getName() + " Ès administrador de la partida");
+			sendGlobalMessage(p.getName() + " √©s administrador de la partida");
 		}
 	}
 	public void setHost(String name){
@@ -451,7 +451,7 @@ public abstract class Joc extends MapaResetejable {
 		ItemButton.clearButtons(ply);
 		PlayerInventory inventory = ply.getInventory();
 		inventory.clear();
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_BLOCK), ChatColor.AQUA + "C‡mera aleatÚria"), ply, event -> {
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_BLOCK), ChatColor.AQUA + "C√†mera aleat√≤ria"), ply, event -> {
             Player p = event.getPlayer();
             teleportCameraRandomly(p);
         });
@@ -465,7 +465,7 @@ public abstract class Joc extends MapaResetejable {
 		}
 	}
 	public void addSpectator(Player ply){
-		Bukkit.broadcastMessage(ply.getName() + " Ès espectador");
+		Bukkit.broadcastMessage(ply.getName() + " √©s espectador");
 		if (!getSpectators().contains(ply)){
 			Espectadors.add(ply);
 		}
@@ -543,7 +543,7 @@ public abstract class Joc extends MapaResetejable {
 		ItemStack ball = new ItemStack(Material.SNOW_BALL);
 		ball.addUnsafeEnchantment(Enchantment.SILK_TOUCH, 1);
 		ball.setAmount(amount);
-		return Utils.setItemNameAndLore(ball, "LlanÁador de neu", "Et transporta a l'enemic que impacti");
+		return Utils.setItemNameAndLore(ball, "Llan√ßador de neu", "Et transporta a l'enemic que impacti");
 	}
 	public boolean giveSnowLauncherOnKill(){
 		return false;
@@ -578,7 +578,7 @@ public abstract class Joc extends MapaResetejable {
 		if(i.isImmune()){
 			evt.setCancelled(true);
 			System.out.println(damaged.getName() + "is immune");
-			damager.sendMessage(ChatColor.GRAY + "El jugador " + damaged.getName() + " Ès invulnerable.");
+			damager.sendMessage(ChatColor.GRAY + "El jugador " + damaged.getName() + " √©s invulnerable.");
 			getWorld().playSound(damager.getLocation(), Sound.ENCHANT_THORNS_HIT, 1.2F, 0.88F);
 			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
 			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());   		
@@ -616,7 +616,7 @@ public abstract class Joc extends MapaResetejable {
 	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
 		// TODO Auto-generated method stub
 		super.onPlayerDeathByPlayer(evt, killed, killer);
-		if(killed == killer)evt.setDeathMessage(ChatColor.YELLOW + killed.getName() + ChatColor.RED + " s'ha suÔcidat");
+		if(killed == killer)evt.setDeathMessage(ChatColor.YELLOW + killed.getName() + ChatColor.RED + " s'ha su√Øcidat");
 		if(giveSnowLauncherOnKill())killer.getInventory().addItem(getSnowLauncher(1));
 	}
 	public void allOnTheLobby(){
@@ -702,18 +702,18 @@ public abstract class Joc extends MapaResetejable {
         for (float anArray : array) {
             if (Utils.testPointUpDown(anArray, lastProgressETA, gameProgressETA)) {
                 String status = "";
-                if (anArray == 10F) status = "ha comenÁat fa poc";
-                if (anArray == 25F) status = "ha comenÁat fa una estona";
+                if (anArray == 10F) status = "ha comen√ßat fa poc";
+                if (anArray == 25F) status = "ha comen√ßat fa una estona";
                 if (anArray == 50F) status = "va per la meitat aproximadament";
-                if (anArray == 75F) status = "acabar‡ aviat";
-                if (anArray == 90F) status = "Ès a l'etapa decisiva. Acabar‡ aviat.";
+                if (anArray == 75F) status = "acabar√† aviat";
+                if (anArray == 90F) status = "√©s a l'etapa decisiva. Acabar√† aviat.";
                 if (anArray == 100F) status = "hauria d'acabar en breu";
-                if (anArray >= 110F) status = "est‡ durant mÈs del previst";
-                if (anArray >= 200F) status = "est‡ durant el doble del previst";
-                if (anArray >= 210F) status = "durar‡ tota l'eterinitat";
+                if (anArray >= 110F) status = "est√† durant m√©s del previst";
+                if (anArray >= 200F) status = "est√† durant el doble del previst";
+                if (anArray >= 210F) status = "durar√† tota l'eterinitat";
                 Com.sendLobbyMessage(ChatColor.GRAY + "La partida de " + ChatColor.DARK_AQUA + getGameName() + ChatColor.GRAY + " " + status);
                 if (anArray >= 150) {
-                    sendGlobalMessage("…s possible que la partida s'hagi estancat. En aquest cas, feu /l i comenÁeu-ne una de nova.");
+                    sendGlobalMessage("√âs possible que la partida s'hagi estancat. En aquest cas, feu /l i comen√ßeu-ne una de nova.");
                 }
             }
         }
@@ -724,12 +724,12 @@ public abstract class Joc extends MapaResetejable {
 		if(pMapaActual().ExisteixPropietat("wiki")){
 			String pageName = pMapaActual().ObtenirPropietat("wiki");
 			boolean local = p.getAddress().getHostString().startsWith("10.0.0.");
-			if(!requested)p.sendMessage("Pots veure la informaciÛ del mapa a:");
+			if(!requested)p.sendMessage("Pots veure la informaci√≥ del mapa a:");
 			if(requested)p.sendMessage("Article del mapa " + getGameName() + ":");
 			p.sendMessage(ChatColor.BLUE + getWikiLink(pageName, local));
 			p.sendMessage("(Clic->Si per obrir)");
 		}else{
-			sendPlayerMessage(p, "Aquest mode de joc no tÈ un article a la wiki");
+			sendPlayerMessage(p, "Aquest mode de joc no t√© un article a la wiki");
 		}
 	}
 	public String getWikiLink(String pageName, boolean local){
@@ -1392,7 +1392,7 @@ ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.ge
 	public void announce(){
 		announceCount++;
 		String pref = "[" + Com.getMinicatString() + ChatColor.WHITE + "] > " + ChatColor.GRAY;
-		sendGlobalMessage(pref + "Joc: " + getGameName() + ", Mapa: " + getActiveMultipleMapName() + ", ProgrÈs: " + Math.round(getGameProgressETA() * 10 * 100)  / 10 + "%");
+		sendGlobalMessage(pref + "Joc: " + getGameName() + ", Mapa: " + getActiveMultipleMapName() + ", Progr√©s: " + Math.round(getGameProgressETA() * 10 * 100)  / 10 + "%");
 	}
 	
 	public Long getAnnounceCount() {

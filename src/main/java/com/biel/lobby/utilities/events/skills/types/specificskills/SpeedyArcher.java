@@ -28,7 +28,7 @@ public class SpeedyArcher extends InherentSkill {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Arquer veloç";
+		return "Arquer veloÃ§";
 	}
 
 	@Override

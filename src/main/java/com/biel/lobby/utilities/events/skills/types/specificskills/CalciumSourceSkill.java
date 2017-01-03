@@ -44,7 +44,7 @@ public class CalciumSourceSkill extends InherentSkill {
 		String modifier1 = ChatColor.GREEN + "" + getModifier() + ChatColor.WHITE;
 		Double percentage = Math.round(getProtectionRatio() * 100 * 10) / 10D;
 		String percent = ChatColor.GREEN + "" + percentage + ChatColor.WHITE + "%";
-		return "El calci reforça el teu esquelet reduïnt el mal per caiguda en " + modifier1 + " de manera que pots caure des de més amunt sense fer-te mal, redueix el mal per caiguda general en un " + percent + "";
+		return "El calci reforÃ§a el teu esquelet reduÃ¯nt el mal per caiguda en " + modifier1 + " de manera que pots caure des de mÃ©s amunt sense fer-te mal, redueix el mal per caiguda general en un " + percent + "";
 	}
 	@Override
 	protected void onPlayerDamage(EntityDamageEvent evt, Player p) {
@@ -58,7 +58,7 @@ public class CalciumSourceSkill extends InherentSkill {
 			evt.setDamage(result);
 			evt.setDamage(evt.getDamage() - getModifier());
 			//playEffect(p);
-			//sendSkillMessage("Reduït: " + Math.round((dmg - evt.getDamage()) * 10) / 10.0D);
+			//sendSkillMessage("ReduÃ¯t: " + Math.round((dmg - evt.getDamage()) * 10) / 10.0D);
 		}
 	}
 

@@ -32,14 +32,14 @@ public class SwordsmanSkill extends InherentSkill {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Espadatxí";
+		return "EspadatxÃ­";
 	}
 
 	@Override
 	public String getDescription() {
 		// TODO Auto-generated method stub
 		String modifier1 = ChatColor.GREEN + "" + getDmgMultiplier() * 100 + ChatColor.WHITE;
-		return "Cada 6 cops el mal del següent cop augmenta en un " + modifier1 + "%. incrementant també l'empenta aplicada a l'enemic. Aquest efecte nomès s'aplica als atacs cos a cos" ;
+		return "Cada 6 cops el mal del segÃ¼ent cop augmenta en un " + modifier1 + "%. incrementant tambÃ© l'empenta aplicada a l'enemic. Aquest efecte nomÃ¨s s'aplica als atacs cos a cos" ;
 	}
 
 	private int getStacks(){
@@ -127,7 +127,7 @@ public class SwordsmanSkill extends InherentSkill {
 		@Override
 		public String getDescription() {
 			// TODO Auto-generated method stub
-			return "Càrregues per poder efectuar un cop amb mal adicional";
+			return "CÃ rregues per poder efectuar un cop amb mal adicional";
 		}
 
 	}

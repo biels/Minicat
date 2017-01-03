@@ -56,7 +56,7 @@ public class SkillPool {
 		}
 	}
 	public void registerSkill(Skill s){
-		if(s.getPlayer() != null){s.setPlayer(null);} //Fora el jugador, això és una llista genèrica!!
+		if(s.getPlayer() != null){s.setPlayer(null);} //Fora el jugador, aixÃ² Ã©s una llista genÃ¨rica!!
 		if(registered.contains(s))return;
 		registered.add(s);
 	}
@@ -89,7 +89,7 @@ public class SkillPool {
 						}
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
-						System.out.println("--Error reflexió / removing habilitat--");
+						System.out.println("--Error reflexiÃ³ / removing habilitat--");
 						e.printStackTrace();
 					} 
 				}
@@ -135,7 +135,7 @@ public class SkillPool {
 	public ItemButton getUnlockerButton(Player p, int n){
 		ItemStack dBlk = new ItemStack(Material.CHEST);
 		dBlk.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 1);
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.AQUA + "Habilitat #" + n,  ChatColor.WHITE + "Obre l'inventari de selecció d'habilitats", Integer.toString(n)), p, event -> {
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.AQUA + "Habilitat #" + n,  ChatColor.WHITE + "Obre l'inventari de selecciÃ³ d'habilitats", Integer.toString(n)), p, event -> {
             int data = (int) event.getData();
             openSelectionMenu(event.getPlayer(), true, data);
         });

@@ -165,7 +165,7 @@ public class Torres extends JocEquips {
 				turr.hasInventory = false;
 				if (preset == TurretPreset.INHIBITOR || preset == TurretPreset.NEXUS){ //0, 2
 					turr.maxHpEscut = 10 + (preset == TurretPreset.NEXUS ? 30 : 0);
-					turr.getByTipus(TipusMillora.RESISTÈNCIA).lvl = 1;
+					turr.getByTipus(TipusMillora.RESISTÃˆNCIA).lvl = 1;
 					turr.tempsEscut = 8;
 					turr.VelAtac = 10;
 					turr.resetArmorCD();
@@ -208,11 +208,11 @@ public class Torres extends JocEquips {
 			Turret turr = Turret.createTurret(Com.getPlugin(), p.getLocation(), p, this, obtenirEquip(p), false, true);
 			turr.xp = 20;
 		}
-		//Bukkit.broadcastMessage("Millora les torres de la base. La batalla començarà d'aquí a 20 segons.");
+		//Bukkit.broadcastMessage("Millora les torres de la base. La batalla comenÃ§arÃ  d'aquÃ­ a 20 segons.");
 		//		getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 		//          public void run() {
 		//          	//TeletransportarTothom();
-		//          	Bukkit.broadcastMessage("La batalla ha començat!");
+		//          	Bukkit.broadcastMessage("La batalla ha comenÃ§at!");
 		//          }
 		//      }, 22 * 20);
 
@@ -438,7 +438,7 @@ public class Torres extends JocEquips {
 			if (block.getType() == Material.BEACON){
 				block.setType(Material.LAVA);
 				world.playSound(getHalfwayMiddle(), Sound.ENTITY_ENDERDRAGON_HURT, 150F, 1.1F);
-				sendGlobalMessage("Enllaç d'energia destruït!");
+				sendGlobalMessage("EnllaÃ§ d'energia destruÃ¯t!");
 				givePoints(p, 10);
 				comprovarGuanyador();
 			}			
@@ -569,20 +569,20 @@ public class Torres extends JocEquips {
 	}
 	//-- FI EVENT CHANNELING
 
-	//-- DEFINICIÓ TORRE--
+	//-- DEFINICIÃ“ TORRE--
 	public class Bonus implements Listener{
 		private final lobby plugin;
 		Boolean predeterminat;
 		final TipusBonus tipus;
-		final int força;
+		final int forÃ§a;
 		final int temps;
 		final Location loc;
 		//public enum TipusBonus {HEAL, SPEED, DAMAGE, PROTECTION};
 		int entityId;
-		public Bonus(lobby plugin, TipusBonus tipus, Location loc, int força, int temps) {
+		public Bonus(lobby plugin, TipusBonus tipus, Location loc, int forÃ§a, int temps) {
 			predeterminat = true;
 			this.tipus = tipus;
-			this.força = força;
+			this.forÃ§a = forÃ§a;
 			this.temps = temps;
 			this.loc = loc;
 			this.plugin = plugin;
@@ -592,7 +592,7 @@ public class Torres extends JocEquips {
 		public Bonus(lobby plugin, TipusBonus tipus, Location loc, ItemStack item, int temps) {
 			predeterminat = false;
 			this.tipus = tipus;
-			this.força = 0;
+			this.forÃ§a = 0;
 			this.temps = temps;
 			this.loc = loc;
 			this.plugin = plugin;
@@ -608,7 +608,7 @@ public class Torres extends JocEquips {
 			switch(tipus){
 			case DAMAGE:
 				plyr.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 34 * 20, 0, false), true);
-				//Bukkit.broadcastMessage(plyr.getName() + " té més dany!");
+				//Bukkit.broadcastMessage(plyr.getName() + " tÃ© mÃ©s dany!");
 				break;
 			case HEAL:
 				Utils.healDamageable(plyr, plyr.getMaxHealth() * 0.6);
@@ -619,7 +619,7 @@ public class Torres extends JocEquips {
 				plyr.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 2, false), true);
 				break;
 			case PROTECTION:
-				if (força == 3){
+				if (forÃ§a == 3){
 					plyr.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 70 * 20, 3, false), true);
 				}else{
 					plyr.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 38 * 20, 1, false), true);
@@ -670,12 +670,12 @@ public class Torres extends JocEquips {
 			case SPEED:
 				return(Material.FEATHER);
 			case PROTECTION:
-				if (força == 3){
+				if (forÃ§a == 3){
 					return(Material.DIAMOND_CHESTPLATE);
 				}
 				return(Material.GOLD_CHESTPLATE);
 			case JUMP:
-				if (força >= 3){
+				if (forÃ§a >= 3){
 					return(Material.IRON_PLATE);
 				}
 				return(Material.WOOD_PLATE);

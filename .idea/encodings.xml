@@ -1,11 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding">
-    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/Joc.java" charset="ISO-8859-1" />
+  <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/Com.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/GestorMapes.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/LoginListener.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/Mapa.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/lobby.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/Joc.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/JocObjectius.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/JocScoreCombo.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/JocTeamDominion.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/MapaResetejable.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/BaseLunar.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/KingSkeletonChallenge.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/RainbowClay.java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/Torres.java" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/Turret.java" charset="ISO-8859-1" />
-    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/VampireSkill.java" charset="ISO-8859-1" />
-    <file url="PROJECT" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/ResourceRush.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/RoboRampage.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/Spleef.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/TNTRun.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/Torres.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/Options.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/ScoreBoardUpdater.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/Turret.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/SkillPool.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/CalciumSourceSkill.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/DeflectorSkill.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/ExternalCombustionEngine.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/FrostArcherSkill.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/MagicArcherSkill.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/SpeedyArcher.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/SwordsmanSkill.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/VampireSkill.java" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

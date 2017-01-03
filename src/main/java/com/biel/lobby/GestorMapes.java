@@ -101,7 +101,7 @@ public class GestorMapes implements Listener{
 		for (ContenidorMapa c : Mapes){
 			if (c instanceof ContenidorJoc){
 				ContenidorJoc contenidorJoc = (ContenidorJoc) c;
-				all.addAll(contenidorJoc.getInst‡ncies());
+				all.addAll(contenidorJoc.getInst√†ncies());
 			}
 
 		}
@@ -163,7 +163,7 @@ public class GestorMapes implements Listener{
 			// TODO Auto-generated constructor stub
 			developmentState = s;
 		}
-		ArrayList<Joc> Inst‡ncies = new ArrayList<>();
+		ArrayList<Joc> Inst√†ncies = new ArrayList<>();
 
 		DevelopmentState developmentState = DevelopmentState.Release;
 		public DevelopmentState getDevelopmentState() {
@@ -204,7 +204,7 @@ public class GestorMapes implements Listener{
 		@Override
 		public int getPlayerAmount() {
 			// TODO Auto-generated method stub
-			return Inst‡ncies.stream().mapToInt(j -> j.getPlayers().size()).sum();
+			return Inst√†ncies.stream().mapToInt(j -> j.getPlayers().size()).sum();
 		}
 		@Override
 		void playerClick(Player ply) {
@@ -232,12 +232,12 @@ public class GestorMapes implements Listener{
 					newInstance.setMultiMapId(map);
 				}
 				newInstance.initialize();
-				Inst‡ncies.add(newInstance);
+				Inst√†ncies.add(newInstance);
 				return newInstance;
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | SecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				Bukkit.broadcastMessage("Ha fallat la creaciÚ d'una inst‡ncia: " + nom);
+				Bukkit.broadcastMessage("Ha fallat la creaci√≤ d'una inst√†ncia: " + nom);
 				Bukkit.broadcastMessage("Error: " + e.getMessage());
 				Bukkit.broadcastMessage("ErrorType: " + e.getClass().getName());
 				if (e instanceof InvocationTargetException){
@@ -250,28 +250,28 @@ public class GestorMapes implements Listener{
 		}
 		Boolean canAutoJoin(){
 			//if (AlgunMapaDisponible() == false){return false;}
-			return Inst‡ncies.size() <= 1;
+			return Inst√†ncies.size() <= 1;
 
 		}
 		void autoJoin(Player ply){
 			if  (canAutoJoin()){
-				if(Inst‡ncies.size() == 0){
+				if(Inst√†ncies.size() == 0){
 					addMap(null);
 				}
-				Inst‡ncies.get(0).Join(ply);
+				Inst√†ncies.get(0).Join(ply);
 			}
 
 		}
 		Boolean AlgunMapaDisponible(){
-			for(Joc map : Inst‡ncies){
+			for(Joc map : Inst√†ncies){
 				if (map.getGameState() == Joc.GameState.WaitingForPlayers){
 					return true;
 				}
 			}
 			return false;
 		}
-		Joc getInst‡nciaFromWorld(World world){
-			for(Joc map : Inst‡ncies){
+		Joc getInst√†nciaFromWorld(World world){
+			for(Joc map : Inst√†ncies){
 				if (map.world.getName().equals(world.getName())){
 					return map;
 				}
@@ -282,7 +282,7 @@ public class GestorMapes implements Listener{
 		public void onPlayerChangedWorld(PlayerChangedWorldEvent evt) {
 			Player ply = evt.getPlayer();
 			//Bukkit.broadcastMessage("FROM: " + evt.getFrom().getName());
-			Joc map = getInst‡nciaFromWorld(evt.getFrom());
+			Joc map = getInst√†nciaFromWorld(evt.getFrom());
 			if (map != null) {
 				//map.Leave(ply);
 				//Bukkit.broadcastMessage("FROM2: " + map.getMapName());
@@ -293,7 +293,7 @@ public class GestorMapes implements Listener{
 		//		public void onInteract(PlayerInteractEvent evt) {
 		//			Player ply = evt.getPlayer();
 		//			
-		//			Joc map = getInst‡nciaFromWorld(ply.getWorld());
+		//			Joc map = getInst√†nciaFromWorld(ply.getWorld());
 		//			if (evt.getItem().getType() == Material.STICK){
 		//				map.JocIniciat();
 		//			}
@@ -312,7 +312,7 @@ public class GestorMapes implements Listener{
 				//map.JocFinalitzat();
 				map.clearExternals();
 				map.deleteVirtualWorld();
-				Inst‡ncies.remove(map);
+				Inst√†ncies.remove(map);
 				map.destroyEventBus();
 				System.gc();
 				//map = null;
@@ -360,7 +360,7 @@ public class GestorMapes implements Listener{
 		}
 		public void ObrirMenu(Player ply){
 			Joc tempInstance = getTempInstance();
-			IconMenu menu = new IconMenu("Inst‡ncies", 27, event -> {
+			IconMenu menu = new IconMenu("Inst√†ncies", 27, event -> {
                 //event.getPlayer().sendMessage("You have chosen " + event.getName());
                 event.setWillClose(false);
                 Joc tempInstance1 = getTempInstance();
@@ -368,7 +368,7 @@ public class GestorMapes implements Listener{
                 int pos = event.getPosition();
                 MapMode m = tempInstance1.getMapMode();
                 if (pos < (m == MapMode.MULTIPLE ? 27 - tempInstance1.getMultiWorldList().size() : 26)){
-                    Joc map = Inst‡ncies.get(pos); /*Open*/
+                    Joc map = Inst√†ncies.get(pos); /*Open*/
                     map.Join(event.getPlayer());
                 }else{
                     Joc nouMapa = addMap(m == MapMode.MULTIPLE ? 26 - event.getPosition() : null); /*New*/
@@ -376,36 +376,36 @@ public class GestorMapes implements Listener{
                 }
 
             });
-			for(Joc mapa : Inst‡ncies){
+			for(Joc mapa : Inst√†ncies){
 				Wool wool = new Wool(getGameColor(mapa));
 				ItemStack stack = wool.toItemStack();
 				stack.setAmount(mapa.getPlayers().size());
 				String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
 				double gameProgressETA = mapa.getGameProgressETA();
-				String progressStr = ChatColor.AQUA + "ProgrÈs: " + Math.round(gameProgressETA * 1000) / 10 + "% ETA";
-				menu.setOption(Inst‡ncies.indexOf(mapa), stack, mapa.getGameName(),ChatColor.WHITE + mapa.NomWorld, ChatColor.WHITE + mapa.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + mapa.getSpectators().size(), "Temps: " + tStr, progressStr);
+				String progressStr = ChatColor.AQUA + "Progr√©s: " + Math.round(gameProgressETA * 1000) / 10 + "% ETA";
+				menu.setOption(Inst√†ncies.indexOf(mapa), stack, mapa.getGameName(),ChatColor.WHITE + mapa.NomWorld, ChatColor.WHITE + mapa.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + mapa.getSpectators().size(), "Temps: " + tStr, progressStr);
 			}
 			MapMode mapMode = tempInstance.getMapMode();
 			if (!AlgunMapaDisponible() || mapMode == MapMode.MULTIPLE){
-				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1), ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova inst‡ncia");
+				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1), ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova inst√†ncia");
 				if(mapMode == MapMode.MULTIPLE){
 					ArrayList<String> multiWorldList = tempInstance.getMultiWorldList();
 					for (int i = 0; i < multiWorldList.size(); i++) {
 						String name = multiWorldList.get(i);
 						menu.setOption(26 - i, new ItemStack(Material.EMERALD, 1),
 								ChatColor.GREEN + name, ChatColor.WHITE
-								+ "Crea una nova inst‡ncia");
+								+ "Crea una nova inst√†ncia");
 					}
 				}
 			}
 
 			menu.open(ply);
 		}
-		public ArrayList<Joc> getInst‡ncies() {
-			return Inst‡ncies;
+		public ArrayList<Joc> getInst√†ncies() {
+			return Inst√†ncies;
 		}
-		public void setInst‡ncies(ArrayList<Joc> inst‡ncies) {
-			Inst‡ncies = inst‡ncies;
+		public void setInst√†ncies(ArrayList<Joc> inst√†ncies) {
+			Inst√†ncies = inst√†ncies;
 		}
 
 
@@ -413,7 +413,7 @@ public class GestorMapes implements Listener{
 	}
 
 	public void openAllGamesMenu(Player ply){
-		IconMenu menu = new IconMenu("Totes les inst‡ncies", 27, event -> {
+		IconMenu menu = new IconMenu("Totes les inst√†ncies", 27, event -> {
             //event.getPlayer().sendMessage("You have chosen " + event.getName());
             event.setWillClose(true);
             List<Joc> allInstances = getGames();
@@ -441,7 +441,7 @@ public class GestorMapes implements Listener{
 	//			stack = wool.toItemStack();
 	//			stack.setAmount(mapa.getPlayers().size());
 	//			String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
-	//			menu.setOption(Inst‡ncies.indexOf(j), stack, j.getMapName(),ChatColor.WHITE + j.NomWorld, ChatColor.WHITE + j.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(j.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + j.getSpectators().size(), "Temps: " + tStr);
+	//			menu.setOption(Inst√†ncies.indexOf(j), stack, j.getMapName(),ChatColor.WHITE + j.NomWorld, ChatColor.WHITE + j.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(j.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + j.getSpectators().size(), "Temps: " + tStr);
 	//		
 	//		}
 	//	}

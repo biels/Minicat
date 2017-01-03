@@ -203,7 +203,7 @@ public class TNTRun extends JocLastStanding {
 			list.add(ChatColor.YELLOW + "Temps: " +  col + "" + ChatColor.BOLD + Integer.toString(temps));
 			list.add(ChatColor.GREEN + "Ronda: " + ChatColor.WHITE + Integer.toString(round));
 			list.add(ChatColor.BLUE + "Jugadors: " + ChatColor.WHITE + Integer.toString(getAlivePlayers().size()));
-			ScoreBoardUpdater.setScoreBoard(getPlayers(), "Estadístiques", list, null);
+			ScoreBoardUpdater.setScoreBoard(getPlayers(), "Estadï¿½stiques", list, null);
 		}
 	}
 	@Override

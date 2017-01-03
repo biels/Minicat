@@ -29,9 +29,9 @@ public class ScoreBoardUpdater {
 //    	
 //    	
 //    	if (plugin.mapa.equalsIgnoreCase("RainbowClay")) {
-//    		Objective objective = board.registerNewObjective("Estadístiques", "dummy");
+//    		Objective objective = board.registerNewObjective("EstadÃ­stiques", "dummy");
 //        	objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-//        	objective.setDisplayName("Estadístiques");
+//        	objective.setDisplayName("EstadÃ­stiques");
 //        	Boolean intEquip1 = false;
 //        	Boolean intEquip2 = false;
 //        	ChatColor core10 = ChatColor.GREEN; if(plugin.pTemp.ObtenirPropietatInt("Core10") == 1){core10 = ChatColor.STRIKETHROUGH;}else{intEquip1 = true;}

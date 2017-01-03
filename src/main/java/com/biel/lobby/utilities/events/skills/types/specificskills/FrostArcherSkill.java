@@ -46,7 +46,7 @@ public class FrostArcherSkill extends InherentSkill {
 	public String getDescription() {
 		// TODO Auto-generated method stub
 		String modifier1 = ChatColor.GREEN + "" + getModifier() + ChatColor.WHITE;
-		return "Empresona els enemics encertats amb l'arc durant" + modifier1 + "s. Les fletxes de gel causen mal reduït" ;
+		return "Empresona els enemics encertats amb l'arc durant" + modifier1 + "s. Les fletxes de gel causen mal reduÃ¯t" ;
 	}
 
 	private static double getModifier() {
@@ -153,7 +153,7 @@ public class FrostArcherSkill extends InherentSkill {
 		@Override
 		public String getDescription() {
 			// TODO Auto-generated method stub
-			return "Càrregues per poder empresonar un enemic";
+			return "CÃ rregues per poder empresonar un enemic";
 		}
 		
 	}
@@ -178,7 +178,7 @@ public class FrostArcherSkill extends InherentSkill {
 		@Override
 		public String getDescription() {
 			// TODO Auto-generated method stub
-			return "Efecte de l'enllaç de gel";
+			return "Efecte de l'enllaÃ§ de gel";
 		}
 		@Override
 		protected void onBlockBreak(BlockBreakEvent evt, Block blk) {

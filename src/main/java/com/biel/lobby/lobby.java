@@ -55,7 +55,7 @@ public final class lobby extends JavaPlugin {
 			//joc.Join(ply);
 			if(!args[0].equals("1")) return false;
 			ranked = !ranked;
-			Bukkit.broadcastMessage("Transferència d'elo " + (ranked ? "activada" : "desactivada"));
+			Bukkit.broadcastMessage("TransferÃ¨ncia d'elo " + (ranked ? "activada" : "desactivada"));
 			return true;
 		}
 		if(cmd.getName().equalsIgnoreCase("a")){
@@ -137,7 +137,7 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("elo")){
 			PlayerData playerData = new PlayerData(ply.getName());
 			if(playerData.getRank() == -1){
-				ply.sendMessage(ChatColor.GOLD + "Fes partides per determinar la teva posició");
+				ply.sendMessage(ChatColor.GOLD + "Fes partides per determinar la teva posiciÃ³");
 				return true;
 			}
 			ply.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + ChatColor.YELLOW + " #" + playerData.getRank()); 
@@ -153,12 +153,12 @@ public final class lobby extends JavaPlugin {
 			if(m != null){
 				if(m instanceof Joc){
 					Joc joc = (Joc) m;
-					ply.sendMessage("Progrés estimat: " + Math.round(joc.getGameProgressETA() * 10000) / 100 + "%");
+					ply.sendMessage("ProgrÃ©s estimat: " + Math.round(joc.getGameProgressETA() * 10000) / 100 + "%");
 				}else{
-					ply.sendMessage("Has d'estar en un joc per fer això");
+					ply.sendMessage("Has d'estar en un joc per fer aixÃ²");
 				}
 			}else{
-				ply.sendMessage("Has d'estar en una partida per fer això");
+				ply.sendMessage("Has d'estar en una partida per fer aixÃ²");
 			}
 			return true;
 		}

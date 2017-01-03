@@ -118,7 +118,7 @@ public class DeflectorSkill extends InherentSkill {
 		if(blocking)getWorld().playEffect(damager.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
 		if(blocking)getWorld().playEffect(damaged.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
 
-		//if(blocking)sendSkillMessage("Deflexió crítica!");
+		//if(blocking)sendSkillMessage("DeflexiÃ³ crÃ­tica!");
 		//Remove after use
 	}
 	public double getDmgMultiplier() {
@@ -155,7 +155,7 @@ public class DeflectorSkill extends InherentSkill {
 	//		@Override
 	//		public String getDescription() {
 	//			// TODO Auto-generated method stub
-	//			return "El següent atac que rebis serà retornat";
+	//			return "El segÃ¼ent atac que rebis serÃ  retornat";
 	//		}
 	//		
 	//	}

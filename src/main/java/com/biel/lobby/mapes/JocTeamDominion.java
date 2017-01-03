@@ -95,7 +95,7 @@ public abstract class JocTeamDominion extends JocEquips {
 		if (JocIniciat){
 			ArrayList<String> list = new ArrayList<>();
 			ArrayList<Integer> values = new ArrayList<>();
-			list.add("[Màxim]");
+			list.add("[MÃ xim]");
 			values.add(Math.round(getMaxHealth()));
 			for(Equip e : Equips){
 				try {
@@ -161,7 +161,7 @@ public abstract class JocTeamDominion extends JocEquips {
 		}
 		public void broadcastPoint(Float value, Float oldValue, Float newValue){
 			if(Utils.testPointUpDown(value, oldValue, newValue)){
-				sendGlobalMessage(ChatColor.GRAY + "L'equip " + getAdjectiuColored() + ChatColor.GRAY + " té " + Integer.toString(Math.round(health)) + "/" + Integer.toString(Math.round(getMaxHealth())) + " punts (" + Integer.toString(Math.round(getPercent())) + "%)");
+				sendGlobalMessage(ChatColor.GRAY + "L'equip " + getAdjectiuColored() + ChatColor.GRAY + " tÃ© " + Integer.toString(Math.round(health)) + "/" + Integer.toString(Math.round(getMaxHealth())) + " punts (" + Integer.toString(Math.round(getPercent())) + "%)");
 			}
 		}
 		public boolean getIntegrity(){

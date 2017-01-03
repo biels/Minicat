@@ -29,9 +29,9 @@ public class Options {
 		dBlk.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
 		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.AQUA + "Teletransportador",  ChatColor.WHITE + "Obre l'inventari de teletransport."), ply, event -> lobby.getPlugin().gest.ObrirMenuMapes(Bukkit.getPlayer(ply.getName())));
 		inventory.setItem(1, button.getItemStack());
-		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_INGOT), ChatColor.GOLD + "Ranking " + ChatColor.YELLOW + "(" + "#" + playerData.getRank() + ")",  ChatColor.WHITE + "Mostra el rànquing de jugadors.", ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + ChatColor.YELLOW + " #" + playerData.getRank()), ply, event -> Com.displayRanking(event.getPlayer()));
+		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_INGOT), ChatColor.GOLD + "Ranking " + ChatColor.YELLOW + "(" + "#" + playerData.getRank() + ")",  ChatColor.WHITE + "Mostra el rÃ nquing de jugadors.", ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + ChatColor.YELLOW + " #" + playerData.getRank()), ply, event -> Com.displayRanking(event.getPlayer()));
 		inventory.setItem(3, button3.getItemStack());
-		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_POWDER), ChatColor.BLUE + "Instàncies [BETA]", ""), ply, event -> Com.getGest().openAllGamesMenu(event.getPlayer()));
+		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_POWDER), ChatColor.BLUE + "InstÃ ncies [BETA]", ""), ply, event -> Com.getGest().openAllGamesMenu(event.getPlayer()));
 		inventory.setItem(5, button4.getItemStack());
 //		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SAPLING), ChatColor.RED + "Fast" + ChatColor.GREEN + "Survival", "Servidor sense normes, mode de joc FastSurvival", "(Cercar FastSurvival al google)"), ply, new ItemButton.OptionClickEventHandler() {
 //			@Override
@@ -51,8 +51,8 @@ public class Options {
 		ItemStack itembook = new ItemStack(Material.WRITTEN_BOOK); 
 		BookMeta book = (BookMeta) itembook.getItemMeta();
 		book.setAuthor("Minicat");
-		book.setTitle(ChatColor.YELLOW + "Informació");
-		book.addPage("Fes /o per obtenir el menú d'opcions, /l per tornar al lobby en qualsevol moment i /m per accedir a l'inventari del teletransportador. Servidor fibra òptica.");
+		book.setTitle(ChatColor.YELLOW + "InformaciÃ³");
+		book.addPage("Fes /o per obtenir el menÃº d'opcions, /l per tornar al lobby en qualsevol moment i /m per accedir a l'inventari del teletransportador. Servidor fibra Ã²ptica.");
 		//book.addPage("<Normes256.txt> craftbookEventHandler-Result;Line:142");
 		itembook.setItemMeta(book);
 		ply.getInventory().setItem(8, itembook);

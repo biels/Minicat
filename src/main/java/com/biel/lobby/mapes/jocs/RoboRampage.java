@@ -75,7 +75,7 @@ protected void setCustomGameRules() {
 			list.add(ChatColor.GREEN + Integer.toString(getMaxScrapHeight()) + " m");
 			//list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
 
-			ScoreBoardUpdater.setScoreBoard(getViewers(), "Estadístiques", list, null); //Puntuació
+			ScoreBoardUpdater.setScoreBoard(getViewers(), "EstadÃ­stiques", list, null); //PuntuaciÃ³
 		}
 	}
 	public Cuboid getBattleCuboid(boolean volumetric){

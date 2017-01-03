@@ -121,7 +121,7 @@ public abstract class JocObjectius extends JocEquips {
 					list.add(obj.getScoreboardStatusLine());
 				}
 			});
-			ScoreBoardUpdater.setScoreBoard(ply, "Estadístiques", list, null);
+			ScoreBoardUpdater.setScoreBoard(ply, "EstadÃ­stiques", list, null);
 		}
 		if (JocFinalitzat){
 			ArrayList<String> list = new ArrayList<>();
@@ -382,7 +382,7 @@ public abstract class JocObjectius extends JocEquips {
 	public class ObjectiuBlockBreak extends Objectiu{
 		public ObjectiuBlockBreak(String nom, Location l) {
 			super(nom, l, null);
-			this.verb = "destruït";
+			this.verb = "destruÃ¯t";
 		}
 		@Override
 		protected void onBlockBreak(BlockBreakEvent evt, Block blk) {

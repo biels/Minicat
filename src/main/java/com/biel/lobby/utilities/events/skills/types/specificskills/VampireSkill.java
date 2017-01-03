@@ -29,7 +29,7 @@ public class VampireSkill extends InherentSkill{
 		// TODO Auto-generated method stub
 		Double percentage = Math.round(getProtectionRatio() * 100 * 10) / 10D;
 		String percent = ChatColor.GREEN + "" + percentage + ChatColor.WHITE + "%";
-		return "Recuperes el " + percent + " de la vida m‡xima quan mates un enemic";
+		return "Recuperes el " + percent + " de la vida m√†xima quan mates un enemic";
 	}
 	private static double getProtectionRatio() {
 		// TODO Auto-generated method stub

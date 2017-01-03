@@ -59,7 +59,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "Arquer m‡gic";
+		return "Arquer m√†gic";
 	}
 
 	@Override

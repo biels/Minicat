@@ -58,9 +58,9 @@ public class LoginListener implements Listener {
 		}
 		Com.teleportPlayerToLobby(player);
 		player.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
-		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de r‡nquing basat en ELO. Ordres /elo i /top");
+		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de r√†nquing basat en ELO. Ordres /elo i /top");
 		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
-		player.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en lÌnia de fibra Úptica de baixa latËncia i 30Mb/s de velocitat de pujada.");
+		player.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en l√≠nia de fibra √≤ptica de baixa lat√®ncia i 30Mb/s de velocitat de pujada.");
 		player.sendMessage(ChatColor.AQUA + "[TELEGRAM] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
 
 		//		ply.setAllowFlight(true);
@@ -89,7 +89,7 @@ public class LoginListener implements Listener {
 		l.add("Piloteta boniquetaa");
 		l.add("Ma, manassa; pilota, pilotassa");
 		l.add("Roll da ball!!");
-		l.add("Amig¸et");
+		l.add("Amig√ºet");
 		return l;
 	}
 	@EventHandler
@@ -166,7 +166,7 @@ public class LoginListener implements Listener {
 			String lastMotd = Com.getRankingString(num);
 			evt.setMotd(lastMotd);
 		} catch (Exception e) {
-			evt.setMotd(ChatColor.GREEN + "Carregant r‡nquing...");
+			evt.setMotd(ChatColor.GREEN + "Carregant r√†nquing...");
 		}
 
 	}
@@ -198,7 +198,7 @@ public class LoginListener implements Listener {
 		boolean off = msg.contains("inves") || msg.contains("polla") || msg.contains("gilip") || msg.contains("tont") || msg.contains("retr") || msg.contains("retard");
 		if(off){
 			if(Com.isOnLobby(evt.getPlayer())){
-				if(Utils.Possibilitat(100))evt.setMessage("quin server mÈs guai!!");
+				if(Utils.Possibilitat(100))evt.setMessage("quin server m√©s guai!!");
 				if(Utils.Possibilitat(60))evt.setMessage("com mola el server!");
 				if(Utils.Possibilitat(10))evt.setMessage("sou els millors!!");
 			}else{
@@ -206,7 +206,7 @@ public class LoginListener implements Listener {
 				if(Utils.Possibilitat(40))evt.setMessage("bona partida!! :D");
 			}
 			if(Utils.Possibilitat(5))evt.setMessage("ehem.. anava a dir... millor callo xD");
-			if(Utils.Possibilitat(8))evt.setMessage("ja comenÁo a perdre els papers, no em feu gaire cas jaja");
+			if(Utils.Possibilitat(8))evt.setMessage("ja comen√ßo a perdre els papers, no em feu gaire cas jaja");
 		}
 
 	}

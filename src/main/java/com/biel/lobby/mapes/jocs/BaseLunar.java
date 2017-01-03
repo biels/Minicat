@@ -111,7 +111,7 @@ public class BaseLunar extends JocScoreRace {
 		String action = "matat";
 		if(Utils.Possibilitat(20))action = "asssssinat";
 		if(Utils.Possibilitat(25)) {
-			String[] planets =  {"mercuri", "venus", "la terra", "mart", "júpiter", "saturn", "ura", "neptú", "una altra galàxia", "les estrelles", "una altra lluna"};
+			String[] planets =  {"mercuri", "venus", "la terra", "mart", "jÃºpiter", "saturn", "ura", "neptÃº", "una altra galÃ xia", "les estrelles", "una altra lluna"};
 			String planet = Utils.getRandomArrayItem(planets);
 			action = "enviat a " + planet;
 		}
@@ -150,7 +150,7 @@ public class BaseLunar extends JocScoreRace {
 			evt.setDamage(result);
 			evt.setDamage(evt.getDamage() - 3);
 			//playEffect(p);
-			//sendSkillMessage("Reduït: " + Math.round((dmg - evt.getDamage()) * 10) / 10.0D);
+			//sendSkillMessage("ReduÃ¯t: " + Math.round((dmg - evt.getDamage()) * 10) / 10.0D);
 		}
 	}
 }
