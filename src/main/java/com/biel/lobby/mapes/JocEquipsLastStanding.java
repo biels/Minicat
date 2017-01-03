@@ -41,7 +41,7 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 		temp.add(id);
 		AliveTeamIDs.removeAll(temp);
 		//+ Cosetes
-		sendGlobalMessage("El equipo " + obtenirEquip(id).getAdjectiuColored() + ChatColor.GRAY + " ha sido destruido completamente");
+		sendGlobalMessage("L'equip " + obtenirEquip(id).getAdjectiuColored() + ChatColor.GRAY + " ha estat eliminat completament.");
 		comprovarGuanyador();
 		updateScoreBoards();
 	}
@@ -100,8 +100,8 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 		if(size == 0){
 			removeAlive(e);
 		}else{
-			sendGlobalMessage("El jugador" + e.getChatColor() + ply.getName() + ChatColor.GRAY + " ha sido eliminado");
-			sendGlobalMessage("Quedan " + Integer.toString(size) + "jugadores en el equipo " + e.getAdjectiuColored());
+			sendGlobalMessage("El jugador" + e.getChatColor() + ply.getName() + ChatColor.GRAY + " ha estat eliminat");
+			sendGlobalMessage("Queden " + Integer.toString(size) + "jugadors a l'equip " + e.getAdjectiuColored());
 		}
 	}
 	public void removeIfAlive(Player ply){

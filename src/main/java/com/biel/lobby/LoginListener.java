@@ -42,9 +42,6 @@ public class LoginListener implements Listener {
 		Player player = event.getPlayer();
 		String name = player.getName();
 		Com.getDataAPI().registerNewPlayer(player);
-		if(name.contains("lucas") || name.contains("pecas") || name.contains("pecas")){
-			return;
-		}
 		if(name.contains("amiguet") || name.equalsIgnoreCase("amiguet")){
 			World w = lobby.getLobbyWorld();			
 			Slime s = (Slime) w.spawnEntity(w.getSpawnLocation().add(0, 2, 0), EntityType.SLIME);
@@ -191,7 +188,7 @@ public class LoginListener implements Listener {
 		msg = msg.replaceAll("ping", "ping pong");
 		msg = msg.replaceAll("bug", "escarbat");
 		msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
-		msg = msg.replaceAll("En fi", "En fi (copyright JoniMega)");
+		msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
 		msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
 		if(evt.getPlayer().getName().contains("amiguet"))msg = msg.replaceAll("calla", "sii soc molt grossa!");
 		evt.setMessage(msg);
