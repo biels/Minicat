@@ -142,8 +142,10 @@ public class RainbowClay extends JocObjectius {
 		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 		items.add(arc);
 		
+		double balancingMultiplier = getBalancingMultiplier(e);
+		
 		int launchers = (int) (8 * balancingMultiplier);
-		if(launchers > 64)launchers = 64;
+		if(launchers > 64) launchers = 64;
 		items.add(getSnowLauncher(launchers));
 		
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
@@ -152,8 +154,8 @@ public class RainbowClay extends JocObjectius {
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		
 		ItemStack pickaxe = new ItemStack(Material.DIAMOND_PICKAXE, 1);
-		double balancingMultiplier = getBalancingMultiplier(e);
-		if(balancingMultiplier > 1)pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
+
+		if(balancingMultiplier > 1) pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
 		items.add(pickaxe);
 		
 		int arrows = (int) (50 * balancingMultiplier);
@@ -217,10 +219,7 @@ public class RainbowClay extends JocObjectius {
 			evt.setCancelled(true);
 			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots modificar la llana";
 			BountifulAPI.sendActionBar(ply, msg, 150);
-
-		
-		
-		
+		}
 	}	
 	
 	@Override

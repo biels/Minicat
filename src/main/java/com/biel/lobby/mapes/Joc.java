@@ -500,6 +500,7 @@ public abstract class Joc extends MapaResetejable {
 		if(percent < 40)color = ChatColor.YELLOW;
 		if(percent < 25)color = ChatColor.RED;
 		if(percent < 15)color = ChatColor.DARK_RED;
+		if(ply.getHealth() > 20) color = ChatColor.GOLD;
 		String r = color + "";
 		for (int i = 0; i < n; i++) {
 			if(i == colorPoint){r += ChatColor.GRAY;}
