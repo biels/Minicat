@@ -1304,7 +1304,7 @@ ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.ge
 		}
 		public void updatePlayerActionBar(){
 			if (getPlayer() == null)return;
-			ActionBarAPI.sendActionBar(getPlayer(), getStatusEffectsText());
+			// ActionBarAPI.sendActionBar(getPlayer(), getStatusEffectsText());
 		}
 		public int getAdditionalSkills() {
 			return additionalSkills;
