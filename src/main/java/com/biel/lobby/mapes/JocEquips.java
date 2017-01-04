@@ -313,23 +313,24 @@ public abstract class JocEquips extends Joc {
 		Boolean first = true;
 		String message = "";
 		for (Equip e : Equips){
+			
 			//VS
-			String vsMsg = ChatColor.GOLD + "VS";
+			String vsMsg = ChatColor.GOLD + "\n    =====[VS]=====";
 			if (!first){
-				message = message + vsMsg;
-				message = message + " ";
+				message = message + vsMsg + "\n";
 			}
+			
 			//Team Color
-			if(e == winner)message = message + ChatColor.BOLD + " --> ";
+			if(e == winner) message = message + ChatColor.BOLD + " --> ";
 			message = message + e.getChatColor();
-			for (Player p : e.getPlayers()){
-				message = message + p.getName() + " ";
+			if(getBalancingMultiplier(e) != 1) {
+				message = message + "\n     <" + getBalancingMultiplier(e) + ">\n";
 			}
-			if (e.getPlayers().size() == 0){
-				message = message + "[-]";
+			for (Player p : e.getPlayers()) {
+				message = message + "     >  " + p.getName() + " ";
 			}
-			if(getBalancingMultiplier(e) != 1){
-				message = message + "<" + getBalancingMultiplier(e) + ">";
+			if (e.getPlayers().size() == 0) {
+				message = message + "     [-]";
 			}
 			if(e == winner)message = message + ChatColor.BOLD + " <-- ";
 			first = false;

@@ -285,6 +285,7 @@ public class Spleef extends JocLastStanding {
 				PlayerMoveEvent evt = (PlayerMoveEvent)event;
 				if (p.getLocation().getBlockY() < 6 && JocIniciat == true){
 					p.getInventory().clear();
+					p.setHealth(20);
 					removeIfAlive(p); 		 
 				}		
 
