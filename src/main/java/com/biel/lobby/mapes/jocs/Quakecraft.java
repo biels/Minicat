@@ -136,9 +136,7 @@ public class Quakecraft extends JocScoreRace {
 	@Override
 	protected void onPlayerInteract(PlayerInteractEvent e, Player p) {
 		updateBar(p);
-		if (e.getPlayer().getItemInHand().getType().name().endsWith("_HOE")
-				&& (e.getAction() == Action.RIGHT_CLICK_AIR || e
-				.getAction() == Action.RIGHT_CLICK_BLOCK)) {
+		if (e.getPlayer().getItemInHand().getType().name().endsWith("_HOE") && (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
 			Vector direction = p.getLocation().getDirection();
 			if (pReloadRocket.get(e.getPlayer().getName()) != null) {
 				long tTransc = System.currentTimeMillis()
@@ -158,7 +156,7 @@ public class Quakecraft extends JocScoreRace {
 					pReloadRocket.put(p.getName(),
 							System.currentTimeMillis());
 					//railgunHitPlace(p, arrow);
-				}else{
+				} else {
 					p.playSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1, 1);
 
 				}
@@ -400,7 +398,12 @@ public class Quakecraft extends JocScoreRace {
 		// TODO Auto-generated method stub
 		super.onPlayerMove(evt, p);
 		updateBar(p);
-
+		
+		if(evt.getTo().getY() < 0) {
+			
+			p.setHealth(0);
+			
+		}
 	}
 	@Override
 	protected void onPlayerMoveDistributed(PlayerMoveEvent evt, Player p) {
