@@ -1,12 +1,16 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
+import java.util.Random;
 
+import com.biel.BielAPI.Utils.GUtils;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
@@ -52,12 +56,24 @@ public class OneInTheChamber extends JocScoreRace {
 		items.add(new ItemStack(Material.IRON_SWORD));
 		items.add(new ItemStack(Material.BOW));
 		items.add(new ItemStack(Material.ARROW));
-		@SuppressWarnings("deprecation")
+        int hashCode = ply.getName().hashCode();
+        Random random = new Random(hashCode);
+        Color color1 = Color.fromBGR(random.nextInt(255), random.nextInt(255), random.nextInt(255));
+        Color color2 = getContrastColor(color1);
+        items.add(GUtils.createColoredArmor(Material.LEATHER_HELMET, color2));
+        items.add(GUtils.createColoredArmor(Material.LEATHER_CHESTPLATE, color1));
+        items.add(GUtils.createColoredArmor(Material.LEATHER_LEGGINGS, color2));
+        items.add(GUtils.createColoredArmor(Material.LEATHER_BOOTS, color1));
+        @SuppressWarnings("deprecation")
 		Potion p1 = new Potion(PotionType.INSTANT_DAMAGE);
 		p1.setSplash(true);
 		items.add(p1.toItemStack(1));
 		return items;
 	}
+    public static Color getContrastColor(Color color) {
+        double y = (299 * color.getRed() + 587 * color.getGreen() + 114 * color.getBlue()) / 1000;
+        return y >= 128 ? Color.BLACK : Color.WHITE;
+    }
 	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed,
 			Player killer) {
 		super.onPlayerDeathByPlayer(evt, killed, killer);
@@ -70,6 +86,11 @@ public class OneInTheChamber extends JocScoreRace {
 			boolean ranged){
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
 		if(ranged)damaged.damage(1000);
+	}
+	@Override
+	protected void onPlayerRespawn(PlayerRespawnEvent evt, Player p) {
+		super.onPlayerRespawn(evt, p);
+		teleportToRandomSpawn(p);
 	}
 
 }
