@@ -2,6 +2,7 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 
+import org.bukkit.Color;
 import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -54,7 +55,12 @@ public class PilotaSplash extends JocScoreRace {
 		ItemStack item = new ItemStack(Material.SLIME_BALL, 1);
 		item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 2);
 		items.add(GUtils.setItemNameAndLore(item, "Puny de pilota", "Pilotassa"));
-		
+		Color color1 = getDeterministicColorForPlayer(ply, false);
+		Color color2 = getDeterministicColorForPlayer(ply, true);
+		items.add(GUtils.createColoredArmor(Material.LEATHER_HELMET, Color.GREEN));
+		items.add(GUtils.createColoredArmor(Material.LEATHER_CHESTPLATE, color1));
+		items.add(GUtils.createColoredArmor(Material.LEATHER_LEGGINGS, color2));
+		items.add(GUtils.createColoredArmor(Material.LEATHER_BOOTS, color1));
 		return items;
 	}
 	public ItemStack getMagnusLauncherItem(){

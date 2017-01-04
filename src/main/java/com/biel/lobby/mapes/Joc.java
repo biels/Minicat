@@ -6,16 +6,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
-import org.bukkit.Effect;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
@@ -1413,5 +1407,12 @@ ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.ge
 		// TODO Auto-generated method stub
 		return super.verifyEvent(evt) && !EventUtils.interactsWithAny(evt, getSpectators(), 6);
 	}
-	
+
+	protected Color getDeterministicColorForPlayer(Player p, boolean alternate){
+		int hashCode = p.getName().hashCode();
+		Random random = new Random(hashCode);
+		Color color1 = Color.fromBGR(random.nextInt(255), random.nextInt(255), random.nextInt(255));
+		Color color2 = GUtils.getContrastColor(color1);
+		return alternate ? color2 : color1;
+	}
 }

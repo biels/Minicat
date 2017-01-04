@@ -56,10 +56,8 @@ public class OneInTheChamber extends JocScoreRace {
 		items.add(new ItemStack(Material.IRON_SWORD));
 		items.add(new ItemStack(Material.BOW));
 		items.add(new ItemStack(Material.ARROW));
-        int hashCode = ply.getName().hashCode();
-        Random random = new Random(hashCode);
-        Color color1 = Color.fromBGR(random.nextInt(255), random.nextInt(255), random.nextInt(255));
-        Color color2 = getContrastColor(color1);
+        Color color1 = getDeterministicColorForPlayer(ply, false);
+        Color color2 = getDeterministicColorForPlayer(ply, true);
         items.add(GUtils.createColoredArmor(Material.LEATHER_HELMET, color2));
         items.add(GUtils.createColoredArmor(Material.LEATHER_CHESTPLATE, color1));
         items.add(GUtils.createColoredArmor(Material.LEATHER_LEGGINGS, color2));
@@ -70,10 +68,7 @@ public class OneInTheChamber extends JocScoreRace {
 		items.add(p1.toItemStack(1));
 		return items;
 	}
-    public static Color getContrastColor(Color color) {
-        double y = (299 * color.getRed() + 587 * color.getGreen() + 114 * color.getBlue()) / 1000;
-        return y >= 128 ? Color.BLACK : Color.WHITE;
-    }
+
 	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed,
 			Player killer) {
 		super.onPlayerDeathByPlayer(evt, killed, killer);

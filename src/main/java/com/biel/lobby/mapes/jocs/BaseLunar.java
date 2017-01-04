@@ -3,6 +3,7 @@ package com.biel.lobby.mapes.jocs;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import com.biel.BielAPI.Utils.GUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -50,9 +51,11 @@ public class BaseLunar extends JocScoreRace {
 		items.add(new ItemStack(Material.ARROW, 50));
 		items.add(getSnowLauncher(10));
 		//Glass
+		Color color1 = getDeterministicColorForPlayer(ply, false);;
+		items.add(GUtils.createColoredArmor(Material.LEATHER_HELMET, color1));
 		items.add(Utils.createColoredArmor(Material.LEATHER_CHESTPLATE, Color.WHITE));
-		items.add(Utils.createColoredArmor(Material.LEATHER_LEGGINGS, Color.WHITE));
-		items.add(Utils.createColoredArmor(Material.LEATHER_BOOTS, Color.BLUE));
+		items.add(Utils.createColoredArmor(Material.LEATHER_LEGGINGS, Color.BLUE));
+		items.add(Utils.createColoredArmor(Material.LEATHER_BOOTS, Color.WHITE));
 		return items;
 	}
 	@Override

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.biel.BielAPI.Utils.GUtils;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -82,6 +84,12 @@ public class Spleef extends JocLastStanding {
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
+		Color color1 = getDeterministicColorForPlayer(ply, false);
+		Color color2 = getDeterministicColorForPlayer(ply, true);
+		items.add(GUtils.createColoredArmor(Material.LEATHER_HELMET, color2));
+		items.add(GUtils.createColoredArmor(Material.LEATHER_CHESTPLATE, color1));
+		items.add(GUtils.createColoredArmor(Material.LEATHER_LEGGINGS, color2));
+		items.add(GUtils.createColoredArmor(Material.LEATHER_BOOTS, color1));
 		return items;
 	}
 
