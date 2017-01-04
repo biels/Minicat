@@ -15,7 +15,13 @@ repositories {
 jar {
 
 }
-
+def defaultEncoding = 'UTF-8'
+compileJava{
+    options.encoding = defaultEncoding
+}
+compileTestJava{
+    options.encoding = defaultEncoding
+}
 dependencies {
 
     //Enable if you have BielAPI installed on maven local

@@ -22,7 +22,7 @@
     <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/mapes/jocs/Torres.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/Options.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/ScoreBoardUpdater.java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/Turret.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/Turret.java" charset="ISO-8859-1" />
     <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/SkillPool.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/CalciumSourceSkill.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/DeflectorSkill.java" charset="UTF-8" />
