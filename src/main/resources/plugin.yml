@@ -1,5 +1,6 @@
 name: lobby
 main: com.biel.lobby.lobby
+description: Main plugin for the minicat (1.0) server.
 depend:
 - BielAPI
 loadBefore:
@@ -19,8 +20,8 @@ commands:
     description: Mostra l'inventari del teletransportador.
     usage: /m
   a:
-    description: Mostra l'inventari del teletransportador.
-    usage: /m
+    description: Mostra totes les partides en curs.
+    usage: /a
   l:
     description: Retorna el jugador al lobby.
     usage: /l
@@ -38,13 +39,13 @@ commands:
     usage: /s
   elo:
     description: Mostra l'elo actual.
-    usage: /s
+    usage: /elo
   top:
     description: Mostra el top de jugadors.
-    usage: /s
+    usage: /top
   ranking:
     description: Mostra el top de jugadors.
-    usage: /s
+    usage: /ranking
   prog:
     description: Progres estimat de la partida (ETA).
     usage: /prog
