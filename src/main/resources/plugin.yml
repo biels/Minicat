@@ -2,6 +2,8 @@ name: lobby
 main: com.biel.lobby.lobby
 depend:
 - BielAPI
+loadBefore:
+- AuthMe
 version: 1.3
 commands:
   prova:
