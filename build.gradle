@@ -30,3 +30,12 @@ dependencies {
     //Enable to use automatic download, when avaliable
     //compile 'org.spigotmc:spigot-api:1.10-R0.1-SNAPSHOT'
 }
+
+task deploy(type: Copy){
+
+    from('build/libs') {
+        include '**/*.jar'
+    }
+    into 'D:\\Servers MC\\Lobby - 1.9\\plugins'
+}
+deploy.dependsOn assemble
