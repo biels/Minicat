@@ -31,8 +31,13 @@ public abstract class Mapa extends WorldEventBus{
 		if(isWorldLoaded())setWorld(getWorld());
 	}
 	public  abstract  String getGameName(); //GameName
+	
 	protected Boolean isWorldLoaded(){
         return Bukkit.getWorld(NomWorld) != null;
+	}
+	
+	public String getGameDisplayName() {
+		return ChatColor.GOLD + "[" + ChatColor.AQUA + getGameName() + ChatColor.GOLD + "] " + ChatColor.GRAY;
 	}
 
 	public void Join(Player ply){
@@ -42,8 +47,18 @@ public abstract class Mapa extends WorldEventBus{
 		}
 		ply.teleport(world.getSpawnLocation(), TeleportCause.PLUGIN);
 		ply.setBedSpawnLocation(world.getSpawnLocation(), true);
-		Bukkit.broadcastMessage(ply.getName() + " ha entrat a " + getGameName() + " (" + NomWorld + ")");
+		
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			
+			if (lobby.isOnLobby(p)) {
+				
+				p.sendMessage(ChatColor.GRAY + ply.getName() + " ha entrat a " + getGameName() + " (" + NomWorld + ")");
+			}
+			
+		}
 		ply.getInventory().clear();
+		
+		
 		Com.setSuffix(ply, "");
 		customJoin(ply);
 	}
@@ -58,7 +73,7 @@ public abstract class Mapa extends WorldEventBus{
 		customLeave(ply, attatchments);
 		String endStr = StringUtils.join(attatchments, " ");
 		
-		Bukkit.broadcastMessage(ChatColor.YELLOW + ply.getName() + ChatColor.GRAY + " ha abandonat " + ChatColor.DARK_AQUA + getGameName() + " " + endStr);
+		Bukkit.broadcastMessage(getGameDisplayName() + ply.getName() + ChatColor.GRAY + " ha abandonat la partida");
 		
 	}
 	@Override
