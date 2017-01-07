@@ -68,7 +68,6 @@ public class OneInTheChamber extends JocScoreRace {
 		items.add(p1.toItemStack(1));
 		return items;
 	}
-
 	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed,
 			Player killer) {
 		super.onPlayerDeathByPlayer(evt, killed, killer);
@@ -83,9 +82,8 @@ public class OneInTheChamber extends JocScoreRace {
 		if(ranged)damaged.damage(1000);
 	}
 	@Override
-	protected void onPlayerRespawn(PlayerRespawnEvent evt, Player p) {
-		super.onPlayerRespawn(evt, p);
+	protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {
+		super.onPlayerRespawnAfterTick(evt, p);
 		teleportToRandomSpawn(p);
 	}
-
 }
