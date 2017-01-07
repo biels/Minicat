@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.Sound;
 import org.bukkit.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -118,6 +119,13 @@ public abstract class Mapa extends WorldEventBus{
 			p.sendMessage(message);
 		}
 	}
+	
+	public void sendGlobalSound(Sound sound, float volume, float pitch){
+		for (Player p : world.getPlayers()){
+			p.playSound(p.getLocation(), sound, volume, pitch);
+		}
+	}
+	
 	public void sendPlayerMessage(Player p, String message) {		
 		p.sendMessage(message);
 	}

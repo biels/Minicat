@@ -265,7 +265,7 @@ public class TntWars extends JocEquips {
 				       String regEnemicCore = "RegT" + (ownerTeam.getId() + 1) +"0";
 				       
 				       // Cuboid ownerCore = pMapaActual().ObtenirCuboid(regOwnerCore, getWorld());
-				       // Cuboid enemicCore = pMapaActual().ObtenirCuboid(regEnemicCore, getWorld());
+				       Cuboid enemicCore = pMapaActual().ObtenirCuboid(regEnemicCore, getWorld());
 				       
 				       ArrayList<Block> rem = new ArrayList<>();
 				       Integer destroyedEnemyBlocks = 0;
