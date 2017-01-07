@@ -100,11 +100,11 @@ public class TntWars extends JocEquips {
 		
 		// Start the things
 		
-//		Cuboid team0Core = pMapaActual().ObtenirCuboid("RegT10", getWorld());
-//	    Cuboid team1Core = pMapaActual().ObtenirCuboid("RegT20", getWorld());
-//	    
-//	    this.team0CoreTotal = team0Core.getVolume();
-//	    this.team1CoreTotal = team1Core.getVolume();
+		Cuboid team0Core = pMapaActual().ObtenirCuboid("RegT10", getWorld());
+	    Cuboid team1Core = pMapaActual().ObtenirCuboid("RegT20", getWorld());
+	    
+	    this.team0CoreTotal = team0Core.getVolume();
+	    this.team1CoreTotal = team1Core.getVolume();
 	    
 	}
 	
@@ -262,7 +262,7 @@ public class TntWars extends JocEquips {
 				       Equip ownerEnemic = obtenirEquipEnemic(owner);
 				       
 				       // String regOwnerCore = "RegT" + (ownerTeam.getId() + 1) +"0";
-				       String regEnemicCore = "RegT" + (ownerTeam.getId() + 1) +"0";
+				       String regEnemicCore = "RegT" + (ownerEnemic.getId() + 1) +"0";
 				       
 				       // Cuboid ownerCore = pMapaActual().ObtenirCuboid(regOwnerCore, getWorld());
 				       Cuboid enemicCore = pMapaActual().ObtenirCuboid(regEnemicCore, getWorld());
@@ -295,9 +295,10 @@ public class TntWars extends JocEquips {
 				    	   }
 				    	   
 				    	   Integer destroyRatio = (destroyedEnemyBlocks / totalToDestroy) * 100;
+				    	   Integer left = team0CoreTotal - team0CoreDestruit;
 				    	   
 				    	   sendGlobalMessage("Team 0: " + team0CoreDestruit + " Team 1: " + team1CoreDestruit);
-				    	   sendGlobalMessage(getGameDisplayName() +  owner.getName() + " ha destruit el core enemic en un " + destroyRatio + "%");
+				    	   sendGlobalMessage(getGameDisplayName() +  owner.getName() + " ha destruit el core enemic en un " + destroyRatio + "% (" + team0CoreDestruit + " / " + left +")");
 				    	   sendGlobalSound(Sound.ENTITY_FIREWORK_TWINKLE, 100, 0);
 				    	   
 				    	   
