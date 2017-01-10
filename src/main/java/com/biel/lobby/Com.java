@@ -45,10 +45,7 @@ public class Com {
 		return getPlugin().dataAPI;
 	}
 	public static void teleportPlayerToLobby(Player p){
-		Mapa m = getGest().getMapWherePlayerIs(p);
-		if(m!=null){
-			m.Leave(p);
-		}
+		registerPlayerLeavingCurrentMap(p);
 		com.biel.lobby.utilities.Utils.clearPlayer(p);
 		p.teleport(getLobbyWorld().getSpawnLocation());
 		p.setDisplayName(p.getName());
@@ -66,6 +63,14 @@ public class Com {
         }, 2);
 		playMinicatAnimation(p);
 	}
+
+	private static void registerPlayerLeavingCurrentMap(Player p) {
+		Mapa m = getGest().getMapWherePlayerIs(p);
+		if(m!=null){
+			m.Leave(p);
+		}
+	}
+
 	public static Boolean isOnLobby(Player ply){
 		return getLobbyWorld().getPlayers().contains(ply);
 	}
