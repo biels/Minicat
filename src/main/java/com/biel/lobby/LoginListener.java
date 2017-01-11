@@ -41,75 +41,20 @@ public class LoginListener implements Listener {
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
 		String name = player.getName();
+		
 		Com.getDataAPI().registerNewPlayer(player);
-		if(name.contains("amiguet") || name.equalsIgnoreCase("amiguet")){
-			World w = lobby.getLobbyWorld();			
-			Slime s = (Slime) w.spawnEntity(w.getSpawnLocation().add(0, 2, 0), EntityType.SLIME);
-			String pilofrase = GUtils.getRandomListItem(getPilofrases());
-			Com.sendLobbyMessage(pilofrase);
-			s.setCustomName("Pilota");
-			s.setCustomNameVisible(true);
-			s.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * Utils.NombreEntre(1, 9), 2));
-			player.setPassenger(s);
-			//s.setHealth(1);
-		}
 		Com.teleportPlayerToLobby(player);
-		player.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
-		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de rànquing basat en ELO. Ordres /elo i /top");
-		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
-		player.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
-		player.sendMessage(ChatColor.AQUA + "[TELEGRAM] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
+		
+		
+//		//player.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
+//		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de rànquing basat en ELO. Ordres /elo i /top");
+//		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
+//		player.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
+//		player.sendMessage(ChatColor.AQUA + "[TELEGRAM] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
 
-		//		ply.setAllowFlight(true);
-		//		ply.setCanPickupItems(false);
-		//		ply.setFlying(true);
-		//		if(ply.getName().equalsIgnoreCase("123dani") || ply.getName().equalsIgnoreCase("adria")){
-		//			event.setJoinMessage(ChatColor.RED + "" + ChatColor.BOLD + "Un faggot s'ha connectat");
-		//		}
-		//		if(ply.getName().equalsIgnoreCase("Martinosky")){
-		//			event.setJoinMessage(ChatColor.BLUE + "" + ChatColor.BOLD + "El RUC s'ha connectat");
-		//		}
-		//		if(ply.getName().equalsIgnoreCase("amiguet")){
-		//			event.setJoinMessage("La pilota ha rodolat");
-		//		}
-		////		if(ply.getName().equalsIgnoreCase("_tor3k4_")){
-		////			event.setJoinMessage(ChatColor.RED + "" + ChatColor.BOLD + "OC.TC rules (Toni OP)");
-		////		}
-		//		if(ply.getName().equalsIgnoreCase("BielCAT")){
-		//			event.setJoinMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "El creador s'ha connectat!");
-		//		}
+		player.setCanPickupItems(false);
+		
 	}
-	public ArrayList<String> getPilofrases(){
-		ArrayList<String> l = new ArrayList<>();
-		l.add("Piloteta rodoneta");
-		l.add("La pizza, la pizza, es crema la pizza");
-		l.add("Piloteta boniquetaa");
-		l.add("Ma, manassa; pilota, pilotassa");
-		l.add("Roll da ball!!");
-		l.add("Amigüet");
-		return l;
-	}
-	@EventHandler
-	public void autoRespawn(PlayerDeathEvent e)	{
-		//		 if ((e.getEntity() instanceof Player)) {
-		//	          Player p = e.getEntity();
-		//	          p.setHealth(p.getMaxHealth());
-		//	          p.teleport(p.getWorld().getSpawnLocation());
-		//	        }
-		//	}
-		//		final Player player = e.getEntity();
-		//		Bukkit.getScheduler().scheduleSyncDelayedTask(lobby.getPlugin(), new Runnable(){ public void run() {
-		//			if(player.isDead()){
-		//				((CraftPlayer) player).getHandle().playerConnection.a(new PacketPlayInClientCommand(EnumClientCommand.PERFORM_RESPAWN));
-		//			}
-		//
-		//
-		//		}}, 5);
-	}
-	//	@EventHandler
-	//	public void autoRespawn(PlayerDeathEvent e)	{
-	//		
-	//	}
 	@EventHandler
 	public void onFoodChange(FoodLevelChangeEvent e) {
 
@@ -167,10 +112,7 @@ public class LoginListener implements Listener {
 		}
 
 	}
-	@EventHandler
-	public void onPlayerChatEvent(PlayerChatEvent evt) {
 
-	}
 	@EventHandler
 	public void onPlayerChatEvent(AsyncPlayerChatEvent evt) {
 		String msg = evt.getMessage();
@@ -187,13 +129,11 @@ public class LoginListener implements Listener {
 		msg = msg.replaceAll("l ag", "gr eix");
 		msg = msg.replaceAll("ping", "ping pong");
 		msg = msg.replaceAll("bug", "escarbat");
-		msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
+		msg = msg.replaceAll("en fi", "en fi (copyright JoniMega)");
 		msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
 		msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
-		if(evt.getPlayer().getName().contains("amiguet"))msg = msg.replaceAll("calla", "sii soc molt grossa!");
 		evt.setMessage(msg);
-		boolean off = msg.contains("inves") || msg.contains("polla") || msg.contains("gilip") || msg.contains("tont") || msg.contains("retr") || msg.contains("retard");
-		if(off){
+		if(msg.contains("inves") || msg.contains("polla") || msg.contains("gilip") || msg.contains("tont") || msg.contains("retr") || msg.contains("retard")){
 			if(Com.isOnLobby(evt.getPlayer())){
 				if(Utils.Possibilitat(100))evt.setMessage("quin server més guai!!");
 				if(Utils.Possibilitat(60))evt.setMessage("com mola el server!");
@@ -204,6 +144,8 @@ public class LoginListener implements Listener {
 			}
 			if(Utils.Possibilitat(5))evt.setMessage("ehem.. anava a dir... millor callo xD");
 			if(Utils.Possibilitat(8))evt.setMessage("ja començo a perdre els papers, no em feu gaire cas jaja");
+			if(Utils.Possibilitat(3))evt.setMessage("lluiscab we love u");
+
 		}
 
 	}

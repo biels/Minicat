@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.Map;
+import java.text.DecimalFormat;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -48,7 +49,7 @@ import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
 import com.connorlinfoot.bountifulapi.BountifulAPI;
-
+import com.biel.lobby.utilities.ScoreBoardUpdater;
 
 public class TntWars extends JocEquips {
 	
@@ -149,8 +150,7 @@ public class TntWars extends JocEquips {
 		} else {
 		    long now = System.currentTimeMillis();
 		    long time = tntCooldown.get(player.getUniqueId());
-		    long cooldown = now - time;
-		    cooldown = 3 - cooldown;		
+		    long cooldown = now - time;		
 		    return (cooldown);
 		}
 	}
@@ -186,6 +186,8 @@ public class TntWars extends JocEquips {
 		
 		items.add(new ItemStack(Material.IRON_SWORD, 1));
 		items.add(new ItemStack(Material.TNT, 1));
+		
+		updateScoreBoard(ply);
 		
 		return items;
 	}
@@ -294,13 +296,20 @@ public class TntWars extends JocEquips {
 				    		   team0CoreDestruit = team0CoreDestruit + destroyedEnemyBlocks;
 				    	   }
 				    	   
-				    	   Integer destroyRatio = (destroyedEnemyBlocks / totalToDestroy) * 100;
-				    	   Integer left = team0CoreTotal - team0CoreDestruit;
 				    	   
-				    	   sendGlobalMessage("Team 0: " + team0CoreDestruit + " Team 1: " + team1CoreDestruit);
-				    	   sendGlobalMessage(getGameDisplayName() +  owner.getName() + " ha destruit el core enemic en un " + destroyRatio + "% (" + team0CoreDestruit + " / " + left +")");
+				    	   
+				    	   Double destroyRatio = ((double)destroyedEnemyBlocks / totalToDestroy) * 100.F;
+				    	   destroyRatio = Math.floor(destroyRatio * 100) / 100.F;
+				    	   
+				    	   sendGlobalMessage(getGameDisplayName() +  owner.getName() + " ha destruit el core enemic en un " + destroyRatio + "%");
 				    	   sendGlobalSound(Sound.ENTITY_FIREWORK_TWINKLE, 100, 0);
 				    	   
+				    	   for(Player p: getPlayers()) {
+				    		   
+				    		   updateScoreBoard(p);
+				    	   }
+				    	   
+				    	  
 				    	   
 				       }
 				       
@@ -320,6 +329,46 @@ public class TntWars extends JocEquips {
 			
 		}
 		
+	}
+	
+	@Override
+	protected void updateScoreBoard(Player ply) {
+		super.updateScoreBoard(ply);
+			
+			ArrayList<String> list = new ArrayList<>();
+			
+			// list.add("  ");
+			
+			for (Equip e : Equips) {
+				
+				Integer id = e.getId();
+				
+				Integer total = 0;
+				Integer destruit = 0;
+				
+				if (id == 1) {
+					total = team1CoreTotal;
+					destruit = team1CoreDestruit;
+				} else {
+					total = team0CoreTotal;
+					destruit = team0CoreDestruit;		
+				}	
+			    				
+		    	Double destroyRatio = ((double)destruit / total) * 100.F;
+		    	
+		    	destroyRatio = Math.floor(destroyRatio);
+		    	destroyRatio = 100 - destroyRatio;
+		    	
+		    	if(id == 1)	list.add(e.getChatColor() + "Equip " + e.getAdjectiu() + "       " + ChatColor.GRAY + destroyRatio + "% ");
+		    	else list.add(e.getChatColor() + "Equip " + e.getAdjectiu() + "   " + ChatColor.GRAY + destroyRatio + "% ");
+
+		    	// if(id == 1)list.add("   ");
+		    	// else list.add("    ");
+			}
+			// list.add("     ");
+			list.add(ChatColor.ITALIC + "by lluiscab");
+			ScoreBoardUpdater.setScoreBoard(ply, "TntWars", list, null);
+
 	}
 
 }
