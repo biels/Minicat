@@ -38,7 +38,6 @@ public abstract class JocObjectius extends JocEquips {
 	//		return (EquipObjectius) super.obtenirEquip(id);
 	//	}
 
-	@Override
 	public void initTeams() {
 		super.initTeams();
 		for (Equip e : Equips){
