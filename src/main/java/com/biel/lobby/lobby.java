@@ -1,7 +1,5 @@
 package com.biel.lobby;
 
-
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -12,7 +10,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-
 
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
@@ -45,14 +42,12 @@ public final class lobby extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 		Player ply = (Player) sender;
 		if(cmd.getName().equalsIgnoreCase("m")){
-			//ObsidianDefenders joc = new ObsidianDefenders();
-			//joc.Join(ply);
+
 			gest.ObrirMenuMapes(ply);
 			return true;
 		}
 		if(cmd.getName().equalsIgnoreCase("r")){
-			//ObsidianDefenders joc = new ObsidianDefenders();
-			//joc.Join(ply);
+
 			if(!args[0].equals("1")) return false;
 			ranked = !ranked;
 			Bukkit.broadcastMessage("Transferència d'elo " + (ranked ? "activada" : "desactivada"));
@@ -146,6 +141,34 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("top") || cmd.getName().equalsIgnoreCase("ranking")){
 			Com.displayRanking(ply);
 			return true;
+		}
+		
+		if(cmd.getName().equalsIgnoreCase("discord")){
+			// Autenticar el jugador amb discord.
+			
+			if (args.length == 1){
+				// Check if args[0] és un token valid
+				if(args[0].length() == 6) {
+					
+					try {
+						int token = Integer.parseInt(args[0]);
+						// TO DO: Query the server for auth. Send the user uuid
+						ply.sendMessage('Hola ;)');
+					} catch (NumberFormatException e) {
+						ply.sendMessage('Token no valid');
+					}
+					
+					return true;
+					
+				} else {
+					ply.sendMessage('Token no valid');	
+				}
+				
+			} else {
+				ply.sendMessage('Verificació amb discord. Us de la comanda:' + ChatColor.GRAY + '/discord <token>');
+				return true;
+			}
+			
 		}
 
 		if(cmd.getName().equalsIgnoreCase("prog")){
