@@ -85,7 +85,8 @@ public class PilotaSplash extends JocScoreRace {
 		super.onPlayerDamage(evt, p);
 		if(evt.getCause() == DamageCause.FALL){
 			evt.setCancelled(true);
-			GUtils.healDamageable(p, 1.0);
+			GUtils.healDamageable(p, 1.5);
+			GUtils.getNearbyEnemies(p, 3.0 + getSpree(p) * 0.2, false).forEach(e -> e.damage(evt.getDamage() * 0.4 + 4 + getSpree(p) * 0.3));
 			getWorld().playSound(p.getLocation(), (evt.getDamage() > 4 ? Sound.BLOCK_SLIME_HIT : Sound.BLOCK_SLIME_STEP), 1F, 1F);			
 		}
 	}
