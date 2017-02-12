@@ -47,7 +47,6 @@ import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.Com;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
-import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.utilities.Turret;
 import com.biel.lobby.utilities.Turret.TipusMillora;
 import com.biel.lobby.utilities.Utils;
@@ -129,7 +128,13 @@ public class Torres extends JocEquips {
 			if(!alive)winGame(obtenirEquipEnemic(e));
 		}
 	}
-
+	boolean getTNTEnabled(){
+		boolean b = true;
+		if(pMapaActual().ExisteixPropietat("TNTEnabled")){
+			b = pMapaActual().ObtenirPropietat("TNTEnabled").equalsIgnoreCase("true");
+		}
+		return b;
+	}
 
 	public ArrayList<Location> getInhibitors(Equip e) {
 		return pMapaActual().ObtenirLocations("inhibitors" + e.getId(), getWorld());
@@ -463,7 +468,8 @@ public class Torres extends JocEquips {
 
 			}
 		}
-		ItemStack arc = (GUtils.Possibilitat(64) ? getTurretItem() : new ItemStack(Material.TNT, 1));
+		int percentatge = getTNTEnabled() ? 64: 100;
+		ItemStack arc = (GUtils.Possibilitat(percentatge) ? getTurretItem() : new ItemStack(Material.TNT, 1));
 		if (killer != null) {
 			if (obtenirEquip(killer) != obtenirEquip(killed)) {
 				killer.getInventory().addItem(arc);
