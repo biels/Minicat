@@ -4,10 +4,10 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.*;
 import org.bukkit.event.player.*;
@@ -31,8 +31,13 @@ public abstract class Mapa extends WorldEventBus{
 		if(isWorldLoaded())setWorld(getWorld());
 	}
 	public  abstract  String getGameName(); //GameName
+	
 	protected Boolean isWorldLoaded(){
         return Bukkit.getWorld(NomWorld) != null;
+	}
+	
+	public String getGameDisplayName() {
+		return ChatColor.GOLD + "[" + ChatColor.AQUA + getGameName() + ChatColor.GOLD + "] " + ChatColor.GRAY;
 	}
 
 	public void Join(Player ply){
@@ -40,14 +45,20 @@ public abstract class Mapa extends WorldEventBus{
 			ply.sendMessage("Acció invàlida: no pots entrar");
 			return;
 		}
-        Mapa mapWherePlayerIs = Com.getGest().getMapWherePlayerIs(ply);
-        if(mapWherePlayerIs != null){
-		   mapWherePlayerIs.Leave(ply);
-        }
 		ply.teleport(world.getSpawnLocation(), TeleportCause.PLUGIN);
 		ply.setBedSpawnLocation(world.getSpawnLocation(), true);
-		Bukkit.broadcastMessage(ply.getName() + " ha entrat a " + getGameName() + " (" + NomWorld + ")");
+		
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			
+			if (lobby.isOnLobby(p)) {
+				
+				p.sendMessage(ChatColor.GRAY + ply.getName() + " ha entrat a " + getGameName() + " (" + NomWorld + ")");
+			}
+			
+		}
 		ply.getInventory().clear();
+		
+		
 		Com.setSuffix(ply, "");
 		customJoin(ply);
 	}
@@ -60,16 +71,18 @@ public abstract class Mapa extends WorldEventBus{
 	public void Leave(Player ply){ // TODO
 		List<String> attatchments = new ArrayList<>();
 		customLeave(ply, attatchments);
-		String endStr = StringUtils.join(attatchments, " ");
 		
-		Bukkit.broadcastMessage(ChatColor.YELLOW + ply.getName() + ChatColor.GRAY + " ha abandonat " + ChatColor.DARK_AQUA + getGameName() + " " + endStr);
+		Bukkit.broadcastMessage(getGameDisplayName() + ply.getName() + ChatColor.GRAY + " ha abandonat la partida");
 		
 	}
 	@Override
 	protected void onPlayerChangedWorld(PlayerChangedWorldEvent evt, Player p) {
 		// TODO Auto-generated method stub
 		super.onPlayerChangedWorld(evt, p);
-		//Bukkit.broadcastMessage(p.getName() + " changed world from " + evt.getFrom().getName() + " to " + evt.getPlayer().getWorld());
+//		Bukkit.broadcastMessage("Changed!");
+//		if(evt.getFrom() == getWorld()){
+//			Leave(p);
+//		}
 	}
 	@Override
 	protected void onPlayerTeleport(PlayerTeleportEvent evt, Player p, Location from, Location to, TeleportCause c) {
@@ -104,6 +117,15 @@ public abstract class Mapa extends WorldEventBus{
 			p.sendMessage(message);
 		}
 	}
+	
+		
+ 	public void sendGlobalSound(Sound sound, float volume, float pitch){
+ 		for (Player p : world.getPlayers()){
+ 			p.playSound(p.getLocation(), sound, volume, pitch);
+ 		}
+ 	}
+ 
+	
 	public void sendPlayerMessage(Player p, String message) {		
 		p.sendMessage(message);
 	}
