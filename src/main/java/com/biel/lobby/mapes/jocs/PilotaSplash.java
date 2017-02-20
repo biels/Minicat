@@ -84,9 +84,11 @@ public class PilotaSplash extends JocScoreRace {
 		// TODO Auto-generated method stub
 		super.onPlayerDamage(evt, p);
 		if(evt.getCause() == DamageCause.FALL){
-			evt.setCancelled(true);
-			GUtils.healDamageable(p, 1.0);
-			getWorld().playSound(p.getLocation(), (evt.getDamage() > 4 ? Sound.BLOCK_SLIME_HIT : Sound.BLOCK_SLIME_STEP), 1F, 1F);			
+			evt.setCancelled(false);
+			GUtils.getNearbyEnemies(p, 3.0 + getSpree(p) * 0.2, false).forEach(e -> e.damage(evt.getDamage() * 0.45 + 5.5 + getSpree(p) * 0.3));
+            getWorld().playSound(p.getLocation(), (evt.getDamage() > 4 ? Sound.BLOCK_SLIME_HIT : Sound.BLOCK_SLIME_STEP), 1F, 1F);
+            GUtils.healDamageable(p, evt.getDamage() * 0.25);
+            evt.setDamage(0.5);
 		}
 	}
 	@Override
@@ -132,14 +134,16 @@ public class PilotaSplash extends JocScoreRace {
 		// TODO Auto-generated method stub
 		super.onPlayerDeathByPlayer(evt, killed, killer);
 		incrementScore(killer);
+		GUtils.healDamageable(killer, 3.0);
 	}
-	@Override
-	protected void onPlayerRespawn(PlayerRespawnEvent evt, Player p) {
-		// TODO Auto-generated method stub
-		super.onPlayerRespawn(evt, p);
-		teleportToRandomSpawn(p);
-	}
-	@Override
+
+    @Override
+    protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {
+        super.onPlayerRespawnAfterTick(evt, p);
+        teleportToRandomSpawn(p);
+    }
+
+    @Override
 	protected void setSpree(Player ply, int value) {
 		// TODO Auto-generated method stub
 		super.setSpree(ply, value);

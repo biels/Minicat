@@ -40,6 +40,10 @@ public abstract class Mapa extends WorldEventBus{
 			ply.sendMessage("Acció invàlida: no pots entrar");
 			return;
 		}
+        Mapa mapWherePlayerIs = Com.getGest().getMapWherePlayerIs(ply);
+        if(mapWherePlayerIs != null){
+		   mapWherePlayerIs.Leave(ply);
+        }
 		ply.teleport(world.getSpawnLocation(), TeleportCause.PLUGIN);
 		ply.setBedSpawnLocation(world.getSpawnLocation(), true);
 		Bukkit.broadcastMessage(ply.getName() + " ha entrat a " + getGameName() + " (" + NomWorld + ")");
@@ -65,10 +69,7 @@ public abstract class Mapa extends WorldEventBus{
 	protected void onPlayerChangedWorld(PlayerChangedWorldEvent evt, Player p) {
 		// TODO Auto-generated method stub
 		super.onPlayerChangedWorld(evt, p);
-//		Bukkit.broadcastMessage("Changed!");
-//		if(evt.getFrom() == getWorld()){
-//			Leave(p);
-//		}
+		//Bukkit.broadcastMessage(p.getName() + " changed world from " + evt.getFrom().getName() + " to " + evt.getPlayer().getWorld());
 	}
 	@Override
 	protected void onPlayerTeleport(PlayerTeleportEvent evt, Player p, Location from, Location to, TeleportCause c) {

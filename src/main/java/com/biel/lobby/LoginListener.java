@@ -54,7 +54,7 @@ public class LoginListener implements Listener {
 			//s.setHealth(1);
 		}
 		Com.teleportPlayerToLobby(player);
-		player.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
+		player.sendMessage("Pots escriure /l per tornar al lobby en qualsevol moment.");
 		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de rànquing basat en ELO. Ordres /elo i /top");
 		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
 		player.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
@@ -228,8 +228,6 @@ public class LoginListener implements Listener {
 			if(lobby.isOnLobby(ply)){
 				if (evt.getCause() == DamageCause.VOID){
 					Com.teleportPlayerToLobby(ply);
-
-
 				}
 				evt.setCancelled(true);
 			}

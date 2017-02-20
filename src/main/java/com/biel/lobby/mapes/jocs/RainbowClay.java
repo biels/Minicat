@@ -98,7 +98,6 @@ public class RainbowClay extends JocObjectius {
 		super.customJocIniciat();
 		setBlockBreakPlace(true);
 		setGiveStartingItemsRespawn(true);
-		ProgTask();
 	}
 	
 	@Override
@@ -415,19 +414,17 @@ public class RainbowClay extends JocObjectius {
 	private static String getBridgeToolName() {
 		return ChatColor.YELLOW + "Aixada del constructor";
 	}
-	public ItemStack getPlaceableItemStack(Player ply){
-		for (ItemStack i : ply.getInventory()){
-			if(i.getType().isSolid()){return i;}
+	public ItemStack getPlaceableItemStack(Player ply) {
+		for (ItemStack i : ply.getInventory()) {
+			if (i.getType().isSolid()) {
+				return i;
+			}
 		}
 		return null;
 	}
-	
-	public void ProgTask(){
 
-	}
-	
 	public void OmplirCofre(Block blk){
-		
+
 	}
 
 }
