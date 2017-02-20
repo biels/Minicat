@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="lib" path="lib/ActionBarAPI-1.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/FeatherBoard.jar"/>
 	<classpathentry kind="lib" path="lib/HolographicDisplays.jar"/>
-	<classpathentry kind="lib" path="lib/BielAPI-0.0.8-SNAPSHOT.jar" sourcepath="/BielAPI"/>
 	<classpathentry kind="lib" path="lib/LibsDisguises.jar"/>
 	<classpathentry kind="lib" path="lib/spigot-1.10.jar">
 		<attributes>
@@ -13,5 +12,9 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/TitleAPI-1.7.4.jar"/>
+	<classpathentry kind="lib" path="/home/lluiscab/Desktop/git/Minicat/lib/BielAPI-0.0.9-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/home/lluiscab/Desktop/git/Minicat/lib/BountifulAPI-1.6.1.jar"/>
+	<classpathentry kind="lib" path="/home/lluiscab/Desktop/git/Minicat/lib/NametagEdit.jar"/>
+	<classpathentry kind="lib" path="/home/lluiscab/Desktop/git/Minicat/lib/MenuBuilder.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
