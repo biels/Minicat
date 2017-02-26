@@ -210,7 +210,16 @@ public abstract class JocEquips extends Joc {
 					e.removePlayer(ply);
 				}
 			}
-			sendGlobalMessage(ply.getName() + " és a l'equip " + eq.getChatColor() + eq.getAdjectiu());
+			
+			if(generationMode == TeamGenerationMode.RANDOM) {
+				
+				
+			} else {
+				sendGlobalMessage(getGameDisplayName() + ply.getName() + " és a l'equip " + eq.getChatColor() + eq.getAdjectiu());
+			}
+			
+			
+			
 			updateScoreBoards();
 			ScoreBoardUpdater.updateTeamScore(this);
 			updateHeadColor(ply);
@@ -327,7 +336,7 @@ public abstract class JocEquips extends Joc {
 				message = message + "\n     <" + getBalancingMultiplier(e) + ">\n";
 			}
 			for (Player p : e.getPlayers()) {
-				message = message + "     >  " + p.getName() + " ";
+				message = message + "     >  " + p.getName() + "\n";
 			}
 			if (e.getPlayers().size() == 0) {
 				message = message + "     [-]";

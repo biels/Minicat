@@ -40,7 +40,6 @@ import com.biel.BielAPI.Utils.EloUtils;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
-import com.biel.BielAPI.Utils.IconMenu.OptionClickEvent;
 import com.biel.BielAPI.events.EventUtils;
 import com.biel.lobby.Com;
 import com.biel.lobby.lobby;
@@ -52,10 +51,14 @@ import com.biel.lobby.utilities.events.skills.SkillPool;
 import com.biel.lobby.utilities.events.skills.types.specificskills.*;
 import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
 import com.biel.lobby.utilities.events.statuseffects.AuraRendererStatusEffect;
-import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
-import com.connorlinfoot.actionbarapi.ActionBarAPI;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect
+;
+import com.connorlinfoot.bountifulapi.BountifulAPI;
 
-
+import org.inventivetalent.menubuilder.chat.ChatListener;
+import org.inventivetalent.menubuilder.chat.ChatMenuBuilder;
+import org.inventivetalent.menubuilder.chat.LineBuilder;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public abstract class Joc extends MapaResetejable {
 	protected Boolean JocIniciat = false;
@@ -117,7 +120,7 @@ public abstract class Joc extends MapaResetejable {
 	protected abstract void setCustomGameRules();
 	public void JocIniciat(){
 		if (JocIniciat){Bukkit.broadcastMessage("S'ha intentat iniciar una partida que ja estava iniciada. Operació anul·lada!"); return;}
-		Bukkit.broadcastMessage(ChatColor.RED + "Partida iniciada!");
+		Bukkit.broadcastMessage(getGameDisplayName() + "S'ha iniciat la partida!");
 		JocIniciat = true;
 		//---
 		customJocIniciat();
@@ -136,6 +139,7 @@ public abstract class Joc extends MapaResetejable {
 		//sendGlobalMessage("W:" + getWorld().getName());
 
 	}	
+	
 	public boolean JocEnMarxa(){
 		return JocIniciat && !JocFinalitzat;
 	}
@@ -182,11 +186,11 @@ public abstract class Joc extends MapaResetejable {
 		if(won)return;
 		if(p == null){			
 			JocFinalitzat();
-			Bukkit.broadcastMessage("La partida a " + getGameName() + " ha finalitzat sense guanyadors");
+			Bukkit.broadcastMessage(getGameDisplayName() + "La partida ha finalitzat sense guanyadors");
 			return;
 		}
 		won = true;
-		Bukkit.broadcastMessage(p.getName() + ChatColor.GRAY + " ha guanyat a " + ChatColor.YELLOW + getGameName());
+		Bukkit.broadcastMessage(getGameDisplayName() + p.getName() + " ha guanyat a " + ChatColor.UNDERLINE + getGameName());
 		matchData.registerEnd(p);
 		JocFinalitzat();
 		ArrayList<Player> wList = new ArrayList<>();
@@ -200,11 +204,11 @@ public abstract class Joc extends MapaResetejable {
 		Player p = wList.get(0);
 		if(p == null){			
 			JocFinalitzat();
-			Bukkit.broadcastMessage("La partida a " + getGameName() + " ha finalitzat sense guanyadors");
+			Bukkit.broadcastMessage(getGameDisplayName() + "La partida ha finalitzat sense guanyadors");
 			return;
 		}
 		won = true;
-		Bukkit.broadcastMessage(p.getName() + ChatColor.GRAY + " ha guanyat a " + ChatColor.YELLOW + getGameName());
+		Bukkit.broadcastMessage(getGameDisplayName() + p.getName() + " ha guanyat a " + ChatColor.UNDERLINE + getGameName());
 		matchData.registerEnd(p);
 		JocFinalitzat();
 		updateEloOrdered(wList);
@@ -276,7 +280,6 @@ public abstract class Joc extends MapaResetejable {
 		return r;
 	}
 	protected Location getRandomSpawnLoc(Player p) {
-		Location loc;
 		ArrayList<Location> locs = pMapaActual().ObtenirLocations("s", world);
 		//locs.stream().sorted((l1, l2) -> GUtils.getNearbyEnemies(l1, 40).size());
 		Collections.shuffle(locs);
@@ -396,7 +399,6 @@ public abstract class Joc extends MapaResetejable {
 	protected abstract void customJocIniciat();
 	protected abstract void customJocFinalitzat();
 	protected boolean canBeDropped(ItemStack i, Player p){
-		boolean r;
 		if (getStartingItems(p) != null) {
 			//r = !getStartingItems(p).contains(i);
 			if (i.getType() == Material.CHEST) {
@@ -459,7 +461,10 @@ public abstract class Joc extends MapaResetejable {
 		}
 	}
 	public void addSpectator(Player ply){
-		Bukkit.broadcastMessage(ply.getName() + " és espectador");
+		for (Player p : getPlayers()) {
+			
+			p.sendMessage(getGameDisplayName() + ply.getName() + " ha entrar com a espectador");
+		}
 		if (!getSpectators().contains(ply)){
 			Espectadors.add(ply);
 		}
@@ -494,7 +499,8 @@ public abstract class Joc extends MapaResetejable {
 		if(percent < 40)color = ChatColor.YELLOW;
 		if(percent < 25)color = ChatColor.RED;
 		if(percent < 15)color = ChatColor.DARK_RED;
-		if(ply.getHealth() > 20) color = ChatColor.GOLD;
+		if(ply.hasPotionEffect(PotionEffectType.ABSORPTION)) color = ChatColor.GOLD;
+		
 		String r = color + "";
 		for (int i = 0; i < n; i++) {
 			if(i == colorPoint){r += ChatColor.GRAY;}
@@ -521,7 +527,6 @@ public abstract class Joc extends MapaResetejable {
 		PlayerInfo i = getPlayerInfo(p);
 		if(i.isImmune()){
 			evt.setCancelled(true);
-			System.out.println(p.getName() + " is immune");
 			getWorld().playEffect(p.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				 		
 		}
 		double m = 1;		
@@ -572,8 +577,10 @@ public abstract class Joc extends MapaResetejable {
 		PlayerInfo i = getPlayerInfo(damaged);
 		if(i.isImmune()){
 			evt.setCancelled(true);
-			System.out.println(damaged.getName() + "is immune");
-			damager.sendMessage(ChatColor.GRAY + "El jugador " + damaged.getName() + " és invulnerable.");
+			
+			
+			BountifulAPI.sendActionBar(damager, ChatColor.GRAY + "El jugador " + damaged.getName() + " és invulnerable.", 150);
+			
 			getWorld().playSound(damager.getLocation(), Sound.ENCHANT_THORNS_HIT, 1.2F, 0.88F);
 			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
 			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());   		
@@ -629,16 +636,21 @@ public abstract class Joc extends MapaResetejable {
 		sendGlobalMessage(ChatColor.BLUE + "Esborrant el mapa en " + Double.toString(delay/20) + "s");
 		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(lobby.getPlugin(), () -> allOnTheLobby(), delay);
 	}
+	
 	@Override
 	protected void customJoin(Player ply){
 		//getPlayerInfo(ply);
 		Utils.clearPlayer(ply);
-		if (getGameState() == GameState.InGame){
+		if (getGameState() == GameState.InGame) {
+			
 			addSpectator(ply);
-		}else{
-			sendGlobalMessage(ply.getName() + " ha entrat al joc");
+			
+		} else {
+			sendGlobalMessage(getGameDisplayName() +  ply.getName() + " ha entrat al joc");
 			donarItemsPreparatiusGenerals(ply);
+			
 		}
+		
 		updateScoreBoard(ply);
 		anunciarWiki(ply, false);
 	}
@@ -788,30 +800,29 @@ public abstract class Joc extends MapaResetejable {
 		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SKULL_ITEM), ChatColor.GREEN + "Afegir jugadors"), ply, event -> {
             final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
             IconMenu menu = new IconMenu("Afegeix...", 27, event12 -> {
-//event.getPlayer().sendMessage("You have chosen " + event.getName());
-event12.setWillClose(true);
-//Obrir mapa
-int pos = event12.getPosition();
-if (pos != 26){
-Player pl = lobbyPlayers.get(pos);
-if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
-Join(pl);
-}else{
-ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat.");
-}
-
-}else{
-for(Player pl : lobbyPlayers){
-if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
-Join(pl);
-}else{
-ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat (" + pl.getName() + ")");
-}
-}
-
-}
-
-});
+				event12.setWillClose(true);
+				//Obrir mapa
+				int pos = event12.getPosition();
+				if (pos != 26){
+				Player pl = lobbyPlayers.get(pos);
+				if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+				Join(pl);
+				}else{
+				ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat.");
+				}
+				
+				}else{
+					for(Player pl : lobbyPlayers){
+						if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+							Join(pl);
+						} else {
+							ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat (" + pl.getName() + ")");
+						}
+					}
+				
+				}
+			
+			});
 
             for(Player p : lobbyPlayers){
                 Material m = Com.getSkullIconMaterial(p);
@@ -830,29 +841,32 @@ ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat (" 
 		ItemButton btnInvitePlayers = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), ChatColor.GREEN + "Convidar jugadors"), ply, event -> {
             final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
             IconMenu menu = new IconMenu("Convida...", 27, event1 -> {
-event1.setWillClose(true);
-//Obrir mapa
-int pos = event1.getPosition();
-if (pos != 26){
-Player pl = lobbyPlayers.get(pos);
-if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
-inviteToGame(pl);
-}else{
-ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat.");
-}
+			event1.setWillClose(true);
+			//Obrir mapa
+			int pos = event1.getPosition();
+			if (pos != 26){
+				
+				Player pl = lobbyPlayers.get(pos);
+				
+				if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+					inviteToGame(pl);
+				} else {
+					ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat.");
+				}
+				
+			} else {
+				for(Player pl : lobbyPlayers){
+					if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
+						inviteToGame(pl);
+					} else {
+						ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.getName() + ")");
+					}
+					
+				}
+			
+			}
 
-}else{
-for(Player pl : lobbyPlayers){
-if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
-inviteToGame(pl);
-}else{
-ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.getName() + ")");
-}
-}
-
-}
-
-});
+            });
 
             for(Player p : lobbyPlayers){
                 Material m = Com.getSkullIconMaterial(p);
@@ -875,20 +889,32 @@ ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.ge
 		//		}
 
 	}
-	public void inviteToGame(Player p){
-		IconMenu m = new IconMenu(getGameName() + " (" + host + ")", 9, event -> {
-            Player ply = event.getPlayer();
-            if(event.getPosition() == 2){
-                Join(ply);
-            }
-            event.setWillClose(true);
-            event.setWillDestroy(true);
-        });
+	public void inviteToGame(Player player){
 		
-		m.setOption(2, new ItemStack(Material.EMERALD, 1), ChatColor.GREEN + "" + ChatColor.BOLD + "Entra", getActiveMultipleMapName());
-		m.setOption(8, new ItemStack(Material.REDSTONE, 1), ChatColor.RED + "" + ChatColor.BOLD + "Tanca", getActiveMultipleMapName());
+		// String join = "\n\n    " + ChatColor.GREEN + ChatColor.UNDERLINE + host + ChatColor.RESET + ChatColor.GREEN + " t'ha convidat a " + getGameName();
+		// String join2 = "\n    " + ChatColor.GOLD + ChatColor.UNDERLINE + "Clica aquí per entrar al joc\n\n";
 		
-		m.open(p);
+		TextComponent clickToJoinMsg = new TextComponent("    Fes clic aquí per a entrar a la partida");
+
+		
+		player.sendMessage(ChatColor.GREEN  + "\n\n    " +  ChatColor.ITALIC + host + ChatColor.RESET + "" + ChatColor.GREEN + " t'ha convidat a " + getGameName() + "");
+		new ChatMenuBuilder().withLine(
+			new LineBuilder().append(
+					new ChatListener() {
+						public void onClick(Player player) {
+			                // player.sendMessage("You clicked me!");
+			                Join(player);
+			            }
+					
+					},
+					clickToJoinMsg
+					
+				)
+		).show(player);
+		player.sendMessage("\n");
+		
+		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 100, 0);
+	
 	}
 	public Boolean getBlockBreakPlace() {
 		return blockBreakPlace;
