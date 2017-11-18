@@ -2,12 +2,7 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 
-import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
@@ -18,10 +13,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -410,7 +402,16 @@ public class RainbowClay extends JocObjectius {
 			}
 		}
 	}
-	
+
+	@Override
+	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
+		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+		if(ranged && damaged.isSneaking()) {
+			damaged.setVelocity(new Vector());
+			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> damaged.setVelocity(new Vector()), 1);
+		}
+	}
+
 	private static String getBridgeToolName() {
 		return ChatColor.YELLOW + "Aixada del constructor";
 	}
