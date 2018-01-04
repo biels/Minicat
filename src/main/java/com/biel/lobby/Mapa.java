@@ -40,6 +40,14 @@ public abstract class Mapa extends WorldEventBus{
 		return ChatColor.GOLD + "[" + ChatColor.AQUA + getGameName() + ChatColor.GOLD + "] " + ChatColor.GRAY;
 	}
 
+	public String getMapName() {
+		return NomWorld;
+	}
+
+	public String getMapDisplayName() {
+		return ChatColor.GOLD + "[" + ChatColor.AQUA + getMapName() + ChatColor.GOLD + "] " + ChatColor.GRAY;
+	}
+
 	public void Join(Player ply){
 
 		ply.teleport(world.getSpawnLocation(), TeleportCause.PLUGIN);
@@ -54,9 +62,10 @@ public abstract class Mapa extends WorldEventBus{
 			
 		}
 		ply.getInventory().clear();
-		
-		
+
+
 		Com.setSuffix(ply, "");
+		Com.setHeadColor(ply, ChatColor.GRAY);
 		customJoin(ply);
 	}
 
@@ -73,10 +82,6 @@ public abstract class Mapa extends WorldEventBus{
 	protected void onPlayerChangedWorld(PlayerChangedWorldEvent evt, Player p) {
 		// TODO Auto-generated method stub
 		super.onPlayerChangedWorld(evt, p);
-//		Bukkit.broadcastMessage("Changed!");
-//		if(evt.getFrom() == getWorld()){
-//			Leave(p);
-//		}
 	}
 	@Override
 	protected void onPlayerTeleport(PlayerTeleportEvent evt, Player p, Location from, Location to, TeleportCause c) {

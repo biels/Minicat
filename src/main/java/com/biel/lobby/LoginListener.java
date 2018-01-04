@@ -1,9 +1,10 @@
 package com.biel.lobby;
 
+import com.nametagedit.plugin.NametagEdit;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -99,42 +100,67 @@ public class LoginListener implements Listener {
 	public void onPlayerChatEvent(AsyncPlayerChatEvent evt) {
 
 		String msg = evt.getMessage();
-		if(msg.contains("ch")) return;
+		Player ply = evt.getPlayer();
 
-		if (msg=="llagosta") msg = msg.replaceAll("llagosta", "la greixosta");
-		else msg = msg.replaceAll("[Ll]{1,}[Aa]{1,}[Gg]{1,}", "greix");
-		for (int i = 15; i > 0; i--) {
-			msg = msg.replaceAll("la" + StringUtils.repeat("g", i), "grei" + StringUtils.repeat("x", i));			
-		}
+		// for (int i = 15; i > 0; i--) {
+		// 	msg = msg.replaceAll("la" + StringUtils.repeat("g", i), "grei" + StringUtils.repeat("x", i));
+		// }
 
-		msg = msg.replaceAll("l.a.g", "g.r.e.i.x");
-		msg = msg.replaceAll("l a g", "g r e i x");
-		msg = msg.replaceAll("l ag ", "gr eix ");
-		msg = msg.replaceAll("l ag", "gr eix");
-		msg = msg.replaceAll("ping", "ping pong");
-		msg = msg.replaceAll("bug", "escarbat");
-		msg = msg.replaceAll("en fi", "en fi (copyright JoniMega)");
-		msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
-		msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
+		// msg = msg.replaceAll("llagosta", "la greixosta");
+		// msg = msg.replaceAll("[Ll]{1,}[Aa]{1,}[Gg]{1,}", "greix");
+		// msg = msg.replaceAll("l.a.g", "g.r.e.i.x");
+		// msg = msg.replaceAll("l a g", "g r e i x");
+		// msg = msg.replaceAll("l ag ", "gr eix ");
+		// msg = msg.replaceAll("l ag", "gr eix");
+		// msg = msg.replaceAll("ping", "ping pong");
+		// msg = msg.replaceAll("bug", "escarbat");
+		// msg = msg.replaceAll("en fi", "en fi (copyright JoniMega)");
+		// msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
+		// msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
 
 		evt.setMessage(msg);
 
-		if(msg.contains("inves") || msg.contains("polla") || msg.contains("gilip") || msg.contains("tont") || msg.contains("retr") || msg.contains("retard")){
+		if(
+			msg.contains("inves") ||
+			msg.contains("polla") ||
+			msg.contains("gilip") ||
+			msg.contains("tont") ||
+			msg.contains("retr") ||
+			msg.contains("retard")
+		) {
+
 			if(Com.isOnLobby(evt.getPlayer())){
-				if(Utils.Possibilitat(60))evt.setMessage("quin server més guai!!");
-				if(Utils.Possibilitat(60))evt.setMessage("com mola el server!");
-				if(Utils.Possibilitat(10))evt.setMessage("sou els millors!!");
+				if(Utils.Possibilitat(60)) evt.setMessage("quin server més guai!!");
+				if(Utils.Possibilitat(60)) evt.setMessage("com mola el server!");
+				if(Utils.Possibilitat(10)) evt.setMessage("sou els millors!!");
 			} else {
 				evt.setMessage("bona partida! ;)");
-				if(Utils.Possibilitat(40))evt.setMessage("bona partida!! :D");
+				if(Utils.Possibilitat(40)) evt.setMessage("bona partida!! :D");
 			}
+
 			if(Utils.Possibilitat(5)) evt.setMessage("ehem.. anava a dir... millor callo xD");
 			if(Utils.Possibilitat(8)) evt.setMessage("ja començo a perdre els papers, no em feu gaire cas jaja");
 			if(Utils.Possibilitat(3)) evt.setMessage("lluiscab we love u");
 
 		}
 
+
+		Mapa mapa = plugin.gest.getMapWherePlayerIs(evt.getPlayer());
+		String zone = lobby.isOnLobby(ply)
+						? ChatColor.GOLD + "[" + ChatColor.AQUA + "Lobby" + ChatColor.GOLD + "] " + ChatColor.GRAY
+						: mapa.getMapDisplayName() + ChatColor.RESET;
+
+		String playerName = (
+								lobby.isOnLobby(ply)
+									? ChatColor.GRAY
+									: NametagEdit.getApi().getNametag(ply).getPrefix()
+							) + ply.getDisplayName();
+
+		Bukkit.broadcastMessage(zone + ChatColor.GRAY + playerName + ChatColor.GRAY + ": " + evt.getMessage());
+		evt.setCancelled(true);
+
 	}
+
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent evt) {
 		if (evt.getTo().getBlockY() < 60) {
