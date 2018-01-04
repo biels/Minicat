@@ -49,9 +49,11 @@ public class Com {
 		com.biel.lobby.utilities.Utils.clearPlayer(p);
 		p.teleport(getLobbyWorld().getSpawnLocation());
 		p.setDisplayName(p.getName());
-		if (p.getName().equals("bielCAT")){
-			p.setDisplayName(ChatColor.RED + "[Admin]" + ChatColor.GREEN +  p.getName() + ChatColor.WHITE);
+
+		if(p.isOp()) {
+			p.setDisplayName(ChatColor.LIGHT_PURPLE + "(admin) " + ChatColor.GRAY + p.getDisplayName());
 		}
+
 		ScoreBoardUpdater.clearScoreBoard(p);
 		Options.giveStartingButtons(p);
 		p.getInventory().setHeldItemSlot(1);
