@@ -41,10 +41,7 @@ public abstract class Mapa extends WorldEventBus{
 	}
 
 	public void Join(Player ply){
-		if (!canJoin(ply)){
-			ply.sendMessage("Acció invàlida: no pots entrar");
-			return;
-		}
+
 		ply.teleport(world.getSpawnLocation(), TeleportCause.PLUGIN);
 		ply.setBedSpawnLocation(world.getSpawnLocation(), true);
 		
@@ -62,10 +59,7 @@ public abstract class Mapa extends WorldEventBus{
 		Com.setSuffix(ply, "");
 		customJoin(ply);
 	}
-	public boolean canJoin(Player ply){
 
-		return true;
-	}
 	protected abstract void customJoin(Player ply);
 	protected abstract void customLeave(Player ply, List<String> attatchments);
 	public void Leave(Player ply){ // TODO
@@ -100,13 +94,6 @@ public abstract class Mapa extends WorldEventBus{
 		super.onPlayerQuit(evt, p);
 		if(p.getWorld() == getWorld())Leave(p);
 	}
-	//	@EventHandler
-	//	public void onPlayerTeleport(PlayerTeleportEvent  evt) {
-	//		if (evt.getFrom().getWorld().getName().equals(world.getName())){
-	//			Leave(evt.getPlayer());
-	//		}
-	//		
-	//	}
 
 	public World getWorld(){
 		return world;

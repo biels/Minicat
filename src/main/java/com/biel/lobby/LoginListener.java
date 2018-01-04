@@ -35,32 +35,20 @@ public class LoginListener implements Listener {
 		
 		Com.getDataAPI().registerNewPlayer(player);
 		Com.teleportPlayerToLobby(player);
-		
-		
-//		//player.sendMessage("Pots fer /l per tornar al lobby en qualsevol moment.");
-//		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema de rànquing basat en ELO. Ordres /elo i /top");
-//		player.sendMessage(ChatColor.DARK_RED + "[NOVETAT] " + ChatColor.WHITE + "Sistema d'espectadors. Entra en una partida iniciada que admeti el mode espectador.");
-//		player.sendMessage(ChatColor.GOLD + "[NOVETAT] " + ChatColor.WHITE + "Servidor sense lag. Hostejat en línia de fibra òptica de baixa latència i 30Mb/s de velocitat de pujada.");
-//		player.sendMessage(ChatColor.AQUA + "[TELEGRAM] " + ChatColor.UNDERLINE + "https://telegram.me/servidorminicat");
 
-		player.setCanPickupItems(false);
+		player.setCanPickupItems(true);
 		
 	}
 	@EventHandler
 	public void onFoodChange(FoodLevelChangeEvent e) {
-
-		//		int food = e.getFoodLevel();
-		//
-		//		for (Player p : Bukkit.getOnlinePlayers()) {
-		//			p.setFoodLevel(food);
-		//		}
 		e.setCancelled(true);
-
 	}
+
 	@EventHandler
 	public void onWeatherChange(WeatherChangeEvent evt) {
 		evt.setCancelled(true);
 	}
+
 	@EventHandler
 	public void onPlace(BlockPlaceEvent evt) {
 		if (evt.getPlayer() != null){
@@ -85,12 +73,14 @@ public class LoginListener implements Listener {
 	}
 	@EventHandler
 	public void onPing(ServerListPingEvent evt) {
+
 		int games = lobby.getPlugin().gest.getAllInstances().size();
+
 		if(Com.getDataAPI().isInDatalessMode()){
 			evt.setMotd(ChatColor.GOLD + "Minicat " + ChatColor.RED + "[dev mode]");
 			return;
 		}
-		//evt.setMotd(Integer.toString(games) + " partides en curs");
+
 		try {
 			int num = 5;
 			while(Com.getRankingString(num + 1).length() <= 140 && num <= 10){
@@ -99,6 +89,7 @@ public class LoginListener implements Listener {
 			String lastMotd = Com.getRankingString(num);
 			evt.setMotd(lastMotd);
 		} catch (Exception e) {
+			System.out.println("Error en carrgear el rànquing: " + e.toString());
 			evt.setMotd(ChatColor.GREEN + "Carregant rànquing...");
 		}
 
@@ -106,8 +97,10 @@ public class LoginListener implements Listener {
 
 	@EventHandler
 	public void onPlayerChatEvent(AsyncPlayerChatEvent evt) {
+
 		String msg = evt.getMessage();
-		if(msg.contains("ch"))return;
+		if(msg.contains("ch")) return;
+
 		if (msg=="llagosta") msg = msg.replaceAll("llagosta", "la greixosta");
 		else msg = msg.replaceAll("[Ll]{1,}[Aa]{1,}[Gg]{1,}", "greix");
 		for (int i = 15; i > 0; i--) {
@@ -123,19 +116,21 @@ public class LoginListener implements Listener {
 		msg = msg.replaceAll("en fi", "en fi (copyright JoniMega)");
 		msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
 		msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
+
 		evt.setMessage(msg);
+
 		if(msg.contains("inves") || msg.contains("polla") || msg.contains("gilip") || msg.contains("tont") || msg.contains("retr") || msg.contains("retard")){
 			if(Com.isOnLobby(evt.getPlayer())){
-				if(Utils.Possibilitat(100))evt.setMessage("quin server més guai!!");
+				if(Utils.Possibilitat(60))evt.setMessage("quin server més guai!!");
 				if(Utils.Possibilitat(60))evt.setMessage("com mola el server!");
 				if(Utils.Possibilitat(10))evt.setMessage("sou els millors!!");
-			}else{
+			} else {
 				evt.setMessage("bona partida! ;)");
 				if(Utils.Possibilitat(40))evt.setMessage("bona partida!! :D");
 			}
-			if(Utils.Possibilitat(5))evt.setMessage("ehem.. anava a dir... millor callo xD");
-			if(Utils.Possibilitat(8))evt.setMessage("ja començo a perdre els papers, no em feu gaire cas jaja");
-			if(Utils.Possibilitat(3))evt.setMessage("lluiscab we love u");
+			if(Utils.Possibilitat(5)) evt.setMessage("ehem.. anava a dir... millor callo xD");
+			if(Utils.Possibilitat(8)) evt.setMessage("ja començo a perdre els papers, no em feu gaire cas jaja");
+			if(Utils.Possibilitat(3)) evt.setMessage("lluiscab we love u");
 
 		}
 
@@ -151,23 +146,18 @@ public class LoginListener implements Listener {
 	}
 	@EventHandler
 	public void onEntityDamageEvent(EntityDamageEvent evt) {
-		if (evt.getEntity() instanceof Slime){
-			if(Utils.Possibilitat(100)){
-				//evt.getEntity().teleport(Com.getLobbyWorld().getSpawnLocation().add(0, 3, 0));
-			}
-		}
-		if (evt.getEntity() instanceof Player){
+
+		if (evt.getEntity() instanceof Player) {
+
 			Player ply = (Player) evt.getEntity();
-			if(lobby.isOnLobby(ply)){
+			if(lobby.isOnLobby(ply)) {
+
 				if (evt.getCause() == DamageCause.VOID){
 					Com.teleportPlayerToLobby(ply);
-
-
 				}
+
 				evt.setCancelled(true);
 			}
-
-
 
 		}
 

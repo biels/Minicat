@@ -334,8 +334,7 @@ public abstract class Joc extends MapaResetejable {
 		}
 		super.Join(ply);
 	}
-	
-	@Override
+
 	public boolean canJoin(Player ply) {
 		switch (getGameState()){
 		case Complete:
@@ -352,7 +351,7 @@ public abstract class Joc extends MapaResetejable {
 			return true;
 
 		}
-		return super.canJoin(ply);
+		return true;
 	}
 	protected void donarItemsInicials(){
 		for (Player ply : getPlayers()){
