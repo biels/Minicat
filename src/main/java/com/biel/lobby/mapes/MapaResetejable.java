@@ -96,14 +96,22 @@ public abstract class MapaResetejable extends Mapa {
 		return isWorld(getMapOriginFile()) ? MapMode.SINGLE : MapMode.MULTIPLE;
 	}
 	public ArrayList<String> getMultiWorldList(){
+
 		ArrayList<String> r = new ArrayList<>();
-		if(getMapMode() == MapMode.MULTIPLE){
+
+		if(getMapMode() == MapMode.MULTIPLE) {
+
 			File folder = getMapOriginFile();
-			for(File f : folder.listFiles()){
-				if(f.isDirectory()){
-					r.add(f.getName());
+			File[] files = folder.listFiles();
+
+			if(files != null && files.length > 0) {
+				for(File f : files) {
+					if(f.isDirectory()){
+						r.add(f.getName());
+					}
 				}
 			}
+
 		}
 		return r;
 	}
