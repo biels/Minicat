@@ -334,8 +334,7 @@ public abstract class Joc extends MapaResetejable {
 		}
 		super.Join(ply);
 	}
-	
-	@Override
+
 	public boolean canJoin(Player ply) {
 		switch (getGameState()){
 		case Complete:
@@ -352,7 +351,7 @@ public abstract class Joc extends MapaResetejable {
 			return true;
 
 		}
-		return super.canJoin(ply);
+		return true;
 	}
 	protected void donarItemsInicials(){
 		for (Player ply : getPlayers()){
@@ -728,6 +727,8 @@ public abstract class Joc extends MapaResetejable {
 		lastProgressETA = gameProgressETA;
 	}
 	public void anunciarWiki(Player p, boolean requested){
+
+		/*
 		if(pMapaActual().ExisteixPropietat("wiki")){
 			String pageName = pMapaActual().ObtenirPropietat("wiki");
 			boolean local = p.getAddress().getHostString().startsWith("10.0.0.");
@@ -738,6 +739,8 @@ public abstract class Joc extends MapaResetejable {
 		}else{
 			sendPlayerMessage(p, "Aquest mode de joc no té un article a la wiki");
 		}
+		*/
+
 	}
 	public String getWikiLink(String pageName, boolean local){
 		String protocol = "http://";

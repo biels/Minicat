@@ -391,7 +391,7 @@ public abstract class JocEquips extends Joc {
 		if(cycles > 500)cycles = 500;
 		if(Equips.size() == 0)return;
 		ZonedDateTime startingTime = ZonedDateTime.now();
-		sendGlobalMessage("Calculant equips equilibrats...");
+		// sendGlobalMessage("Calculant equips equilibrats...");
 		double bestVariance = Double.NaN;
 		List<List<Player>> bestTeams = null;
 		for (int i = 0; i < cycles; i++) {
@@ -406,10 +406,10 @@ public abstract class JocEquips extends Joc {
 		}
 		resetTeams();
 		long millis = Duration.between(startingTime, ZonedDateTime.now()).toMillis();
-		sendGlobalMessage(MessageFormat.format("Desviació típica: {0}, Temps: {1}ms, Cicles: {2}, Vel:{3}ms/c", Math.sqrt(bestVariance), millis, cycles, Math.round(millis * 100/(double)cycles) / 100D));
+		// sendGlobalMessage(MessageFormat.format("Desviació típica: {0}, Temps: {1}ms, Cicles: {2}, Vel:{3}ms/c", Math.sqrt(bestVariance), millis, cycles, Math.round(millis * 100/(double)cycles) / 100D));
 		final List<List<Player>> finalTeams = bestTeams;
 		if(finalTeams != null)finalTeams.forEach(t -> t.forEach(p -> establirEquipJugador(p, Equips.get(finalTeams.indexOf(t)))));
-		sendGlobalMessage("D: " + getAvgNumericDeviation());
+		// sendGlobalMessage("D: " + getAvgNumericDeviation());
 		generationMode = TeamGenerationMode.BALANCED;
 	}
 	public static double variance(List<Double> values){

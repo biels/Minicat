@@ -40,11 +40,16 @@ public abstract class Mapa extends WorldEventBus{
 		return ChatColor.GOLD + "[" + ChatColor.AQUA + getGameName() + ChatColor.GOLD + "] " + ChatColor.GRAY;
 	}
 
+	public String getMapName() {
+		return NomWorld;
+	}
+
+	public String getMapDisplayName() {
+		return ChatColor.GOLD + "[" + ChatColor.AQUA + getMapName() + ChatColor.GOLD + "] " + ChatColor.GRAY;
+	}
+
 	public void Join(Player ply){
-		if (!canJoin(ply)){
-			ply.sendMessage("Acció invàlida: no pots entrar");
-			return;
-		}
+
 		ply.teleport(world.getSpawnLocation(), TeleportCause.PLUGIN);
 		ply.setBedSpawnLocation(world.getSpawnLocation(), true);
 		
@@ -57,15 +62,13 @@ public abstract class Mapa extends WorldEventBus{
 			
 		}
 		ply.getInventory().clear();
-		
-		
+
+
 		Com.setSuffix(ply, "");
+		Com.setHeadColor(ply, ChatColor.GRAY);
 		customJoin(ply);
 	}
-	public boolean canJoin(Player ply){
 
-		return true;
-	}
 	protected abstract void customJoin(Player ply);
 	protected abstract void customLeave(Player ply, List<String> attatchments);
 	public void Leave(Player ply){ // TODO
@@ -79,10 +82,6 @@ public abstract class Mapa extends WorldEventBus{
 	protected void onPlayerChangedWorld(PlayerChangedWorldEvent evt, Player p) {
 		// TODO Auto-generated method stub
 		super.onPlayerChangedWorld(evt, p);
-//		Bukkit.broadcastMessage("Changed!");
-//		if(evt.getFrom() == getWorld()){
-//			Leave(p);
-//		}
 	}
 	@Override
 	protected void onPlayerTeleport(PlayerTeleportEvent evt, Player p, Location from, Location to, TeleportCause c) {
@@ -100,13 +99,6 @@ public abstract class Mapa extends WorldEventBus{
 		super.onPlayerQuit(evt, p);
 		if(p.getWorld() == getWorld())Leave(p);
 	}
-	//	@EventHandler
-	//	public void onPlayerTeleport(PlayerTeleportEvent  evt) {
-	//		if (evt.getFrom().getWorld().getName().equals(world.getName())){
-	//			Leave(evt.getPlayer());
-	//		}
-	//		
-	//	}
 
 	public World getWorld(){
 		return world;

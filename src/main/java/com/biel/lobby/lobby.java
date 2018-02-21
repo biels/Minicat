@@ -43,17 +43,16 @@ public final class lobby extends JavaPlugin {
 		// TODO Insert logic to be performed when the plugin is disabled
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
+
 		Player ply = (Player) sender;
 		if(cmd.getName().equalsIgnoreCase("m")){
-			//ObsidianDefenders joc = new ObsidianDefenders();
-			//joc.Join(ply);
+
 			gest.ObrirMenuMapes(ply);
 			return true;
 		}
+
 		if(cmd.getName().equalsIgnoreCase("r")){
-			//ObsidianDefenders joc = new ObsidianDefenders();
-			//joc.Join(ply);
-			if(!args[0].equals("1")) return false;
+
 			ranked = !ranked;
 			Bukkit.broadcastMessage("Transferència d'elo " + (ranked ? "activada" : "desactivada"));
 			return true;
@@ -93,7 +92,7 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("p")){
 			GestorPropietats pMapaActual = Utils.getpMapaFromWorld(ply.getWorld());
 
-			if (ply.isOp() == true){
+			if (ply.isOp()){
 				if (args.length == 2){
 					pMapaActual.EstablirPropietat(args [0], args [1]);	    				
 				}
@@ -112,7 +111,7 @@ public final class lobby extends JavaPlugin {
 			}
 		}
 		if(cmd.getName().equalsIgnoreCase("e")){
-			if (ply.isOp() == true){
+			if (ply.isOp()){
 				Mapa mapWherePlayerIs = gest.getMapWherePlayerIs(ply);
 				if (mapWherePlayerIs instanceof MapaResetejable){
 					MapaResetejable m = (MapaResetejable) mapWherePlayerIs;
@@ -125,7 +124,7 @@ public final class lobby extends JavaPlugin {
 			}
 		}
 		if(cmd.getName().equalsIgnoreCase("s")){
-			if (ply.isOp() == true){
+			if (ply.isOp()){
 				Mapa mapWherePlayerIs = gest.getMapWherePlayerIs(ply);
 				if (mapWherePlayerIs instanceof MapaResetejable){
 					MapaResetejable m = (MapaResetejable) mapWherePlayerIs;
