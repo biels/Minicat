@@ -92,7 +92,7 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 	public boolean isAlive(Player ply){
 		return AlivePlayers.contains(ply);		
 	}
-	void removeAlive(Player ply){
+	public void removeAlive(Player ply){
 		AlivePlayers.remove(ply);
 		//Comprova la integritat de l'equip.
 		Equip e = obtenirEquip(ply);
