@@ -1,9 +1,6 @@
 package com.biel.lobby.mapes.jocs;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import com.biel.BielAPI.Utils.GUtils;
 import org.bukkit.Color;
@@ -217,26 +214,7 @@ public class Spleef extends JocLastStanding {
 				BlockBreakEvent evt = (BlockBreakEvent)event;
 				if (blk.getType() != Material.SNOW_BLOCK){evt.setCancelled(true);}
 				if(!evt.isCancelled()){
-//					PlayerInfo playerInfo = getPlayerInfo(evt.getPlayer());
-//					int step = playerInfo.getValue();
-//					ArrayList<BlockFace> blockFaces = new ArrayList<BlockFace>();
-//					if(step >= 2){
-//						blockFaces.add(BlockFace.SOUTH);
-//						blockFaces.add(BlockFace.NORTH);
-//						blockFaces.add(BlockFace.EAST);
-//						blockFaces.add(BlockFace.WEST);
-//					}
-//					if(step >= 4){
-//						blockFaces.add(BlockFace.SOUTH_EAST);
-//						blockFaces.add(BlockFace.NORTH_EAST);
-//						blockFaces.add(BlockFace.SOUTH_WEST);
-//						blockFaces.add(BlockFace.NORTH_WEST);
-//						getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 0);
-//					}
-//					getWorld().playSound(loc, Sound.CLICK, 0.8F + (0.4F * step), 1F + (0.4F * step));
-//					blockFaces.forEach(f -> blk.getRelative(f).setType(BREAK_TYPE));
-//					playerInfo.setValue(playerInfo.getValue() + 1);
-//					if(playerInfo.getValue() > 4)playerInfo.setValue(0);
+
 				}
 
 			}
@@ -289,12 +267,24 @@ public class Spleef extends JocLastStanding {
 				PlayerPickupItemEvent evt = (PlayerPickupItemEvent)event;
 				evt.setCancelled(true);
 			}
-			if (event instanceof PlayerMoveEvent){
+			if (event instanceof PlayerMoveEvent) {
+
 				PlayerMoveEvent evt = (PlayerMoveEvent)event;
-				if (p.getLocation().getBlockY() < 6 && JocIniciat == true){
+
+				if (p.getLocation().getBlockY() < 0 && JocIniciat) {
+
 					p.getInventory().clear();
 					p.setHealth(20);
-					removeIfAlive(p); 		 
+					p.setGameMode(GameMode.SPECTATOR);
+					removeIfAlive(p);
+
+					if(anyoneAlive()) {
+
+						Player randAlivePlayer = getRandomAlivePlayer();
+						p.teleport(randAlivePlayer.getLocation().add(0.0, 2.0, 0.0));
+
+					}
+
 				}		
 
 			}

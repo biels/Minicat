@@ -1,13 +1,14 @@
 package com.biel.lobby.mapes;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 public abstract class JocLastStanding extends Joc{
 	
-	ArrayList<Player> AlivePlayers;
+	public ArrayList<Player> AlivePlayers;
 	public void initAlivePlayers() {
 		AlivePlayers = this.getPlayers();
 	}
@@ -20,9 +21,6 @@ public abstract class JocLastStanding extends Joc{
 	}
 	
 	public boolean isAlive(Player ply){
-//		for (Player p : AlivePlayers){
-//			Bukkit.broadcastMessage(ChatColor.GREEN + p.getName());
-//		}
 		return AlivePlayers.contains(ply);
 		
 	}
@@ -39,6 +37,14 @@ public abstract class JocLastStanding extends Joc{
 			removeAlive(ply);
 		}   
 	}
+
+	public Player getRandomAlivePlayer() {
+
+		Random rand = new Random();
+		return AlivePlayers.get(rand.nextInt(AlivePlayers.size()));
+
+	}
+
 	public Boolean anyoneAlive(){
 		return(AlivePlayers.size() != 0);
 	}
