@@ -1,8 +1,14 @@
 package com.biel.lobby;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
+import com.gmail.filoghost.holographicdisplays.api.Hologram;
+import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
+import com.gmail.filoghost.holographicdisplays.api.VisibilityManager;
 import com.nametagedit.plugin.NametagEdit;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -55,6 +61,7 @@ public class Com {
 		}
 
 		ScoreBoardUpdater.clearScoreBoard(p);
+		showRanking(p);
 		Options.giveStartingButtons(p);
 		p.getInventory().setHeldItemSlot(1);
 		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
@@ -64,6 +71,49 @@ public class Com {
             setSuffix(p, ColorConverter.chatToRaw(ChatColor.GRAY) + NBSP + ColorConverter.chatToRaw(ChatColor.YELLOW) + "#" + rank);
         }, 2);
 		playMinicatAnimation(p);
+	}
+
+
+	private static HashMap<UUID, Hologram> playerHologramMap = new HashMap<UUID, Hologram>();
+	private static void showRanking(Player player) {
+
+		Hologram hologram;
+		if(playerHologramMap.containsKey(player.getUniqueId())) {
+			hologram = playerHologramMap.get(player.getUniqueId());
+			hologram.clearLines();
+		} else {
+			hologram = HologramsAPI.createHologram(getPlugin(), player.getLocation());
+			playerHologramMap.put(player.getUniqueId(), hologram);
+		}
+
+		VisibilityManager visibilityManager = hologram.getVisibilityManager();
+		visibilityManager.showTo(player);
+		visibilityManager.setVisibleByDefault(false);
+
+		hologram.appendTextLine(ChatColor.GOLD + "MINICAT RANKING");
+		hologram.appendTextLine("");
+
+		if(Com.getDataAPI().isInDatalessMode()) {
+			hologram.appendTextLine(ChatColor.RED + "✗ Ranking not available in dataless mode ✗");
+			return;
+		}
+
+		Integer i = 10;
+
+		ArrayList<Integer> pIDs = getDataAPI().getRanking();
+
+		for (Integer id : pIDs) {
+
+			PlayerData data = new PlayerData(id);
+			int index = pIDs.indexOf(id) + 1;
+
+			String text = ChatColor.GOLD + "#" + index + " " + data.getUserName() + " " + Math.round(data.getElo());
+			hologram.appendTextLine(text);
+
+			if(i <= 0)break;
+		}
+
+
 	}
 
 	private static void registerPlayerLeavingCurrentMap(Player p) {
