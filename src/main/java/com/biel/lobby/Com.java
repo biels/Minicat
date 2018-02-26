@@ -10,10 +10,7 @@ import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import com.gmail.filoghost.holographicdisplays.api.VisibilityManager;
 import com.nametagedit.plugin.NametagEdit;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -82,7 +79,8 @@ public class Com {
 			hologram = playerHologramMap.get(player.getUniqueId());
 			hologram.clearLines();
 		} else {
-			hologram = HologramsAPI.createHologram(getPlugin(), player.getLocation());
+			Location hologramLocation = new Location(getLobbyWorld(), -283, 72.5, 26);
+			hologram = HologramsAPI.createHologram(getPlugin(), hologramLocation);
 			playerHologramMap.put(player.getUniqueId(), hologram);
 		}
 
@@ -90,7 +88,7 @@ public class Com {
 		visibilityManager.showTo(player);
 		visibilityManager.setVisibleByDefault(false);
 
-		hologram.appendTextLine(ChatColor.GOLD + "MINICAT RANKING");
+		hologram.appendTextLine(ChatColor.AQUA + "MINICAT RANKING");
 		hologram.appendTextLine("");
 
 		if(Com.getDataAPI().isInDatalessMode()) {
@@ -107,7 +105,10 @@ public class Com {
 			PlayerData data = new PlayerData(id);
 			int index = pIDs.indexOf(id) + 1;
 
-			String text = ChatColor.GOLD + "#" + index + " " + data.getUserName() + " " + Math.round(data.getElo());
+			String text = "";
+			text += ChatColor.YELLOW + "" + index + ". ";
+			text += ChatColor.GOLD + data.getUserName();
+			text += ChatColor.GRAY + " - " + ChatColor.YELLOW + Math.round(data.getElo());
 			hologram.appendTextLine(text);
 
 			if(i <= 0)break;
