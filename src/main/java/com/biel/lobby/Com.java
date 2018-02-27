@@ -111,6 +111,7 @@ public class Com {
 			text += ChatColor.GRAY + " - " + ChatColor.YELLOW + Math.round(data.getElo());
 			hologram.appendTextLine(text);
 
+			i--;
 			if(i <= 0)break;
 		}
 
