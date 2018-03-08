@@ -2,3 +2,4 @@
 .class
 /build/*
 .gradle/
+/mysql/*.sql
