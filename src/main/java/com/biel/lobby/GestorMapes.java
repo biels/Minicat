@@ -71,17 +71,30 @@ public class GestorMapes implements Listener{
 		auto_ratings = Com.getDataAPI().getAutoRating();
 		Mapes.sort((m1, m2) -> Double.compare(m2.getRating(), m1.getRating()));
 	}
-	public void ObrirMenuMapes(Player ply){
+	public void ObrirMenuMapes(Player ply) {
 		queryAutoRatings();
-		IconMenu menu = new IconMenu(ChatColor.RED + "Tots els mapes", (int) (9 * (Math.ceil(Mapes.size() / 9) + 1)), event -> {
+
+		String menuTitle = ChatColor.RED + "Tots els mapes";
+		IconMenu menu = new IconMenu(menuTitle, 54, event -> {
 
 			event.setWillClose(false);
             int pos = event.getPosition();
-            ContenidorMapa cont = Mapes.get(pos);
-            cont.playerClick(event.getPlayer());
+
+			String gameName = event.getMenu().getOptionNames()[pos];
+
+			for(ContenidorMapa mapa : Mapes) {
+
+				if(mapa.getDisplayName().equals(gameName)) {
+					mapa.playerClick(event.getPlayer());
+					return;
+				}
+
+			}
 
         });
+		menu.setName(menuTitle);
 
+		Integer menuPos = 10;
 		for(ContenidorMapa mapa : Mapes){
 
 			int count = 1;
@@ -89,13 +102,16 @@ public class GestorMapes implements Listener{
 
 			ItemStack icon = new ItemStack(mapa.mat, count);
 
-			menu.setOption(Mapes.indexOf(mapa), icon, mapa.getDisplayName(), mapa.getDescription());
+			menu.setOption(menuPos, icon, mapa.getDisplayName(), mapa.getDescription());
+
+			menuPos++;
+			if(menuPos == 17 || menuPos == 26 || menuPos == 35 || menuPos == 45) menuPos += 2;
 
 		}
 
-
 		menu.open(ply);
 	}
+
 	public ArrayList<Mapa> getAllInstances(){
 		ArrayList<Mapa> all = new ArrayList<>();
 		for (ContenidorMapa c : Mapes){
