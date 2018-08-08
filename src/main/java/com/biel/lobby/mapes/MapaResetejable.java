@@ -18,26 +18,32 @@ import com.biel.lobby.utilities.GestorPropietats;
 
 
 public abstract class MapaResetejable extends Mapa {
+
 	static String FolderLiveWorlds = "LiveWorlds"; 
 	static String FolderMaps = "mapes"; 
 	static String FolderCopies = "copies";
+
 	private int multiMapId;
-	protected Boolean EditMode = false;
-	public enum MapMode{SINGLE, MULTIPLE};
+	Boolean EditMode = false;
+	public enum MapMode{ SINGLE, MULTIPLE }
+
 	public MapaResetejable() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
+
 	public void initialize() {
 		createVirtualWorld();
 	}
-	String getLiveWorldAvaliableName(String where){
+
+	String getLiveWorldAvaliableName(String where) {
+
 		String nouNom = "";
 		int LastNum = 1;
 		File folder = new File(where);
 		if (!folder.exists()) {
 			folder.mkdir();
 		}
+
 		for (final File fileEntry : folder.listFiles()) {
 			if (fileEntry.isDirectory()){
 				String nomArxiu = fileEntry.getName();
@@ -54,17 +60,21 @@ public abstract class MapaResetejable extends Mapa {
 				}
 			}
 		}
+
 		nouNom = getGameName() + Integer.toString(LastNum + 1);
-		if (nouNom.equals("")){
+
+		if (nouNom.equals("")) {
 			nouNom = getGameName() + "1";
 		}
-		//Bukkit.broadcastMessage(nouNom);
+
 		return nouNom;
 	}
 
-	void createVirtualWorld(){
+	void createVirtualWorld() {
+
 		if (getGameName().equals("")){return;}
-		if (isWorldLoaded() == true){return;}
+		if (isWorldLoaded()){return;}
+
 		NomWorld = getLiveWorldAvaliableName(FolderLiveWorlds);
 		//Copy world
 		File worldOrigin = getWorldOriginMappedFile();
@@ -74,7 +84,6 @@ public abstract class MapaResetejable extends Mapa {
 			File uid = new File(worldLive.getPath() + "/" + "uid.dat");
 			uid.delete();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			Bukkit.broadcastMessage("El mon no s'ha pogut copiar");
 			e.printStackTrace();
 		}
@@ -82,6 +91,7 @@ public abstract class MapaResetejable extends Mapa {
 		world = Bukkit.createWorld(new WorldCreator(getLiveWorldFolder()));
 		updateWorldToRegisteredHandler();
 	}
+
 	private void updateWorldToRegisteredHandler() {
 		setWorld(world);
 	}
@@ -204,7 +214,6 @@ public abstract class MapaResetejable extends Mapa {
 	}
 	public void setEditMode(Boolean editMode) {
 		EditMode = editMode;
-		sendGlobalMessage("Mode edició = " + Boolean.toString(editMode));
 	}
 	public GestorPropietats pMapaActual(){
 		return new GestorPropietats(getLiveWorldFolder() + "/" + "pMapaActual.txt");

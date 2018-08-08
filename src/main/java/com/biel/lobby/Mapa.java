@@ -18,6 +18,7 @@ import com.biel.lobby.mapes.MapaContinu;
 import com.biel.lobby.mapes.MapaResetejable;
 
 public abstract class Mapa extends WorldEventBus{
+
 	public lobby plugin;
 
 	public String NomWorld = "";
@@ -30,7 +31,8 @@ public abstract class Mapa extends WorldEventBus{
 		this.plugin = lobby.getPlugin();
 		if(isWorldLoaded())setWorld(getWorld());
 	}
-	public  abstract  String getGameName(); //GameName
+
+	public  abstract  String getGameName();
 	
 	protected Boolean isWorldLoaded(){
         return Bukkit.getWorld(NomWorld) != null;
@@ -71,21 +73,25 @@ public abstract class Mapa extends WorldEventBus{
 
 	protected abstract void customJoin(Player ply);
 	protected abstract void customLeave(Player ply, List<String> attatchments);
-	public void Leave(Player ply){ // TODO
+
+	public void Leave(Player ply) {
+
 		List<String> attatchments = new ArrayList<>();
 		customLeave(ply, attatchments);
 		
 		Bukkit.broadcastMessage(getGameDisplayName() + ply.getName() + ChatColor.GRAY + " ha abandonat la partida");
 		
 	}
+
 	@Override
 	protected void onPlayerChangedWorld(PlayerChangedWorldEvent evt, Player p) {
 		// TODO Auto-generated method stub
 		super.onPlayerChangedWorld(evt, p);
 	}
+
 	@Override
 	protected void onPlayerTeleport(PlayerTeleportEvent evt, Player p, Location from, Location to, TeleportCause c) {
-	  // !DIASBLED!
+
 		super.onPlayerTeleport(evt, p, from, to, c);
 		if(from.getWorld() != to.getWorld()){
 			if(from.getWorld() == getWorld()){
@@ -93,6 +99,7 @@ public abstract class Mapa extends WorldEventBus{
 			}
 		}
 	}
+
 	@Override
 	protected void onPlayerQuit(PlayerQuitEvent evt, Player p) {
 		// TODO Auto-generated method stub
@@ -116,23 +123,28 @@ public abstract class Mapa extends WorldEventBus{
  			p.playSound(p.getLocation(), sound, volume, pitch);
  		}
  	}
- 
 	
 	public void sendPlayerMessage(Player p, String message) {		
 		p.sendMessage(message);
 	}
 	enum TipusMapa{Continu, Resetejable};
-	public TipusMapa getTipusMapa(){
+
+	public TipusMapa getTipusMapa() {
+
 		if (this instanceof MapaResetejable){
 			return TipusMapa.Resetejable;
 		}
 		if(this instanceof MapaContinu){
 			return TipusMapa.Continu;
 		}
+
 		Bukkit.broadcastMessage("El mapa és de tipus indeterminat");
 		return null;
+
 	}
+
 	public void copyDirectory(File sourceLocation , File targetLocation) throws IOException {
+
 		if (sourceLocation.isDirectory()) {
 			if (!targetLocation.exists()) {
 				targetLocation.mkdir();
@@ -157,8 +169,10 @@ public abstract class Mapa extends WorldEventBus{
 			in.close();
 			out.close();
 		}
+
 	}
 	public static void deleteFolder(File folder) {
+
 		File[] files = folder.listFiles();
 		if(files!=null) { //some JVMs return null for empty dirs
 			for(File f: files) {
@@ -170,6 +184,7 @@ public abstract class Mapa extends WorldEventBus{
 			}
 		}
 		folder.delete();
+
 	}
 
 }

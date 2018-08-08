@@ -2,10 +2,10 @@ package com.biel.lobby;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import com.connorlinfoot.actionbarapi.ActionBarAPI;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import com.gmail.filoghost.holographicdisplays.api.VisibilityManager;
@@ -25,17 +25,19 @@ import com.biel.lobby.utilities.data.PlayerData;
 import com.connorlinfoot.titleapi.TitleAPI;
 
 public class Com {
- //HIO
+
 	static char NBSP = '\u00A0';
 	static public lobby getPlugin() {
+
 		Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("lobby");
 	
-		// WorldGuard may not be loaded
-		if (plugin == null || !(plugin instanceof lobby)) {
-			return null; // Maybe you want throw an exception instead
+		if (plugin instanceof lobby) {
+            return (lobby) plugin;
 		}
-	
-		return (lobby) plugin;
+
+		return null;
+
+
 	}
 
 	static public World getLobbyWorld(){
@@ -47,7 +49,9 @@ public class Com {
 	static public DataAPI getDataAPI(){
 		return getPlugin().dataAPI;
 	}
-	public static void teleportPlayerToLobby(Player p){
+
+	public static void teleportPlayerToLobby(Player p) {
+
 		registerPlayerLeavingCurrentMap(p);
 		com.biel.lobby.utilities.Utils.clearPlayer(p);
 		p.teleport(getLobbyWorld().getSpawnLocation());
@@ -61,13 +65,16 @@ public class Com {
 		showRanking(p);
 		Options.giveStartingButtons(p);
 		p.getInventory().setHeldItemSlot(1);
+
 		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
             setHeadColor(p, ChatColor.WHITE);
             int rank = new PlayerData(p).getRank();
             Utils.donarItemsPlayer(p, getRankEquipment(rank));
             setSuffix(p, ColorConverter.chatToRaw(ChatColor.GRAY) + NBSP + ColorConverter.chatToRaw(ChatColor.YELLOW) + "#" + rank);
         }, 2);
+
 		playMinicatAnimation(p);
+
 	}
 
 
@@ -88,7 +95,7 @@ public class Com {
 		visibilityManager.showTo(player);
 		visibilityManager.setVisibleByDefault(false);
 
-		hologram.appendTextLine(ChatColor.AQUA + "MINICAT RANKING");
+		hologram.appendTextLine(ChatColor.AQUA + "ELO RANKING");
 		hologram.appendTextLine("");
 
 		if(Com.getDataAPI().isInDatalessMode()) {
@@ -128,9 +135,11 @@ public class Com {
 	public static Boolean isOnLobby(Player ply){
 		return getLobbyWorld().getPlayers().contains(ply);
 	}
+
 	public static void sendLobbyMessage(String msg){
 		for(Player p : Bukkit.getOnlinePlayers())if(isOnLobby(p))p.sendMessage(msg);
 	}
+
 	public static void setHeadColor(Player ply, ChatColor color){
 		setHeadColor(ply, ColorConverter.chatToRaw(color));
 	}
@@ -140,24 +149,31 @@ public class Com {
 	public static void setSuffix(Player ply, String suffix){
 		NametagEdit.getApi().setSuffix(ply, suffix);
 	}
-	public static void displayRanking(Player p){
-		if(Com.getDataAPI().isInDatalessMode()){
-			p.sendMessage("El rànquing no es pot visualitzar en mode sense dades");
+
+	public static void displayRanking(Player p) {
+
+		if(Com.getDataAPI().isInDatalessMode()) {
+            ActionBarAPI.sendActionBar(p, ChatColor.RED + "El rànquing no es pot visualitzar en mode sense dades");
 			return;
 		}
+
 		ArrayList<Integer> pIDs = getDataAPI().getRanking();
 		p.sendMessage("-----Rànquing global-----");
+
 		int max = 10;
-		for (Integer id : pIDs){
+		for (Integer id : pIDs) {
+
 			PlayerData data = new PlayerData(id);
 			int index = pIDs.indexOf(id) + 1;
 			String msg = "";
 			String c = "";
+
 			c = "" + ChatColor.BLUE;
 			if (index <= 10){c = "" + ChatColor.YELLOW;}
 			if (index <= 3){c = "" + ChatColor.GREEN;}
 			if (index <= 1){c = "" + ChatColor.AQUA;}
 			if (index == pIDs.size()){c = "" + ChatColor.RED;}
+
 			msg += ChatColor.GREEN;
 			msg += Integer.toString(index);
 			msg += ChatColor.RED;
@@ -167,14 +183,18 @@ public class Com {
 			msg += ChatColor.DARK_AQUA + " [" + Math.round(data.getElo()) + "]";
 			p.sendMessage(msg);
 			max--;
+
 			if(max <= 0)break;
+
 		}
 		
 	}
-	public static String getRankingString(int num){
+	public static String getRankingString(int num) {
+
 		if(Com.getDataAPI().isInDatalessMode()){
 			return "[Not Avaliable]";
 		}
+
 		ArrayList<String> positions = new ArrayList<>();
 		ArrayList<Integer> pIDs = getDataAPI().getRanking();
 		int max = num;
@@ -184,11 +204,13 @@ public class Com {
 			int index = pIDs.indexOf(id) + 1;
 			String msg = "";
 			String c = "";
+
 			c = "" + ChatColor.BLUE;
 			if (index <= 10){c = "" + ChatColor.YELLOW;}
 			if (index <= 3){c = "" + ChatColor.GREEN;}
 			if (index <= 1){c = "" + ChatColor.AQUA;}
 			if (index == pIDs.size()){c = "" + ChatColor.RED;}
+
 			msg += ChatColor.DARK_RED;
 			msg += Integer.toString(index);
 			msg += " - ";
@@ -199,9 +221,12 @@ public class Com {
 			max--;
 			if(max <= 0)break;
 		}
+
 		return String.join(", ", positions);
+
 	}
-	public static ArrayList<ItemStack> getRankEquipment(int r){
+	public static ArrayList<ItemStack> getRankEquipment(int r) {
+
 		ArrayList<ItemStack> l = new ArrayList<>();
 		if(r == 1){
 			l.add(new ItemStack(Material.DIAMOND_HELMET));
@@ -245,14 +270,19 @@ public class Com {
 			l.add(new ItemStack(Material.LEATHER_BOOTS));
 			return l;
 		}
+
 		return l;
 	}
+
 	public static String getMinicatString(){
 		return ChatColor.YELLOW + "MINICAT";
 	}
-	public static void playMinicatAnimation(Player p){
+
+	public static void playMinicatAnimation(Player p) {
+
 		ArrayList<String> f = new ArrayList<>();
 		String bold = "";
+
 		f.add(ChatColor.WHITE + "" + bold + "MINICAT");
 		f.add(ChatColor.YELLOW + "" + bold + "M" + ChatColor.WHITE + "" + bold + "INICAT");
 		f.add(ChatColor.GOLD + "" + bold + "M" + ChatColor.YELLOW + "" + bold + "I" + ChatColor.WHITE + "" + bold + "NICAT");
@@ -264,13 +294,18 @@ public class Com {
 		f.add(ChatColor.WHITE + "" + bold + "MINIC" + ChatColor.YELLOW + "" + bold + "A" + ChatColor.GOLD + "" + bold + "T");
 		f.add(ChatColor.WHITE + "" + bold + "MINICA" + ChatColor.YELLOW + "" + bold + "T");
 		f.add(ChatColor.WHITE + "" + bold + "MINICAT");
+
 		int i = 0;
 		for (String s : f){
 			Bukkit.getScheduler().runTaskLater(getPlugin(), () -> TitleAPI.sendTitle(p,0,6,0,s,Integer.toString(Bukkit.getOnlinePlayers().size())), 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
 			i++;
 		}
+
 	}
-	public static Material getSkullIconMaterial(Player p){
+
+	public static Material getSkullIconMaterial(Player p) {
+
+	    // What's this for??
 		Material m = Material.SKULL_ITEM;
 		if(Stream.of("amiguet", "pilota", "ball", "").anyMatch(s -> (p.getName().equalsIgnoreCase(s) || p.getName().contains(s))))
 			m = Material.SLIME_BALL;

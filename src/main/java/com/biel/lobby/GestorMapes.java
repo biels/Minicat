@@ -3,7 +3,6 @@ package com.biel.lobby;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,21 +19,22 @@ import org.bukkit.material.Wool;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.Pair;
 import com.biel.lobby.mapes.Joc;
-import com.biel.lobby.mapes.MapaResetejable;
 import com.biel.lobby.mapes.MapaResetejable.MapMode;
 import com.biel.lobby.mapes.jocs.*;
 
 
-public class GestorMapes implements Listener{
+public class GestorMapes implements Listener {
+
 	public lobby plugin;
-	ArrayList<Pair<String, Double>> auto_ratings;
-	ArrayList<ContenidorMapa> Mapes = new ArrayList<>();
+	private ArrayList<Pair<String, Double>> auto_ratings;
+	private ArrayList<ContenidorMapa> Mapes = new ArrayList<>();
+
 	public GestorMapes() {
 
 		this.plugin = lobby.getPlugin();
-		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        assert plugin != null;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
 
-		//Mapes.add(new ContenidorJoc(ObsidianDefenders.class, "Obsidian defenders", Material.OBSIDIAN, DevelopmentState.NotWorking));
 		Mapes.add(new ContenidorJoc(Spleef.class, "Spleef", Material.SNOW, DevelopmentState.Release));
 		Mapes.add(new ContenidorJoc(RainbowClay.class, "Rainbow Clay", Material.HARD_CLAY, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(Torres.class, "Torres de defensa", Material.ARROW, DevelopmentState.Beta));
@@ -42,36 +42,26 @@ public class GestorMapes implements Listener{
 		Mapes.add(new ContenidorJoc(Dominion.class, "Dominion", Material.DIAMOND, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(TeamDeathMatch.class, "Team Death Match", Material.IRON_SWORD, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(Arena4.class, "Arena 4", Material.BAKED_POTATO, DevelopmentState.Alpha));
-		//Mapes.add(new ContenidorJoc(Coliseu.class, "Coliseu", Material.QUARTZ_BLOCK, DevelopmentState.NotWorking));
-		//Mapes.add(new ContenidorJoc(TheTowers.class, "The Towers", Material.EXP_BOTTLE, DevelopmentState.NotWorking));
 		Mapes.add(new ContenidorJoc(TNTRun.class, "TNT Run", Material.TNT, DevelopmentState.KnownIssues));
-		//Mapes.add(new ContenidorJoc(RoboRampage.class, "ToTheSky", Material.LAPIS_BLOCK, DevelopmentState.InDevelopment));
-		//Mapes.add(new ContenidorJoc(Arena1v1.class, "Arena 1v1", Material.WOOD_SWORD, DevelopmentState.PreAlpha));
 		Mapes.add(new ContenidorJoc(ArenaAllvAll.class, "Arena ALLvsALL", Material.SAND, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(BaseLunar.class, "Base Lunar", Material.GLASS, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(BoletumDTC.class, "Boletus DTC", Material.MUSHROOM_SOUP, DevelopmentState.Beta));
-		//Mapes.add(new ContenidorJoc(DominionTitan.class, "Dominion Titan", Material.DIAMOND_AXE, DevelopmentState.Beta));
-		//Mapes.add(new ContenidorJoc(DominionKOTH.class, "Dominion KOTH", Material.DIAMOND_BARDING, DevelopmentState.Beta));
-		//Mapes.add(new ContenidorJoc(TeamDeathMatchJaneatorForest.class, "TDM Janeator Forest", Material.SAPLING, DevelopmentState.Alpha));
-		//Mapes.add(new ContenidorJoc(InfernoRush.class, "Inferno Rush", Material.BLAZE_POWDER, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(KingSkeletonChallenge.class, "King Skeleton", Material.GOLD_HELMET, DevelopmentState.PreAlpha));
-		//Mapes.add(new ContenidorJoc(WarehouseKOTH.class, "Warehouse KOTH", Material.WOOD, DevelopmentState.Beta));
-		//Mapes.add(new ContenidorJoc(OniChan.class, "Oni-Chan", Material.CAKE, DevelopmentState.InDevelopment));
-		//Mapes.add(new ContenidorJoc(PixelRift.class, "Pixel Rift", Material.ITEM_FRAME, DevelopmentState.KnownIssues));
-		//Mapes.add(new ContenidorJoc(ResourceRush.class, "Resource Rush", Material.DIAMOND_ORE, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(Parkour.class, "ParkourFlow", Material.GOLD_BLOCK, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(InkWars.class, "Ink Wars", Material.COAL_BLOCK, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(RedstoneWars.class, "Redstone Wars", Material.REDSTONE_BLOCK, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(PilotaSplash.class, "Pilota Splash", Material.SLIME_BALL, DevelopmentState.Alpha));
-		//Mapes.add(new ContenidorJoc(TempleQuest.class, "Temple Quest", Material.QUARTZ_BLOCK, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(OneInTheChamber.class, "OneInTheChamber", Material.BOW, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(BedWars.class, "Bed Wars", Material.BED, DevelopmentState.InDevelopment));
 	}
-	public void queryAutoRatings() {
+
+	private void queryAutoRatings() {
 		auto_ratings = Com.getDataAPI().getAutoRating();
 		Mapes.sort((m1, m2) -> Double.compare(m2.getRating(), m1.getRating()));
 	}
-	public void ObrirMenuMapes(Player ply){
+
+	public void ObrirMenuMapes(Player ply) {
+
 		queryAutoRatings();
 		IconMenu menu = new IconMenu(ChatColor.RED + "Tots els mapes", (int) (9 * (Math.ceil(Mapes.size() / 9) + 1)), event -> {
 
@@ -95,43 +85,51 @@ public class GestorMapes implements Listener{
 
 
 		menu.open(ply);
+
 	}
+
 	public ArrayList<Mapa> getAllInstances(){
 		ArrayList<Mapa> all = new ArrayList<>();
 		for (ContenidorMapa c : Mapes){
 			if (c instanceof ContenidorJoc){
 				ContenidorJoc contenidorJoc = (ContenidorJoc) c;
-				all.addAll(contenidorJoc.getInstàncies());
+				all.addAll(contenidorJoc.getInstancies());
 			}
 
 		}
 		return all;
 	}
-	public Mapa getMapWherePlayerIs(Player p){
+
+	public Mapa getMapWherePlayerIs(Player p) {
+
 		if (lobby.isOnLobby(p)){return null;}
 		for(Mapa m : getAllInstances()){
 			if(m.getWorld().getPlayers().contains(p)){
 				return m;
 			}
 		}
-		//Bukkit.broadcastMessage("Jugador desaparegut");
 		return null;
 	}
-	public abstract class ContenidorMapa implements Listener{
+
+	public abstract class ContenidorMapa implements Listener {
+
 		public lobby plugin;
 
 		Class<?> ClassMapa;
 		String nom;
 		Material mat;
+
 		public String getNom() {
 			return nom;
 		}
+
 		public ArrayList<String> getDescription(){
 			ArrayList<String> l = new ArrayList<>();
 			int playerAmount = getPlayerAmount();
 			if(playerAmount > 0)l.add(ChatColor.GREEN + "" + playerAmount + " jugador" + (playerAmount > 1 ? "s" : ""));
 			return l;
 		}
+
 		public double getRating(){
 			return 0;
 		}
@@ -153,24 +151,30 @@ public class GestorMapes implements Listener{
 
 
 		public ContenidorMapa(Class<?> classMapa, String nom, Material mat) {
+
 			plugin = lobby.getPlugin();
-			plugin.getServer().getPluginManager().registerEvents(this, plugin);
+            assert plugin != null;
+            plugin.getServer().getPluginManager().registerEvents(this, plugin);
 			ClassMapa = classMapa;
 			this.nom = nom;
 			this.mat = mat;
 
 		}
+
 		abstract void playerClick(Player ply);
 
 	}
-	public enum DevelopmentState {NotWorking, KnownIssues, InDevelopment, PreAlpha, Alpha, Beta, Release}
-	public class ContenidorJoc extends ContenidorMapa{
+
+	public enum DevelopmentState { NotWorking, KnownIssues, InDevelopment, PreAlpha, Alpha, Beta, Release }
+
+	public class ContenidorJoc extends ContenidorMapa {
+
 		public ContenidorJoc(Class<?> classMapa, String nom, Material mat, DevelopmentState s) {
 			super(classMapa, nom, mat);
 			// TODO Auto-generated constructor stub
 			developmentState = s;
 		}
-		ArrayList<Joc> Instàncies = new ArrayList<>();
+		ArrayList<Joc> Instancies = new ArrayList<>();
 
 		DevelopmentState developmentState = DevelopmentState.Release;
 		public DevelopmentState getDevelopmentState() {
@@ -179,27 +183,29 @@ public class GestorMapes implements Listener{
 		public void setDevelopmentState(DevelopmentState developmentState) {
 			this.developmentState = developmentState;
 		}
-		public String getDevelopmentString(){
+		public String getDevelopmentString() {
+
 			switch(developmentState){
-			case InDevelopment:
-				return ChatColor.GREEN + "[En desenvolupament]";
-			case Alpha:
-				return ChatColor.DARK_RED + "[Alpha]";
-			case Beta:
-				return ChatColor.GOLD + "[Beta]";
-			case NotWorking:
-				return ChatColor.STRIKETHROUGH + "" + ChatColor.RED + "[No Funciona]";
-			case KnownIssues:
-				return ChatColor.RED + "[Errors coneguts]";
-			case PreAlpha:
-				return ChatColor.RED + "[Pre-Alpha]";
-			case Release:
-				return "";
-			default:
-				break;
+                case InDevelopment:
+                    return ChatColor.GREEN + "[En desenvolupament]";
+                case Alpha:
+                    return ChatColor.DARK_RED + "[Alpha]";
+                case Beta:
+                    return ChatColor.GOLD + "[Beta]";
+                case NotWorking:
+                    return ChatColor.STRIKETHROUGH + "" + ChatColor.RED + "[No Funciona]";
+                case KnownIssues:
+                    return ChatColor.RED + "[Errors coneguts]";
+                case PreAlpha:
+                    return ChatColor.RED + "[Pre-Alpha]";
+                case Release:
+                    return "";
+                default:
+                    break;
 			}
 			return "";
 		}
+
 		@Override
 		public ArrayList<String> getDescription() {
 
@@ -212,10 +218,11 @@ public class GestorMapes implements Listener{
 
 			return l;
 		}
+
 		@Override
 		public int getPlayerAmount() {
 			// TODO Auto-generated method stub
-			return Instàncies.stream().mapToInt(j -> j.getPlayers().size()).sum();
+			return Instancies.stream().mapToInt(j -> j.getPlayers().size()).sum();
 		}
 
 		@Override
@@ -231,20 +238,22 @@ public class GestorMapes implements Listener{
 			// TODO Auto-generated method stub
 			ObrirMenu(ply);
 		}
+
 		@Override
 		public String getDisplayName() {
 			// TODO Auto-generated method stub
 			return super.getDisplayName() + " " + getDevelopmentString();
 		}
+
 		public Joc getTempInstance(){
 			try {
 				return (Joc) ClassMapa.newInstance();
 			} catch (InstantiationException | IllegalAccessException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			return null;
 		}
+
 		public Joc addMap(Integer map){
 			try {
 				Joc newInstance = (Joc) ClassMapa.newInstance();
@@ -252,57 +261,53 @@ public class GestorMapes implements Listener{
 					newInstance.setMultiMapId(map);
 				}
 				newInstance.initialize();
-				Instàncies.add(newInstance);
+				Instancies.add(newInstance);
 				return newInstance;
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | SecurityException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				Bukkit.broadcastMessage("Ha fallat la creaciò d'una instància: " + nom);
+				Bukkit.broadcastMessage("Ha fallat la creaciò d'una instancia: " + nom);
 				Bukkit.broadcastMessage("Error: " + e.getMessage());
 				Bukkit.broadcastMessage("ErrorType: " + e.getClass().getName());
-				if (e instanceof InvocationTargetException){
-					InvocationTargetException ex = (InvocationTargetException) e;
-					Bukkit.broadcastMessage("Message: " + ex.getTargetException().getMessage());
-					Bukkit.broadcastMessage("String: " + ex.getTargetException().toString());
-				}
-				return null;
+                return null;
 			}
 		}
-		Boolean canAutoJoin(){
-			//if (AlgunMapaDisponible() == false){return false;}
-			return Instàncies.size() <= 1;
+
+		Boolean canAutoJoin() {
+			return Instancies.size() <= 1;
 
 		}
 		void autoJoin(Player ply){
 			if  (canAutoJoin()){
-				if(Instàncies.size() == 0){
+				if(Instancies.size() == 0){
 					addMap(null);
 				}
-				Instàncies.get(0).Join(ply);
+				Instancies.get(0).Join(ply);
 			}
 
 		}
 		Boolean AlgunMapaDisponible(){
-			for(Joc map : Instàncies){
+			for(Joc map : Instancies){
 				if (map.getGameState() == Joc.GameState.WaitingForPlayers){
 					return true;
 				}
 			}
 			return false;
 		}
-		Joc getInstànciaFromWorld(World world){
-			for(Joc map : Instàncies){
+
+		Joc getInstanciaFromWorld(World world){
+			for(Joc map : Instancies){
 				if (map.world.getName().equals(world.getName())){
 					return map;
 				}
 			}
 			return null;
 		}
+
 		@EventHandler
 		public void onPlayerChangedWorld(PlayerChangedWorldEvent evt) {
 
 			Player ply = evt.getPlayer();
-			Joc map = getInstànciaFromWorld(evt.getFrom());
+			Joc map = getInstanciaFromWorld(evt.getFrom());
 
 			if (map != null) {
 
@@ -319,37 +324,44 @@ public class GestorMapes implements Listener{
 				//map.JocFinalitzat();
 				map.clearExternals();
 				map.deleteVirtualWorld();
-				Instàncies.remove(map);
+				Instancies.remove(map);
 				map.destroyEventBus();
 				System.gc();
 				//map = null;
 				//Bukkit.broadcastMessage("Mapa esborrat!");
 			}
 		}
-		public DyeColor getGameColor(Joc joc){
+
+		public DyeColor getGameColor(Joc joc) {
+
 			switch(joc.getGameState()){
-			case InGame:
-				return DyeColor.RED;
-			case Preparing:
-				return DyeColor.YELLOW;
-			case WaitingForPlayers:
-				return DyeColor.GREEN;
-			case Complete:
-				return DyeColor.PURPLE;
-			case Resetejant:
-				return DyeColor.GRAY;
-			case Editant:
-				return DyeColor.BLUE;
-			default:
-				break;
+                case InGame:
+                    return DyeColor.RED;
+                case Preparing:
+                    return DyeColor.YELLOW;
+                case WaitingForPlayers:
+                    return DyeColor.GREEN;
+                case Complete:
+                    return DyeColor.PURPLE;
+                case Resetejant:
+                    return DyeColor.GRAY;
+                case Editant:
+                    return DyeColor.BLUE;
+                default:
+                    break;
 			}
+
 			return DyeColor.WHITE;
+
 		}
-		public double getRating(){
+
+		public double getRating() {
+
 			Joc tempInstance = getTempInstance();
 			return Math.sqrt(auto_ratings.stream().filter(p -> p.getFirst().equals(tempInstance.getGameName())).mapToDouble(Pair::getSecond).findAny().orElse(0) / 100D) * 100D;
 		}
-		public String getRatingString(){
+
+		public String getRatingString() {
 			Character c = '\u272E';
 			int n = 10;
 			double rating = getRating();
@@ -365,9 +377,10 @@ public class GestorMapes implements Listener{
 			}
 			return r ;
 		}
-		public void ObrirMenu(Player ply){
+
+		public void ObrirMenu(Player ply) {
 			Joc tempInstance = getTempInstance();
-			IconMenu menu = new IconMenu("Instàncies disponibles", 27, event -> {
+			IconMenu menu = new IconMenu("Instancies disponibles", 27, event -> {
 
                 event.setWillClose(false);
                 Joc tempInstance1 = getTempInstance();
@@ -376,7 +389,7 @@ public class GestorMapes implements Listener{
                 MapMode m = tempInstance1.getMapMode();
 
                 if (pos < (m == MapMode.MULTIPLE ? 27 - tempInstance1.getMultiWorldList().size() : 26)){
-                    Joc map = Instàncies.get(pos); /*Open*/
+                    Joc map = Instancies.get(pos); /*Open*/
                     map.Join(event.getPlayer());
                 } else {
                     Joc nouMapa = addMap(m == MapMode.MULTIPLE ? 26 - event.getPosition() : null); /*New*/
@@ -394,25 +407,25 @@ public class GestorMapes implements Listener{
 
 			}
 
-			for(Joc mapa : Instàncies){
+			for(Joc mapa : Instancies){
 				Wool wool = new Wool(getGameColor(mapa));
 				ItemStack stack = wool.toItemStack();
 				stack.setAmount(mapa.getPlayers().size());
-				String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
+				String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));
 				double gameProgressETA = mapa.getGameProgressETA();
 				String progressStr = ChatColor.AQUA + "Progrés: " + Math.round(gameProgressETA * 1000) / 10 + "% ETA";
-				menu.setOption(Instàncies.indexOf(mapa), stack, mapa.getGameName(),ChatColor.WHITE + mapa.NomWorld, ChatColor.WHITE + mapa.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + mapa.getSpectators().size(), "Temps: " + tStr, progressStr);
+				menu.setOption(Instancies.indexOf(mapa), stack, mapa.getGameName(),ChatColor.WHITE + mapa.NomWorld, ChatColor.WHITE + mapa.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + mapa.getSpectators().size(), "Temps: " + tStr, progressStr);
 			}
 			MapMode mapMode = tempInstance.getMapMode();
 			if (!AlgunMapaDisponible() || mapMode == MapMode.MULTIPLE){
-				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1), ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instància");
+				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1), ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instancia");
 				if(mapMode == MapMode.MULTIPLE){
 					ArrayList<String> multiWorldList = tempInstance.getMultiWorldList();
 					for (int i = 0; i < multiWorldList.size(); i++) {
 						String name = multiWorldList.get(i);
 						menu.setOption(26 - i, new ItemStack(Material.EMERALD, 1),
 								ChatColor.GREEN + name, ChatColor.WHITE
-								+ "Crear una nova instància");
+								+ "Crear una nova instancia");
 					}
 				}
 			}
@@ -420,11 +433,11 @@ public class GestorMapes implements Listener{
 			menu.open(ply);
 		}
 
-		public ArrayList<Joc> getInstàncies() {
-			return Instàncies;
+		public ArrayList<Joc> getInstancies() {
+			return Instancies;
 		}
-		public void setInstàncies(ArrayList<Joc> instàncies) {
-			Instàncies = instàncies;
+		public void setInstancies(ArrayList<Joc> instancies) {
+			Instancies = instancies;
 		}
 
 	}
@@ -450,18 +463,7 @@ public class GestorMapes implements Listener{
 
 		menu.open(ply);
 	}
-	//	public ItemStack getIconForInstance(Mapa m){
-	//		ItemStack stack = new ItemStack(Material.WOOD)
-	//		if (m instanceof Joc){
-	//			Joc j = (Joc) m;
-	//			Wool wool = new Wool(getGameColor(j));
-	//			stack = wool.toItemStack();
-	//			stack.setAmount(mapa.getPlayers().size());
-	//			String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
-	//			menu.setOption(Instàncies.indexOf(j), stack, j.getMapName(),ChatColor.WHITE + j.NomWorld, ChatColor.WHITE + j.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(j.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + j.getSpectators().size(), "Temps: " + tStr);
-	//		
-	//		}
-	//	}
+
 	public List<Joc> getGames() {
 		return getAllInstances().stream().filter(m -> m instanceof Joc).map(m -> (Joc)m).collect(Collectors.toList());
 	}
