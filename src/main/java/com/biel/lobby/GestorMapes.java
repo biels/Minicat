@@ -92,7 +92,6 @@ public class GestorMapes implements Listener{
 			}
 
         });
-		menu.setName(menuTitle);
 
 		Integer menuPos = 10;
 		for(ContenidorMapa mapa : Mapes){
