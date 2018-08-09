@@ -94,6 +94,5 @@ public class OneInTheChamber extends JocScoreRace {
 	protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {
 		super.onPlayerRespawnAfterTick(evt, p);
 		teleportToRandomSpawn(p);
-		getStartingItems(p);
 	}
 }
