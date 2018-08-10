@@ -1,6 +1,7 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -18,9 +19,12 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -54,6 +58,7 @@ public class RainbowClay extends JocObjectius {
 		return equips;
 	}
 	
+	
 	@Override
 	protected ArrayList<Objectiu> getDesiredObjectivesTeam(EquipObjectius e) {
 		ArrayList<Objectiu> objectius = new ArrayList<>();
@@ -76,7 +81,6 @@ public class RainbowClay extends JocObjectius {
 	@Override
 	protected void setCustomGameRules() {
 		// TODO Auto-generated method stub
-
 	}
 	
 	@Override
@@ -89,7 +93,6 @@ public class RainbowClay extends JocObjectius {
 	protected void customJocIniciat() {
 		super.customJocIniciat();
 		setBlockBreakPlace(true);
-		setGiveStartingItemsRespawn(true);
 	}
 	
 	@Override
@@ -160,7 +163,6 @@ public class RainbowClay extends JocObjectius {
 		int block_amount = (int) (45 * balancingMultiplier);
 		if(block_amount > 64){block_amount = 64;}
 		if (obtenirEquip(ply).getId() == 0){
-			
 			items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 14));
 		}else{
 			
@@ -386,7 +388,6 @@ public class RainbowClay extends JocObjectius {
 	protected void onBlockHitByProjectile(ProjectileHitEvent evt, Block b, Projectile proj) {
 		// TODO Auto-generated method stub
 		super.onBlockHitByProjectile(evt, b, proj);
-		//sendGlobalMessage("Pilotassa");
 		Material t = b.getType();
 		if(t == Material.GLASS || t == Material.STAINED_GLASS || t == Material.STAINED_GLASS_PANE || t == Material.THIN_GLASS || t == Material.GLOWSTONE){
 			b.setType(Material.AIR);
@@ -423,9 +424,178 @@ public class RainbowClay extends JocObjectius {
 		}
 		return null;
 	}
+	
+	
+	@Override
+	public void heartbeat() {
+		// TODO Auto-generated method stub
+		super.heartbeat();
+		if(getHeartbeatCount() % 30 == 0 && getWorld() != null){
+			Cuboid cub = pMapaActual().ObtenirCuboid("RegC", getWorld());
+			
+			cub.getBlocks().stream()
+				.filter(b -> b.getType() == Material.CHEST)
+				.forEach(b -> fillChest((Chest) b.getState(), getMiddleChestItems(),false));
+			cub = pMapaActual().ObtenirCuboid("RegCT", getWorld());
+			cub.getBlocks().stream()
+				.filter(b -> b.getType() == Material.CHEST)
+				.forEach(b -> fillChest((Chest) b.getState(), getPotionChestItems(),true));
+		}
+	}
+	public void fillChest(Chest chest, List<ItemStack> items, boolean respect){
+		Inventory inv = chest.getInventory();
+		if(!respect)inv.clear();
+		if(inv.getMaxStackSize()>(inv.getStorageContents().length+items.size())) items.forEach(i -> inv.addItem(i));
+	}
+	public List<ItemStack> getPotionChestItems(){
+		List<ItemStack> llistaItems = new ArrayList<>();
+		
+		ItemStack item = new ItemStack(Material.SPLASH_POTION, 1);
+		PotionMeta meta = (PotionMeta) item.getItemMeta();
 
-	public void OmplirCofre(Block blk){
-
+		switch(Utils.NombreEntre(0, 7)){
+		case 0:meta.addCustomEffect(new PotionEffect(PotionEffectType.POISON, 80, 3), true);break;
+		case 1:meta.addCustomEffect(new PotionEffect(PotionEffectType.BLINDNESS, 160, 1), true);break;
+		case 2:meta.addCustomEffect(new PotionEffect(PotionEffectType.GLOWING, 600, 1), true);break;
+		case 3:meta.addCustomEffect(new PotionEffect(PotionEffectType.SLOW, 120, 2), true);break;
+		case 4:meta.addCustomEffect(new PotionEffect(PotionEffectType.LEVITATION, 40, 3), true);break;
+		case 5:meta.addCustomEffect(new PotionEffect(PotionEffectType.CONFUSION, 280, 2), true);break;
+		case 6:meta.addCustomEffect(new PotionEffect(PotionEffectType.WEAKNESS, 400, 2), true);break;
+		case 7:meta.addCustomEffect(new PotionEffect(PotionEffectType.JUMP, 80, 8), true);break;
+		}
+		switch(Utils.NombreEntre(0, 5)){
+		case 0:meta.setColor(Color.AQUA);break;
+		case 1:meta.setColor(Color.BLUE);break;
+		case 2:meta.setColor(Color.GREEN);break;
+		case 3:meta.setColor(Color.PURPLE);break;
+		case 4:meta.setColor(Color.RED);break;
+		case 5:meta.setColor(Color.WHITE);break;
+		}
+		meta.setDisplayName("Poció a distància");
+		
+		item.setItemMeta(meta);
+		llistaItems.add(item);
+		return llistaItems;
+	}
+	
+	public List<ItemStack> getMiddleChestItems(){
+		List<ItemStack> llistaItems = new ArrayList<>();	
+		int maxN = Utils.NombreEntre(4, 9);
+		int n = 0;
+		
+		
+		while(n < maxN){
+			if(Utils.Possibilitat(5)){
+				ItemStack item =new ItemStack(Material.ENDER_PEARL, 1);
+				ItemMeta meta =  item.getItemMeta();
+				ArrayList<String> lore = new ArrayList<String>();
+				lore.add("No ens fem responsables");
+				lore.add("de les morts provocades");
+				lore.add("per aquest item");
+				meta.setLore(lore);
+				item.setItemMeta(meta);
+				
+				llistaItems.add(item);
+				n++;
+			}
+			if(Utils.Possibilitat(2)){		
+				ItemStack item = new ItemStack(Material.GOLD_LEGGINGS, 1);
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+				
+				llistaItems.add(item);
+				n++;
+			}
+			if(Utils.Possibilitat(2)){		
+				ItemStack item = new ItemStack(Material.GOLD_CHESTPLATE, 1);
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+			
+				llistaItems.add(item);
+				n++;
+			}
+			if(Utils.Possibilitat(2)){		
+				ItemStack item = new ItemStack(Material.GOLD_BOOTS, 1);
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+				
+			
+				llistaItems.add(item);
+				n++;
+			}
+			if(Utils.Possibilitat(2)){		
+				ItemStack item = new ItemStack(Material.GOLD_HELMET, 1);
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(10))item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+				
+				llistaItems.add(item);
+				n++;
+			}
+			if(Utils.Possibilitat(1)){		
+				ItemStack item = new ItemStack(Material.GOLD_AXE, 1);
+				if(Utils.Possibilitat(20))item.addUnsafeEnchantment(Enchantment.FIRE_ASPECT, Utils.NombreEntre(1, 5));
+				if(Utils.Possibilitat(1))item.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 3);
+			
+				llistaItems.add(item);
+				n++;
+			}
+			if(Utils.Possibilitat(10)){
+				llistaItems.add(new ItemStack(Material.GOLDEN_APPLE, 1));
+				n++;
+			}
+			if(Utils.Possibilitat(20)){
+				ItemStack item = new ItemStack(Material.IRON_INGOT, 1);
+				if(Utils.Possibilitat(1)&&Utils.Possibilitat(1))item.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
+				
+				llistaItems.add(item);
+				n++;
+			}
+			if(Utils.Possibilitat(3)){
+				llistaItems.add(new ItemStack(Material.GLASS, 16));
+				n++;
+			}
+			if(Utils.Possibilitat(5)){
+				llistaItems.add(new ItemStack(Material.SHIELD, 1));
+				n++;
+			}
+			if(Utils.Possibilitat(20)){
+				llistaItems.add(new ItemStack(Material.ARROW, 4));
+				n++;
+			}
+			if(Utils.Possibilitat(5)){		
+				ItemStack item = new ItemStack(Material.POTION, 1);
+				PotionMeta meta = (PotionMeta) item.getItemMeta();
+				 
+				switch(Utils.NombreEntre(1, 9)){
+				case 1: meta.addCustomEffect(new PotionEffect(PotionEffectType.POISON, 80, 1), true);break;
+				case 2: meta.addCustomEffect(new PotionEffect(PotionEffectType.ABSORPTION, 800, 4), true);break;
+				case 3: meta.addCustomEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 800, 2), true);break;
+				case 4: meta.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 1200, 1), true);break;
+				case 5: meta.addCustomEffect(new PotionEffect(PotionEffectType.JUMP, 320, 4), true);break;
+				case 6: meta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, 600, 1), true);break;
+				case 7: meta.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 1200, 1), true);break;
+				case 8: meta.addCustomEffect(new PotionEffect(PotionEffectType.GLOWING, 320, 1), true);break;
+				case 9: meta.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 600, 1), true);break;
+				}
+				meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+				meta.setDisplayName("Poció Màgica");
+				meta.setColor(Color.YELLOW);
+				
+				ArrayList<String> lore = new ArrayList<String>();
+				lore.add("Una poció amb poders");
+				lore.add("aleatoris :D");
+				meta.setLore(lore);
+				item.setItemMeta(meta);
+				
+				llistaItems.add(item);
+				n++;
+			}
+		}
+		return llistaItems;
 	}
 
 }
