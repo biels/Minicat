@@ -521,12 +521,8 @@ public class Parkour extends JocScoreCombo{
 		List<Pair<Class<? extends ParkourBubble>, Double>> getRegisteredBubbleTypes(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<>();
 			r.add(new Pair<>(SingleBlockBubble.class, 60D));
-			r.add(new Pair<>(ZigZagBubble.class, 8D));
-			r.add(new Pair<>(CrossBlockTowerBubble.class, 10D));
-			r.add(new Pair<>(SingleBlockLineBubble.class, 10D));
-			r.add(new Pair<>(SlimeJumpBubble.class, 10D));
-			r.add(new Pair<>(GlassPaneLineBubble.class, 10D));
-			r.add(new Pair<>(SineWaveBubble.class, 8D));
+			//r.add(new Pair<>(ZigZagBubble.class, 8D));
+			//r.add(new Pair<>(SingleBlockLineBubble.class, 10D));
 			return r;
 		}
 		
@@ -666,6 +662,7 @@ public class Parkour extends JocScoreCombo{
 				return 3 * n  + 1;
 			}
 		}
+		
 		public class SingleBlockLineBubble extends ParkourBubble{
 			int n = Utils.NombreEntre(2, 4) * 2;
 			@Override
@@ -686,125 +683,7 @@ public class Parkour extends JocScoreCombo{
 			}
 			
 		}
-		public class SlimeJumpBubble extends ParkourBubble{
-			@Override
-			public Vector getRandomBubbleSpacing() {
-				// TODO Auto-generated method stub
-				return getForward().multiply(2).add(new Vector(0,-12,0));
-			}
-
-			@Override
-			public void generate() {
-				// TODO Auto-generated method stub
-				for(int i = 0; i < 3; i++){
-					for (int j = 0; j < 3; j++){
-						blocks.add(getRight().multiply(i - 1).add(getForward().multiply(j)));materials.add(Material.SLIME_BLOCK);
-					}
-				}
-				checkpoints.add(new Checkpoint(getForward(), 2.12));
-				Vector d = getForward().multiply(5).add(getUp().multiply(4));
-				for(int i = 0; i < 3; i++){
-					for (int j = 0; j < 2; j++){
-						blocks.add(getRight().multiply(i - 1).add(getForward().multiply(j)).add(d));materials.add(Material.QUARTZ_BLOCK);
-					}
-				}
-				checkpoints.add(new Checkpoint(d.clone().add(getForward()), 1.8));
-			}
-
-			@Override
-			public double getMultiplier() {
-				// TODO Auto-generated method stub
-				return 1.5;
-			}
-			
-		}
-		public class CrossBlockTowerBubble extends ParkourBubble{
-			int n = Utils.NombreEntre(0, 2) * 4 + 3;
-			@Override
-			public Vector getRandomBubbleSpacing() {
-				// TODO Auto-generated method stub
-				Vector randomBubbleSpacing = super.getRandomBubbleSpacing();
-				randomBubbleSpacing.setY(0);
-				return randomBubbleSpacing;
-			}
-			@Override
-			public void generate() {
-				Vector c = getForward();
-				Vector d = getBackRightLeftRandom();
-				if(!d.equals(getBackward()))n--;
-				int t = GUtils.NombreEntre(-2, 2);
-				boolean counterClockwise = d.equals(getRight());
-				//sendGlobalMessage("ccw: " + counterClockwise);
-				for (int i = 0; i < n; i++) {
-					Vector lc = c.clone().add(getUp().multiply(i));
-					blocks.add(lc);materials.add((t == 1 ? Material.PACKED_ICE : Material.QUARTZ_BLOCK));
-					Vector dlc = lc.clone().add(d);
-					Material mat = Material.QUARTZ_BLOCK;
-					if(t == 1)if(GUtils.Possibilitat(30))mat = Material.IRON_FENCE;
-					if(t == 2)if(GUtils.Possibilitat(60))mat = Material.PACKED_ICE;
-					blocks.add(dlc);materials.add(mat);
-					checkpoints.add(new Checkpoint(dlc));
-					d = GUtils.rotateVector(d, getUp(), (Math.PI/2.0) * (counterClockwise ? 1 : -1));
-				}
-
-			}
-
-			@Override
-			public double getMultiplier() {
-				// TODO Auto-generated method stub
-				return 1.7 * n + 0.5;
-			}
-
-		}
-		public class GlassPaneLineBubble extends ParkourBubble{
-
-			@Override
-			public void generate() {
-				// TODO Auto-generated method stub
-				
-				blocks.add(getZero());materials.add(Material.QUARTZ_BLOCK);
-				checkpoints.add(new Checkpoint(getZero()));
-				for(int i = 1; i < 15; i++){
-					if (Utils.Possibilitat(80)){
-						blocks.add(getForward().multiply(i));materials.add(Material.STAINED_GLASS_PANE);
-						if (i % 3 == 0) checkpoints.add(new Checkpoint(getForward().multiply(i)));
-					}
-				}
-				Vector end = getForward().multiply(15);
-				blocks.add(end);materials.add(Material.QUARTZ_BLOCK);
-				checkpoints.add(new Checkpoint(end));
-			}
-
-			@Override
-			public double getMultiplier() {
-				// TODO Auto-generated method stub
-				return 5.5;
-			}
-			
-		}
-		public class SineWaveBubble extends ParkourBubble{
-			int n = Utils.NombreEntre(1, 4);
-			int r = Utils.NombreEntre(3, 9);
-			@Override
-			public void generate() {
-				// TODO Auto-generated method stub
-				
-				for (double i = 0; i <= 2 * r * n; i = i + 1) {
-					double x = i;
-					double y = Math.sin(i * Math.PI / (2*r)) * r;
-					Vector v = getForward().multiply(x).add(getLeft().multiply(y));
-					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
-					if(i % (r) == 0)checkpoints.add(new Checkpoint(v));
-				}
-			}
-
-			@Override
-			public double getMultiplier() {
-				// TODO Auto-generated method stub
-				return  Math.PI * r * n / 2;
-			}
-			
-		}
+		
 	}
 	
 	
