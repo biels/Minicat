@@ -615,10 +615,11 @@ public abstract class Joc extends MapaResetejable {
 	}
 	@Override
 	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
-		// TODO Auto-generated method stub
+
 		super.onPlayerDeathByPlayer(evt, killed, killer);
-		if(killed == killer)evt.setDeathMessage(ChatColor.YELLOW + killed.getName() + ChatColor.RED + " s'ha suïcidat");
-		if(giveSnowLauncherOnKill())killer.getInventory().addItem(getSnowLauncher(1));
+		if(killed == killer) evt.setDeathMessage(ChatColor.YELLOW + killed.getName() + ChatColor.RED + " s'ha suïcidat");
+		if(giveSnowLauncherOnKill()) killer.getInventory().addItem(getSnowLauncher(1));
+
 	}
 	public void allOnTheLobby(){
 		for (Player p : world.getPlayers()){

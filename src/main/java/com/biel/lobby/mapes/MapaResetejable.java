@@ -113,6 +113,11 @@ public abstract class MapaResetejable extends Mapa {
 			}
 
 		}
+		if(getMapMode() == MapMode.SINGLE) {
+			r.add(getMapName());
+
+
+		}
 		return r;
 	}
 	public String getMultiMapName() {
