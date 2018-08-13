@@ -3,7 +3,6 @@ package com.biel.lobby.mapes.jocs;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.Regions.Cuboid;
 import com.biel.lobby.mapes.JocEquipsLastStanding;
-import com.biel.lobby.mapes.JocObjectius;
 import com.biel.lobby.utilities.BUtils;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
@@ -15,13 +14,13 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 public class BedWars extends JocEquipsLastStanding {
@@ -32,12 +31,14 @@ public class BedWars extends JocEquipsLastStanding {
 
     @Override
     protected void customJocIniciat() {
+
         super.customJocIniciat();
-        Equips.stream()
-                .map(e -> (EquipBedWars)e)
-                .forEach(EquipBedWars::detectBed);
+
+        Equips.stream().map(e -> (EquipBedWars)e).forEach(EquipBedWars::detectBed);
         setBlockBreakPlace(true);
         setGiveStartingItemsRespawn(true);
+        updateScoreBoards();
+
     }
 
     @Override
@@ -45,8 +46,8 @@ public class BedWars extends JocEquipsLastStanding {
 
         ArrayList<Equip> equips = new ArrayList<>();
 
-            equips.add(new EquipBedWars(DyeColor.RED, "vermell"));
-            equips.add(new EquipBedWars(DyeColor.BLUE, "blau"));
+            equips.add(new EquipBedWars(DyeColor.ORANGE, "taronja"));
+            equips.add(new EquipBedWars(DyeColor.GREEN, "verd"));
 
         return equips;
 
@@ -72,8 +73,8 @@ public class BedWars extends JocEquipsLastStanding {
             // Armor
             items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
             items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
+            items.add(new ItemStack(Material.IRON_LEGGINGS, 1));
             items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
-            items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 
             // Sword
             ItemStack sword = new ItemStack(Material.IRON_SWORD, 1);
@@ -97,8 +98,8 @@ public class BedWars extends JocEquipsLastStanding {
             int block_amount = (int) (45 * balancingMultiplier);
             if (block_amount > 64) block_amount = 64;
 
-            if (obtenirEquip(ply).getId() == 0) items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 14));
-            else items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 10));
+            if (obtenirEquip(ply).getId() == 0) items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 1));
+            else items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 5));
 
             // Arrows
             int arrows = (int) (50 * balancingMultiplier);
@@ -118,13 +119,19 @@ public class BedWars extends JocEquipsLastStanding {
         return obtenirEquip(ply, EquipBedWars.class);
     }
 
+    @Override
+    protected void updateScoreBoards() {
+        getPlayers().forEach(this::updateScoreBoard);
+    }
 
     @Override
     protected void updateScoreBoard(Player ply) {
 
-        super.updateScoreBoard(ply);
-
-        if(!JocIniciat) return;
+        if(!JocIniciat) {
+            ArrayList<String> list = new ArrayList<>();
+            ScoreBoardUpdater.setScoreBoard(ply, ChatColor.BOLD + "" + ChatColor.RED + "Bed Wars", list, null);
+            return;
+        }
 
         ArrayList<String> list = new ArrayList<>();
 
@@ -188,7 +195,7 @@ public class BedWars extends JocEquipsLastStanding {
     protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
 
         super.onPlayerDeath(evt, killed);
-        Bukkit.broadcastMessage("isBedAlive: " + obtenirEquip(killed).isBedAlive());
+        updateScoreBoards();
         if(!obtenirEquip(killed).isBedAlive()) removeAlive(killed);
     }
 
@@ -219,22 +226,21 @@ public class BedWars extends JocEquipsLastStanding {
 
             } else {
 
+                blk.setType(Material.AIR);
                 sendGlobalSound(Sound.ENTITY_ENDERDRAGON_GROWL, 100, 1);
-                String text = obtenirEquip(ply).getChatColor() == ChatColor.RED
-                        ? ChatColor.GREEN + "S'ha destruit el llit " + ChatColor.BLUE + "blau"
-                        : ChatColor.GREEN + "S'ha destruit el llit " + ChatColor.RED + "vermell";
+                String text = obtenirEquip(ply).getId() == 0
+                        ? ChatColor.RED + "S'ha destruit el llit " + ChatColor.GREEN + "verd"
+                        : ChatColor.RED + "S'ha destruit el llit " + ChatColor.GOLD + "taronja";
 
                 for (Player p : getPlayers()) {
                     BountifulAPI.sendTitle(p, 10, 20, 10, "", text);
                 }
 
+                updateScoreBoards();
+
             }
 
-            updateScoreBoards();
-
         }
-
-        // Check if block has been placed by a player or was on the map by default
 
     }
 
