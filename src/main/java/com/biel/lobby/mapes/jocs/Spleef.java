@@ -294,7 +294,7 @@ public class Spleef extends JocLastStanding {
 
 	private void arrowAoE(Location loc, ProjectileHitEvent evt,
 			LivingEntity shooter) {
-		if (evt.getEntityType() == EntityType.ARROW && shooter.getLocation().getBlockY() > 20){        			
+		if (evt.getEntityType() == EntityType.ARROW){        			
 			//        			loc.getBlock().setType(BREAK_TYPE);
 			int i = 2;
 			while (i > 0){
