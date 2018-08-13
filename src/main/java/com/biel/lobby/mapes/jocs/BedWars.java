@@ -4,6 +4,7 @@ import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.Regions.Cuboid;
 import com.biel.lobby.mapes.JocEquipsLastStanding;
 import com.biel.lobby.mapes.JocObjectius;
+import com.biel.lobby.utilities.BUtils;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 import com.connorlinfoot.bountifulapi.BountifulAPI;
@@ -164,14 +165,7 @@ public class BedWars extends JocEquipsLastStanding {
     protected void onBlockHitByProjectile(ProjectileHitEvent evt, Block b, Projectile proj) {
 
         super.onBlockHitByProjectile(evt, b, proj);
-
-        Material t = b.getType();
-        if (
-                t == Material.GLASS ||
-                t == Material.STAINED_GLASS ||
-                t == Material.STAINED_GLASS_PANE ||
-                t == Material.THIN_GLASS
-        ) {
+        if (BUtils.isGlassBlock(b)) {
 
             b.setType(Material.AIR);
             getWorld().playSound(b.getLocation(), Sound.BLOCK_GLASS_BREAK, 15F, 1.2F);
@@ -181,14 +175,8 @@ public class BedWars extends JocEquipsLastStanding {
 
                 if (GUtils.Possibilitat(58)) continue;
                 Block relative = b.getRelative(f);
-                t = relative.getType();
 
-                if (
-                        t == Material.GLASS ||
-                        t == Material.STAINED_GLASS ||
-                        t == Material.STAINED_GLASS_PANE ||
-                        t == Material.THIN_GLASS
-                ) {
+                if (BUtils.isGlassBlock(b)) {
                     relative.setType(Material.AIR);
                 }
 

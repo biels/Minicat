@@ -54,4 +54,16 @@ public class BUtils {
 		return blks;
 	}
 
+	public static boolean isGlassBlock(Block blk) {
+
+		Material t = blk.getType();
+		return (
+			t == Material.GLASS ||
+			t == Material.STAINED_GLASS ||
+			t == Material.STAINED_GLASS_PANE ||
+			t == Material.THIN_GLASS
+		);
+
+	}
+
 }
