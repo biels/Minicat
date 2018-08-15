@@ -25,6 +25,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
@@ -150,7 +152,6 @@ public class Parkour extends JocScoreCombo{
 			updateStartingPlatforms();
 		}
 		if(JocIniciat){
-			streams.forEach(ParkourStream::tick);
 			comprovarFinish();
 		}
 	}
@@ -179,6 +180,7 @@ public class Parkour extends JocScoreCombo{
 		if(!JocIniciat){
 			if(!evt.getFrom().getBlock().equals(evt.getTo().getBlock()))evt.setCancelled(true);
 		}
+		
 	}
 	@Override
 	protected void onPlayerDamage(EntityDamageEvent evt, Player p) {
@@ -224,9 +226,7 @@ public class Parkour extends JocScoreCombo{
 		public BubbleHandler getTargetBubbleHandler(){
 			return handlers.get(targetBubbleIndex);
 		}
-		protected void tick(){
-			getPlayer().setExp((targetBubbleIndex /(float) mapLength));			
-		}
+		
 		protected void ultraTick(){
 			getTargetBubbleHandler().handleTick();
 		}
@@ -374,7 +374,14 @@ public class Parkour extends JocScoreCombo{
 				p.teleport(getBubble().getFailTeleportPoint(startLocation));
 				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_HORSE_ARMOR, 1F, 1.1F);
 				advance(Score.FAIL);
+				
+				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 25, 129));
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 25, 129));
+
 			}
+			
+
+			
 			//CHECKPOINT HANDLER
 			public class CheckpointHandler{
 				int checkpointIndex;
@@ -449,9 +456,8 @@ public class Parkour extends JocScoreCombo{
 				}
 				public void createHolgram(){
 					if (ho != null){return;}
-					//getHologramLocation().getBlock().setType(Material.GOLD_BLOCK);
 					ho = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
-					////sendGlobalMessage("Hologram created + "  + getHologramDisplayText());
+
 				}
 				public void updateHologram(){
 					if (ho == null){createHolgram();}
@@ -468,7 +474,7 @@ public class Parkour extends JocScoreCombo{
 			}
 		}
 	}
-	public class ParkourProvider{ //Single instnace
+	public class ParkourProvider{ //Single instance
 		//		ParkourModule currentModule;
 		ArrayList<ParkourBubble> bubbles = new ArrayList<>();
 		public ParkourBubble getBubble(int index){
@@ -485,8 +491,7 @@ public class Parkour extends JocScoreCombo{
 				b = getRandomBubbleType().getConstructor(ParkourProvider.class).newInstance(this);			
 				b.generate();
 				if(bubbles.size() > 0){
-					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(b.getRandomBubbleSpacing());
-					//if(newEntryPoint.getBlockY() < 5)newEntryPoint.setY(5);		
+					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(b.getRandomBubbleSpacing());	
 					b.setEntryPoint(newEntryPoint);
 				}else{
 					b.setEntryPoint(getForward().multiply(4));
@@ -510,32 +515,12 @@ public class Parkour extends JocScoreCombo{
 				if(i > 300)break;
 			}
 			return registeredBubbleTypes.get(0).getFirst();
-			//			int c = 0;
-			//			for(Pair<Class<? extends ParkourBubble>, Double> t : registeredBubbleTypes){
-			//				if(Utils.Possibilitat(t.getSecond(), 100 + 10 * registeredBubbleTypes.size()))return t.getFirst();
-			//				if(c > 50)return registeredBubbleTypes.get(0).getFirst();
-			//				c++;
-			//			}
-			//			return null;
 		}
 		List<Pair<Class<? extends ParkourBubble>, Double>> getRegisteredBubbleTypes(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<>();
 			r.add(new Pair<>(SingleBlockBubble.class, 60D));
-			//r.add(new Pair<>(ZigZagBubble.class, 8D));
-			//r.add(new Pair<>(SingleBlockLineBubble.class, 10D));
 			return r;
 		}
-		
-		//		public class ParkourModule{ //Set of bubbles
-		//			ArrayList<ParkourBubble> bubbles = new ArrayList<ParkourBubble>();
-		//			Vector startPoint;
-		//			public ParkourBubble getNextBubble(){
-		//				return null;				
-		//			}
-		//			public void generateBubbles(){
-		//				
-		//			}
-		//		}
 
 		public abstract class ParkourBubble{ //Single island on sky
 			private Vector entryPoint; //Absolute - ISSUES
