@@ -253,7 +253,7 @@ public class RainbowClay extends JocObjectius {
 
 		if (centre.contains(blk) && blk.getType() == Material.CHEST) {
 			evt.setCancelled(true);
-			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots destruir els cofres del cnetre";
+			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots destruir els cofres del centre";
 			BountifulAPI.sendActionBar(ply, msg, 150);
 
 		}
