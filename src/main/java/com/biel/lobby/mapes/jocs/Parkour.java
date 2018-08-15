@@ -137,12 +137,15 @@ public class Parkour extends JocScoreCombo{
 		playerCount = players.size();
 	}
 	protected void teleportToEndingSpawn(Player p){
-		p.teleport(pMapaActual().ObtenirLocation("endSpawn", world));
+		//p.teleport(pMapaActual().ObtenirLocation("endSpawn", world));
 	}
 	public void comprovarFinish(){
 		//boolean allFinished = streams.stream().mapToInt(ParkourStream::getTargetBubbleIndex).min().getAsInt() > 100;
 		boolean allFinished = getPlayers().stream().map(p -> getPlayerInfo(p).isInGame()).allMatch(b -> b == false);
-		if(allFinished)comprovarGuanyador();
+		if(allFinished){
+			comprovarGuanyador();
+			
+		}
 	}
 	@Override
 	public void heartbeat() {
@@ -377,7 +380,6 @@ public class Parkour extends JocScoreCombo{
 				
 				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 25, 129));
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 25, 129));
-
 			}
 			
 
