@@ -56,9 +56,11 @@ public class BatallaAerea extends JocScoreRace {
         items.add(p2.toItemStack(2));
         items.add(new ItemStack(Material.ARROW, 1));
         items.add(new ItemStack(Material.CHAINMAIL_HELMET, 1));
-        items.add(new ItemStack(Material.ELYTRA, 1));
+        ply.getInventory().setChestplate(new ItemStack(Material.ELYTRA));
+        ply.getInventory().setItemInOffHand(new ItemStack(Material.SHIELD));
         items.add(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
         items.add(new ItemStack(Material.CHAINMAIL_BOOTS, 1));
+
         return items;
     }
     @Override
@@ -145,8 +147,10 @@ public class BatallaAerea extends JocScoreRace {
             p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 128, true), true);
             p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 128, true), true);
             p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 30, 128, true), true);
+            // Aixó dona els items inicials als jugadors
 
         }
+
         if(p.getInventory().contains(getMagnusLauncherItem(), 1)){
 
         }else if(p.getInventory().containsAtLeast(getMagnusLauncherItem(), 2)){
