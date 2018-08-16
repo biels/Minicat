@@ -113,6 +113,7 @@ public class BatallaAerea extends JocScoreRace {
         // TODO Auto-generated method stub
         super.onPlayerRespawnAfterTick(evt, p);
         teleportToRandomSpawn(p);
+
     }
     public double getMinimumHeight(){
         double r = 10.0;
