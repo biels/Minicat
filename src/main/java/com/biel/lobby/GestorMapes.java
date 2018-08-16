@@ -66,6 +66,7 @@ public class GestorMapes implements Listener{
 		//Mapes.add(new ContenidorJoc(TempleQuest.class, "Temple Quest", Material.QUARTZ_BLOCK, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(OneInTheChamber.class, "OneInTheChamber", Material.BOW, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(BedWars.class, "Bed Wars", Material.BED, DevelopmentState.InDevelopment));
+		Mapes.add(new ContenidorJoc(BatallaAerea.class, "Batalla Aerea", Material.ELYTRA, DevelopmentState.InDevelopment));
 	}
 	public void queryAutoRatings() {
 		auto_ratings = Com.getDataAPI().getAutoRating();
