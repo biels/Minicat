@@ -69,11 +69,11 @@ public class ResourceRush extends JocTeamScoreRace {
 			return 20;
 		case IRON_INGOT:
 			return 15;
-		case INK_SACK:
+		case INK_SAC:
 			return 15;
 		case COAL:
 			return 4;
-		case LOG:
+		case OAK_LOG:
 			return 1;
 		default:
 			return 0;
@@ -90,11 +90,11 @@ public class ResourceRush extends JocTeamScoreRace {
 			return 2;
 		case IRON_INGOT:
 			return 4;
-		case INK_SACK:
+		case INK_SAC:
 			return 0;
 		case COAL:
 			return 4;
-		case LOG:
+		case OAK_LOG:
 			return 1;
 		default:
 			return 0;
@@ -102,7 +102,7 @@ public class ResourceRush extends JocTeamScoreRace {
 	}
 	public ArrayList<ItemStack> getChestStartingContents(int m){
 		ArrayList<ItemStack> r = new ArrayList<>();
-		r.add(new ItemStack(Material.LOG, 2 * m));
+		r.add(new ItemStack(Material.OAK_LOG, 2 * m));
 		r.add(new ItemStack(Material.COAL, 4 * m));
 		r.add(new ItemStack(Material.COAL, 4 * m));
 		r.add(new ItemStack(Material.IRON_INGOT, 4 * m));
@@ -122,11 +122,11 @@ public class ResourceRush extends JocTeamScoreRace {
 			return ChatColor.GOLD;
 		case IRON_INGOT:
 			return ChatColor.DARK_GRAY;
-		case INK_SACK:
+		case INK_SAC:
 			return ChatColor.DARK_BLUE;
 		case COAL:
 			return ChatColor.BLACK;
-		case LOG:
+		case OAK_LOG:
 			return ChatColor.GRAY;
 		default:
 			return ChatColor.WHITE;

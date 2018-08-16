@@ -134,7 +134,8 @@ public class ExternalCombustionEngine extends InherentSkill {
 			Predicate<? super Player> enemyCheck = p -> getGame().areEnemies(ply, p);
 			if(isNthTick(10))nearbyPlayers.stream().filter(enemyCheck).forEach(dmgAction
 					//.andThen(p -> ((Entity) p).setFireTicks((getValue() > 50 ? 4 : 0)))
-					.andThen(p -> getWorld().playEffect(((LivingEntity) p).getEyeLocation().subtract(Utils.NombreEntre(-0.1, 0.1), Utils.NombreEntre(-1.8, 0.1), Utils.NombreEntre(-0.1, 0.1)), Effect.LARGE_SMOKE, 0))
+					// TODO: 1.13 Update effect name
+					// .andThen(p -> getWorld().playEffect(((LivingEntity) p).getEyeLocation().subtract(Utils.NombreEntre(-0.1, 0.1), Utils.NombreEntre(-1.8, 0.1), Utils.NombreEntre(-0.1, 0.1)), Effect.LARGE_SMOKE, 0))
 					.andThen(p -> getWorld().playSound(((LivingEntity) p).getEyeLocation(), Sound.BLOCK_FIRE_AMBIENT,(float) (0.5 * distFact.apply((Player) p)), 1.05F))
 					);
 		}

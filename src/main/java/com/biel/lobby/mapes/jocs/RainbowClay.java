@@ -3,6 +3,7 @@ package com.biel.lobby.mapes.jocs;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biel.lobby.utilities.BUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -173,13 +174,13 @@ public class RainbowClay extends JocObjectius {
 		}
 		if (obtenirEquip(ply).getId() == 0) {
 
-			items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 14));
+			items.add(new ItemStack(Material.RED_TERRACOTTA, block_amount));
 		} else {
 
-			items.add(new ItemStack(Material.STAINED_CLAY, block_amount, (short) 10));
+			items.add(new ItemStack(Material.BLUE_TERRACOTTA, block_amount));
 		}
 
-		items.add(new ItemStack(Material.WEB, 1));
+		items.add(new ItemStack(Material.COBWEB, 1));
 
 		return items;
 	}
@@ -220,7 +221,7 @@ public class RainbowClay extends JocObjectius {
 		}
 
 		if ((llana1.contains(blk) || llana2.contains(blk) || llana3.contains(blk) || llana4.contains(blk))
-				&& blk.getType() != Material.WEB) {
+				&& blk.getType() != Material.COBWEB) {
 
 			evt.setCancelled(true);
 			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots modificar la llana";
@@ -243,7 +244,7 @@ public class RainbowClay extends JocObjectius {
 		Cuboid llana4 = pMapaActual().ObtenirCuboid("RegT21", getWorld());
 
 		if ((llana1.contains(blk) || llana2.contains(blk) || llana3.contains(blk) || llana4.contains(blk))
-				&& blk.getType() != Material.WEB) {
+				&& blk.getType() != Material.COBWEB) {
 
 			evt.setCancelled(true);
 			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots modificar la llana";
@@ -258,7 +259,7 @@ public class RainbowClay extends JocObjectius {
 
 		}
 
-		if (blk.getType() == Material.STAINED_CLAY && blk.getData() == 11) {
+		if (blk.getType() == Material.PURPLE_TERRACOTTA) {
 			evt.setCancelled(true);
 		}
 
@@ -349,7 +350,7 @@ public class RainbowClay extends JocObjectius {
 					if (cub.contains(to.getBlock())) {
 						if (e == equip) {
 							Vector vec = Utils.CrearVector(center, from).normalize().add(new Vector(0, 1, 0));
-							getWorld().playSound(to, Sound.ENTITY_IRONGOLEM_HURT, 1F, 2.2F);
+							getWorld().playSound(to, Sound.ENTITY_IRON_GOLEM_HURT, 1F, 2.2F);
 							getWorld().playEffect(to, Effect.MOBSPAWNER_FLAMES, 3);
 							getWorld().playEffect(to.clone().add(new Vector(0, 1, 0)), Effect.MOBSPAWNER_FLAMES, 3);
 							if (cub.contains(from.getBlock()) && plyr.getVelocity().length() >= 1) {
@@ -389,7 +390,6 @@ public class RainbowClay extends JocObjectius {
 					ItemStack placeableItemStack = getPlaceableItemStack(ply);
 					if (placeableItemStack != null) {
 						bDown.setType(placeableItemStack.getType());
-						bDown.setData(placeableItemStack.getData().getData());
 						ItemStack sampleIt = new ItemStack(placeableItemStack);
 						sampleIt.setAmount(1);
 						ply.getInventory().removeItem(sampleIt);
@@ -407,8 +407,8 @@ public class RainbowClay extends JocObjectius {
 		super.onBlockHitByProjectile(evt, b, proj);
 		// sendGlobalMessage("Pilotassa");
 		Material t = b.getType();
-		if (t == Material.GLASS || t == Material.STAINED_GLASS || t == Material.STAINED_GLASS_PANE
-				|| t == Material.THIN_GLASS || t == Material.GLOWSTONE) {
+
+		if (BUtils.isGlassBlock(b) || t == Material.GLOWSTONE) {
 			b.setType(Material.AIR);
 			getWorld().playSound(b.getLocation(), Sound.BLOCK_GLASS_BREAK, 15F, 1.2F);
 			proj.remove();
@@ -417,8 +417,7 @@ public class RainbowClay extends JocObjectius {
 					continue;
 				Block relative = b.getRelative(f);
 				t = relative.getType();
-				if (t == Material.GLASS || t == Material.STAINED_GLASS || t == Material.STAINED_GLASS_PANE
-						|| t == Material.THIN_GLASS || t == Material.GLOWSTONE) {
+				if (BUtils.isGlassBlock(relative) || t == Material.GLOWSTONE) {
 					relative.setType(Material.AIR);
 				}
 			}
@@ -545,7 +544,7 @@ public class RainbowClay extends JocObjectius {
 				n++;
 			}
 			if (Utils.Possibilitat(2)) {
-				ItemStack item = new ItemStack(Material.GOLD_LEGGINGS, 1);
+				ItemStack item = new ItemStack(Material.GOLDEN_LEGGINGS, 1);
 				if (Utils.Possibilitat(15))
 					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
@@ -556,19 +555,7 @@ public class RainbowClay extends JocObjectius {
 				n++;
 			}
 			if (Utils.Possibilitat(2)) {
-				ItemStack item = new ItemStack(Material.GOLD_CHESTPLATE, 1);
-				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
-				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
-				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
-
-				llistaItems.add(item);
-				n++;
-			}
-			if (Utils.Possibilitat(2)) {
-				ItemStack item = new ItemStack(Material.GOLD_BOOTS, 1);
+				ItemStack item = new ItemStack(Material.GOLDEN_CHESTPLATE, 1);
 				if (Utils.Possibilitat(15))
 					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
@@ -580,7 +567,19 @@ public class RainbowClay extends JocObjectius {
 				n++;
 			}
 			if (Utils.Possibilitat(2)) {
-				ItemStack item = new ItemStack(Material.GOLD_HELMET, 1);
+				ItemStack item = new ItemStack(Material.GOLDEN_BOOTS, 1);
+				if (Utils.Possibilitat(15))
+					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+				if (Utils.Possibilitat(15))
+					item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
+				if (Utils.Possibilitat(15))
+					item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+
+				llistaItems.add(item);
+				n++;
+			}
+			if (Utils.Possibilitat(2)) {
+				ItemStack item = new ItemStack(Material.GOLDEN_HELMET, 1);
 				if (Utils.Possibilitat(15))
 					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
@@ -592,7 +591,7 @@ public class RainbowClay extends JocObjectius {
 				n++;
 			}
 			if (Utils.Possibilitat(1)) {
-				ItemStack item = new ItemStack(Material.GOLD_AXE, 1);
+				ItemStack item = new ItemStack(Material.GOLDEN_AXE, 1);
 				if (Utils.Possibilitat(30))
 					item.addUnsafeEnchantment(Enchantment.FIRE_ASPECT, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(1))

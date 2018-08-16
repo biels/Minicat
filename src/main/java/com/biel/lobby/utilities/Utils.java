@@ -284,7 +284,12 @@ public class Utils {
 		ArrayList<BlockFace> faces = new ArrayList<>();
 		for (BlockFace f : fToCheck){
 			Block bl = b.getRelative(f);
-			if (bl.getType() == Material.LOG){faces.add(f);}
+			if (bl.getType() == Material.OAK_LOG){faces.add(f);}
+			if (bl.getType() == Material.ACACIA_LOG){faces.add(f);}
+			if (bl.getType() == Material.BIRCH_LOG){faces.add(f);}
+			if (bl.getType() == Material.DARK_OAK_LOG){faces.add(f);}
+			if (bl.getType() == Material.JUNGLE_LOG){faces.add(f);}
+			if (bl.getType() == Material.SPRUCE_LOG){faces.add(f);}
 		}
 		return faces;
 	}
@@ -538,7 +543,7 @@ public class Utils {
 	}
 	public static ArrayList<ItemStack> getBrewingItems(){
 		ArrayList<ItemStack> i = new ArrayList<>();
-		i.add(new ItemStack(Material.NETHER_WARTS));
+		i.add(new ItemStack(Material.NETHER_WART));
 		i.add(new ItemStack(Material.GLOWSTONE));
 		i.add(new ItemStack(Material.REDSTONE));
 		i.add(new ItemStack(Material.SPIDER_EYE));

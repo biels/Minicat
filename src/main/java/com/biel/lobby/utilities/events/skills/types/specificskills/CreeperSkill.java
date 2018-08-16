@@ -31,7 +31,7 @@ public class CreeperSkill extends InherentSkill {
 	@Override
 	public Material getMaterial() {
 		// TODO Auto-generated method stub
-		return Material.SKULL_ITEM;
+		return Material.SKELETON_SKULL;
 	}
 	@Override
 	public Byte getData() {
@@ -62,7 +62,8 @@ public class CreeperSkill extends InherentSkill {
 		int dist = 10;
 		Location c = killed.getEyeLocation();
 		ArrayList<Player> nearbyPlayers = GUtils.getNearbyPlayers(c, dist);
-		getWorld().playEffect(c, Effect.EXPLOSION_HUGE, 8);
+		// TODO: 1.13 Update effect name
+		// getWorld().playEffect(c, Effect.EXPLOSION_HUGE, 8);
 		getWorld().playSound(c, Sound.ENTITY_GENERIC_EXPLODE, 0.8F, 1.0F);
 		getWorld().playSound(c, Sound.ENTITY_CREEPER_PRIMED, 0.8F, 1.0F);
 		//evt.getDrops().add(new ItemStack(Material.))
@@ -73,8 +74,9 @@ public class CreeperSkill extends InherentSkill {
 	}
 	public void playEffect(Player p) {
 		for (int i = 0; i < 12; i++) {
-			getWorld().playEffect(p.getEyeLocation().subtract(0, 0.9, 0),
-					Effect.SNOWBALL_BREAK, Utils.NombreEntre(0, 7));
+			// TODO: 1.13 Update effect name
+			/*getWorld().playEffect(p.getEyeLocation().subtract(0, 0.9, 0),
+					Effect.SNOWBALL_BREAK, Utils.NombreEntre(0, 7));*/
 		}
 	}
 

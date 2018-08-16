@@ -40,7 +40,7 @@ public class Arena4 extends JocEquips {
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
-		items.add(new ItemStack(Material.WOOD_SWORD));
+		items.add(new ItemStack(Material.WOODEN_SWORD));
 		return items;
 	}
 

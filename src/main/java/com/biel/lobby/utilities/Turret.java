@@ -7,6 +7,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.PistonMoveReaction;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -175,15 +176,15 @@ public class Turret extends EventBus {
 			if (loc.getBlock().getType() != Material.AIR){
 				return false;
 			}
-			if(loc.getBlock().getRelative(BlockFace.DOWN).getType() == Material.LEAVES){
+			if(loc.getBlock().getRelative(BlockFace.DOWN).getType() == Material.OAK_LEAVES){
 				return false;
 			}
 		}
 		return true;
 	}
 	public void Build(){
-		if (headless == false){
-			if (canBuild() == false){built = false; return;}
+		if (!headless ){
+			if (!canBuild() ){built = false; return;}
 
 			Material mat = Material.GOLD_BLOCK;
 			if(equip.getId() == 0){mat = Material.REDSTONE_BLOCK;}else{mat = Material.LAPIS_BLOCK;}
@@ -192,10 +193,10 @@ public class Turret extends EventBus {
 			loc.getBlock().setType(mat);
 			TurretBlocks.add(loc.clone());
 			loc.setY(loc.getY() + 1);
-			loc.getBlock().setType(Material.NETHER_FENCE);
+			loc.getBlock().setType(Material.NETHER_BRICK_FENCE);
 			TurretBlocks.add(loc.clone());
 			loc.setY(loc.getY() + 1);
-			loc.getBlock().setType(Material.REDSTONE_TORCH_ON);
+			loc.getBlock().setType(Material.REDSTONE_TORCH);
 			TurretBlocks.add(loc.clone());
 			resetArmorCD();
 			built = true;
@@ -203,7 +204,7 @@ public class Turret extends EventBus {
 
 	}
 	public void Destroy(){
-		if (headless == true){
+		if (headless){
 			return;
 		}
 		DestroyArmor();
@@ -310,7 +311,8 @@ public class Turret extends EventBus {
 
 				sign.update();
 
-				block.setData(dirs.get(faces.indexOf(face)));
+				// TODO: 1.13 All block.setData are broken
+				// block.setData(dirs.get(faces.indexOf(face)));
 				ArmorBlocks.add(block.getLocation());
 			}
 			h = h - 1;
@@ -482,7 +484,7 @@ public class Turret extends EventBus {
 					
 					arrow.setVelocity(dir.multiply(3.4));
 
-					world.playSound(spawnpoint, Sound.ENTITY_IRONGOLEM_ATTACK, 1, 0.3F);
+					world.playSound(spawnpoint, Sound.ENTITY_IRON_GOLEM_ATTACK, 1, 0.3F);
 					Learn(xpPerTir);
 					tirs = tirs + 1;
 					tirsquim = tirsquim + 1;
@@ -601,10 +603,10 @@ public class Turret extends EventBus {
 			hpEscut = hpEscut - damage;
 			Boolean armorSate = CheckArmor();
 			if (armorSate == false){
-				world.playSound(loceffect, Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 3F, 1F);
+				world.playSound(loceffect, Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 3F, 1F);
 				resetArmorCD();
 			}else{
-				world.playSound(loceffect, Sound.ENTITY_ZOMBIE_ATTACK_DOOR_WOOD, 3F, 1F);
+				world.playSound(loceffect, Sound.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, 3F, 1F);
 			}
 
 		}else{
@@ -767,7 +769,7 @@ public class Turret extends EventBus {
 		Inventory pinv = plyr.getInventory();
 		if (evt.getAction() == Action.RIGHT_CLICK_BLOCK){
 			if (ContainsTurretBlock(evt.getClickedBlock().getLocation())){
-				if (plyr.getItemInHand().getType() == Material.EXP_BOTTLE){
+				if (plyr.getItemInHand().getType() == Material.EXPERIENCE_BOTTLE){
 					Learn(1000);
 					evt.setCancelled(true);
 					return;
@@ -806,8 +808,7 @@ public class Turret extends EventBus {
 				ItemStack cursor = evt.getCursor();
 				evt.setCancelled(true);
 
-
-				if (cursor.getTypeId() == 0){ //if player has no item on the cursor
+				if (cursor.getType().equals(Material.AIR)){ //if player has no item on the cursor
 					Player plyr = (Player) evt.getWhoClicked();
 
 
@@ -888,12 +889,12 @@ public class Turret extends EventBus {
 			break;
 			case QUÍMICA:  name = "Química";
 			Description = "Habilitats amb pocions";
-			material = Material.BREWING_STAND_ITEM;
+			material = Material.BREWING_STAND;
 			Cost = 50;
 			break;
 			case MECÀNICA:  name = "Mecànica avançada";
 			Description = "Habilitats especials cada 10 tirs";
-			material = Material.PISTON_BASE;
+			material = Material.PISTON;
 			Cost = 100;
 			max = 5;
 			break;

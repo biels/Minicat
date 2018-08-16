@@ -526,7 +526,7 @@ public abstract class Joc extends MapaResetejable {
 		PlayerInfo i = getPlayerInfo(p);
 		if(i.isImmune()){
 			evt.setCancelled(true);
-			getWorld().playEffect(p.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				 		
+			getWorld().playEffect(p.getEyeLocation(), Effect.FIREWORK_SHOOT, DyeColor.BLUE.getDyeData());
 		}
 		double m = 1;		
 		m =  175/(CBUtils.getPing(p)+1);
@@ -539,7 +539,7 @@ public abstract class Joc extends MapaResetejable {
 	}
 	public ItemStack getSnowLauncher(int amount){
 		isSnowLauncherEnabled = true;
-		ItemStack ball = new ItemStack(Material.SNOW_BALL);
+		ItemStack ball = new ItemStack(Material.SNOWBALL);
 		ball.addUnsafeEnchantment(Enchantment.SILK_TOUCH, 1);
 		ball.setAmount(amount);
 		return Utils.setItemNameAndLore(ball, "Llançador de neu", "Et transporta a l'enemic que impacti");
@@ -581,8 +581,8 @@ public abstract class Joc extends MapaResetejable {
 			BountifulAPI.sendActionBar(damager, ChatColor.GRAY + "El jugador " + damaged.getName() + " és invulnerable.", 150);
 			
 			getWorld().playSound(damager.getLocation(), Sound.ENCHANT_THORNS_HIT, 1.2F, 0.88F);
-			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
-			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());   		
+			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORK_SHOOT, DyeColor.BLUE.getDyeData());
+			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORK_SHOOT, DyeColor.RED.getDyeData());
 		}
 		if(!evt.isCancelled()){
 			i.setDamageDealt(i.getDamageDealt() + evt.getDamage());
@@ -801,7 +801,7 @@ public abstract class Joc extends MapaResetejable {
 		ItemButton btnStartGame = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_ROD), ChatColor.GREEN + "Inicia la partida"), ply, event -> iniciarCommand(event.getPlayer()));
 		if(hasHostPrivilleges(ply))inventory.setItem(0, btnStartGame.getItemStack());
 		ItemButton btnWiki = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Wiki " + getGameName()), ply, event -> anunciarWiki(event.getPlayer(), true));
-		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SKULL_ITEM), ChatColor.GREEN + "Afegir jugadors"), ply, event -> {
+		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SKELETON_SKULL), ChatColor.GREEN + "Afegir jugadors"), ply, event -> {
             final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
             IconMenu menu = new IconMenu("Afegeix...", 27, event12 -> {
 				event12.setWillClose(true);
@@ -1428,7 +1428,8 @@ public abstract class Joc extends MapaResetejable {
 		if(matchData == null)return;
 		for(Player p : getPlayers()){
 			PlayerInfo i = getPlayerInfo(p);
-			matchData.registerTimestamp(p, ending, i.getKills(), i.getDeaths(), i.getDamageDealt(), i.isAlive(), p.getItemInHand().getTypeId(), i.getBlocksPlaced(), i.getBlocksBroken(), i.getObjectivesCompleted(), i.getSpree());
+			// TODO: Fix item id
+			matchData.registerTimestamp(p, ending, i.getKills(), i.getDeaths(), i.getDamageDealt(), i.isAlive(), p.getInventory().getItemInMainHand().getType().getId(), i.getBlocksPlaced(), i.getBlocksBroken(), i.getObjectivesCompleted(), i.getSpree());
 		}
 	}
 	//Eventr filtering

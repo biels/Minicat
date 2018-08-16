@@ -1,9 +1,7 @@
 package com.biel.lobby;
 
-import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,58 +18,47 @@ import org.bukkit.material.Wool;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.Pair;
 import com.biel.lobby.mapes.Joc;
-import com.biel.lobby.mapes.MapaResetejable;
 import com.biel.lobby.mapes.MapaResetejable.MapMode;
 import com.biel.lobby.mapes.jocs.*;
 
+public class GestorMapes implements Listener {
 
-public class GestorMapes implements Listener{
 	public lobby plugin;
-	ArrayList<Pair<String, Double>> auto_ratings;
-	ArrayList<ContenidorMapa> Mapes = new ArrayList<>();
+	private ArrayList<Pair<String, Double>> auto_ratings;
+	private ArrayList<ContenidorMapa> Mapes = new ArrayList<>();
+
 	public GestorMapes() {
 
 		this.plugin = lobby.getPlugin();
+		assert plugin != null;
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 
-		//Mapes.add(new ContenidorJoc(ObsidianDefenders.class, "Obsidian defenders", Material.OBSIDIAN, DevelopmentState.NotWorking));
 		Mapes.add(new ContenidorJoc(Spleef.class, "Spleef", Material.SNOW, DevelopmentState.Release));
-		Mapes.add(new ContenidorJoc(RainbowClay.class, "Rainbow Clay", Material.HARD_CLAY, DevelopmentState.Beta));
+		Mapes.add(new ContenidorJoc(RainbowClay.class, "Rainbow Clay", Material.TERRACOTTA, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(Torres.class, "Torres de defensa", Material.ARROW, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(Quakecraft.class, "Quakecraft", Material.STONE_HOE, DevelopmentState.Beta));
-		Mapes.add(new ContenidorJoc(Dominion.class, "Dominion", Material.DIAMOND, DevelopmentState.Beta));
+		// Mapes.add(new ContenidorJoc(Dominion.class, "Dominion", Material.DIAMOND, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(TeamDeathMatch.class, "Team Death Match", Material.IRON_SWORD, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(Arena4.class, "Arena 4", Material.BAKED_POTATO, DevelopmentState.Alpha));
-		//Mapes.add(new ContenidorJoc(Coliseu.class, "Coliseu", Material.QUARTZ_BLOCK, DevelopmentState.NotWorking));
-		//Mapes.add(new ContenidorJoc(TheTowers.class, "The Towers", Material.EXP_BOTTLE, DevelopmentState.NotWorking));
 		Mapes.add(new ContenidorJoc(TNTRun.class, "TNT Run", Material.TNT, DevelopmentState.KnownIssues));
-		//Mapes.add(new ContenidorJoc(RoboRampage.class, "ToTheSky", Material.LAPIS_BLOCK, DevelopmentState.InDevelopment));
-		//Mapes.add(new ContenidorJoc(Arena1v1.class, "Arena 1v1", Material.WOOD_SWORD, DevelopmentState.PreAlpha));
 		Mapes.add(new ContenidorJoc(ArenaAllvAll.class, "Arena ALLvsALL", Material.SAND, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(BaseLunar.class, "Base Lunar", Material.GLASS, DevelopmentState.Alpha));
-		Mapes.add(new ContenidorJoc(BoletumDTC.class, "Boletus DTC", Material.MUSHROOM_SOUP, DevelopmentState.Beta));
-		//Mapes.add(new ContenidorJoc(DominionTitan.class, "Dominion Titan", Material.DIAMOND_AXE, DevelopmentState.Beta));
-		//Mapes.add(new ContenidorJoc(DominionKOTH.class, "Dominion KOTH", Material.DIAMOND_BARDING, DevelopmentState.Beta));
-		//Mapes.add(new ContenidorJoc(TeamDeathMatchJaneatorForest.class, "TDM Janeator Forest", Material.SAPLING, DevelopmentState.Alpha));
-		//Mapes.add(new ContenidorJoc(InfernoRush.class, "Inferno Rush", Material.BLAZE_POWDER, DevelopmentState.InDevelopment));
-		Mapes.add(new ContenidorJoc(KingSkeletonChallenge.class, "King Skeleton", Material.GOLD_HELMET, DevelopmentState.PreAlpha));
-		//Mapes.add(new ContenidorJoc(WarehouseKOTH.class, "Warehouse KOTH", Material.WOOD, DevelopmentState.Beta));
-		//Mapes.add(new ContenidorJoc(OniChan.class, "Oni-Chan", Material.CAKE, DevelopmentState.InDevelopment));
-		//Mapes.add(new ContenidorJoc(PixelRift.class, "Pixel Rift", Material.ITEM_FRAME, DevelopmentState.KnownIssues));
-		//Mapes.add(new ContenidorJoc(ResourceRush.class, "Resource Rush", Material.DIAMOND_ORE, DevelopmentState.InDevelopment));
+		Mapes.add(new ContenidorJoc(BoletumDTC.class, "Boletus DTC", Material.MUSHROOM_STEW, DevelopmentState.Beta));
+		Mapes.add(new ContenidorJoc(KingSkeletonChallenge.class, "King Skeleton", Material.GOLDEN_HELMET, DevelopmentState.PreAlpha));
 		Mapes.add(new ContenidorJoc(Parkour.class, "ParkourFlow", Material.GOLD_BLOCK, DevelopmentState.Alpha));
-		Mapes.add(new ContenidorJoc(InkWars.class, "Ink Wars", Material.COAL_BLOCK, DevelopmentState.Alpha));
+		// Mapes.add(new ContenidorJoc(InkWars.class, "Ink Wars", Material.COAL_BLOCK, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(RedstoneWars.class, "Redstone Wars", Material.REDSTONE_BLOCK, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(PilotaSplash.class, "Pilota Splash", Material.SLIME_BALL, DevelopmentState.Alpha));
-		//Mapes.add(new ContenidorJoc(TempleQuest.class, "Temple Quest", Material.QUARTZ_BLOCK, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(OneInTheChamber.class, "OneInTheChamber", Material.BOW, DevelopmentState.Alpha));
-		Mapes.add(new ContenidorJoc(BedWars.class, "Bed Wars", Material.BED, DevelopmentState.InDevelopment));
+		Mapes.add(new ContenidorJoc(BedWars.class, "Bed Wars", Material.ORANGE_BED, DevelopmentState.InDevelopment));
+
 	}
+
 	public void queryAutoRatings() {
 		auto_ratings = Com.getDataAPI().getAutoRating();
 		Mapes.sort((m1, m2) -> Double.compare(m2.getRating(), m1.getRating()));
 	}
-	public void ObrirMenuMapes(Player ply){
+	public void ObrirMenuMapes(Player ply) {
 		queryAutoRatings();
 		IconMenu menu = new IconMenu(ChatColor.RED + "Tots els mapes", (int) (9 * (Math.ceil(Mapes.size() / 9) + 1)), event -> {
 
@@ -82,7 +69,7 @@ public class GestorMapes implements Listener{
 
         });
 
-		for(ContenidorMapa mapa : Mapes){
+		for(ContenidorMapa mapa : Mapes) {
 
 			int count = 1;
 			if(mapa.getPlayerAmount() > 0 ) count = mapa.getPlayerAmount();
@@ -96,7 +83,7 @@ public class GestorMapes implements Listener{
 
 		menu.open(ply);
 	}
-	public ArrayList<Mapa> getAllInstances(){
+	public ArrayList<Mapa> getAllInstances() {
 		ArrayList<Mapa> all = new ArrayList<>();
 		for (ContenidorMapa c : Mapes){
 			if (c instanceof ContenidorJoc){
@@ -107,26 +94,32 @@ public class GestorMapes implements Listener{
 		}
 		return all;
 	}
-	public Mapa getMapWherePlayerIs(Player p){
-		if (lobby.isOnLobby(p)){return null;}
-		for(Mapa m : getAllInstances()){
+	public Mapa getMapWherePlayerIs(Player p) {
+
+		if (lobby.isOnLobby(p)) return null;
+
+		for(Mapa m : getAllInstances()) {
+
 			if(m.getWorld().getPlayers().contains(p)){
 				return m;
 			}
+
 		}
-		//Bukkit.broadcastMessage("Jugador desaparegut");
+
 		return null;
 	}
-	public abstract class ContenidorMapa implements Listener{
+	public abstract class ContenidorMapa implements Listener {
+
 		public lobby plugin;
 
 		Class<?> ClassMapa;
 		String nom;
 		Material mat;
+
 		public String getNom() {
 			return nom;
 		}
-		public ArrayList<String> getDescription(){
+		public ArrayList<String> getDescription() {
 			ArrayList<String> l = new ArrayList<>();
 			int playerAmount = getPlayerAmount();
 			if(playerAmount > 0)l.add(ChatColor.GREEN + "" + playerAmount + " jugador" + (playerAmount > 1 ? "s" : ""));
@@ -260,11 +253,6 @@ public class GestorMapes implements Listener{
 				Bukkit.broadcastMessage("Ha fallat la creaciò d'una instància: " + nom);
 				Bukkit.broadcastMessage("Error: " + e.getMessage());
 				Bukkit.broadcastMessage("ErrorType: " + e.getClass().getName());
-				if (e instanceof InvocationTargetException){
-					InvocationTargetException ex = (InvocationTargetException) e;
-					Bukkit.broadcastMessage("Message: " + ex.getTargetException().getMessage());
-					Bukkit.broadcastMessage("String: " + ex.getTargetException().toString());
-				}
 				return null;
 			}
 		}
@@ -316,14 +304,11 @@ public class GestorMapes implements Listener{
 			if(map.getEditMode())return;
 
 			if (map.getWorld().getPlayers().size() == 0){
-				//map.JocFinalitzat();
 				map.clearExternals();
 				map.deleteVirtualWorld();
 				Instàncies.remove(map);
 				map.destroyEventBus();
 				System.gc();
-				//map = null;
-				//Bukkit.broadcastMessage("Mapa esborrat!");
 			}
 		}
 		public DyeColor getGameColor(Joc joc){
@@ -450,18 +435,7 @@ public class GestorMapes implements Listener{
 
 		menu.open(ply);
 	}
-	//	public ItemStack getIconForInstance(Mapa m){
-	//		ItemStack stack = new ItemStack(Material.WOOD)
-	//		if (m instanceof Joc){
-	//			Joc j = (Joc) m;
-	//			Wool wool = new Wool(getGameColor(j));
-	//			stack = wool.toItemStack();
-	//			stack.setAmount(mapa.getPlayers().size());
-	//			String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
-	//			menu.setOption(Instàncies.indexOf(j), stack, j.getMapName(),ChatColor.WHITE + j.NomWorld, ChatColor.WHITE + j.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(j.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + j.getSpectators().size(), "Temps: " + tStr);
-	//		
-	//		}
-	//	}
+
 	public List<Joc> getGames() {
 		return getAllInstances().stream().filter(m -> m instanceof Joc).map(m -> (Joc)m).collect(Collectors.toList());
 	}

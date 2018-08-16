@@ -9,7 +9,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.FireworkEffect.Builder;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -70,7 +69,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 	@Override
 	public Material getMaterial() {
 		// TODO Auto-generated method stub
-		return Material.FIREWORK;
+		return Material.FIREWORK_ROCKET;
 	}
 	protected Color getColor(ChatColor c){
 		return ColorConverter.hexToColor(ColorConverter.chatToHex(c));

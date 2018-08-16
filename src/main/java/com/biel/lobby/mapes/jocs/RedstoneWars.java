@@ -131,7 +131,7 @@ public class RedstoneWars extends JocEquips{
 	protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
 		// TODO Auto-generated method stub
 		super.onBlockBreak(evt, blk);
-		if(blk.getType() == Material.GLOWING_REDSTONE_ORE)evt.setCancelled(false);
+		if(blk.getType() == Material.REDSTONE_ORE)evt.setCancelled(false);
 		if (blk.getType() == Material.GOLD_BLOCK) {
 			GUtils.getLocationsCircle(blk.getLocation(), 1.1, 32).forEach(l -> {
 				FallingBlock tnt = world.spawnFallingBlock(l, Material.REDSTONE_ORE, (byte) 0x0);

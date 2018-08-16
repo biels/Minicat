@@ -3,7 +3,7 @@ package com.biel.lobby.mapes.jocs;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.Utils.Regions.Cuboid;
 import com.biel.lobby.mapes.JocEquipsLastStanding;
-import com.biel.lobby.mapes.JocObjectius;
+import com.biel.lobby.utilities.BUtils;
 import com.biel.lobby.utilities.Utils;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
@@ -11,12 +11,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 public class BedWars extends JocEquipsLastStanding {
@@ -40,7 +38,6 @@ public class BedWars extends JocEquipsLastStanding {
 
     @Override
     protected void setCustomGameRules() {
-
     }
 
     @Override
@@ -51,7 +48,7 @@ public class BedWars extends JocEquipsLastStanding {
     protected ArrayList<ItemStack> getStartingItems(Player ply) {
         ArrayList<ItemStack> items = new ArrayList<>();
         Equip e = obtenirEquip(ply);
-        items.add(new ItemStack(Material.WOOD_SWORD, 1));
+        items.add(new ItemStack(Material.WOODEN_SWORD, 1));
         items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
         items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
         items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
@@ -73,12 +70,12 @@ public class BedWars extends JocEquipsLastStanding {
             int radiusFromSpawn = 8;
             Cuboid cuboid = GUtils.getCuboidAround(this.getTeamSpawnLocation(), radiusFromSpawn);
             Optional<Block> optionalBed = cuboid.getBlocks().stream()
-                    .filter(block -> block.getType().equals(Material.BED_BLOCK))
+                    .filter(BUtils::isBedBlock)
                     .findAny();
             if(optionalBed.isPresent()){
                 bedLocation = optionalBed.get().getLocation();
                 getWorld().playEffect(bedLocation, Effect.MOBSPAWNER_FLAMES, 0);
-            }else{
+            } else {
                 sendMessage("[Error] No s'ha pogut trobar el llit per a l'equip " + this.getAdjectiuColored());
             }
         }
@@ -86,7 +83,7 @@ public class BedWars extends JocEquipsLastStanding {
             return bedLocation;
         }
         public boolean isBedAlive(){
-            return bedLocation.getBlock().getType() == Material.BED;
+            return BUtils.isBedBlock(bedLocation.getBlock());
         }
     }
 

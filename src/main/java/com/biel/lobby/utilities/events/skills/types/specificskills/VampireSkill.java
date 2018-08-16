@@ -65,8 +65,9 @@ public class VampireSkill extends InherentSkill{
 			Vector v = Utils.CrearVector(killer.getLocation(), killed.getLocation()).multiply(0.5D);
 			double max = 7;
 			for (int i = 0; i < max; i++) {
-				getWorld().playEffect(getPlayer().getLocation().add(v.clone().multiply(i/max)),
-						Effect.HEART, 0);
+				// TODO: 1.13 Update effect name
+				/*getWorld().playEffect(getPlayer().getLocation().add(v.clone().multiply(i/max)),
+						Effect.HEART, 0);*/
 			}
 		}
 	}

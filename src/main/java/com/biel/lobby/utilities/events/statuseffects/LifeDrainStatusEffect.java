@@ -47,8 +47,9 @@ public class LifeDrainStatusEffect extends StatusEffect {
 			Vector v = Utils.CrearVector(getOwnerPlayer().getLocation(), getPlayer().getLocation()).multiply(0.5D);
 			double max = 7;
 			for (int i = 0; i < max; i++) {
-				getWorld().playEffect(getPlayer().getEyeLocation().add(0, -0.8, 0).add(v.clone().multiply(i/max)),
-						Effect.HEART, 0);
+				// TODO: 1.13 I don't know that the updated HEART effect is
+				/*getWorld().playEffect(getPlayer().getEyeLocation().add(0, -0.8, 0).add(v.clone().multiply(i/max)),
+						Effect.HEART, 0);*/
 			}
 		}
 	}

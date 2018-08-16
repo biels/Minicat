@@ -653,8 +653,8 @@ public class Parkour extends JocScoreCombo{
 					blocks.add(getForward().multiply(2 * i));materials.add(Material.QUARTZ_BLOCK);
 					blocks.add(getForward().multiply(2 * i + 1).add(getRight().multiply(2)));materials.add(Material.QUARTZ_BLOCK);
 					if(i < n - 1){
-						blocks.add(getForward().multiply(2 * i + 1).add(getUp()));materials.add(Material.FENCE);
-						blocks.add(getForward().multiply(2 * i + 2).add(getRight().multiply(2)).add(getUp()));materials.add(Material.FENCE);
+						blocks.add(getForward().multiply(2 * i + 1).add(getUp()));materials.add(Material.OAK_FENCE);
+						blocks.add(getForward().multiply(2 * i + 2).add(getRight().multiply(2)).add(getUp()));materials.add(Material.OAK_FENCE);
 					}
 				}
 				blocks.stream().filter(b -> materialGetter.apply(b) == Material.QUARTZ_BLOCK).forEach(b -> checkpoints.add(new Checkpoint(b, 0.9)));
@@ -740,7 +740,7 @@ public class Parkour extends JocScoreCombo{
 					blocks.add(lc);materials.add((t == 1 ? Material.PACKED_ICE : Material.QUARTZ_BLOCK));
 					Vector dlc = lc.clone().add(d);
 					Material mat = Material.QUARTZ_BLOCK;
-					if(t == 1)if(GUtils.Possibilitat(30))mat = Material.IRON_FENCE;
+					if(t == 1)if(GUtils.Possibilitat(30))mat = Material.IRON_BARS;
 					if(t == 2)if(GUtils.Possibilitat(60))mat = Material.PACKED_ICE;
 					blocks.add(dlc);materials.add(mat);
 					checkpoints.add(new Checkpoint(dlc));
@@ -766,7 +766,7 @@ public class Parkour extends JocScoreCombo{
 				checkpoints.add(new Checkpoint(getZero()));
 				for(int i = 1; i < 15; i++){
 					if (Utils.Possibilitat(80)){
-						blocks.add(getForward().multiply(i));materials.add(Material.STAINED_GLASS_PANE);
+						blocks.add(getForward().multiply(i));materials.add(Material.GREEN_STAINED_GLASS);
 						if (i % 3 == 0) checkpoints.add(new Checkpoint(getForward().multiply(i)));
 					}
 				}
