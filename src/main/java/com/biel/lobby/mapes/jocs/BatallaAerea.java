@@ -18,7 +18,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import com.biel.lobby.mapes.JocScoreRace;
-
+import java.lang.Math;
 public class BatallaAerea extends JocScoreRace {
 
     @Override
@@ -49,6 +49,41 @@ public class BatallaAerea extends JocScoreRace {
         items.add(new ItemStack(Material.CHAINMAIL_BOOTS, 1));
 
         return items;
+    }
+    public boolean mapEdge(PlayerMoveEvent evt,Player ply){
+        boolean retorn = false;
+        Location pLoc = evt.getTo();
+//        System.out.println(pLoc);
+        if((Math.abs(pLoc.getZ()) <= 25 && Math.abs(pLoc.getZ()) >= 24) || (Math.abs(pLoc.getX()) <= 25 && Math.abs(pLoc.getX()) >= 24)){
+            System.out.println("funciona");
+            retorn = true;
+        }else{
+            System.out.println("no ets al borde");
+        }
+        return retorn;
+    }
+    public int getEdge(boolean bool,PlayerMoveEvent evt,Player ply){
+        int costat;
+        if(bool){
+            Location pLoc = evt.getTo();
+            if((Math.abs(pLoc.getZ()) <= 25) && (Math.abs(pLoc.getZ()) >= 24) && (pLoc.getZ() > 0 )){
+                System.out.println("costat 1");
+                costat = 1;
+            }else if((Math.abs(pLoc.getZ()) <= 25) && (Math.abs(pLoc.getZ()) >= 24) && (pLoc.getZ() < 0 )){
+                System.out.println("costat -1");
+                costat = -1;
+            }else if((Math.abs(pLoc.getX()) <= 25) && (Math.abs(pLoc.getX()) >= 24) && (pLoc.getX() > 0 )){
+                System.out.println("costat 2");
+                costat = 2;
+            }else if((Math.abs(pLoc.getX()) <= 25) && (Math.abs(pLoc.getX()) >= 24) && (pLoc.getX() < 0 )){
+                System.out.println("costat -2");
+                costat = -2;
+            }
+            }
+        return costat;
+    public void tpside(Player ply,Integer costat){
+
+        }
     }
     @Override
     protected int getBaseSkillUnlockerAmount() {return 1;} // Activa les skills
@@ -103,22 +138,23 @@ public class BatallaAerea extends JocScoreRace {
         }
         return r;
     }
-    public ItemStack getRocket(){
-        // proporciona un coet quan es crida
-        ItemStack item = new ItemStack(Material.FIREWORK, 1);
 
-        return item;
-    }
+//    public ItemStack getRocket(){
+//        // proporciona un coet quan es crida
+//        ItemStack item = new ItemStack(Material.FIREWORK, 1);
+//
+//        return item;
+//    }
     //TODO No funciona s'ha d'arreglar (onPlayerDropItem)
-    @EventHandler
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
+    protected void onPlayerDropItem(PlayerDropItemEvent event) {
+        System.out.println("s'activa droplayer");
         if (event.getItemDrop().getItemStack().getType() == Material.FIREWORK) {
             event.setCancelled(true);
             event.getItemDrop().getItemStack().setType(Material.AIR);
         }
     }
     @Override
-    protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
+    public void onPlayerMove(PlayerMoveEvent evt, Player p) {
         // TODO Auto-generated method stub
         super.onPlayerMove(evt, p);
         if(evt.getTo().getY() < getMinimumHeight()){ //quan el jugador està en una altura menor que 5 et teletransporta a un respawn aleatori
@@ -132,6 +168,9 @@ public class BatallaAerea extends JocScoreRace {
         // controla que no es doni mes d'un coet a l'hora
         if(p.getInventory().containsAtLeast(getRocket(), 2)){ p.getInventory().remove(getRocket());}
         else{p.getInventory().addItem(getRocket());}
+        boolean mapcostat = mapEdge(evt,p);
+        getEdge(mapcostat,evt,p);
+
     }
 }
 
