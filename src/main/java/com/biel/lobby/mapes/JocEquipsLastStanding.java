@@ -3,6 +3,7 @@ package com.biel.lobby.mapes;
 import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 import com.biel.lobby.utilities.ScoreBoardUpdater;
@@ -73,6 +74,7 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 			winnerTeam = getWinner();
 			sendGlobalMessage(ChatColor.GRAY + "L'equip " + winnerTeam.getChatColor() + winnerTeam.getAdjectiu() + ChatColor.GRAY + " ha guanyat la partida!");
 			winGame(winnerTeam);
+			getPlayers().forEach(player -> player.setGameMode(GameMode.SPECTATOR));
 		}
 		if (AliveTeamIDs.size() == 0){
 			sendGlobalMessage(ChatColor.YELLOW + "No hi ha guanyadors!");
