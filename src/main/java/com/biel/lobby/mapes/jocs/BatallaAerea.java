@@ -2,16 +2,10 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 import java.util.Collections;
-
-import com.biel.BielAPI.Utils.GUtils;
-import org.bukkit.Effect;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -23,10 +17,7 @@ import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
-
 import com.biel.lobby.mapes.JocScoreRace;
-import com.biel.lobby.utilities.Utils;
-import org.bukkit.util.Vector;
 
 public class BatallaAerea extends JocScoreRace {
 
@@ -35,12 +26,8 @@ public class BatallaAerea extends JocScoreRace {
         // TODO Auto-generated method stub
         return 2 + getPlayers().size();
     }
-
     @Override
-    public String getGameName() {
-        // TODO Auto-generated method stub
-        return "Batalla Aerea";
-    }
+    public String getGameName() { return "Batalla Aerea"; }
     @Override
     protected ArrayList<ItemStack> getStartingItems(Player ply) {
         ArrayList<ItemStack> items = new ArrayList<>();
@@ -51,7 +38,7 @@ public class BatallaAerea extends JocScoreRace {
         Potion p1 = new Potion(PotionType.INSTANT_DAMAGE);
         p1.setSplash(true);
         items.add(p1.toItemStack(1));
-        Potion p2 = new Potion(PotionType.SLOWNESS);
+        Potion p2 = new Potion(PotionType.WEAKNESS);
         p2.setSplash(true);
         items.add(p2.toItemStack(2));
         items.add(new ItemStack(Material.ARROW, 1));
@@ -64,17 +51,11 @@ public class BatallaAerea extends JocScoreRace {
         return items;
     }
     @Override
-    protected int getBaseSkillUnlockerAmount() {
-        // TODO Auto-generated method stub
-        return 1;
-    }
+    protected int getBaseSkillUnlockerAmount() {return 1;} // Activa les skills
     @Override
     protected void teletransportarTothom() {
-        for (Player d : getPlayers()) {  // d gets successively each value in ar.
-            teleportToRandomSpawn(d);
-        }
+        for (Player d : getPlayers()) {  teleportToRandomSpawn(d); }
     }
-
     protected void teleportToRandomSpawn(Player d) {
         Location loc;
         loc = getRandomSpawnLoc();
@@ -88,47 +69,47 @@ public class BatallaAerea extends JocScoreRace {
         return l;
     }
 
-
     @Override
-    protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed,
-                                         Player killer) {
-        //
+    protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
         super.onPlayerDeathByPlayer(evt, killed, killer);
         incrementScore(killer);
         Potion p1 = new Potion(PotionType.REGEN);
         killer.getInventory().addItem(p1.toItemStack(1));
-        killer.getInventory().addItem(getMagnusLauncherItem());
+        killer.getInventory().addItem(getRocket());
         evt.getDrops().clear();
         evt.setDeathMessage(killer.getName() + " ha matat a " + killed.getName() + " [+1]");
         updateScoreBoards();
     }
 
     @Override
-    protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager,
-                                          boolean ranged) {
+    protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
         // TODO Auto-generated method stub
         super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-        if(ranged)damager.getInventory().addItem(new ItemStack(Material.ARROW, 1));
     }
     @Override
     protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {
         // TODO Auto-generated method stub
         super.onPlayerRespawnAfterTick(evt, p);
+        // teletransporta a un dels spawns
         teleportToRandomSpawn(p);
 
     }
     public double getMinimumHeight(){
-        double r = 10.0;
+        //quan es crida comprova l'altura en la que es troba el jugador
+        double r = 10.0; // altura predeterminada
+        //agafa la propietat del fitxer de config del mapa si hi és
         if(pMapaActual().ExisteixPropietat("MinHeight")){
             r = pMapaActual().ObtenirPropietatInt("MinHeight");
         }
         return r;
     }
-    public ItemStack getMagnusLauncherItem(){
+    public ItemStack getRocket(){
+        // proporciona un coet quan es crida
         ItemStack item = new ItemStack(Material.FIREWORK, 1);
 
         return item;
     }
+    //TODO No funciona s'ha d'arreglar (onPlayerDropItem)
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         if (event.getItemDrop().getItemStack().getType() == Material.FIREWORK) {
@@ -140,27 +121,19 @@ public class BatallaAerea extends JocScoreRace {
     protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
         // TODO Auto-generated method stub
         super.onPlayerMove(evt, p);
-
-        if(evt.getTo().getY() < getMinimumHeight()){
-            teleportToRandomSpawn(p);
+        if(evt.getTo().getY() < getMinimumHeight()){ //quan el jugador està en una altura menor que 5 et teletransporta a un respawn aleatori
+            teleportToRandomSpawn(p); //teletransporta a spawn aleatori
+            //Control per evitar caigudes un cop teletransportat
             p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 30, 128, true), true);
             p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 128, true), true);
             p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 128, true), true);
-            p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 30, 128, true), true);
-            // Aixó dona els items inicials als jugadors
 
         }
-
-        if(p.getInventory().contains(getMagnusLauncherItem(), 1)){
-
-        }else if(p.getInventory().containsAtLeast(getMagnusLauncherItem(), 2)){
-            p.getInventory().remove(getMagnusLauncherItem());
-
-
-            }
-            else{p.getInventory().addItem(getMagnusLauncherItem());}
-        }
+        // controla que no es doni mes d'un coet a l'hora
+        if(p.getInventory().containsAtLeast(getRocket(), 2)){ p.getInventory().remove(getRocket());}
+        else{p.getInventory().addItem(getRocket());}
     }
+}
 
 
 
