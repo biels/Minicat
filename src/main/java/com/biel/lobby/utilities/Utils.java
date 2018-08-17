@@ -108,7 +108,7 @@ public class Utils {
 		if(matstr.contains("HELMET")){
 			slot = 3;
 		}
-		if(matstr.contains("CHESTPLATE")){
+		if(matstr.contains("CHESTPLATE") || matstr.contains("ELYTRA")){
 			slot = 2;
 		}
 		if(matstr.contains("LEGGINGS")){
