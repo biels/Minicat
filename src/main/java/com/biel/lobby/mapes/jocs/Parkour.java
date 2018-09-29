@@ -136,9 +136,7 @@ public class Parkour extends JocScoreCombo{
 		}
 		playerCount = players.size();
 	}
-	protected void teleportToEndingSpawn(Player p){
-		//p.teleport(pMapaActual().ObtenirLocation("endSpawn", world));
-	}
+	
 	public void comprovarFinish(){
 		//boolean allFinished = streams.stream().mapToInt(ParkourStream::getTargetBubbleIndex).min().getAsInt() > 100;
 		boolean allFinished = getPlayers().stream().map(p -> getPlayerInfo(p).isInGame()).allMatch(b -> b == false);
@@ -174,7 +172,7 @@ public class Parkour extends JocScoreCombo{
 	@Override
 	protected void customJocFinalitzat() {
 		// TODO Auto-generated method stub
-
+		super.customJocFinalitzat();
 	}
 	@Override
 	protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
@@ -211,12 +209,6 @@ public class Parkour extends JocScoreCombo{
 		public int getTargetBubbleIndex() {
 			return targetBubbleIndex;
 		}
-		//		public void bufferBubbles(){
-		//			//Add new generated bubbles as handlers
-		//			while(handlers.size() < provider.bubbles.size()){
-		//				handlers.add(new BubbleHandler(handlers.size())); // implicit index+1
-		//			}			
-		//		}
 		public void checkBufferBuildStreaming(){
 			for (int i = 0; i < 3; i++) {
 				int index = targetBubbleIndex + i;
@@ -291,7 +283,7 @@ public class Parkour extends JocScoreCombo{
 			}
 			public void advance(Score score){
 				ParkourPlayerInfo i = getPlayerInfo(getPlayer());
-				if(!i.isInGame()){teleportToEndingSpawn(getPlayer()); return;}
+				if(!i.isInGame())return;
 				if(targetBubbleIndex > mapLength && i.isInGame()){
 					sendGlobalMessage(getPlayer().getName() + " ha arribat a la meta!");
 					//teleportToEndingSpawn(getPlayer());
@@ -337,7 +329,9 @@ public class Parkour extends JocScoreCombo{
 				//getWorld().playEffect(l, Effect.FLAME, 4);
 
 				checkpointHandlers.forEach(ch -> ch.handleCpLocationCheckIn(l));
-
+				if(!getPlayerInfo(p).isInGame()){
+					return;
+				}
 				if(l.getY() < getBubble().getLowestSurfaceY(startLocation) - 1){ // IMPORTANT UPFACTOR
 					registerFail(p);
 					return;
@@ -382,8 +376,6 @@ public class Parkour extends JocScoreCombo{
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 25, 129));
 			}
 			
-
-			
 			//CHECKPOINT HANDLER
 			public class CheckpointHandler{
 				int checkpointIndex;
@@ -421,13 +413,12 @@ public class Parkour extends JocScoreCombo{
 				void onLeave(){
 					if(isAlone())advanceBasedOnTime();
 					tryComplete();
-
 				}
 				void tryComplete(){
 					if(!completed)complete();
 				}
+				
 				void complete(){
-					//Completion code
 					setLeaveTime();
 					completed = true;
 					updateHologram();
@@ -459,7 +450,6 @@ public class Parkour extends JocScoreCombo{
 				public void createHolgram(){
 					if (ho != null){return;}
 					ho = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
-
 				}
 				public void updateHologram(){
 					if (ho == null){createHolgram();}
@@ -673,8 +663,6 @@ public class Parkour extends JocScoreCombo{
 		
 	}
 	
-	
-		
 	@Override
 	public ParkourPlayerInfo getPlayerInfo(Player p) {
 		return getPlayerInfo(p, ParkourPlayerInfo.class);		
