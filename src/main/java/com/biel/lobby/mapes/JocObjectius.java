@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.biel.lobby.utilities.BUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
@@ -311,12 +312,11 @@ public abstract class JocObjectius extends JocEquips {
 	}
 	public class ObjectiuBlockChange extends Objectiu{
 		Material m;
-		byte data;
-		public ObjectiuBlockChange(String nom, Location l, Material m, byte data) {
-			super(nom, l, data);
+		public ObjectiuBlockChange(String nom, Location l, Material m) {
+			super(nom, l, 0);
 			this.m = m;
-			this.data = data;
 		}
+
 		public boolean isInsideProtectionRadius(Location l){
 			double dist = l.distance(location);
 			//if (dist == 0){return false;}
@@ -326,50 +326,51 @@ public abstract class JocObjectius extends JocEquips {
 
 		@Override
 		protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
-			// TODO Auto-generated method stub
 			super.onBlockBreak(evt, blk);
-			if(isInsideProtectionRadius(blk.getLocation())){evt.setCancelled(true);
-			sendPlayerMessage(evt.getPlayer(), ChatColor.RED + "No pots destrossar el monument");}
+			if(isInsideProtectionRadius(blk.getLocation())){
+				evt.setCancelled(true);
+				sendPlayerMessage(evt.getPlayer(), ChatColor.RED + "No pots destruir el monument");
+			}
 		}
+
 		@Override
 		protected void onBlockPlace(BlockPlaceEvent evt, Block blk) {
 			super.onBlockPlace(evt, blk);	
 			if(isInsideProtectionRadius(blk.getLocation())){
 				Boolean completed = onChange(evt, evt.getPlayer(), blk); 
-				if(completed == true){return;}				
+				if(completed) return;
 				if(!evt.isCancelled())sendPlayerMessage(evt.getPlayer(), ChatColor.RED + "No pots modificar el monument");
 				evt.setCancelled(true);
 			}
 			
 		}
-		@SuppressWarnings("deprecation")
-		public Boolean onChange(BlockPlaceEvent evt, Player p, Block blk){
-			if(canBeCompleted(p)){				
-				boolean sameType = m == blk.getType();				
-				boolean sameData = data == blk.getData();				
-				boolean sameLocation = blk.getLocation().equals(location);				
-				if(sameType && sameData && sameLocation){					
-					complete(p);
-					//location.getBlock().setType(Material.GLASS);
-					return true;
-				}else{
-					if(sameLocation){
-						sendPlayerMessage(p, "Introdueix la llana corresponent");
-						evt.setCancelled(true);
-					}
-					return false;
-				}
-			}else{
+
+		Boolean onChange(BlockPlaceEvent evt, Player p, Block blk) {
+
+			if(!canBeCompleted(p)) return false;
+			if(!blk.getLocation().equals(location)) return false;
+
+			if(blk.getType().equals(m)){
+
+				complete(p);
+				return true;
+
+			} else {
+
+				sendPlayerMessage(p, "Introdueix la llana corresponent");
+				evt.setCancelled(true);
+
 				return false;
 			}
+
 		}
+
 	}
 	public class ObjectiuWoolPlace extends ObjectiuBlockChange{
-		@SuppressWarnings("deprecation")
+
 		DyeColor color;
 		public ObjectiuWoolPlace(String nom, Location l, DyeColor color) {
-			// TODO: 1.13 not really sure this change will work at all
-			super(nom, l, Material.WHITE_WOOL, color.getWoolData());
+			super(nom, l, BUtils.dyeToWool(color));
 			this.color = color;
 		}
 		@Override

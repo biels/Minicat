@@ -3,6 +3,7 @@ package com.biel.lobby.utilities;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -63,6 +64,30 @@ public class BUtils {
 				type.equals(Material.BROWN_BED) || type.equals(Material.CYAN_BED) || type.equals(Material.GRAY_BED)  || type.equals(Material.GREEN_BED) ||
 				type.equals(Material.LIGHT_BLUE_BED) || type.equals(Material.LIGHT_GRAY_BED) || type.equals(Material.LIME_BED) || type.equals(Material.MAGENTA_BED) ||
 				type.equals(Material.ORANGE_BED) || type.equals(Material.PINK_BED) || type.equals(Material.PURPLE_BED) || type.equals(Material.RED_BED)  || type.equals(Material.YELLOW_BED);
+	}
+
+	public static Material dyeToWool(DyeColor color) {
+
+		// TODO: Pretty sure there's better ways to do this
+		if(color.equals(DyeColor.BLACK)) return Material.BLACK_WOOL;
+		if(color.equals(DyeColor.BLUE)) return Material.BLUE_WOOL;
+		if(color.equals(DyeColor.BROWN)) return Material.BROWN_WOOL;
+		if(color.equals(DyeColor.CYAN)) return Material.CYAN_WOOL;
+		if(color.equals(DyeColor.GRAY)) return Material.GRAY_WOOL;
+		if(color.equals(DyeColor.GREEN)) return Material.GREEN_WOOL;
+		if(color.equals(DyeColor.LIGHT_BLUE)) return Material.LIGHT_BLUE_WOOL;
+		if(color.equals(DyeColor.LIGHT_GRAY)) return Material.LIGHT_GRAY_WOOL;
+		if(color.equals(DyeColor.LIME)) return Material.LIME_WOOL;
+		if(color.equals(DyeColor.MAGENTA)) return Material.MAGENTA_WOOL;
+		if(color.equals(DyeColor.ORANGE)) return Material.ORANGE_WOOL;
+		if(color.equals(DyeColor.PINK)) return Material.PINK_WOOL;
+		if(color.equals(DyeColor.PURPLE)) return Material.PURPLE_WOOL;
+		if(color.equals(DyeColor.RED)) return Material.RED_WOOL;
+		if(color.equals(DyeColor.WHITE)) return Material.WHITE_WOOL;
+		if(color.equals(DyeColor.YELLOW)) return Material.YELLOW_WOOL;
+
+
+		return Material.WHITE_WOOL;
 	}
 
 	public static boolean isGlassBlock(Block block)  {

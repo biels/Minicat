@@ -34,6 +34,7 @@ import com.biel.lobby.utilities.Utils;
 import com.connorlinfoot.bountifulapi.BountifulAPI;
 
 public class RainbowClay extends JocObjectius {
+
 	public RainbowClay() {
 		super();
 
@@ -286,7 +287,6 @@ public class RainbowClay extends JocObjectius {
 
 		}
 
-		return;
 	}
 
 	protected void onPlayerInteract(PlayerInteractEvent evt, Player p) {
@@ -317,7 +317,6 @@ public class RainbowClay extends JocObjectius {
 			ply.playSound(ply.getLocation(), Sound.BLOCK_CHEST_LOCKED, 100.0F, 0.0F);
 			evt.setCancelled(true);
 		}
-		return;
 
 	}
 
