@@ -19,13 +19,11 @@ public class ArenaAllvAll extends JocScoreRace {
 
 	@Override
 	protected int getFinishScore() {
-		// TODO Auto-generated method stub
 		return 2 + getPlayers().size();
 	}
 
 	@Override
 	public String getGameName() {
-		// TODO Auto-generated method stub
 		return "ArenaAllvAll";
 	}
 	@Override
@@ -48,7 +46,6 @@ public class ArenaAllvAll extends JocScoreRace {
 	}
 	@Override
 	protected int getBaseSkillUnlockerAmount() {
-		// TODO Auto-generated method stub
 		return 1;
 	}
 	@Override
@@ -71,9 +68,8 @@ public class ArenaAllvAll extends JocScoreRace {
 		return loc;
 	}
 	@Override
-	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed,
-			Player killer) {
-		// TODO Auto-generated method stub
+	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
+
 		super.onPlayerDeathByPlayer(evt, killed, killer);
 		incrementScore(killer);
 		if (getSpree(killer) == 1){
@@ -100,17 +96,15 @@ public class ArenaAllvAll extends JocScoreRace {
 		evt.getDrops().clear();
 		evt.setDeathMessage(killer.getName() + " ha matat a " + killed.getName() + " [+1]");
 		updateScoreBoards();
+
 	}
 	@Override
-	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager,
-			boolean ranged) {
-		// TODO Auto-generated method stub
+	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
 		if(ranged)damager.getInventory().addItem(new ItemStack(Material.ARROW, 1));
 	}
 	@Override
 	protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {
-		// TODO Auto-generated method stub
 		super.onPlayerRespawnAfterTick(evt, p);
 		teleportToRandomSpawn(p);
 	}
