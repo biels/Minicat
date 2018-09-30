@@ -3,4 +3,4 @@
 /build/*
 .gradle/
 /mysql/*.sql
-.idea/*
+.idea
