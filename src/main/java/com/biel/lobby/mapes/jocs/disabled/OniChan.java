@@ -1,13 +1,13 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.disabled;
 
 import java.util.ArrayList;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import com.biel.lobby.mapes.JocLastStanding;
+import com.biel.lobby.mapes.Joc;
 
-public class InfernoRush extends JocLastStanding {
+public class OniChan extends Joc{
 
 	@Override
 	protected void setCustomGameRules() {
@@ -28,9 +28,21 @@ public class InfernoRush extends JocLastStanding {
 	}
 
 	@Override
+	protected void customJocIniciat() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void customJocFinalitzat() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
 	public String getGameName() {
 		// TODO Auto-generated method stub
-		return "InfernoRush";
+		return "OniChan";
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.disabled;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -36,8 +36,7 @@ import org.bukkit.util.Vector;
 
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
-import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
+import com.biel.lobby.mapes.jocs.disabled.ObsidianDefenders.Ability.AbilityType;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
