@@ -1,3 +1,7 @@
+plugins {
+    id "org.sonarqube" version "2.6"
+}
+
 apply plugin: 'java'
 apply plugin: 'idea'
 archivesBaseName = 'minicat'
@@ -36,6 +40,6 @@ task deploy(type: Copy){
     from('build/libs') {
         include '**/*.jar'
     }
-    into 'D:\\Servers MC\\Lobby - 1.9\\plugins'
+    into 'F:\\Servers MC\\Lobby - 1.9\\plugins'
 }
 deploy.dependsOn assemble

@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -41,6 +42,11 @@ public class BedWars extends JocEquipsLastStanding {
     @Override
     protected void setCustomGameRules() {
 
+    }
+
+    @Override
+    protected void onPlayerDropItem(PlayerDropItemEvent evt, Player p) {
+        super.onPlayerDropItem(evt, p);
     }
 
     @Override
