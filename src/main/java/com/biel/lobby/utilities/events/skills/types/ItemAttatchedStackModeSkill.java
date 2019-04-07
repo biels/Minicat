@@ -1,83 +1,118 @@
+/*
+ * Decompiled with CFR 0.139.
+ * 
+ * Could not load the following classes:
+ *  org.apache.commons.lang.IllegalClassException
+ *  org.bukkit.ChatColor
+ *  org.bukkit.entity.Player
+ */
 package com.biel.lobby.utilities.events.skills.types;
 
+import com.biel.lobby.utilities.events.skills.types.ItemAttatchedModeSkill;
 import org.apache.commons.lang.IllegalClassException;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-public abstract class ItemAttatchedStackModeSkill extends ItemAttatchedModeSkill {
+public abstract class ItemAttatchedStackModeSkill
+extends ItemAttatchedModeSkill {
+    @Override
+    public void onModeSwitch(ItemAttatchedModeSkill.SkillMode llIlIIllIlIIIl) {
+        ItemAttatchedStackModeSkill llIlIIllIlIIlI;
+        super.onModeSwitch(llIlIIllIlIIIl);
+        StackSkillMode llIlIIllIlIIll = (StackSkillMode)llIlIIllIlIIIl;
+        llIlIIllIlIIlI.getTrayEffect().setMaxValue(llIlIIllIlIIll.getMaxStacks());
+    }
 
-	public ItemAttatchedStackModeSkill(Player ply) {
-		super(ply);
-		// TODO Auto-generated constructor stub
-	}
-	
-	@Override
-	protected Class<? extends ItemAttatchedModeSkillTrayEffect> getTrayEffectClass() {
-		// TODO Auto-generated method stub
-		return ItemAttatchedStackModeSkillTrayEffect.class;
-	}
-	public class StackSkillMode extends SkillMode{
-		private int maxStacks;
+    @Override
+    public StackSkillMode getSelectedMode() {
+        ItemAttatchedStackModeSkill llIlIIllIIlIll;
+        return (StackSkillMode)super.getSelectedMode();
+    }
 
-		public StackSkillMode(int id, String name, String description, ChatColor chatColor, int maxStacks) {
-			super(id, name, description, chatColor);
-			this.maxStacks = maxStacks;
-		}
+    public void registerMode(StackSkillMode llIlIIllIllIIl) {
+        ItemAttatchedStackModeSkill llIlIIllIllIlI;
+        super.registerMode(llIlIIllIllIIl);
+    }
 
-		public StackSkillMode(int id, String name, String description, int maxStacks) {
-			super(id, name, description);
-			this.maxStacks = maxStacks;
-		}
+    public ItemAttatchedStackModeSkill(Player llIlIIlllIIlII) {
+        ItemAttatchedStackModeSkill llIlIIlllIIlIl;
+        super(llIlIIlllIIlII);
+    }
 
-		public int getMaxStacks() {
-			return maxStacks;
-		}
+    @Override
+    protected ItemAttatchedStackModeSkillTrayEffect getTrayEffect() {
+        ItemAttatchedStackModeSkill llIlIIllIIllIl;
+        return (ItemAttatchedStackModeSkillTrayEffect)super.getTrayEffect();
+    }
 
-		public void setMaxStacks(int maxStacks) {
-			this.maxStacks = maxStacks;
-		}
+    @Deprecated
+    @Override
+    public void registerMode(ItemAttatchedModeSkill.SkillMode llIlIIllIlllll) {
+        throw new IllegalClassException(StackSkillMode.class, ItemAttatchedModeSkill.SkillMode.class);
+    }
 
-	}
-	@Override @Deprecated
-	public void registerMode(SkillMode mode) {
-		throw new IllegalClassException(StackSkillMode.class, SkillMode.class);
-	}
-	public void registerMode(StackSkillMode mode) {
-		// TODO Auto-generated method stub
-		super.registerMode(mode);
-	}
-	@Override
-	public void onModeSwitch(SkillMode newMode) {
-		// TODO Auto-generated method stub
-		super.onModeSwitch(newMode);
-		StackSkillMode m = (StackSkillMode) newMode;
-		getTrayEffect().setMaxValue(m.getMaxStacks());
-	}
-	@Override
-	protected ItemAttatchedStackModeSkillTrayEffect getTrayEffect() {
-		// TODO Auto-generated method stub
-		return (ItemAttatchedStackModeSkillTrayEffect) super.getTrayEffect();
-	}
-	@Override
-	public StackSkillMode getSelectedMode() {
-		// TODO Auto-generated method stub
-		return (StackSkillMode) super.getSelectedMode();
-	}
-	public class ItemAttatchedStackModeSkillTrayEffect extends ItemAttatchedModeSkillTrayEffect{
+    @Override
+    protected Class<? extends ItemAttatchedModeSkill.ItemAttatchedModeSkillTrayEffect> getTrayEffectClass() {
+        return ItemAttatchedStackModeSkillTrayEffect.class;
+    }
 
-		public ItemAttatchedStackModeSkillTrayEffect(Player ply) {
-			super(ply);
-			// TODO Auto-generated constructor stub
-		}
-		@Override
-		public void onMaxUp() {
-			// TODO Auto-generated method stub
-			getTrayEffect().setModalRemainingTicks(Integer.MAX_VALUE);
-		}
-		@Override
-		public void onMaxLose() {
-			// TODO Auto-generated method stub
-			getTrayEffect().setModalRemainingTicks(0);
-		}
-	}
+    public class ItemAttatchedStackModeSkillTrayEffect
+    extends ItemAttatchedModeSkill.ItemAttatchedModeSkillTrayEffect {
+        private static final /* synthetic */ int[] llllllIl;
+
+        static {
+            ItemAttatchedStackModeSkillTrayEffect.lllIllIlIl();
+        }
+
+        public ItemAttatchedStackModeSkillTrayEffect(Player llllllIlIllIlI) {
+            ItemAttatchedStackModeSkillTrayEffect llllllIlIllIIl;
+            super(llllllIlIllIlI);
+        }
+
+        @Override
+        public void onMaxLose() {
+            ItemAttatchedStackModeSkillTrayEffect llllllIlIlIIIl;
+            llllllIlIlIIIl.ItemAttatchedStackModeSkill.this.getTrayEffect().setModalRemainingTicks(llllllIl[1]);
+        }
+
+        @Override
+        public void onMaxUp() {
+            ItemAttatchedStackModeSkillTrayEffect llllllIlIlIlIl;
+            llllllIlIlIlIl.ItemAttatchedStackModeSkill.this.getTrayEffect().setModalRemainingTicks(llllllIl[0]);
+        }
+
+        private static void lllIllIlIl() {
+            llllllIl = new int[2];
+            ItemAttatchedStackModeSkillTrayEffect.llllllIl[0] = -" ".length() & (-1 & Integer.MAX_VALUE);
+            ItemAttatchedStackModeSkillTrayEffect.llllllIl[1] = (85 ^ 11 ^ (61 ^ 118)) & (173 ^ 146 ^ (154 ^ 176) ^ -" ".length());
+        }
+    }
+
+    public class StackSkillMode
+    extends ItemAttatchedModeSkill.SkillMode {
+        private /* synthetic */ int maxStacks;
+
+        public int getMaxStacks() {
+            StackSkillMode lllllIIlIIIlIlI;
+            return lllllIIlIIIlIlI.maxStacks;
+        }
+
+        public StackSkillMode(int lllllIIlIIlIlIl, String lllllIIlIIlIlII, String lllllIIlIIlIIll, int lllllIIlIIlIIlI) {
+            StackSkillMode lllllIIlIIlIlll;
+            super(lllllIIlIIlIlIl, lllllIIlIIlIlII, lllllIIlIIlIIll);
+            lllllIIlIIlIlll.maxStacks = lllllIIlIIlIIlI;
+        }
+
+        public void setMaxStacks(int lllllIIlIIIIIll) {
+            lllllIIlIIIIlII.maxStacks = lllllIIlIIIIIll;
+        }
+
+        public StackSkillMode(int lllllIIlIlIlIIl, String lllllIIlIlIlIII, String lllllIIlIlIIlll, ChatColor lllllIIlIIlllll, int lllllIIlIIllllI) {
+            StackSkillMode lllllIIlIlIlIll;
+            super(lllllIIlIlIlIIl, lllllIIlIlIlIII, lllllIIlIlIIlll, lllllIIlIIlllll);
+            lllllIIlIlIlIll.maxStacks = lllllIIlIIllllI;
+        }
+    }
+
 }
+

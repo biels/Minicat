@@ -1,39 +1,66 @@
+/*
+ * Decompiled with CFR 0.139.
+ * 
+ * Could not load the following classes:
+ *  org.bukkit.entity.Player
+ */
 package com.biel.lobby.utilities.events.statuseffects;
 
+import com.biel.lobby.utilities.events.skills.types.CooldownSkill;
+import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 import org.bukkit.entity.Player;
 
-import com.biel.lobby.utilities.events.skills.types.CooldownSkill;
-import com.biel.lobby.utilities.events.statuseffects.StatusEffect.StatusEffectType;
+public class CDStatusEffect
+extends StatusEffect {
+    private static final /* synthetic */ int[] lIllIIIIl;
+    /* synthetic */ CooldownSkill s;
 
-public class CDStatusEffect extends StatusEffect {
-	CooldownSkill s;
-	public CDStatusEffect(Player ply, CooldownSkill s) {
-		super(ply);
-		this.s = s;
-		// TODO Auto-generated constructor stub
-	}
+    private static boolean lIIllIllIlI(int n) {
+        return n != 0;
+    }
 
-	@Override
-	public String getName() {
-		// TODO Auto-generated method stub
-		return s.getName();
-	}
+    private static void lIIllIllIIl() {
+        lIllIIIIl = new int[1];
+        CDStatusEffect.lIllIIIIl[0] = -" ".length();
+    }
 
-	@Override
-	public String getDescription() {
-		// TODO Auto-generated method stub
-		return s.getDescription();
-	}
-	@Override
-	public void tick() {
-		// TODO Auto-generated method stub
-		super.tick();
-		if(s.isCDAvaliable()){
-			setRemainingTicks(-1);
-			setType(StatusEffectType.BUFF);
-		}else {
-			setType(StatusEffectType.SKILL_TRAY);
-			setRemainingTicks(s.getCDRemainigTicks());
-		}
-	}
+    @Override
+    public String getDescription() {
+        CDStatusEffect lIllIIIlIlIIlI;
+        return lIllIIIlIlIIlI.s.getDescription();
+    }
+
+    static {
+        CDStatusEffect.lIIllIllIIl();
+    }
+
+    @Override
+    public String getName() {
+        CDStatusEffect lIllIIIlIlIlIl;
+        return lIllIIIlIlIlIl.s.getName();
+    }
+
+    public CDStatusEffect(Player lIllIIIlIlllII, CooldownSkill lIllIIIlIllIII) {
+        CDStatusEffect lIllIIIlIllIlI;
+        super(lIllIIIlIlllII);
+        lIllIIIlIllIlI.s = lIllIIIlIllIII;
+    }
+
+    @Override
+    public void tick() {
+        CDStatusEffect lIllIIIlIIllll;
+        super.tick();
+        if (CDStatusEffect.lIIllIllIlI((int)lIllIIIlIIllll.s.isCDAvaliable())) {
+            lIllIIIlIIllll.setRemainingTicks(lIllIIIIl[0]);
+            lIllIIIlIIllll.setType(StatusEffect.StatusEffectType.BUFF);
+            "".length();
+            if (" ".length() <= -" ".length()) {
+                return;
+            }
+        } else {
+            lIllIIIlIIllll.setType(StatusEffect.StatusEffectType.SKILL_TRAY);
+            lIllIIIlIIllll.setRemainingTicks(lIllIIIlIIllll.s.getCDRemainigTicks());
+        }
+    }
 }
+

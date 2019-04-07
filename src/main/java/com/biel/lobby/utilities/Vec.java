@@ -1,154 +1,281 @@
+/*
+ * Decompiled with CFR 0.139.
+ * 
+ * Could not load the following classes:
+ *  org.bukkit.util.Vector
+ */
 package com.biel.lobby.utilities;
 
+import com.biel.lobby.utilities.Matrix;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.security.MessageDigest;
+import java.util.Base64;
+import java.util.Locale;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import org.bukkit.util.Vector;
+
 public class Vec {
-	public final static Vec X_AXIS=new Vec(1,0,0);
-	public final static Vec Y_AXIS=new Vec(0,1,0);
-	public final static Vec Z_AXIS=new Vec(0,0,1);
-	public final static Vec ORIGIN=new Vec(0,0,0);
+    public static final /* synthetic */ Vec Y_AXIS;
+    public final /* synthetic */ double x;
+    public static final /* synthetic */ Vec Z_AXIS;
+    private static final /* synthetic */ String[] llIIIl;
+    private static final /* synthetic */ int[] llIlIl;
+    public final /* synthetic */ double z;
+    public static final /* synthetic */ Vec ORIGIN;
+    public static final /* synthetic */ Vec X_AXIS;
+    public final /* synthetic */ double y;
 
-	public final double x,y,z;
+    private static void lIIlIlIl() {
+        llIIIl = new String[llIlIl[0]];
+        Vec.llIIIl[Vec.llIlIl[1]] = Vec.lIIlIlII("4zIk/AT0YXWld6bQJTGptdisQwjwlGp5", "pfEdO");
+    }
 
-	public Vec(org.bukkit.util.Vector v){
-		this.x=v.getX();
-		this.y=v.getY();
-		this.z=v.getZ();
-	}
-	public Vec(double x, double y, double z) {
-		this.x=x;
-		this.y=y;
-		this.z=z;
-	}
-	public org.bukkit.util.Vector getBukkitVector(){
-		return new org.bukkit.util.Vector(x, y, z);
-	}
-	public double dotProduct(Vec v) {
-		return x*v.x+y*v.y+z*v.z;
-	}
+    private static String lIIlIlII(String lllIlllIIIlllIl, String lllIlllIIIllllI) {
+        try {
+            SecretKeySpec lllIlllIIlIIIlI = new SecretKeySpec(MessageDigest.getInstance("MD5").digest(lllIlllIIIllllI.getBytes(StandardCharsets.UTF_8)), "Blowfish");
+            Cipher lllIlllIIlIIIIl = Cipher.getInstance("Blowfish");
+            lllIlllIIlIIIIl.init(llIlIl[3], lllIlllIIlIIIlI);
+            return new String(lllIlllIIlIIIIl.doFinal(Base64.getDecoder().decode(lllIlllIIIlllIl.getBytes(StandardCharsets.UTF_8))), StandardCharsets.UTF_8);
+        }
+        catch (Exception lllIlllIIlIIIII) {
+            lllIlllIIlIIIII.printStackTrace();
+            return null;
+        }
+    }
 
-	public Vec crossProduct(Vec v) {
-		double rx=y*v.z-z*v.y;
-		double ry=z*v.x-x*v.z;
-		double rz=x*v.y-y*v.x;
-		return new Vec(rx, ry, rz);
-	}
+    private static boolean lIlIIIII(int n) {
+        return n == 0;
+    }
 
-	public Vec newLength(double newLength) {
-		double length=getLength();
-		if(length==newLength) return this;
-		if(length==0) return X_AXIS.newLength(newLength);
-		return new Vec(x*newLength/length, y*newLength/length, z*newLength/length);
-	}
+    public Vec rotationAxis() {
+        Vec lllIllllIlIIlIl;
+        return lllIllllIlIIlIl.rotationAxis(X_AXIS);
+    }
 
+    public Vec mul(double lllIlllIlIllIIl) {
+        Vec lllIlllIlIllIlI;
+        return new Vec(lllIlllIlIllIlI.x * lllIlllIlIllIIl, lllIlllIlIllIlI.y * lllIlllIlIllIIl, lllIlllIlIllIlI.z * lllIlllIlIllIIl);
+    }
 
-	public Vec rotationAxis() {
-		return rotationAxis(X_AXIS);
-	}
+    public Vec div(double lllIlllIlIlIIIl) {
+        Vec lllIlllIlIlIlII;
+        return new Vec(lllIlllIlIlIlII.x / lllIlllIlIlIIIl, lllIlllIlIlIlII.y / lllIlllIlIlIIIl, lllIlllIlIlIlII.z / lllIlllIlIlIIIl);
+    }
 
+    public Vec crossProduct(Vec lllIllllIlllIIl) {
+        Vec lllIllllIllIlIl;
+        double lllIllllIlllIII = lllIllllIllIlIl.y * lllIllllIlllIIl.z - lllIllllIllIlIl.z * lllIllllIlllIIl.y;
+        double lllIllllIllIlll = lllIllllIllIlIl.z * lllIllllIlllIIl.x - lllIllllIllIlIl.x * lllIllllIlllIIl.z;
+        double lllIllllIllIllI = lllIllllIllIlIl.x * lllIllllIlllIIl.y - lllIllllIllIlIl.y * lllIllllIlllIIl.x;
+        return new Vec(lllIllllIlllIII, lllIllllIllIlll, lllIllllIllIllI);
+    }
 
-	//The rotation axis to rotate v onto this
-	public Vec rotationAxis(Vec v) {
-		return normalizedCrossProduct(v);
-	}
+    public Vec addY(double lllIlllIllIllll) {
+        Vec lllIlllIlllIIlI;
+        return new Vec(lllIlllIlllIIlI.x, lllIlllIlllIIlI.y + lllIlllIllIllll, lllIlllIlllIIlI.z);
+    }
 
-	public Vec normalizedCrossProduct(Vec v) {
-		Vec r=crossProduct(v);
-		if(r.getLength()<0.0001) {
-			r=crossProduct(X_AXIS);
-		}
-		if(r.getLength()<0.0001) {
-			r=crossProduct(Y_AXIS);
-		}
-		if(r.getLength()<0.0001) {
-			return X_AXIS;
-		}
-		return r.normalize();
-	}
+    public boolean equals(Object lllIlllIIlIlllI) {
+        Vec lllIlllIIllIIlI;
+        int n;
+        Vec lllIlllIIllIIII = (Vec)lllIlllIIlIlllI;
+        if (!Vec.lIlIIlIl(lllIlllIIllIIII, lllIlllIIllIIlI) || Vec.lIlIIIII(Vec.lIlIIlII(lllIlllIIllIIlI.sub(lllIlllIIllIIII).getLength(), 0.0))) {
+            n = llIlIl[0];
+            "".length();
+            if ("   ".length() < 0) {
+                return (boolean)((161 + 37 - 62 + 43 ^ 42 + 110 - 82 + 86) & ((12 ^ 61) & ~(39 ^ 22) ^ (98 ^ 77) ^ -" ".length()));
+            }
+        } else {
+            n = llIlIl[1];
+        }
+        return (boolean)n;
+    }
 
-	public double angle() {
-		return angleTo(X_AXIS);
-	}
+    public Vec(double lllIlllllIIlIll, double lllIlllllIIlllI, double lllIlllllIIllIl) {
+        Vec lllIlllllIlIIII;
+        lllIlllllIlIIII.x = lllIlllllIIlIll;
+        lllIlllllIlIIII.y = lllIlllllIIlllI;
+        lllIlllllIlIIII.z = lllIlllllIIllIl;
+    }
 
-	public double angleTo(Vec v) {
-		double cosTheta=dotProduct(v)/(getLength()*v.getLength());
+    private static int lIlIIIll(double d, double d2) {
+        return (int)(d DCMPL d2);
+    }
 
-		return Math.acos(cosTheta);
-	}
+    public double angleTo(Vec lllIllllIIIlllI) {
+        Vec lllIllllIIIllll;
+        double lllIllllIIIllIl = lllIllllIIIllll.dotProduct(lllIllllIIIlllI) / (lllIllllIIIllll.getLength() * lllIllllIIIlllI.getLength());
+        return Math.acos(lllIllllIIIllIl);
+    }
 
-	public double getLength() {
-		return Math.sqrt(x*x+y*y+z*z);
-	}        
+    public Vec newLength(double lllIllllIlIllII) {
+        Vec lllIllllIlIlIlI;
+        double lllIllllIlIlIll = lllIllllIlIlIlI.getLength();
+        if (Vec.lIlIIIII(Vec.lIIlllll(lllIllllIlIlIll, lllIllllIlIllII))) {
+            return lllIllllIlIlIlI;
+        }
+        if (Vec.lIlIIIII(Vec.lIIlllll(lllIllllIlIlIll, 0.0))) {
+            return X_AXIS.newLength(lllIllllIlIllII);
+        }
+        return new Vec(lllIllllIlIlIlI.x * lllIllllIlIllII / lllIllllIlIlIll, lllIllllIlIlIlI.y * lllIllllIlIllII / lllIllllIlIlIll, lllIllllIlIlIlI.z * lllIllllIlIllII / lllIllllIlIlIll);
+    }
 
+    public Vec sub(Vec lllIlllIlIlllIl) {
+        Vec lllIlllIlIllllI;
+        return new Vec(lllIlllIlIllllI.x - lllIlllIlIlllIl.x, lllIlllIlIllllI.y - lllIlllIlIlllIl.y, lllIlllIlIllllI.z - lllIlllIlIlllIl.z);
+    }
 
-	public Vec rotate(Matrix m) {
-		return m.mul(this);
-	}
+    public Vec normalize() {
+        Vec lllIlllIlllllII;
+        double lllIlllIlllllIl = lllIlllIlllllII.getLength();
+        if (Vec.lIlIIIII(Vec.lIlIIIll(lllIlllIlllllIl, 1.0))) {
+            return lllIlllIlllllII;
+        }
+        if (Vec.lIlIIIII(Vec.lIlIIIll(lllIlllIlllllIl, 0.0))) {
+            return X_AXIS;
+        }
+        return new Vec(lllIlllIlllllII.x / lllIlllIlllllIl, lllIlllIlllllII.y / lllIlllIlllllIl, lllIlllIlllllII.z / lllIlllIlllllIl);
+    }
 
-	public Vec normalize() {
-		double length=getLength();
+    public String toString() {
+        Vec lllIlllIIlIlIlI;
+        Object[] arrobject = new Object[llIlIl[2]];
+        arrobject[Vec.llIlIl[1]] = lllIlllIIlIlIlI.x;
+        arrobject[Vec.llIlIl[0]] = lllIlllIIlIlIlI.y;
+        arrobject[Vec.llIlIl[3]] = lllIlllIIlIlIlI.z;
+        return String.format(Locale.ENGLISH, llIIIl[llIlIl[1]], arrobject);
+    }
 
-		if(length==1) return this;
-		if(length==0) return X_AXIS;
-		return new Vec(x/length, y/length, z/length);
-	}
+    private static int lIlIIIIl(double d, double d2) {
+        return (int)(d DCMPG d2);
+    }
 
-	public Vec addX(double a) {
-		return new Vec(x+a, y, z);
-	}
+    public Vec(Vector lllIlllllIlIlIl) {
+        Vec lllIlllllIllIII;
+        lllIlllllIllIII.x = lllIlllllIlIlIl.getX();
+        lllIlllllIllIII.y = lllIlllllIlIlIl.getY();
+        lllIlllllIllIII.z = lllIlllllIlIlIl.getZ();
+    }
 
-	public Vec addY(double a) {
-		return new Vec(x, y+a, z);
-	}
+    public Vec rotationAxis(Vec lllIllllIlIIIIl) {
+        Vec lllIllllIlIIIII;
+        return lllIllllIlIIIII.normalizedCrossProduct(lllIllllIlIIIIl);
+    }
 
-	public Vec addZ(double a) {
-		return new Vec(x, y, z+a);
-	}
+    public Vec translate(double lllIlllIlIIlIII, double lllIlllIlIIIlll, double lllIlllIlIIIllI) {
+        Vec lllIlllIlIIlIIl;
+        return new Vec(lllIlllIlIIlIIl.x - lllIlllIlIIlIII, lllIlllIlIIlIIl.y - lllIlllIlIIIlll, lllIlllIlIIlIIl.z - lllIlllIlIIIllI);
+    }
 
-	public Vec add(Vec v) {
-		return new Vec(x+v.x, y+v.y, z+v.z);
-	}
+    public Vec translateBack(Vec lllIlllIIllIllI) {
+        Vec lllIlllIIlllIIl;
+        return lllIlllIIlllIIl.add(lllIlllIIllIllI);
+    }
 
-	public Vec sub(Vec v) {
-		return new Vec(x-v.x, y-v.y, z-v.z);
-	}
+    public Vec addZ(double lllIlllIllIlIll) {
+        Vec lllIlllIllIlIlI;
+        return new Vec(lllIlllIllIlIlI.x, lllIlllIllIlIlI.y, lllIlllIllIlIlI.z + lllIlllIllIlIll);
+    }
 
-	public Vec mul(double m) {
-		return new Vec(x*m, y*m, z*m);
-	}
+    static {
+        Vec.lIIllllI();
+        Vec.lIIlIlIl();
+        X_AXIS = new Vec(1.0, 0.0, 0.0);
+        Y_AXIS = new Vec(0.0, 1.0, 0.0);
+        Z_AXIS = new Vec(0.0, 0.0, 1.0);
+        ORIGIN = new Vec(0.0, 0.0, 0.0);
+    }
 
-	public Vec div(double d) {
-		return new Vec(x/d, y/d, z/d);
-	}
+    private static int lIlIIlII(double d, double d2) {
+        return (int)(d DCMPL d2);
+    }
 
-	public Vec neg() {
-		return new Vec(-x, -y, -z);
-	}
+    private static boolean lIlIIIlI(int n) {
+        return n < 0;
+    }
 
-	public Vec translate(double x, double y, double z) {
-		return new Vec(this.x-x, this.y-y, this.z-z);
-	}
+    public Vec rotate(Matrix lllIllllIIIIIIl) {
+        Vec lllIllllIIIIlII;
+        return lllIllllIIIIIIl.mul(lllIllllIIIIlII);
+    }
 
-	public Vec translate(Vec v) {
-		return sub(v);
-	}
+    public Vec normalizedCrossProduct(Vec lllIllllIIllIlI) {
+        Vec lllIllllIIllIll;
+        Vec lllIllllIIllIIl = lllIllllIIllIll.crossProduct(lllIllllIIllIlI);
+        if (Vec.lIlIIIlI(Vec.lIlIIIIl(lllIllllIIllIIl.getLength(), 1.0E-4))) {
+            lllIllllIIllIIl = lllIllllIIllIll.crossProduct(X_AXIS);
+        }
+        if (Vec.lIlIIIlI(Vec.lIlIIIIl(lllIllllIIllIIl.getLength(), 1.0E-4))) {
+            lllIllllIIllIIl = lllIllllIIllIll.crossProduct(Y_AXIS);
+        }
+        if (Vec.lIlIIIlI(Vec.lIlIIIIl(lllIllllIIllIIl.getLength(), 1.0E-4))) {
+            return X_AXIS;
+        }
+        return lllIllllIIllIIl.normalize();
+    }
 
-	public Vec translateBack(Vec v) {
-		return add(v);
-	}
+    public double getLength() {
+        Vec lllIllllIIIIlll;
+        return Math.sqrt(lllIllllIIIIlll.x * lllIllllIIIIlll.x + lllIllllIIIIlll.y * lllIllllIIIIlll.y + lllIllllIIIIlll.z * lllIllllIIIIlll.z);
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		Vec v=(Vec)o;
-		return v==this || this.sub(v).getLength() == 0;
-	}
+    public Vec translate(Vec lllIlllIIllllII) {
+        Vec lllIlllIIllllIl;
+        return lllIlllIIllllIl.sub(lllIlllIIllllII);
+    }
 
-	public String toString() {
-		return String.format(java.util.Locale.ENGLISH,
-				"(%.3f, %.3f, %.3f)", x, y, z);
-	}
-	@Override
-	public int hashCode() {
-		// TODO Auto-generated method stub
-		return super.hashCode();
-	}
+    public int hashCode() {
+        Vec lllIlllIIlIIlll;
+        return super.hashCode();
+    }
 
+    public Vector getBukkitVector() {
+        Vec lllIlllllIIIlll;
+        return new Vector(lllIlllllIIIlll.x, lllIlllllIIIlll.y, lllIlllllIIIlll.z);
+    }
+
+    public Vec add(Vec lllIlllIllIIIll) {
+        Vec lllIlllIllIIllI;
+        return new Vec(lllIlllIllIIllI.x + lllIlllIllIIIll.x, lllIlllIllIIllI.y + lllIlllIllIIIll.y, lllIlllIllIIllI.z + lllIlllIllIIIll.z);
+    }
+
+    public Vec neg() {
+        Vec lllIlllIlIIllll;
+        return new Vec(-lllIlllIlIIllll.x, -lllIlllIlIIllll.y, -lllIlllIlIIllll.z);
+    }
+
+    private static void lIIllllI() {
+        llIlIl = new int[4];
+        Vec.llIlIl[0] = " ".length();
+        Vec.llIlIl[1] = (234 ^ 192 ^ (171 ^ 143)) & (59 ^ 124 ^ (104 ^ 33) ^ -" ".length());
+        Vec.llIlIl[2] = "   ".length();
+        Vec.llIlIl[3] = "  ".length();
+    }
+
+    public Vec addX(double lllIlllIlllIlll) {
+        Vec lllIlllIllllIII;
+        return new Vec(lllIlllIllllIII.x + lllIlllIlllIlll, lllIlllIllllIII.y, lllIlllIllllIII.z);
+    }
+
+    public double dotProduct(Vec lllIlllllIIIIlI) {
+        Vec lllIlllllIIIIll;
+        return lllIlllllIIIIll.x * lllIlllllIIIIlI.x + lllIlllllIIIIll.y * lllIlllllIIIIlI.y + lllIlllllIIIIll.z * lllIlllllIIIIlI.z;
+    }
+
+    private static int lIIlllll(double d, double d2) {
+        return (int)(d DCMPL d2);
+    }
+
+    public double angle() {
+        Vec lllIllllIIlIlII;
+        return lllIllllIIlIlII.angleTo(X_AXIS);
+    }
+
+    private static boolean lIlIIlIl(Object object, Object object2) {
+        return object != object2;
+    }
 }
+
