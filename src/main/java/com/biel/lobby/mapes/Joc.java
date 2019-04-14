@@ -1004,8 +1004,8 @@ public abstract class Joc extends MapaResetejable {
 		PlayerInfo i = getPlayerInfo(p);
 		i.lastMoveEvent = ZonedDateTime.now();
 		Vector v = Utils.CrearVector(evt.getFrom(), evt.getTo());
-		if(v.getX() != 0 || v.getZ() != 0 || evt.getFrom().getYaw() != evt.getTo().getYaw())
-		i.setImmune(false);
+		if(v.getX() > 0.01 || v.getZ() > 0.01 || evt.getFrom().getYaw() - evt.getTo().getYaw() > 1)
+			i.setImmune(false);
 	}
 	
 	@Override

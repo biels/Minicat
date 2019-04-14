@@ -456,9 +456,11 @@ public class RainbowClay extends JocObjectius {
 
 			cub.getBlocks().stream().filter(b -> b.getType() == Material.CHEST)
 					.forEach(b -> fillChest((Chest) b.getState(), getMiddleChestItems(), false));
-			cub = pMapaActual().ObtenirCuboid("RegCT", getWorld());
-			cub.getBlocks().stream().filter(b -> b.getType() == Material.CHEST)
-					.forEach(b -> fillChest((Chest) b.getState(), getPotionChestItems(), true));
+			if(pMapaActual().ExisteixPropietat("RegCT")){
+				cub = pMapaActual().ObtenirCuboid("RegCT", getWorld());
+				cub.getBlocks().stream().filter(b -> b.getType() == Material.CHEST)
+						.forEach(b -> fillChest((Chest) b.getState(), getPotionChestItems(), true));
+			}
 		}
 	}
 
