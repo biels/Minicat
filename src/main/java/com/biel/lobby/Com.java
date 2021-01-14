@@ -211,14 +211,14 @@ public class Com {
 			return l;
 		}
 		if(r == 2){
-			l.add(new ItemStack(Material.GOLD_HELMET));
-			l.add(new ItemStack(Material.GOLD_CHESTPLATE));
-			l.add(new ItemStack(Material.GOLD_LEGGINGS));
-			l.add(new ItemStack(Material.GOLD_BOOTS));
+			l.add(new ItemStack(Material.GOLDEN_HELMET));
+			l.add(new ItemStack(Material.GOLDEN_CHESTPLATE));
+			l.add(new ItemStack(Material.GOLDEN_LEGGINGS));
+			l.add(new ItemStack(Material.GOLDEN_BOOTS));
 			return l;
 		}
 		if(r == 3){
-			l.add(new ItemStack(Material.GOLD_HELMET));
+			l.add(new ItemStack(Material.GOLDEN_HELMET));
 			l.add(new ItemStack(Material.IRON_CHESTPLATE));
 			l.add(new ItemStack(Material.IRON_LEGGINGS));
 			l.add(new ItemStack(Material.IRON_BOOTS));
@@ -271,7 +271,7 @@ public class Com {
 		}
 	}
 	public static Material getSkullIconMaterial(Player p){
-		Material m = Material.SKULL_ITEM;
+		Material m = Material.LEGACY_SKULL_ITEM;
 		if(Stream.of("amiguet", "pilota", "ball", "").anyMatch(s -> (p.getName().equalsIgnoreCase(s) || p.getName().contains(s))))
 			m = Material.SLIME_BALL;
 		return m;

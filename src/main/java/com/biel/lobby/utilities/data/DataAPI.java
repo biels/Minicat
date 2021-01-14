@@ -1,10 +1,7 @@
 package com.biel.lobby.utilities.data;
 
-import java.sql.DriverManager;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -36,7 +33,7 @@ public class DataAPI {
 			connection = DriverManager.getConnection("jdbc:mysql://" + host
 					+ ":" + port + "/" + db + "?autoReconnect=true&useSSL=false", user, password);
 		} catch (Exception e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 			datalessMode = true;
 			logger.warning("Could not connect to database, switching to off-server datalessMode mode.");
 		}
@@ -231,11 +228,13 @@ public class DataAPI {
 		}
 	}
 	public ArrayList<Integer> getRanking() {
+
 		ArrayList<Integer> r = new ArrayList<>();
 		if(datalessMode){
 			logger.warning("Tried to get ranking in dataless mode.");
 			return r;
 		}
+		repairConnection();
 		try { //TODO
 			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE TIMESTAMPDIFF(DAY, players.last_played, NOW()) < 15  ORDER BY `elo` DESC;");
 			ResultSet result = sql.executeQuery();
@@ -389,7 +388,7 @@ public class DataAPI {
 		return 0;
 	}
 	//TIMESTAMP
-	public void registerTimestamp(int matchId, int playerId, int frameId, int kills, int deaths, double damageDealt, boolean isAlive, int itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree) { //Gamemode
+	public void registerTimestamp(int matchId, int playerId, int frameId, int kills, int deaths, double damageDealt, boolean isAlive, String itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree) { //Gamemode
 		if(datalessMode)return;
 		repairConnection();
 		try {
@@ -403,7 +402,7 @@ public class DataAPI {
 			ps.setInt(5, deaths);
 			ps.setDouble(6, damageDealt);
 			ps.setBoolean(7, isAlive);
-			ps.setInt(8, itemInHand);
+//			ps.setInt(8, itemInHand);
 			ps.setInt(9, blocksPlaced);
 			ps.setInt(10, blocksBroken);
 			ps.setInt(11, objectivesCompleted);

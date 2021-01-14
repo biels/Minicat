@@ -14,6 +14,12 @@ repositories {
         //Repository url is ok, but server seems to be (temporarily, 02/01/17) serving wrong content
         //url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
     }*/
+    maven {
+        url "https://hub.spigotmc.org/nexus/content/repositories/snapshots"
+    }
+    maven {
+        url = "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
 }
 
 jar {
@@ -27,12 +33,19 @@ compileTestJava{
     options.encoding = defaultEncoding
 }
 dependencies {
-
+    compile group: 'com.google.guava', name: 'guava', version: '19.0'
+    compile 'org.apache.commons:commons-io:1.3.2'
     //Enable if you have BielAPI installed on maven local
     //compile 'BielAPI:BielAPI:0.0.8-SNAPSHOT'
     compile fileTree(dir: 'lib', include: '*.jar')
     //Enable to use automatic download, when avaliable
     //compile 'org.spigotmc:spigot-api:1.10-R0.1-SNAPSHOT'
+//    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.15'
+
+    compileOnly "org.spigotmc:spigot-api:1.16.4-R0.1-SNAPSHOT"
+//    compileOnly "org.spigotmc:spigot:1.16.4-R0.1-SNAPSHOT"
+    testCompileOnly  "org.spigotmc:spigot-api:1.16.4-R0.1-SNAPSHOT"
+
 }
 
 task deploy(type: Copy){

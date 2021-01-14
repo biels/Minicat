@@ -53,7 +53,7 @@ public class TeamDeathMatch extends JocTeamDeathMatch {
 		items.add(new ItemStack(Material.IRON_BOOTS, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		items.add(new ItemStack(Material.GOLDEN_APPLE, 2));
-		items.add(Utils.setItemNameAndLore(new ItemStack(Material.SNOW_BALL, (int) Math.round(4 * (balancingMultiplier - 0.2))), "Bomba", "Explota a l'impacte"));
+		items.add(Utils.setItemNameAndLore(new ItemStack(Material.SNOWBALL, (int) Math.round(4 * (balancingMultiplier - 0.2))), "Bomba", "Explota a l'impacte"));
 		items.add(new ItemStack(Material.ARROW, (int) (20 * balancingMultiplier)));
 		return items;
 	}
@@ -61,7 +61,7 @@ public class TeamDeathMatch extends JocTeamDeathMatch {
 	protected boolean canBeDropped(ItemStack i, Player p) {
 		// TODO Auto-generated method stub
 		Material t = i.getType();
-		if(t == Material.GOLDEN_APPLE || t == Material.SNOW_BALL)return true;
+		if(t == Material.GOLDEN_APPLE || t == Material.SNOWBALL)return true;
 		return super.canBeDropped(i, p);
 	}
 	@Override

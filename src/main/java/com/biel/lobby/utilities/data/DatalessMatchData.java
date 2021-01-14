@@ -27,6 +27,6 @@ public class DatalessMatchData extends MatchData {
     }
 
     @Override
-    public void registerTimestamp(Player p, boolean ending, int kills, int deaths, double damageDealt, boolean isAlive, int itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree) {
+    public void registerTimestamp(Player p, boolean ending, int kills, int deaths, double damageDealt, boolean isAlive, String itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree) {
     }
 }

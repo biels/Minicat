@@ -28,7 +28,7 @@ public abstract class ColorConverter
 		dyeChatMap.put(DyeColor.PINK, ChatColor.LIGHT_PURPLE);
 		dyeChatMap.put(DyeColor.PURPLE, ChatColor.DARK_PURPLE);
 		dyeChatMap.put(DyeColor.RED, ChatColor.DARK_RED);
-		dyeChatMap.put(DyeColor.SILVER, ChatColor.GRAY);
+//		dyeChatMap.put(DyeColor.SILVER, ChatColor.GRAY);
 		dyeChatMap.put(DyeColor.WHITE, ChatColor.WHITE);
 		dyeChatMap.put(DyeColor.YELLOW, ChatColor.YELLOW);
 	}
@@ -112,7 +112,7 @@ public abstract class ColorConverter
 		dyeHexMap.put(DyeColor.PINK, "#d98199");
 		dyeHexMap.put(DyeColor.PURPLE, "#7e34bf");
 		dyeHexMap.put(DyeColor.RED, "#9e2b27");
-		dyeHexMap.put(DyeColor.SILVER, "#a0a7a7");
+//		dyeHexMap.put(DyeColor.SILVER, "#a0a7a7");
 		dyeHexMap.put(DyeColor.WHITE, "#a4a4a4");
 		dyeHexMap.put(DyeColor.YELLOW, "#c2b51c");
 	}

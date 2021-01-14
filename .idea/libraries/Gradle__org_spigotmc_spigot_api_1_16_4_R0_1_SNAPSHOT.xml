@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Gradle: org.spigotmc:spigot-api:1.16.4-R0.1-SNAPSHOT">
+    <CLASSES>
+      <root url="file://$APPLICATION_HOME_DIR$/jbr/bin/Could not find org.spigotmc:spigot-api:1.16.4-R0.1-SNAPSHOT." />
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spigotmc/spigot-api/1.16.4-R0.1-SNAPSHOT/121f298f358377a8a14d20547e8ad8d2ad85ccd9/spigot-api-1.16.4-R0.1-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spigotmc/spigot-api/1.16.4-R0.1-SNAPSHOT/1c222830d39f0eab9e3e6e9a06f5d7951a43427/spigot-api-1.16.4-R0.1-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spigotmc/spigot-api/1.16.4-R0.1-SNAPSHOT/87110911811b26b36efc4f2685a6e12f21b55de1/spigot-api-1.16.4-R0.1-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

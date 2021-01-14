@@ -60,7 +60,7 @@ public class DiamondCoreSkill extends InherentSkill {
 		Joc j = getGame();
 		int n = j.getPlayers().stream().mapToInt(ply -> (j.areEnemies(getPlayer(), ply)? 1 : 0)).sum();
 		for (int i = 0; i < n; i++) {
-			getWorld().playEffect(getPlayer().getEyeLocation().add(0, -0.14 * n, 0), Effect.HAPPY_VILLAGER, n);			
+			getWorld().playEffect(getPlayer().getEyeLocation().add(0, -0.14 * n, 0), Effect.VILLAGER_PLANT_GROW, n);
 		}
 		
 		evt.setDamage(evt.getDamage() * (1 - (getProtectionRatio() + getProtectionRatioForPlayer() * n)));

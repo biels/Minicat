@@ -188,7 +188,7 @@ public class InkWars extends JocEquips {
 	}
 	public void winAction(EquipInkWars eq) {
 		for(Player p : eq.getPlayers()){
-			getWorld().playEffect(p.getEyeLocation(), Effect.FIREWORKS_SPARK, 0);
+			getWorld().playEffect(p.getEyeLocation(), Effect.FIREWORK_SHOOT, 0);
 		}
 		sendGlobalMessage(eq.getChatColor() + "" + ChatColor.BOLD + "The " + eq.getAdjectiu().toLowerCase() + " team won!");
 		JocFinalitzat();
@@ -224,13 +224,13 @@ public class InkWars extends JocEquips {
 			InkWarsPlayerInfo i = getPlayerInfo(p);
 			boolean isInBaseRange = p.getLocation().distance(e.getTeamSpawnLocation()) < 10;
 			if (isInBaseRange){
-				if(!p.getInventory().contains(Material.WORKBENCH)){
+				if(!p.getInventory().contains(Material.CRAFTING_TABLE)){
 					giveWeaponSelectionButton(p);
 					sendPlayerMessage(p, ChatColor.YELLOW + "You can now select your ink weapon!");
 				}
 			}else{
-				if(p.getInventory().contains(Material.WORKBENCH)){
-					p.getInventory().remove(Material.WORKBENCH);
+				if(p.getInventory().contains(Material.CRAFTING_TABLE)){
+					p.getInventory().remove(Material.CRAFTING_TABLE);
 
 					InkWeapon activeWeapon = i.getActiveWeapon();
 					if (activeWeapon == null) {
@@ -281,7 +281,8 @@ public class InkWars extends JocEquips {
 				iter.remove();    
 				Block b = entry.getKey();
 				if (getTeamOwningBlock(b) != null) {
-					b.setData(getTeamOwningBlock(b).getColor().getWoolData());
+//					b.setData(getTeamOwningBlock(b).getColor().getWoolData());
+					// TODO UPDATE
 				}
 			}else{
 				//Expansion physics
@@ -319,7 +320,7 @@ public class InkWars extends JocEquips {
 		return null;
 	}
 	public void giveWeaponSelectionButton(Player p){
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.WORKBENCH), ChatColor.GOLD + "" + ChatColor.BOLD + "Weapon selector",  ChatColor.WHITE + "Opens weapon selection menu."), p, event -> openWeaponSelectionMenu(event.getPlayer()));
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.CRAFTING_TABLE), ChatColor.GOLD + "" + ChatColor.BOLD + "Weapon selector",  ChatColor.WHITE + "Opens weapon selection menu."), p, event -> openWeaponSelectionMenu(event.getPlayer()));
 		p.getInventory().addItem(button.getItemStack());
 	}
 	public void openWeaponSelectionMenu(Player p){
@@ -338,14 +339,14 @@ public class InkWars extends JocEquips {
 		String lvlString = ChatColor.GOLD + "" + ChatColor.BOLD + " [Level " + string + "]";
 		menu.setOption(0, new ItemStack(Material.STICK, 1), ChatColor.GREEN + "" + ChatColor.BOLD + "Roller" + lvlString);
 		menu.setOption(1, new ItemStack(Material.TORCH, 1), ChatColor.YELLOW + "" + ChatColor.BOLD + "Brush" + lvlString);
-		menu.setOption(2, new ItemStack(Material.SNOW_BALL, 1), ChatColor.BLUE + "" + ChatColor.BOLD + "Machinegun" + lvlString);
+		menu.setOption(2, new ItemStack(Material.SNOWBALL, 1), ChatColor.BLUE + "" + ChatColor.BOLD + "Machinegun" + lvlString);
 		menu.setOption(3, new ItemStack(Material.ENDER_PEARL, 1), ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Ender" + lvlString);
 
 		menu.open(p);
 	}
-	public boolean isPaintable(Block b){ 
+	public boolean isPaintable(Block b){
 		ArrayList<Material> p = new ArrayList<>();
-		p.add(Material.WOOL);p.add(Material.STAINED_CLAY);p.add(Material.STAINED_GLASS);p.add(Material.STAINED_GLASS_PANE);
+		p.add(Material.WHITE_WOOL);p.add(Material.LEGACY_STAINED_CLAY);p.add(Material.LEGACY_STAINED_GLASS);p.add(Material.LEGACY_STAINED_GLASS_PANE);
 		//		p.add(Material.STONE);p.add(Material.STONE);p.add(Material.STONE_B)
 		Material t = b.getType();
 		return (p.contains(t));
@@ -461,8 +462,8 @@ public class InkWars extends JocEquips {
 				//Register
 				if(oldOwnerTeam != newOwnerTeam)getPlayerInfo(getPlayer()).registerBlockPaint(oldOwnerTeam);
 				//Paint
-				if(forcedly)b.setType(Material.STAINED_CLAY);
-				b.setData(sc.getWoolData(), false);
+				if(forcedly)b.setType(Material.LEGACY_STAINED_CLAY);
+//				b.setData(sc.getWoolData(), false);
 				double pInk = 0;
 				if(highInkBlocks.containsKey(b)){
 					pInk = highInkBlocks.get(b).getSecond();
@@ -517,7 +518,7 @@ public class InkWars extends JocEquips {
 				while(iterator.hasNext()) {
 					preHitBlock = hitBlock;
 					hitBlock = iterator.next();
-					if(hitBlock.getTypeId()!=0) //Check all non-solid blockid's here.
+					if(hitBlock.getType().getId()!=0) //Check all non-solid blockid's here.
 					{break;}
 				}
 				if (hitBlock != null && preHitBlock != null) {	
@@ -547,7 +548,7 @@ public class InkWars extends JocEquips {
 				Snowball s = (Snowball) proj;
 				getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_ATTACK, 1, 1.1F);
 				getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_JUMP, 1, 1.1F);
-				getWorld().playEffect(preHitBlock.getLocation(), Effect.SPLASH, 0);
+//				getWorld().playEffect(preHitBlock.getLocation(), Effect.SPLASH, 0);
 				paintRadius(preHitBlock.getLocation(), 1.1 + Math.sqrt(getWeaponLevel() * 0.75), 4 + getWeaponLevel() / 2.0);
 				for(Player p : Utils.getNearbyPlayers(preHitBlock.getLocation(), 1 + getWeaponLevel())){
 					if(areEnemies(p, getPlayer())){
@@ -558,7 +559,7 @@ public class InkWars extends JocEquips {
 		}	
 		@Override
 		public ItemStack getLoadMaterial() {
-			return Utils.setItemName(new ItemStack(Material.SNOW_BALL, 1), obtenirEquip(getPlayer()).getChatColor() + "Ink ball");
+			return Utils.setItemName(new ItemStack(Material.SNOWBALL, 1), obtenirEquip(getPlayer()).getChatColor() + "Ink ball");
 		}
 		@Override
 		public ItemStack getToolMaterial() {
@@ -597,9 +598,9 @@ public class InkWars extends JocEquips {
 		@Override
 		public void onWeaponHit(ProjectileHitEvent evt, Projectile proj, Block hitBlock, Block preHitBlock) {
 			paintRadius(preHitBlock.getLocation(), Math.sqrt(getWeaponLevel() / 2.0) + 1.75, 4 + getWeaponLevel() * 2 + 1);
-			world.playEffect(preHitBlock.getLocation(), Effect.COLOURED_DUST, 0);
-			world.playEffect(preHitBlock.getLocation(), Effect.COLOURED_DUST, 0);
-			world.playEffect(getPlayer().getEyeLocation(), Effect.COLOURED_DUST, 0);
+//			world.playEffect(preHitBlock.getLocation(), Effect.COLOURED_DUST, 0);
+//			world.playEffect(preHitBlock.getLocation(), Effect.COLOURED_DUST, 0);
+//			world.playEffect(getPlayer().getEyeLocation(), Effect.COLOURED_DUST, 0);
 			getPlayerInfo(getPlayer()).setShieldTicks(20 * 6);
 		}
 
@@ -633,8 +634,8 @@ public class InkWars extends JocEquips {
 						chargeTicks = 6 * 20; //Starting charges
 						damager.playSound(damaged.getEyeLocation(), Sound.BLOCK_FURNACE_FIRE_CRACKLE, 1, (float) 1.2);
 						damaged.playSound(damaged.getEyeLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1, (float) 1.2);
-						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
-						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
+//						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
+//						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
 						sendPlayerMessage(targeted, ChatColor.GRAY + getPlayer().getName() + " has tricked you to paint for him (6s)!");
 						InkWeapon targetedActiveWeapon = getPlayerInfo(targeted).getActiveWeapon();
 
@@ -669,9 +670,9 @@ public class InkWars extends JocEquips {
 				if(chargeTicks == 2) {
 					//Last
 					paintRadius(targeted.getEyeLocation(), Math.sqrt(4.5 + getWeaponLevel() * 0.25), Math.sqrt(4.5 + getWeaponLevel() * 0.3));
-					getWorld().playEffect(targeted.getEyeLocation(), Effect.INSTANT_SPELL, 4);
-					getWorld().playEffect(targeted.getEyeLocation(), Effect.CLOUD, 4);
-					getWorld().playSound(targeted.getEyeLocation(), Sound.ENTITY_FIREWORK_BLAST, 1, 1.2F);
+//					getWorld().playEffect(targeted.getEyeLocation(), Effect.INSTANT_SPELL, 4);
+//					getWorld().playEffect(targeted.getEyeLocation(), Effect.CLOUD, 4);
+//					getWorld().playSound(targeted.getEyeLocation(), Sound.ENTITY_FIREWORK_BLAST, 1, 1.2F);
 				}
 				if(chargeTicks <= 1){	//Because on chargeTicks=0 this object gets kicked from the memory		
 					InkWeapon targetedActiveWeapon = getPlayerInfo(targeted).getActiveWeapon();
@@ -684,7 +685,7 @@ public class InkWars extends JocEquips {
 					targeted = null;
 				}
 				chargeTicks -= 1;
-				getWorld().playEffect(targeted.getLocation().add(0.5, 0.12, 0.5), Effect.LAVA_POP, 4);
+//				getWorld().playEffect(targeted.getLocation().add(0.5, 0.12, 0.5), Effect.LAVA_POP, 4);
 
 			}
 		}
@@ -932,7 +933,7 @@ public class InkWars extends JocEquips {
 		super.onPlayerInteract(evt, p);
 		Block b = evt.getClickedBlock();
 		if(b != null){
-			if(b.getType() == Material.WALL_SIGN){
+			if(b.getType() == Material.OAK_WALL_SIGN){
 				openWeaponSelectionMenu(p); //For service stations
 			}
 		}

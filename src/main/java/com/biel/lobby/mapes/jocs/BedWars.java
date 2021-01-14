@@ -57,7 +57,7 @@ public class BedWars extends JocEquipsLastStanding {
     protected ArrayList<ItemStack> getStartingItems(Player ply) {
         ArrayList<ItemStack> items = new ArrayList<>();
         Equip e = obtenirEquip(ply);
-        items.add(new ItemStack(Material.WOOD_SWORD, 1));
+        items.add(new ItemStack(Material.WOODEN_SWORD, 1));
         items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
         items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
         items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
@@ -79,7 +79,7 @@ public class BedWars extends JocEquipsLastStanding {
             int radiusFromSpawn = 8;
             Cuboid cuboid = GUtils.getCuboidAround(this.getTeamSpawnLocation(), radiusFromSpawn);
             Optional<Block> optionalBed = cuboid.getBlocks().stream()
-                    .filter(block -> block.getType().equals(Material.BED_BLOCK))
+                    .filter(block -> block.getType().equals(Material.RED_BED))
                     .findAny();
             if(optionalBed.isPresent()){
                 bedLocation = optionalBed.get().getLocation();
@@ -92,7 +92,7 @@ public class BedWars extends JocEquipsLastStanding {
             return bedLocation;
         }
         public boolean isBedAlive(){
-            return bedLocation.getBlock().getType() == Material.BED;
+            return bedLocation.getBlock().getType() == Material.RED_BED;
         }
     }
 

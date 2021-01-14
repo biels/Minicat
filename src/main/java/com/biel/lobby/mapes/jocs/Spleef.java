@@ -163,17 +163,17 @@ public class Spleef extends JocLastStanding {
 
 			}
 			public Material pala(int vegades){
-				Material mat = Material.WOOD_SPADE;    			
-				if (vegades == 0){mat = Material.WOOD_SPADE;}
-				if (vegades == 1){mat = Material.WOOD_HOE;}	
-				if (vegades == 2){mat = Material.STONE_SPADE;}
+				Material mat = Material.WOODEN_SHOVEL;
+				if (vegades == 0){mat = Material.WOODEN_SHOVEL;}
+				if (vegades == 1){mat = Material.WOODEN_HOE;}
+				if (vegades == 2){mat = Material.STONE_SHOVEL;}
 				if (vegades == 3){mat = Material.STONE_HOE;}	
-				if (vegades == 4){mat = Material.IRON_SPADE;}
+				if (vegades == 4){mat = Material.IRON_SHOVEL;}
 				if (vegades == 5){mat = Material.IRON_HOE;}	
 				if (vegades == 6){mat = Material.TNT;}//{mat = Material.GOLD_SPADE;}
 				//if (vegades == 7){mat = Material.ENDER_PEARL;}
-				if (vegades == 7){mat = Material.GOLD_HOE;}
-				if (vegades == 8){mat = Material.DIAMOND_SPADE;}
+				if (vegades == 7){mat = Material.GOLDEN_HOE;}
+				if (vegades == 8){mat = Material.DIAMOND_SHOVEL;}
 				if (vegades == 9){mat = Material.DIAMOND_HOE;}
 				if (vegades == 10){mat = Material.BOW;}
 				if (vegades == 11){mat = Material.TNT;}
@@ -271,7 +271,7 @@ public class Spleef extends JocLastStanding {
 
 				PlayerMoveEvent evt = (PlayerMoveEvent)event;
 
-				if (p.getLocation().getBlockY() < 0 && JocIniciat) {
+				if (p.getLocation().getBlockY() < 12 && JocIniciat) {
 
 					p.getInventory().clear();
 					p.setHealth(20);
@@ -368,7 +368,7 @@ public class Spleef extends JocLastStanding {
 		Boolean utilitzat = false;
 		if (evt.getAction() == Action.RIGHT_CLICK_BLOCK){
 			Location loc = evt.getClickedBlock().getLocation();
-			if (stack.getType() == Material.WOOD_HOE || stack.getType() == Material.STONE_HOE  || stack.getType() == Material.IRON_HOE || stack.getType() == Material.GOLD_HOE || stack.getType() == Material.DIAMOND_HOE){  
+			if (stack.getType() == Material.LEGACY_WOOD_HOE || stack.getType() == Material.STONE_HOE  || stack.getType() == Material.IRON_HOE || stack.getType() == Material.LEGACY_GOLD_HOE || stack.getType() == Material.DIAMOND_HOE){
 				Location ploc = p.getLocation();
 				ploc.setY(ploc.getY() - 1);
 				int dir = 0;
@@ -395,12 +395,12 @@ public class Spleef extends JocLastStanding {
 						//Location bloc = ploc.clone();
 						Location bloc = loc.clone();
 						//Bukkit.broadcastMessage("Signe=" + Signe.toString() + " CoordX=" + CoordX.toString());
-						if (stack.getType() == Material.WOOD_HOE || stack.getType() == Material.STONE_HOE){          						
+						if (stack.getType() == Material.WOODEN_HOE || stack.getType() == Material.STONE_HOE){
 							int pass = 0;
 							Boolean wood = false;
 							while (bloc.getBlock().getType() == Material.SNOW_BLOCK){
 								if (bloc.equals(ploc) == false){
-									if (stack.getType() == Material.WOOD_HOE){
+									if (stack.getType() == Material.WOODEN_HOE){
 										utilitzat = true;
 										if (wood == true){       								
 
@@ -454,7 +454,7 @@ public class Spleef extends JocLastStanding {
 
 
 						}
-						if (stack.getType() == Material.IRON_HOE || stack.getType() == Material.GOLD_HOE || stack.getType() == Material.DIAMOND_HOE){ 
+						if (stack.getType() == Material.IRON_HOE || stack.getType() == Material.GOLDEN_HOE || stack.getType() == Material.DIAMOND_HOE){
 
 							int pass = 0;
 							Boolean iron = true;
@@ -536,7 +536,7 @@ public class Spleef extends JocLastStanding {
 										}
 									}
 								}
-								if (stack.getType() == Material.GOLD_HOE){
+								if (stack.getType() == Material.LEGACY_GOLD_HOE){
 									utilitzat = true;       								
 
 									if (pass == 0){amp = 0;}

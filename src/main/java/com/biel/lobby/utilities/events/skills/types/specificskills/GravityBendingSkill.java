@@ -31,7 +31,7 @@ public class GravityBendingSkill extends InherentSkill {
 	@Override
 	public Material getMaterial() {
 		// TODO Auto-generated method stub
-		return Material.GOLD_BOOTS;
+		return Material.LEGACY_GOLD_BOOTS;
 	}
 	@Override
 	public String getName() {
@@ -109,7 +109,7 @@ public class GravityBendingSkill extends InherentSkill {
 				Utils.healDamageable(getOwnerPlayer(), dmg * 1.1);
 				getWorld().playEffect(
 						getOwnerPlayer().getEyeLocation().add(0, -0.8, 0),
-						Effect.HAPPY_VILLAGER, 0);
+						Effect.VILLAGER_PLANT_GROW, 0);
 				Location ploc = p.getLocation();
 				int i = Utils.NombreEntre(5, 10);
 				getWorld().playSound(ploc, Sound.ENTITY_PLAYER_SMALL_FALL, 3F, 1F);

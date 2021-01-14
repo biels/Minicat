@@ -31,7 +31,7 @@ public class Arena1v1 extends JocTeamDeathMatch {
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
-		items.add(new ItemStack(Material.WOOD_SWORD, 1));
+		items.add(new ItemStack(Material.WOODEN_SWORD, 1));
 		return items;
 	}
 

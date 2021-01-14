@@ -67,8 +67,8 @@ public class BoletumDTC extends JocObjectius {
 		items.add(new ItemStack(Material.DIAMOND_PICKAXE, 1));
 		items.add(new ItemStack(Material.IRON_AXE));
 		items.add(new ItemStack(Material.GLASS, 32));
-		items.add(new ItemStack(Material.WOOD, 64));
-		items.add(new ItemStack(Material.WOOD, 64));
+		items.add(new ItemStack(Material.OAK_PLANKS, 64));
+		items.add(new ItemStack(Material.OAK_PLANKS, 64));
 		items.add(new ItemStack(Material.CHAINMAIL_HELMET, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
 		items.add(new ItemStack(Material.IRON_BOOTS, 1));
@@ -78,7 +78,7 @@ public class BoletumDTC extends JocObjectius {
 		items.add(new ItemStack(Material.ARROW, 1));
 		
 
-		items.add(new ItemStack(Material.WEB, 1));
+		items.add(new ItemStack(Material.COBWEB, 1));
 		return items;
 	}
 

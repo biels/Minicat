@@ -26,7 +26,7 @@ public class BerserkSkill extends InherentSkill {
 	@Override
 	public Material getMaterial() {
 		// TODO Auto-generated method stub
-		return Material.GOLD_AXE;
+		return Material.LEGACY_GOLD_AXE;
 	}
 	@Override
 	public String getName() {

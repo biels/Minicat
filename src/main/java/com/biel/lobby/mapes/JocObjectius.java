@@ -368,7 +368,7 @@ public abstract class JocObjectius extends JocEquips {
 		@SuppressWarnings("deprecation")
 		DyeColor color;
 		public ObjectiuWoolPlace(String nom, Location l, DyeColor color) {
-			super(nom, l, Material.WOOL, color.getWoolData());	
+			super(nom, l, Material.WHITE_WOOL, color.getWoolData());
 			this.color = color;
 		}
 		@Override
