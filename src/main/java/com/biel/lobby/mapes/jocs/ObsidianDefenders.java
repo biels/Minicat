@@ -79,7 +79,7 @@ public class ObsidianDefenders extends JocEquips {
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
-		items.add(new ItemStack(Material.WOOD_SWORD, 1));
+		items.add(new ItemStack(Material.WOODEN_SWORD, 1));
 		//		items.add(new ItemStack(Material.DIAMOND_PICKAXE, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
@@ -415,7 +415,7 @@ public class ObsidianDefenders extends JocEquips {
 			if (Or >= 25){
 				Or = 25;
 			}
-			if (killer.getItemInHand().getType() == Material.GOLD_PICKAXE){
+			if (killer.getItemInHand().getType() == Material.GOLDEN_PICKAXE){
 				Or = Or * 3;
 				if (Or >= 30){
 					Or = 30;
@@ -446,7 +446,7 @@ public class ObsidianDefenders extends JocEquips {
 				pTemp().EstablirPropietat(killer.getName() + "MortsExplotats", Integer.toString(Integer.parseInt(pTemp().ObtenirPropietat(killer.getName() + "MortsExplotats")) + 1));
 
 			}
-			if (killer.getItemInHand().getType() == Material.GOLD_PICKAXE){
+			if (killer.getItemInHand().getType() == Material.GOLDEN_PICKAXE){
 				evt.setDeathMessage(killer.getName()  + " ha matat amb el pic d'or a " + player.getName()+ "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")(" + ChatColor.GOLD + "x3" + ChatColor.WHITE + ")");
 			}
 			if(Ability.hasAbility(plugin, this, player, AbilityType.CREEPER)){
@@ -461,14 +461,14 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			if (player.getInventory().contains(Material.DIAMOND_PICKAXE) == true){
 				player.getInventory().remove(Material.DIAMOND_PICKAXE);
-				ItemStack itemstack3 = new ItemStack(Material.GOLD_PICKAXE, 1); // A stack of diamonds
+				ItemStack itemstack3 = new ItemStack(Material.GOLDEN_PICKAXE, 1); // A stack of diamonds
 				evt.setDeathMessage(killer.getName()  + " ha matat a " + player.getName()+ " que tenia pic de diamant!(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
 				killer.sendMessage(ChatColor.GOLD + "+2 Or passiu! (pic d'or)");
 				killer.sendMessage(ChatColor.GOLD + "Matar un enemic amb el pic d'or et dona x3 or");
 				inventory.addItem(itemstack3);
 			}
-			if (player.getInventory().contains(Material.GOLD_PICKAXE) == true){
-				player.getInventory().remove(Material.GOLD_PICKAXE);
+			if (player.getInventory().contains(Material.GOLDEN_PICKAXE) == true){
+				player.getInventory().remove(Material.GOLDEN_PICKAXE);
 
 			}
 			updateScoreBoards();
@@ -495,7 +495,7 @@ public class ObsidianDefenders extends JocEquips {
 		//			}
 		//		}
 		if (evt.getItem() != null){
-			if (stack.getType() == Material.WOOD_SWORD && JocIniciat == false){
+			if (stack.getType() == Material.WOODEN_SWORD && JocIniciat == false){
 				Ability.openSelectionInventory(plugin, this, plyr);
 			}
 			if (stack.getType() == Material.DIAMOND_BLOCK){
@@ -509,7 +509,7 @@ public class ObsidianDefenders extends JocEquips {
 					if(p.isDead() || !p.isOnline()){
 						continue;
 					}
-					ItemStack steveItem = new ItemStack(Material.SKULL_ITEM, 1, (short)SkullType.PLAYER.ordinal());
+					ItemStack steveItem = new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short)SkullType.PLAYER.ordinal());
 					inv1.addItem(Utils.setItemName(steveItem, p.getName()));
 				}
 
@@ -527,7 +527,7 @@ public class ObsidianDefenders extends JocEquips {
 					p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 3, false), true);
 				}
 				Bukkit.broadcastMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha utilitzat una" + ChatColor.BOLD + " nether star" + ChatColor.RESET +"!");
-				evt.getItem().setType(Material.FIREWORK_CHARGE);
+				evt.getItem().setType(Material.FIREWORK_ROCKET);
 			}
 			if (stack.getType() == Material.ARROW){
 				if (stack.getEnchantments().size() >= 1){
@@ -695,7 +695,7 @@ public class ObsidianDefenders extends JocEquips {
 			RANDOM
 		}
 		static ItemStack Icona(lobby plugin, ObsidianDefenders j, Player plyr, AbilityType habilitat){
-			Material mat = Material.WOOD;
+			Material mat = Material.OAK_PLANKS;
 			String Titol = "<Nom>";
 			String Desc = "<Descripció>";
 			String Desc2 = "<Descripció2>";
@@ -710,7 +710,7 @@ public class ObsidianDefenders extends JocEquips {
 				disp = true;
 				break;
 			case REGENERACIO_AUGMENTADA:
-				mat = Material.SAPLING;
+				mat = Material.OAK_SAPLING;
 				Titol = "Regeneració augmentada";
 				Desc = "x3 Regeneració passiva x2 cost de menjar";
 				disp = true;
@@ -743,7 +743,7 @@ public class ObsidianDefenders extends JocEquips {
 				disp = true;
 				break;
 			case PIROTÈCNIC:
-				mat = Material.FIREWORK;
+				mat = Material.FIREWORK_ROCKET;
 				Titol = "Pirotècnic";
 				Desc = "+ 35 % força explosions";
 				disp = true;
@@ -755,7 +755,7 @@ public class ObsidianDefenders extends JocEquips {
 				disp = true;
 				break;
 			case CONTROL_GRAVETAT:
-				mat = Material.GOLD_BOOTS;
+				mat = Material.GOLDEN_BOOTS;
 				Titol = "Control de la gravetat";
 				Desc = "Duplica el mal per caiguda dels";
 				Desc2 =	"enemics atacats recentment (10s)";
@@ -784,7 +784,7 @@ public class ObsidianDefenders extends JocEquips {
 				disp = true;
 				break;
 			case COMANDANT:
-				mat = Material.COMMAND;
+				mat = Material.LEGACY_COMMAND;
 				Titol = "Comandant";
 				Desc = "Augmenta el mal dels aliats propers un";
 				Desc2 =	"12% i comença amb items addicionals";
@@ -868,7 +868,7 @@ public class ObsidianDefenders extends JocEquips {
 		public static void giveSelectors(lobby plugin, Player plyr){
 			int i = 1;
 			while(i <= 2){
-				ItemStack item = new ItemStack(Material.WOOD_SWORD);
+				ItemStack item = new ItemStack(Material.WOODEN_SWORD);
 				ItemMeta meta = item.getItemMeta();
 				meta.setDisplayName("Habilitat " + Integer.toString(i));
 				ArrayList<String> lore = new ArrayList<>();
@@ -923,10 +923,10 @@ public class ObsidianDefenders extends JocEquips {
 				}
 				if (player.getLocation().getBlockY() >= 49 && entity.getTicksLived() > 5 && !spawnProt){
 					Inventory inv = player.getInventory();
-					if (inv.contains(Material.FIREWORK_CHARGE) == true){
+					if (inv.contains(Material.FIREWORK_ROCKET) == true){
 						pTemp().EstablirPropietat("Explo", Long.toString(Calendar.getInstance().getTimeInMillis()));
 						pTemp().EstablirPropietat("ExploPlayer", player.getName());
-						ItemStack item = new ItemStack(Material.FIREWORK_CHARGE, 1);
+						ItemStack item = new ItemStack(Material.FIREWORK_ROCKET, 1);
 						inv.removeItem(item);
 						int mortsExplotats = Integer.parseInt(pTemp().ObtenirPropietat(player.getName() + "MortsExplotats"));
 						int morts = Integer.parseInt(pTemp().ObtenirPropietat(player.getName() + "Morts"));
@@ -940,7 +940,7 @@ public class ObsidianDefenders extends JocEquips {
 							explo = explo + 1F;
 							explo = explo + (explo * 1.012F);
 						}
-						if (inv.contains(Material.GOLD_SWORD) == true){
+						if (inv.contains(Material.LEGACY_GOLD_SWORD) == true){
 							explo = explo + (explo * 0.20F);
 						}
 						if(Ability.hasAbility(plugin, this, player, AbilityType.PIROTÈCNIC)){

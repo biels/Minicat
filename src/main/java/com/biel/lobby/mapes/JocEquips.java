@@ -494,7 +494,7 @@ public abstract class JocEquips extends Joc {
             }
         });
 		inventory.setItem(2, button.getItemStack());
-		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.COMMAND), ChatColor.YELLOW + "Equips equilibrats"), ply, event -> ferEquipsEquilibrats());
+		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.COMMAND_BLOCK), ChatColor.YELLOW + "Equips equilibrats"), ply, event -> ferEquipsEquilibrats());
 		if(hasHostPrivilleges(ply))inventory.setItem(3, button2.getItemStack());
 		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), ChatColor.YELLOW + "Equips aleatoris + Inici"), ply, event -> {
             if(canBeStartedBy(ply, true)){
@@ -561,8 +561,8 @@ public abstract class JocEquips extends Joc {
 		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 		items.add(arc);
 		items.add(new ItemStack(Material.ARROW, 64));
-		items.add(new ItemStack(Material.LOG, 64));
-		items.add(new ItemStack(Material.GRILLED_PORK, 32));
+		items.add(new ItemStack(Material.OAK_LOG, 64));
+		items.add(new ItemStack(Material.LEGACY_GRILLED_PORK, 32));
 		return items;
 	}
 	@Override
@@ -740,7 +740,7 @@ public abstract class JocEquips extends Joc {
 	void forcefieldKickOff(Player p, Location normalizedForcefield){
 		Location ploc = p.getLocation();
 		Vector vec = Utils.CrearVector(normalizedForcefield, ploc).normalize().add(new Vector(0, 1, 0)).normalize();
-		getWorld().playSound(ploc, Sound.ENTITY_IRONGOLEM_HURT, 1F, 2.2F);
+		getWorld().playSound(ploc, Sound.ENTITY_IRON_GOLEM_HURT, 1F, 2.2F);
 		getWorld().playEffect(ploc, Effect.MOBSPAWNER_FLAMES, 3);
 		getWorld().playEffect(ploc.clone().add(new Vector(0, 1, 0)), Effect.MOBSPAWNER_FLAMES, 3);
 		//Kick

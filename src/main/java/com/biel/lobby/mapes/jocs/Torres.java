@@ -442,7 +442,7 @@ public class Torres extends JocEquips {
 			}
 			if (block.getType() == Material.BEACON){
 				block.setType(Material.LAVA);
-				world.playSound(getHalfwayMiddle(), Sound.ENTITY_ENDERDRAGON_HURT, 150F, 1.1F);
+				world.playSound(getHalfwayMiddle(), Sound.ENTITY_ENDER_DRAGON_HURT, 150F, 1.1F);
 				sendGlobalMessage("Enllaç d'energia destruït!");
 				givePoints(p, 10);
 				comprovarGuanyador();
@@ -526,11 +526,11 @@ public class Torres extends JocEquips {
 					caught.teleport(loc1);
 
 					ecaught.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, 2));
-					world.playEffect(ecaught.getEyeLocation(), Effect.WITCH_MAGIC, 0);
+					world.playEffect(ecaught.getEyeLocation(), Effect.POTION_BREAK, 0);
 				}
 			}else{
 			}
-			world.playEffect(evt.getHook().getLocation(), Effect.VILLAGER_THUNDERCLOUD, 0);
+//			world.playEffect(evt.getHook().getLocation(), Effect.VILLAGER_THUNDERCLOUD, 0);
 		}
 
 
@@ -679,12 +679,12 @@ public class Torres extends JocEquips {
 				if (força == 3){
 					return(Material.DIAMOND_CHESTPLATE);
 				}
-				return(Material.GOLD_CHESTPLATE);
+				return(Material.LEGACY_GOLD_CHESTPLATE);
 			case JUMP:
 				if (força >= 3){
-					return(Material.IRON_PLATE);
+					return(Material.LEGACY_IRON_PLATE);
 				}
-				return(Material.WOOD_PLATE);
+				return(Material.LEGACY_WOOD_PLATE);
 			default:
 				return(Material.COBBLESTONE);
 

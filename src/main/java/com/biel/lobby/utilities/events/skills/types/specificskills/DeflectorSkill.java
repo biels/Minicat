@@ -113,10 +113,10 @@ public class DeflectorSkill extends InherentSkill {
 		damager.setVelocity(dir);
 		//ENDH
 		getWorld().playSound(damager.getLocation(), Sound.BLOCK_METAL_HIT, 1.2F, 0.8F);
-		getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.BLUE.getDyeData());   				
-		getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORKS_SPARK, DyeColor.RED.getDyeData());
-		if(blocking)getWorld().playEffect(damager.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
-		if(blocking)getWorld().playEffect(damaged.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
+		getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORK_SHOOT, DyeColor.BLUE.getDyeData());
+		getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORK_SHOOT, DyeColor.RED.getDyeData());
+//		if(blocking)getWorld().playEffect(damager.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
+//		if(blocking)getWorld().playEffect(damaged.getEyeLocation(), Effect.MAGIC_CRIT, DyeColor.RED.getDyeData());
 
 		//if(blocking)sendSkillMessage("Deflexió crítica!");
 		//Remove after use

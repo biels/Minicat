@@ -90,8 +90,10 @@ public class LoginListener implements Listener {
 			String lastMotd = Com.getRankingString(num);
 			evt.setMotd(lastMotd);
 		} catch (Exception e) {
+
 			System.out.println("Error en carrgear el rànquing: " + e.toString());
 			evt.setMotd(ChatColor.GREEN + "Carregant rànquing...");
+			e.printStackTrace();
 		}
 
 	}
@@ -102,21 +104,21 @@ public class LoginListener implements Listener {
 		String msg = evt.getMessage();
 		Player ply = evt.getPlayer();
 
-		// for (int i = 15; i > 0; i--) {
-		// 	msg = msg.replaceAll("la" + StringUtils.repeat("g", i), "grei" + StringUtils.repeat("x", i));
-		// }
+		 for (int i = 15; i > 0; i--) {
+		 	msg = msg.replaceAll("la" + StringUtils.repeat("g", i), "grei" + StringUtils.repeat("x", i));
+		 }
 
-		// msg = msg.replaceAll("llagosta", "la greixosta");
-		// msg = msg.replaceAll("[Ll]{1,}[Aa]{1,}[Gg]{1,}", "greix");
-		// msg = msg.replaceAll("l.a.g", "g.r.e.i.x");
-		// msg = msg.replaceAll("l a g", "g r e i x");
-		// msg = msg.replaceAll("l ag ", "gr eix ");
-		// msg = msg.replaceAll("l ag", "gr eix");
-		// msg = msg.replaceAll("ping", "ping pong");
-		// msg = msg.replaceAll("bug", "escarbat");
-		// msg = msg.replaceAll("en fi", "en fi (copyright JoniMega)");
-		// msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
-		// msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
+		 msg = msg.replaceAll("llagosta", "la greixosta");
+		 msg = msg.replaceAll("[Ll]+[Aa]+[Gg]+", "greix");
+		 msg = msg.replaceAll("l.a.g", "g.r.e.i.x");
+		 msg = msg.replaceAll("l a g", "g r e i x");
+		 msg = msg.replaceAll("l ag ", "gr eix ");
+		 msg = msg.replaceAll("l ag", "gr eix");
+		 msg = msg.replaceAll("ping", "ping pong");
+		 msg = msg.replaceAll("bug", "escarbat");
+		 msg = msg.replaceAll("en fi", "en fi (copyright JoniMega)");
+		 msg = msg.replaceAll("en fi", "En fi (copyright JoniMega)");
+		 msg = msg.replaceAll("Enfi", "En fi (copyright JoniMega)");
 
 		evt.setMessage(msg);
 

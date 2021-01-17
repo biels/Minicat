@@ -92,7 +92,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 	public static void updateEquipment(Skeleton sk){
 		EntityEquipment eq = sk.getEquipment();
 		
-		eq.setHelmet(new ItemStack(Material.GOLD_HELMET));
+		eq.setHelmet(new ItemStack(Material.GOLDEN_HELMET));
 		Color c = Color.BLUE;
 		if (sk.getHealth() <= 100){
 			c = Color.ORANGE;
@@ -116,11 +116,11 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 			ItemStack it = sk.getEquipment().getItemInHand();
 			ItemStack nextit = null;
 			if (it.isSimilar(new ItemStack(Material.ENDER_PEARL))){
-				nextit = new ItemStack(Material.EYE_OF_ENDER);
+				nextit = new ItemStack(Material.ENDER_EYE);
 				w.playSound(sk.getEyeLocation(), Sound.BLOCK_WOOD_STEP, 2, (float) 1.1);
 				teleportToEscape(sk);
 			}
-			if (it.isSimilar(new ItemStack(Material.EYE_OF_ENDER))){
+			if (it.isSimilar(new ItemStack(Material.ENDER_EYE))){
 				nextit = getSpellItemStack(getNextSpell());
 				w.playSound(sk.getEyeLocation(), Sound.BLOCK_WOOD_BREAK, (float) 2.5, (float) 1.55);
 				//return;
@@ -219,21 +219,21 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 		case BLAZE:
 			return new ItemStack(Material.BLAZE_POWDER);
 		case BONUS:
-			return new ItemStack(Material.EXP_BOTTLE);
+			return new ItemStack(Material.EXPERIENCE_BOTTLE);
 		case MAGMA_CUBE:
 			return new ItemStack(Material.MAGMA_CREAM);
 		case MINEFIELD:
 			return new ItemStack(Material.TNT);
 		case SKELETON:
-			return new ItemStack(Material.SKULL_ITEM, 1, (short) 0, (byte) 0);
+			return new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short) 0, (byte) 0);
 		case SLIME:
 			return new ItemStack(Material.SLIME_BALL);
 		case WITCH:
-			return new ItemStack(Material.BREWING_STAND_ITEM);
+			return new ItemStack(Material.LEGACY_BREWING_STAND_ITEM);
 		case WITHER:
-			return new ItemStack(Material.SKULL_ITEM, 1, (short) 0, (byte) 1);
+			return new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short) 0, (byte) 1);
 		case ZOMBIE:
-			return new ItemStack(Material.SKULL_ITEM, 1, (short) 0, (byte) 2);
+			return new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short) 0, (byte) 2);
 		default:
 			return new ItemStack(Material.BEDROCK);
 
@@ -261,7 +261,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 			Location randomLoc = locs.get(Utils.NombreEntre(0, locs.size() - 1));
 			Block block = randomLoc.getBlock();
 			Material type = block.getType();
-			if ((type == Material.GRASS || type == Material.REDSTONE_LAMP_ON) && block.getRelative(BlockFace.UP).isEmpty()){
+			if ((type == Material.GRASS || type == Material.LEGACY_REDSTONE_LAMP_ON) && block.getRelative(BlockFace.UP).isEmpty()){
 				finalLocs.add(randomLoc);
 			}
 			//Bukkit.broadcastMessage("msg: " + Integer.toString(num) + " - - " + Integer.toString(locs.size()) + ": "  + Integer.toString(finalLocs.size()));
@@ -295,7 +295,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 		d.add(new ItemStack(Material.TNT, 25));
 		d.add(new ItemStack(Material.ENDER_PEARL, Utils.NombreEntre(8, 16)));
 		//d.add(SpecialItemsUtils.getRandomSpecialItem(2));
-		ItemStack itemStack3 = new ItemStack(Material.GOLD_HELMET);
+		ItemStack itemStack3 = new ItemStack(Material.GOLDEN_HELMET);
 		itemStack3.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 9);
 		itemStack3.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
 		d.add(itemStack3);

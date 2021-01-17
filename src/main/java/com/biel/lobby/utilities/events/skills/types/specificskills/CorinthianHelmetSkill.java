@@ -28,7 +28,7 @@ public class CorinthianHelmetSkill extends InherentSkill {
 	@Override
 	public Material getMaterial() {
 		// TODO Auto-generated method stub
-		return Material.GOLD_HELMET;
+		return Material.GOLDEN_HELMET;
 	}
 	@Override
 	public String getDescription() {

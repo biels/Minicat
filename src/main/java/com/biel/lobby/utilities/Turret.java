@@ -175,7 +175,7 @@ public class Turret extends EventBus {
 			if (loc.getBlock().getType() != Material.AIR){
 				return false;
 			}
-			if(loc.getBlock().getRelative(BlockFace.DOWN).getType() == Material.LEAVES){
+			if(loc.getBlock().getRelative(BlockFace.DOWN).getType() == Material.LEGACY_LEAVES){
 				return false;
 			}
 		}
@@ -192,10 +192,10 @@ public class Turret extends EventBus {
 			loc.getBlock().setType(mat);
 			TurretBlocks.add(loc.clone());
 			loc.setY(loc.getY() + 1);
-			loc.getBlock().setType(Material.NETHER_FENCE);
+			loc.getBlock().setType(Material.LEGACY_NETHER_FENCE);
 			TurretBlocks.add(loc.clone());
 			loc.setY(loc.getY() + 1);
-			loc.getBlock().setType(Material.REDSTONE_TORCH_ON);
+			loc.getBlock().setType(Material.LEGACY_REDSTONE_TORCH_ON);
 			TurretBlocks.add(loc.clone());
 			resetArmorCD();
 			built = true;
@@ -299,7 +299,7 @@ public class Turret extends EventBus {
 				if (block.getType() != Material.AIR && block.getPistonMoveReaction() != PistonMoveReaction.BREAK){
 					continue;
 				}
-				block.setType(Material.WALL_SIGN);
+				block.setType(Material.LEGACY_WALL_SIGN);
 				Sign sign = (Sign)block.getState();
 				if (creador != null){
 					sign.setLine(1,creador.getName());
@@ -309,8 +309,8 @@ public class Turret extends EventBus {
 				}
 
 				sign.update();
-
-				block.setData(dirs.get(faces.indexOf(face)));
+//              TODO UPDATE
+//				block.setData(dirs.get(faces.indexOf(face)));
 				ArmorBlocks.add(block.getLocation());
 			}
 			h = h - 1;
@@ -482,7 +482,7 @@ public class Turret extends EventBus {
 					
 					arrow.setVelocity(dir.multiply(3.4));
 
-					world.playSound(spawnpoint, Sound.ENTITY_IRONGOLEM_ATTACK, 1, 0.3F);
+					world.playSound(spawnpoint, Sound.ENTITY_IRON_GOLEM_ATTACK, 1, 0.3F);
 					Learn(xpPerTir);
 					tirs = tirs + 1;
 					tirsquim = tirsquim + 1;
@@ -601,10 +601,10 @@ public class Turret extends EventBus {
 			hpEscut = hpEscut - damage;
 			Boolean armorSate = CheckArmor();
 			if (armorSate == false){
-				world.playSound(loceffect, Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 3F, 1F);
+				world.playSound(loceffect, Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, 3F, 1F);
 				resetArmorCD();
 			}else{
-				world.playSound(loceffect, Sound.ENTITY_ZOMBIE_ATTACK_DOOR_WOOD, 3F, 1F);
+				world.playSound(loceffect, Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, 3F, 1F);
 			}
 
 		}else{
@@ -767,7 +767,7 @@ public class Turret extends EventBus {
 		Inventory pinv = plyr.getInventory();
 		if (evt.getAction() == Action.RIGHT_CLICK_BLOCK){
 			if (ContainsTurretBlock(evt.getClickedBlock().getLocation())){
-				if (plyr.getItemInHand().getType() == Material.EXP_BOTTLE){
+				if (plyr.getItemInHand().getType() == Material.EXPERIENCE_BOTTLE){
 					Learn(1000);
 					evt.setCancelled(true);
 					return;
@@ -800,50 +800,51 @@ public class Turret extends EventBus {
 		super.onInventoryClick(evt, inv);
 
 		//Bukkit.broadcastMessage(evt.getAction().name());
-		if (evt.getInventory().getName().equals(invString)){
-			if (evt.getRawSlot() < 9 && evt.getRawSlot() > -1){ // the top inv rawslots are numbered 0 to 53 starting top left, -999 is returned if u click outside the inv view screen
-				ItemStack itemclicked = evt.getCurrentItem();
-				ItemStack cursor = evt.getCursor();
-				evt.setCancelled(true);
-
-
-				if (cursor.getTypeId() == 0){ //if player has no item on the cursor
-					Player plyr = (Player) evt.getWhoClicked();
-
-
-					Location lastTurret;
-					if (isAdmin){
-						lastTurret = plyr.getLocation();
-					}else{
-						lastTurret = joc.pTemp().ObtenirLocation("LastTurretOpen" + plyr.getName(), world);
-					}
-
-					if (ContainsTurretBlock(lastTurret) || isAdmin){
-						//do your stuff here
-						Millora mill = Millores.get(evt.getRawSlot());
-
-						if (mill.possibleUpgrade()){
-							if (evt.getAction() == InventoryAction.PICKUP_ALL){
-								mill.lvlUp();
-
-							}
-							if (evt.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY){
-								mill.upgradeMaximum();
-
-							}
-							if (anyUpgradePossible() == false){
-								plyr.closeInventory();
-							}else{
-								openOrRefreshInventory(plyr);
-							}
-
-						}
-
-					}
-
-				}
-			}
-		}
+		// TODO UPDATE
+//		if (evt.getInventory().getName().equals(invString)){
+//			if (evt.getRawSlot() < 9 && evt.getRawSlot() > -1){ // the top inv rawslots are numbered 0 to 53 starting top left, -999 is returned if u click outside the inv view screen
+//				ItemStack itemclicked = evt.getCurrentItem();
+//				ItemStack cursor = evt.getCursor();
+//				evt.setCancelled(true);
+//
+//
+//				if (cursor.getType().getId() == 0){ //if player has no item on the cursor
+//					Player plyr = (Player) evt.getWhoClicked();
+//
+//
+//					Location lastTurret;
+//					if (isAdmin){
+//						lastTurret = plyr.getLocation();
+//					}else{
+//						lastTurret = joc.pTemp().ObtenirLocation("LastTurretOpen" + plyr.getName(), world);
+//					}
+//
+//					if (ContainsTurretBlock(lastTurret) || isAdmin){
+//						//do your stuff here
+//						Millora mill = Millores.get(evt.getRawSlot());
+//
+//						if (mill.possibleUpgrade()){
+//							if (evt.getAction() == InventoryAction.PICKUP_ALL){
+//								mill.lvlUp();
+//
+//							}
+//							if (evt.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY){
+//								mill.upgradeMaximum();
+//
+//							}
+//							if (anyUpgradePossible() == false){
+//								plyr.closeInventory();
+//							}else{
+//								openOrRefreshInventory(plyr);
+//							}
+//
+//						}
+//
+//					}
+//
+//				}
+//			}
+//		}
 	}
 
 	public enum TipusMillora {MAL, VELOCITAT_ATAC, FOC, DIST_ATAC, RESISTÈNCIA, QUÍMICA, MECÀNICA, MAGNETISME, APRENENTATGE};
@@ -888,12 +889,12 @@ public class Turret extends EventBus {
 			break;
 			case QUÍMICA:  name = "Química";
 			Description = "Habilitats amb pocions";
-			material = Material.BREWING_STAND_ITEM;
+			material = Material.LEGACY_BREWING_STAND_ITEM;
 			Cost = 50;
 			break;
 			case MECÀNICA:  name = "Mecànica avançada";
 			Description = "Habilitats especials cada 10 tirs";
-			material = Material.PISTON_BASE;
+			material = Material.LEGACY_PISTON_BASE;
 			Cost = 100;
 			max = 5;
 			break;

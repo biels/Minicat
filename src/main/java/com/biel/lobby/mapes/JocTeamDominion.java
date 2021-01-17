@@ -503,8 +503,9 @@ public abstract class JocTeamDominion extends JocEquips {
 		public void renderEnvironment(PhysicalControlPoint p) {
 			// TODO Auto-generated method stub
 			for (Block b : p.getEnvironmentBlocks()){
-				if(b.getType() == Material.WOOL || b.getType() == Material.STAINED_CLAY || b.getType() == Material.STAINED_GLASS || b.getType() == Material.STAINED_GLASS_PANE){
-					b.setData(getDyeColorForBlock(p, b));
+				if(b.getType() == Material.WHITE_WOOL || b.getType() == Material.LEGACY_STAINED_CLAY || b.getType() == Material.LEGACY_STAINED_GLASS || b.getType() == Material.LEGACY_STAINED_GLASS_PANE){
+//					b.setData(getDyeColorForBlock(p, b));
+//					TODO Update to data
 				}
 			}
 		}

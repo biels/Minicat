@@ -74,7 +74,7 @@ public class Quakecraft extends JocScoreRace {
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
-		items.add(new ItemStack(Material.WOOD_HOE, 1));
+		items.add(new ItemStack(Material.LEGACY_WOOD_HOE, 1));
 		return items;
 	}
 	@Override
@@ -112,16 +112,16 @@ public class Quakecraft extends JocScoreRace {
 	ItemStack getRailgun(Player ply){
 		int t = getMaxT(ply);
 		String l = Integer.toString(t) + "ms CD";
-		if(t >= 1800){return Utils.setItemNameAndLore(new ItemStack(Material.WOOD_HOE), "Escopeta de fira", l);}
+		if(t >= 1800){return Utils.setItemNameAndLore(new ItemStack(Material.WOODEN_HOE), "Escopeta de fira", l);}
 		if(t >= 1600){return Utils.setItemNameAndLore(new ItemStack(Material.STONE_HOE), ChatColor.YELLOW + "Llan�a-pilotes", l);}
 		if(t >= 1400){return Utils.setItemNameAndLore(new ItemStack(Material.IRON_HOE), ChatColor.YELLOW + "Llan�ador de focs artificials", l);}
-		if(t >= 1200){return Utils.setItemNameAndLore(new ItemStack(Material.GOLD_HOE), ChatColor.YELLOW + "Railgun experimental", l);}
+		if(t >= 1200){return Utils.setItemNameAndLore(new ItemStack(Material.GOLDEN_HOE), ChatColor.YELLOW + "Railgun experimental", l);}
 		ItemStack item = new ItemStack(Material.DIAMOND_HOE);
 		if(t >= 1000){return Utils.setItemNameAndLore(item, ChatColor.AQUA + "Railgun", l);}
 		if(t > 550){return Utils.setItemNameAndLore(item,  ChatColor.AQUA + "Ultimate Railgun", l);}
 		item.addEnchantment(Enchantment.ARROW_DAMAGE, 4);
 		if(t <= 550){return Utils.setItemNameAndLore(item, ChatColor.AQUA +"SUPER Railgun", l);}
-		return new ItemStack(Material.WOOD);
+		return new ItemStack(Material.OAK_PLANKS);
 	}
 	void updateRailgun(Player ply){
 		PlayerInventory i = ply.getInventory();
@@ -145,7 +145,7 @@ public class Quakecraft extends JocScoreRace {
 				//updateBar(p, tTransc, maxT);
 
 				if (tTransc >= getMaxT(p)) {
-					p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_LAUNCH, 1, 1);
+					p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1, 1);
 					//						Main.nmsAccess.spawnFirework(p);
 					Arrow arrow = p.getWorld().spawn(p.getEyeLocation().add(direction),
 							Arrow.class);
@@ -157,7 +157,7 @@ public class Quakecraft extends JocScoreRace {
 							System.currentTimeMillis());
 					//railgunHitPlace(p, arrow);
 				} else {
-					p.playSound(p.getLocation(), Sound.BLOCK_WOOD_BUTTON_CLICK_ON, 1, 1);
+					p.playSound(p.getLocation(), Sound.BLOCK_WOODEN_BUTTON_CLICK_ON, 1, 1);
 
 				}
 			}
@@ -266,10 +266,10 @@ public class Quakecraft extends JocScoreRace {
 	}
 	private Color getColorRailgun(Player ply){
 		Material t = getRailgun(ply).getType();
-		if(t == Material.WOOD_HOE){return Color.RED;}
+		if(t == Material.LEGACY_WOOD_HOE){return Color.RED;}
 		if(t == Material.STONE_HOE){return Color.GREEN;}
 		if(t == Material.IRON_HOE){return Color.SILVER;}
-		if(t == Material.GOLD_HOE){return Color.YELLOW;}
+		if(t == Material.LEGACY_GOLD_HOE){return Color.YELLOW;}
 		if(t == Material.DIAMOND_HOE){return Color.AQUA;}
 		return Color.BLACK;
 	}

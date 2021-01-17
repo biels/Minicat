@@ -86,7 +86,7 @@ public class PilotaSplash extends JocScoreRace {
 		if(evt.getCause() == DamageCause.FALL){
 			evt.setCancelled(false);
 			GUtils.getNearbyEnemies(p, 3.0 + getSpree(p) * 0.2, false).forEach(e -> e.damage(evt.getDamage() * 0.45 + 5.5 + getSpree(p) * 0.3));
-            getWorld().playSound(p.getLocation(), (evt.getDamage() > 4 ? Sound.BLOCK_SLIME_HIT : Sound.BLOCK_SLIME_STEP), 1F, 1F);
+            getWorld().playSound(p.getLocation(), (evt.getDamage() > 4 ? Sound.BLOCK_SLIME_BLOCK_HIT : Sound.BLOCK_SLIME_BLOCK_STEP), 1F, 1F);
             GUtils.healDamageable(p, evt.getDamage() * 0.25);
             evt.setDamage(0.5);
 		}
@@ -102,7 +102,7 @@ public class PilotaSplash extends JocScoreRace {
 				incrementScore(k);
 				resetSpree(p);
 				k.playSound(p.getLocation(), Sound.ENTITY_SLIME_ATTACK, 1F, 1.5F);
-				k.playEffect(p.getEyeLocation(), Effect.POTION_SWIRL, 3);
+//				k.playEffect(p.getEyeLocation(), Effect.POTION_SWIRL, 3);
 			}
 		}
 		//Magnus controller

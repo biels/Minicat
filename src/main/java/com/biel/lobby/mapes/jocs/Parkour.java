@@ -671,7 +671,7 @@ public class Parkour extends JocScoreCombo{
 					blocks.add(lc);materials.add((t == 1 ? Material.PACKED_ICE : Material.QUARTZ_BLOCK));
 					Vector dlc = lc.clone().add(d);
 					Material mat = Material.QUARTZ_BLOCK;
-					if(t == 1)if(GUtils.Possibilitat(30))mat = Material.IRON_FENCE;
+					if(t == 1)if(GUtils.Possibilitat(30))mat = Material.LEGACY_IRON_FENCE;
 					if(t == 2)if(GUtils.Possibilitat(60))mat = Material.PACKED_ICE;
 					blocks.add(dlc);materials.add(mat);
 					checkpoints.add(new Checkpoint(dlc));
@@ -697,7 +697,7 @@ public class Parkour extends JocScoreCombo{
 				checkpoints.add(new Checkpoint(getZero()));
 				for(int i = 1; i < 15; i++){
 					if (Utils.Possibilitat(80)){
-						blocks.add(getForward().multiply(i));materials.add(Material.STAINED_GLASS_PANE);
+						blocks.add(getForward().multiply(i));materials.add(Material.LEGACY_STAINED_GLASS_PANE);
 						if (i % 3 == 0) checkpoints.add(new Checkpoint(getForward().multiply(i)));
 					}
 				}

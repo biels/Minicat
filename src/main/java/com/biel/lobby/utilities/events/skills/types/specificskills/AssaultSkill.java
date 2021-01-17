@@ -66,8 +66,8 @@ public class AssaultSkill extends InherentSkill {
 				l.damage(evt.getDamage() * (1 + getProtectionRatio()), p);
 				l.setVelocity(new Vector(0, 1.25, 0));
 				p.getWorld().playEffect(l.getLocation().add(0.5, 0, 0.5), Effect.SMOKE, 4);
-				getWorld().playEffect(p.getLocation().add(0.2, 0.3, 0.2), Effect.MAGIC_CRIT, 0);
-				getWorld().playEffect(p.getLocation().add(0.2, 0.3, 0.2), Effect.MAGIC_CRIT, 0);
+//				getWorld().playEffect(p.getLocation().add(0.2, 0.3, 0.2), Effect.MAGIC_CRIT, 0);
+//				getWorld().playEffect(p.getLocation().add(0.2, 0.3, 0.2), Effect.MAGIC_CRIT, 0);
 				someone = true;
 			}
 			if (someone){evt.setCancelled(true);}

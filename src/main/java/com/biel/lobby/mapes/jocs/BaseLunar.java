@@ -36,11 +36,11 @@ public class BaseLunar extends JocScoreRace {
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
-		ItemStack esp = new ItemStack(Material.WOOD_SWORD, 1); // A stack of diamonds
+		ItemStack esp = new ItemStack(Material.WOODEN_SWORD, 1); // A stack of diamonds
 		esp.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
 		esp.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 		items.add(esp);
-		items.add(new ItemStack(Material.WOOD_SWORD, 1));
+		items.add(new ItemStack(Material.WOODEN_SWORD, 1));
 		items.add(new ItemStack(Material.BOW, 1));
 		Potion p1 = new Potion(PotionType.INSTANT_DAMAGE);
 		p1.setSplash(true);

@@ -64,8 +64,8 @@ public class CalciumSourceSkill extends InherentSkill {
 
 	public void playEffect(Player p) {
 		for (int i = 0; i < 12; i++) {
-			getWorld().playEffect(p.getEyeLocation().subtract(0, 0.9, 0),
-					Effect.SNOWBALL_BREAK, Utils.NombreEntre(0, 7));
+//			getWorld().playEffect(p.getEyeLocation().subtract(0, 0.9, 0),
+//					Effect.SNOWBALL_BREAK, Utils.NombreEntre(0, 7));
 		}
 	}
 

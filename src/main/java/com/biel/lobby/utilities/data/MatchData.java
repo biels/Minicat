@@ -2,7 +2,7 @@ package com.biel.lobby.utilities.data;
 
 import java.util.ArrayList;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
 
 import com.biel.lobby.Com;
@@ -42,7 +42,7 @@ public class MatchData {
 		}
 		joc.getGameName();
 		ArrayList<String> teamStrings = new ArrayList<>();
-		for(ArrayList<Integer> l : arr){teamStrings.add(StringUtils.join(l, ','));}		
+		for(ArrayList<Integer> l : arr){teamStrings.add(StringUtils.join(l, ','));}
 		return StringUtils.join(teamStrings, ';');
 	}
 	public void registerEnd(int winner){
@@ -54,7 +54,7 @@ public class MatchData {
 	public void registerEnd(Player winner){
 		registerEnd(new PlayerData(winner).getId());
 	}
-	public void registerTimestamp(Player p, boolean ending, int kills, int deaths, double damageDealt, boolean isAlive, int itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree){
+	public void registerTimestamp(Player p, boolean ending, int kills, int deaths, double damageDealt, boolean isAlive, String itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree){
 		Com.getDataAPI().registerTimestamp(id, new PlayerData(p).getId(), (ending ? -1 : currentFrame), kills, deaths, damageDealt, isAlive, itemInHand, blocksPlaced, blocksBroken, objectivesCompleted, spree);
 		currentFrame++;
 	}
