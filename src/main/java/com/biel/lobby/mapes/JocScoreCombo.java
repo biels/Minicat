@@ -45,7 +45,7 @@ public abstract class JocScoreCombo extends Joc {
 	protected void customJocFinalitzat() {
 		// TODO Auto-generated method stub
 
-		planificarReseteig(40 / (getPlayers().size() + 1));
+		planificarReseteig(20);
 	}
 	public enum Rank{
 		SS(99), S(95), A(90), B(80), C(70), D(60), F(40), FF(5);

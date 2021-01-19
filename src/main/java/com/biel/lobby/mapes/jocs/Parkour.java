@@ -25,6 +25,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
@@ -134,13 +136,14 @@ public class Parkour extends JocScoreCombo{
 		}
 		playerCount = players.size();
 	}
-	protected void teleportToEndingSpawn(Player p){
-		p.teleport(pMapaActual().ObtenirLocation("endSpawn", world));
-	}
+	
 	public void comprovarFinish(){
 		//boolean allFinished = streams.stream().mapToInt(ParkourStream::getTargetBubbleIndex).min().getAsInt() > 100;
 		boolean allFinished = getPlayers().stream().map(p -> getPlayerInfo(p).isInGame()).allMatch(b -> b == false);
-		if(allFinished)comprovarGuanyador();
+		if(allFinished){
+			comprovarGuanyador();
+			
+		}
 	}
 	@Override
 	public void heartbeat() {
@@ -150,7 +153,6 @@ public class Parkour extends JocScoreCombo{
 			updateStartingPlatforms();
 		}
 		if(JocIniciat){
-			streams.forEach(ParkourStream::tick);
 			comprovarFinish();
 		}
 	}
@@ -170,7 +172,7 @@ public class Parkour extends JocScoreCombo{
 	@Override
 	protected void customJocFinalitzat() {
 		// TODO Auto-generated method stub
-
+		super.customJocFinalitzat();
 	}
 	@Override
 	protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
@@ -179,6 +181,7 @@ public class Parkour extends JocScoreCombo{
 		if(!JocIniciat){
 			if(!evt.getFrom().getBlock().equals(evt.getTo().getBlock()))evt.setCancelled(true);
 		}
+		
 	}
 	@Override
 	protected void onPlayerDamage(EntityDamageEvent evt, Player p) {
@@ -206,12 +209,6 @@ public class Parkour extends JocScoreCombo{
 		public int getTargetBubbleIndex() {
 			return targetBubbleIndex;
 		}
-		//		public void bufferBubbles(){
-		//			//Add new generated bubbles as handlers
-		//			while(handlers.size() < provider.bubbles.size()){
-		//				handlers.add(new BubbleHandler(handlers.size())); // implicit index+1
-		//			}			
-		//		}
 		public void checkBufferBuildStreaming(){
 			for (int i = 0; i < 3; i++) {
 				int index = targetBubbleIndex + i;
@@ -224,9 +221,7 @@ public class Parkour extends JocScoreCombo{
 		public BubbleHandler getTargetBubbleHandler(){
 			return handlers.get(targetBubbleIndex);
 		}
-		protected void tick(){
-			getPlayer().setExp((targetBubbleIndex /(float) mapLength));			
-		}
+		
 		protected void ultraTick(){
 			getTargetBubbleHandler().handleTick();
 		}
@@ -288,7 +283,7 @@ public class Parkour extends JocScoreCombo{
 			}
 			public void advance(Score score){
 				ParkourPlayerInfo i = getPlayerInfo(getPlayer());
-				if(!i.isInGame()){teleportToEndingSpawn(getPlayer()); return;}
+				if(!i.isInGame())return;
 				if(targetBubbleIndex > mapLength && i.isInGame()){
 					sendGlobalMessage(getPlayer().getName() + " ha arribat a la meta!");
 					//teleportToEndingSpawn(getPlayer());
@@ -334,7 +329,9 @@ public class Parkour extends JocScoreCombo{
 				//getWorld().playEffect(l, Effect.FLAME, 4);
 
 				checkpointHandlers.forEach(ch -> ch.handleCpLocationCheckIn(l));
-
+				if(!getPlayerInfo(p).isInGame()){
+					return;
+				}
 				if(l.getY() < getBubble().getLowestSurfaceY(startLocation) - 1){ // IMPORTANT UPFACTOR
 					registerFail(p);
 					return;
@@ -374,7 +371,11 @@ public class Parkour extends JocScoreCombo{
 				p.teleport(getBubble().getFailTeleportPoint(startLocation));
 				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_HORSE_ARMOR, 1F, 1.1F);
 				advance(Score.FAIL);
+				
+				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 25, 129));
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 25, 129));
 			}
+			
 			//CHECKPOINT HANDLER
 			public class CheckpointHandler{
 				int checkpointIndex;
@@ -412,13 +413,12 @@ public class Parkour extends JocScoreCombo{
 				void onLeave(){
 					if(isAlone())advanceBasedOnTime();
 					tryComplete();
-
 				}
 				void tryComplete(){
 					if(!completed)complete();
 				}
+				
 				void complete(){
-					//Completion code
 					setLeaveTime();
 					completed = true;
 					updateHologram();
@@ -449,9 +449,7 @@ public class Parkour extends JocScoreCombo{
 				}
 				public void createHolgram(){
 					if (ho != null){return;}
-					//getHologramLocation().getBlock().setType(Material.GOLD_BLOCK);
 					ho = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
-					////sendGlobalMessage("Hologram created + "  + getHologramDisplayText());
 				}
 				public void updateHologram(){
 					if (ho == null){createHolgram();}
@@ -468,7 +466,7 @@ public class Parkour extends JocScoreCombo{
 			}
 		}
 	}
-	public class ParkourProvider{ //Single instnace
+	public class ParkourProvider{ //Single instance
 		//		ParkourModule currentModule;
 		ArrayList<ParkourBubble> bubbles = new ArrayList<>();
 		public ParkourBubble getBubble(int index){
@@ -485,8 +483,7 @@ public class Parkour extends JocScoreCombo{
 				b = getRandomBubbleType().getConstructor(ParkourProvider.class).newInstance(this);			
 				b.generate();
 				if(bubbles.size() > 0){
-					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(b.getRandomBubbleSpacing());
-					//if(newEntryPoint.getBlockY() < 5)newEntryPoint.setY(5);		
+					Vector newEntryPoint = bubbles.get(bubbles.size() - 1).getAbsoluteExitPoint().add(b.getRandomBubbleSpacing());	
 					b.setEntryPoint(newEntryPoint);
 				}else{
 					b.setEntryPoint(getForward().multiply(4));
@@ -510,36 +507,12 @@ public class Parkour extends JocScoreCombo{
 				if(i > 300)break;
 			}
 			return registeredBubbleTypes.get(0).getFirst();
-			//			int c = 0;
-			//			for(Pair<Class<? extends ParkourBubble>, Double> t : registeredBubbleTypes){
-			//				if(Utils.Possibilitat(t.getSecond(), 100 + 10 * registeredBubbleTypes.size()))return t.getFirst();
-			//				if(c > 50)return registeredBubbleTypes.get(0).getFirst();
-			//				c++;
-			//			}
-			//			return null;
 		}
 		List<Pair<Class<? extends ParkourBubble>, Double>> getRegisteredBubbleTypes(){
 			List<Pair<Class<? extends ParkourBubble>, Double>> r = new ArrayList<>();
 			r.add(new Pair<>(SingleBlockBubble.class, 60D));
-			r.add(new Pair<>(ZigZagBubble.class, 8D));
-			r.add(new Pair<>(CrossBlockTowerBubble.class, 10D));
-			r.add(new Pair<>(SingleBlockLineBubble.class, 10D));
-			r.add(new Pair<>(SlimeJumpBubble.class, 10D));
-			r.add(new Pair<>(GlassPaneLineBubble.class, 10D));
-			r.add(new Pair<>(SineWaveBubble.class, 8D));
 			return r;
 		}
-		
-		//		public class ParkourModule{ //Set of bubbles
-		//			ArrayList<ParkourBubble> bubbles = new ArrayList<ParkourBubble>();
-		//			Vector startPoint;
-		//			public ParkourBubble getNextBubble(){
-		//				return null;				
-		//			}
-		//			public void generateBubbles(){
-		//				
-		//			}
-		//		}
 
 		public abstract class ParkourBubble{ //Single island on sky
 			private Vector entryPoint; //Absolute - ISSUES
@@ -644,48 +617,6 @@ public class Parkour extends JocScoreCombo{
 				return 1.1;
 			}
 		}
-		public class ZigZagBubble extends ParkourBubble{
-			//Single block with a torch
-			int n = Utils.NombreEntre(3, 5);
-			@Override
-			public void generate() {
-				for (int i = 0; i < n; i++) {
-					blocks.add(getForward().multiply(2 * i));materials.add(Material.QUARTZ_BLOCK);
-					blocks.add(getForward().multiply(2 * i + 1).add(getRight().multiply(2)));materials.add(Material.QUARTZ_BLOCK);
-					if(i < n - 1){
-						blocks.add(getForward().multiply(2 * i + 1).add(getUp()));materials.add(Material.LEGACY_FENCE);
-						blocks.add(getForward().multiply(2 * i + 2).add(getRight().multiply(2)).add(getUp()));materials.add(Material.LEGACY_FENCE);
-					}
-				}
-				blocks.stream().filter(b -> materialGetter.apply(b) == Material.QUARTZ_BLOCK).forEach(b -> checkpoints.add(new Checkpoint(b, 0.9)));
-			}
-
-			@Override
-			public double getMultiplier() {
-				// TODO Auto-generated method stub
-				return 3 * n  + 1;
-			}
-		}
-		public class SingleBlockLineBubble extends ParkourBubble{
-			int n = Utils.NombreEntre(2, 4) * 2;
-			@Override
-			public void generate() {
-				// TODO Auto-generated method stub
-				
-				for (int i = 0; i < n; i++){
-					Vector v = getForward().multiply(2 * i);
-					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
-					if (i % 1 == 0) checkpoints.add(new Checkpoint(v));
-				}
-			}
-			
-			@Override
-			public double getMultiplier() {
-				// TODO Auto-generated method stub
-				return n * 1.05 + 0.5;
-			}
-			
-		}
 		public class SlimeJumpBubble extends ParkourBubble{
 			@Override
 			public Vector getRandomBubbleSpacing() {
@@ -716,7 +647,7 @@ public class Parkour extends JocScoreCombo{
 				// TODO Auto-generated method stub
 				return 1.5;
 			}
-			
+
 		}
 		public class CrossBlockTowerBubble extends ParkourBubble{
 			int n = Utils.NombreEntre(0, 2) * 4 + 3;
@@ -761,7 +692,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public void generate() {
 				// TODO Auto-generated method stub
-				
+
 				blocks.add(getZero());materials.add(Material.QUARTZ_BLOCK);
 				checkpoints.add(new Checkpoint(getZero()));
 				for(int i = 1; i < 15; i++){
@@ -780,7 +711,7 @@ public class Parkour extends JocScoreCombo{
 				// TODO Auto-generated method stub
 				return 5.5;
 			}
-			
+
 		}
 		public class SineWaveBubble extends ParkourBubble{
 			int n = Utils.NombreEntre(1, 4);
@@ -788,7 +719,7 @@ public class Parkour extends JocScoreCombo{
 			@Override
 			public void generate() {
 				// TODO Auto-generated method stub
-				
+
 				for (double i = 0; i <= 2 * r * n; i = i + 1) {
 					double x = i;
 					double y = Math.sin(i * Math.PI / (2*r)) * r;
@@ -803,12 +734,51 @@ public class Parkour extends JocScoreCombo{
 				// TODO Auto-generated method stub
 				return  Math.PI * r * n / 2;
 			}
-			
+
+		}
+		public class ZigZagBubble extends ParkourBubble{
+			//Single block with a torch
+			int n = Utils.NombreEntre(3, 5);
+			@Override
+			public void generate() {
+				for (int i = 0; i < n; i++) {
+					blocks.add(getForward().multiply(2 * i));materials.add(Material.QUARTZ_BLOCK);
+					blocks.add(getForward().multiply(2 * i + 1).add(getRight().multiply(2)));materials.add(Material.QUARTZ_BLOCK);
+					if(i < n - 1){
+						blocks.add(getForward().multiply(2 * i + 1).add(getUp()));materials.add(Material.FENCE);
+						blocks.add(getForward().multiply(2 * i + 2).add(getRight().multiply(2)).add(getUp()));materials.add(Material.FENCE);
+					}
+				}
+				blocks.stream().filter(b -> materialGetter.apply(b) == Material.QUARTZ_BLOCK).forEach(b -> checkpoints.add(new Checkpoint(b, 0.9)));
+			}
+
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return 3 * n  + 1;
+			}
+		}
+		
+		public class SingleBlockLineBubble extends ParkourBubble{
+			int n = Utils.NombreEntre(2, 4) * 2;
+			@Override
+			public void generate() {
+				// TODO Auto-generated method stub
+				
+				for (int i = 0; i < n; i++){
+					Vector v = getForward().multiply(2 * i);
+					blocks.add(v);materials.add(Material.QUARTZ_BLOCK);
+					if (i % 1 == 0) checkpoints.add(new Checkpoint(v));
+				}
+			}
+			@Override
+			public double getMultiplier() {
+				// TODO Auto-generated method stub
+				return n * 1.05 + 0.5;
+			}
 		}
 	}
 	
-	
-		
 	@Override
 	public ParkourPlayerInfo getPlayerInfo(Player p) {
 		return getPlayerInfo(p, ParkourPlayerInfo.class);		
