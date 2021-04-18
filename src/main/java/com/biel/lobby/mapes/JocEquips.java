@@ -5,9 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
@@ -78,6 +76,36 @@ public abstract class JocEquips extends Joc {
 		updateScoreBoards();
 		
 	}
+
+	// Rejoin
+	@Override
+	protected HashMap savePlayersForRejoin() {
+
+		HashMap<String, ArrayList> players = new HashMap<>();
+
+		for (Equip e : Equips) {
+			ArrayList<UUID> pl = new ArrayList<>();
+
+			for (Player p: e.getPlayers()) {
+				pl.add(p.getUniqueId());
+			}
+
+			players.put(e.getAdjectiu(), pl);
+		}
+
+		return players;
+
+	}
+
+	@Override
+	protected void customPlayerRejoin(Player p) {
+
+		fixarSpawn(p);
+		p.teleport(obtenirEquip(p).getTeamSpawnLocation());
+		Utils.donarItemsPlayer(p, getStartingItems(p));
+
+	}
+
 	public void winGame(Equip e){ //TODO
 		if(won)return;
 		if(e == null){			
@@ -201,30 +229,30 @@ public abstract class JocEquips extends Joc {
 			Com.setHeadColor(p, ColorConverter.chatToRaw(e.getChatColor()));
 		}
 	}
-	public void establirEquipJugador(Player ply, Equip eq){
-		if (!eq.getPlayers().contains(ply)){
-			for (Equip e : Equips){
-				if (e == eq){
-					e.addPlayer(ply);
-				}else{
-					e.removePlayer(ply);
-				}
+	public void establirEquipJugador(Player ply, Equip eq) {
+
+		if (eq.getPlayers().contains(ply)) return;
+
+		for (Equip e : Equips){
+			if (e == eq) {
+				e.addPlayer(ply);
+			}else{
+				e.removePlayer(ply);
 			}
-			
-			if(generationMode == TeamGenerationMode.RANDOM) {
-				
-				
-			} else {
-				sendGlobalMessage(getGameDisplayName() + ply.getName() + " és a l'equip " + eq.getChatColor() + eq.getAdjectiu());
-			}
-			
-			
-			
-			updateScoreBoards();
-			ScoreBoardUpdater.updateTeamScore(this);
-			updateHeadColor(ply);
-			updateScoreBoards();
 		}
+
+		if(generationMode == TeamGenerationMode.RANDOM) {
+
+
+		} else {
+			sendGlobalMessage(getGameDisplayName() + ply.getName() + " és a l'equip " + eq.getChatColor() + eq.getAdjectiu());
+		}
+
+
+		updateScoreBoards();
+		ScoreBoardUpdater.updateTeamScore(this);
+		updateHeadColor(ply);
+		updateScoreBoards();
 
 	}
 	@SuppressWarnings("unchecked")

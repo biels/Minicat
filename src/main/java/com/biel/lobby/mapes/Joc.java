@@ -3,10 +3,7 @@ package com.biel.lobby.mapes;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.bukkit.*;
@@ -70,7 +67,10 @@ public abstract class Joc extends MapaResetejable {
 	protected boolean won = false;
 	protected boolean unfairFlag = false;
 	protected String host;
-	
+	protected boolean allowRejoin = false;
+
+	private HashMap<String, ArrayList> Players = new HashMap<>();
+
 	//--Other--
 	private Boolean blockBreakPlace = false;
 	private Boolean giveStartingItemsRespawn = false;
@@ -118,25 +118,82 @@ public abstract class Joc extends MapaResetejable {
 		setCustomGameRules();
 	}
 	protected abstract void setCustomGameRules();
-	public void JocIniciat(){
-		if (JocIniciat){Bukkit.broadcastMessage("S'ha intentat iniciar una partida que ja estava iniciada. Operació anul·lada!"); return;}
+
+	protected HashMap savePlayersForRejoin() {
+
+		HashMap<String, ArrayList> players = new HashMap<>();
+
+		for(Player p: getPlayers()) {
+			ArrayList<UUID> pl = new ArrayList<>();
+			pl.add(p.getUniqueId());
+			players.put(p.getName(), pl);
+		}
+
+		return players;
+
+	}
+
+	protected void onPlayerRejoin(Player p) {
+
+		p.sendMessage(ChatColor.AQUA + "Benvingut de nou!");
+		p.getInventory().clear();
+		customPlayerRejoin(p);
+
+	}
+
+	protected void customPlayerRejoin(Player p) {
+		p.teleport(world.getSpawnLocation());
+	}
+
+	protected boolean canPlayerRejoin(Player p) {
+
+		for(String s: Players.keySet()) {
+
+			ArrayList list = Players.get(s);
+			if(list.contains(p.getUniqueId())) return true;
+
+		}
+
+		return false;
+
+	}
+
+	public boolean getAllowRejoin(){
+		return allowRejoin;
+	}
+	public void setAllowRejoin(boolean b) {
+		allowRejoin = b;
+	}
+
+	public void JocIniciat() {
+
+		// Prevent starting the game if already started
+		if (JocIniciat) return;
+
+		// Broadcast game start
 		Bukkit.broadcastMessage(getGameDisplayName() + "S'ha iniciat la partida!");
+
+		// Save start status and enable pbp
 		JocIniciat = true;
-		//---
-		customJocIniciat();
 		world.setPVP(true);
+
+		// Setup game
+		customJocIniciat();
 		donarItemsInicials();
 		teletransportarTothom();
 		establirTempsInicial();
 		resetHeartbeat();
-		//---
+		updateScoreBoards();
+		sendGameInfo();
+
+		// Save match data
 		matchData = MatchData.registerStart(this);
 		for(Player p : getPlayers()){
 			getPlayerInfo(p);
 		}
-		updateScoreBoards();
-		sendGameInfo();
-		//sendGlobalMessage("W:" + getWorld().getName());
+
+		// Save players for rejoin later
+		Players = savePlayersForRejoin();
 
 	}	
 	
@@ -333,29 +390,44 @@ public abstract class Joc extends MapaResetejable {
 	public boolean hasHostPrivilleges(Player p){
 		return host.equalsIgnoreCase(p.getName());
 	}
+
 	@Override
 	public void Join(Player ply) {
-		// TODO Auto-generated method stub
-		if(canJoin(ply)){
-			if(getPlayers().size() == 0)setHost(ply);			
+
+		if(getGameState() == GameState.InGame && canPlayerRejoin(ply)) {
+			onPlayerRejoin(ply);
+			return;
 		}
+
+		if(canJoin(ply)) {
+
+			if(getPlayers().size() == 0) setHost(ply);
+		}
+
 		super.Join(ply);
 	}
 
 	public boolean canJoin(Player ply) {
+
 		switch (getGameState()){
-		case Complete:
-			return false;
-		case Editant:
-			return ply.isOp();
-		case InGame:
-			return getAllowSpectators();
-		case Preparing:
-			return true;
-		case Resetejant:
-			return false;
-		case WaitingForPlayers:
-			return true;
+
+			case Complete:
+				return false;
+
+			case Editant:
+				return ply.isOp();
+
+			case InGame:
+				return getAllowSpectators();
+
+			case Preparing:
+				return true;
+
+			case Resetejant:
+				return false;
+
+			case WaitingForPlayers:
+				return true;
 
 		}
 		return true;
@@ -469,7 +541,7 @@ public abstract class Joc extends MapaResetejable {
 	public void addSpectator(Player ply){
 		for (Player p : getPlayers()) {
 			
-			p.sendMessage(getGameDisplayName() + ply.getName() + " ha entrar com a espectador");
+			p.sendMessage(getGameDisplayName() + ply.getName() + " ha entrat com a espectador");
 		}
 		if (!getSpectators().contains(ply)){
 			Espectadors.add(ply);
@@ -646,16 +718,19 @@ public abstract class Joc extends MapaResetejable {
 	
 	@Override
 	protected void customJoin(Player ply){
-		//getPlayerInfo(ply);
+
 		Utils.clearPlayer(ply);
 		if (getGameState() == GameState.InGame) {
-			
+
+			if(canPlayerRejoin(ply)) {
+				onPlayerRejoin(ply);
+				return;
+			}
 			addSpectator(ply);
 			
 		} else {
 			sendGlobalMessage(getGameDisplayName() +  ply.getName() + " ha entrat al joc");
 			donarItemsPreparatiusGenerals(ply);
-			
 		}
 		
 		updateScoreBoard(ply);

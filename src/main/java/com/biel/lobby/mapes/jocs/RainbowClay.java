@@ -94,6 +94,7 @@ public class RainbowClay extends JocObjectius {
 		super.customJocIniciat();
 		setBlockBreakPlace(true);
 		setGiveStartingItemsRespawn(true);
+		setAllowRejoin(true);
 	}
 
 	@Override
