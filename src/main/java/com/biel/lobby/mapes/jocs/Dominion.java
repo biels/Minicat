@@ -43,7 +43,7 @@ public class Dominion extends JocTeamDominion {
 			try {
 				name = pointNames[i];
 			} catch (Exception e) {
-				System.out.print("Falta especificar un nom de punt de control");
+				com.biel.lobby.Com.getPlugin().getLogger().warning("Falta especificar un nom de punt de control");
 				name = "No_definit";
 			}
 			double radius;
@@ -90,8 +90,8 @@ public class Dominion extends JocTeamDominion {
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.STONE_SWORD, 1));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		arc.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
+		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
+		arc.addUnsafeEnchantment(Enchantment.INFINITY, 1);
 		items.add(arc);
 		items.add(new ItemStack(Material.CHAINMAIL_HELMET, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
@@ -106,9 +106,9 @@ public class Dominion extends JocTeamDominion {
 		// TODO Auto-generated method stub
 		super.donarEfectesInicials(ply);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 20 * 10, 4, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 3, 1, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 5, 0, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 19, 1, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 3, 1, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 20 * 5, 0, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 19, 1, true), true);
 	}
 	@Override
 	public String getGameName() {

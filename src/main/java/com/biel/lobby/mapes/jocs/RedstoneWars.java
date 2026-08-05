@@ -54,8 +54,8 @@ public class RedstoneWars extends JocEquips{
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		arc.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 10);
-		arc.addUnsafeEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
+		arc.addUnsafeEnchantment(Enchantment.INFINITY, 10);
+		arc.addUnsafeEnchantment(Enchantment.PUNCH, 1);
 		arc.addUnsafeEnchantment(Enchantment.KNOCKBACK, 4);
 		items.add(arc);
 		items.add(new ItemStack(Material.ARROW, 1));
@@ -131,7 +131,7 @@ public class RedstoneWars extends JocEquips{
 	protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
 		// TODO Auto-generated method stub
 		super.onBlockBreak(evt, blk);
-		if(blk.getType() == Material.LEGACY_GLOWING_REDSTONE_ORE)evt.setCancelled(false);
+		if(blk.getType() == Material.REDSTONE_ORE)evt.setCancelled(false);
 		if (blk.getType() == Material.GOLD_BLOCK) {
 			GUtils.getLocationsCircle(blk.getLocation(), 1.1, 32).forEach(l -> {
 				FallingBlock tnt = world.spawnFallingBlock(l, Material.REDSTONE_ORE, (byte) 0x0);

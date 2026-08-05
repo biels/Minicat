@@ -4,12 +4,10 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.FireworkEffect.Builder;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -26,6 +24,7 @@ import org.bukkit.util.Vector;
 import com.biel.BielAPI.Utils.ColorConverter;
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.Com;
+import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.utilities.events.skills.types.ItemAttatchedStackModeSkill;
 import com.biel.lobby.utilities.events.statuseffects.LifeDrainStatusEffect;
 
@@ -164,7 +163,7 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
 				float power) {
 			// TODO Auto-generated method stub
 			super.onEntityShootBow(evt, e, bow, proj, power);
-			System.out.println("Shootbow: " + e.getName() + ", " + getPlayer().getName());
+			Com.getPlugin().getLogger().fine("Magic Archer bow shot: " + e.getName() + ", " + getPlayer().getName());
 			if(e.getName().equalsIgnoreCase(getPlayer().getName())){
 				if(isMaxed()){
 					//Shoot with effect
@@ -228,7 +227,10 @@ public class MagicArcherSkill extends ItemAttatchedStackModeSkill {
                     flyingEffect = false;
                 }
             };
-			Bukkit.getScheduler().runTaskLater(Com.getPlugin(), runnable, 2);
+			Joc game = getGame();
+			if (game != null) {
+				game.scheduleGameplayTask(runnable, 2);
+			}
 			
 		}
 	}

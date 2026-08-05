@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import com.biel.lobby.Com;
 import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
 
@@ -172,9 +173,9 @@ public abstract class ItemAttatchedModeSkill extends InherentSkill {
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| SecurityException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Com.getPlugin().getLogger().log(java.util.logging.Level.SEVERE, "Could not create the skill tray effect", e);
 		}
-		System.out.println("Null TrayEffectInstance");
+		Com.getPlugin().getLogger().warning("Skill tray effect instance is null");
 		return null;
 	}
 	public class ItemAttatchedModeSkillTrayEffect extends StatusEffect{

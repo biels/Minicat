@@ -176,7 +176,7 @@ protected void setCustomGameRules() {
 		
 	}
 	public void ProgTask(){
-		tid = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, () -> spawnEnemy(), 1, 2 * 20); // *12
+		tid = scheduleGameplayRepeatingTask(() -> spawnEnemy(), 1, 2 * 20); // *12
 	}
 	@Override
 	protected void onBlockPlace(BlockPlaceEvent evt, Block blk) {
@@ -196,7 +196,7 @@ protected void setCustomGameRules() {
 			Material htype = z.getEquipment().getHelmet().getType();
 			
 			if (htype == Material.REDSTONE_BLOCK){
-				killer.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 20, 1));
+				killer.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 20 * 20, 1));
 			}
 			if (htype == Material.LAPIS_BLOCK){
 				killer.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 1));

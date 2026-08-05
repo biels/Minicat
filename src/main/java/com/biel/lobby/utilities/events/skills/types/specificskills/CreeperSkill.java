@@ -31,7 +31,7 @@ public class CreeperSkill extends InherentSkill {
 	@Override
 	public Material getMaterial() {
 		// TODO Auto-generated method stub
-		return Material.LEGACY_SKULL_ITEM;
+		return Material.CREEPER_HEAD;
 	}
 	@Override
 	public Byte getData() {

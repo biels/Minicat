@@ -45,8 +45,8 @@ public class TeamDeathMatch extends JocTeamDeathMatch {
 		double balancingMultiplier = getBalancingMultiplier(ply);
 		items.add(new ItemStack(Material.STONE_SWORD, 1));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		//arc.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
+		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
+		//arc.addUnsafeEnchantment(Enchantment.INFINITY, 1);
 		items.add(arc);
 		items.add(new ItemStack(Material.CHAINMAIL_HELMET, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));

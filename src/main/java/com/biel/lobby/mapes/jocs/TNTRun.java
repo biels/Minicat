@@ -67,7 +67,7 @@ public class TNTRun extends JocLastStanding {
 				if (hasTNT(p)){
 					speed = 4;
 				}
-				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 800 * 20, 0, true), true); 
+				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 800 * 20, 0, true), true);
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 800 * 20, speed, true), true);
 			}else{
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 800 * 20, 20, true), true);
@@ -94,11 +94,11 @@ public class TNTRun extends JocLastStanding {
 			immunePlayers.add(ply);
 			ply.getInventory().setHelmet(new ItemStack(Material.QUARTZ_BLOCK));
 			ply.getInventory().setItem(8, new ItemStack(Material.QUARTZ_BLOCK));
-			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+			scheduleGameplayTask(() -> {
                 ply.getInventory().setHelmet(null);
                    ply.getInventory().clear(8);
                 immunePlayers.remove(ply);
-            }, 20 * 2);
+            }, 20L * secs);
 		}
 	}
 	void passarTNT(Player de, Player a){
@@ -170,7 +170,7 @@ public class TNTRun extends JocLastStanding {
 	int taskId = 0;
 	public void ProgTask(){
 		 
-		taskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+		taskId = scheduleGameplayRepeatingTask(() -> {
            //time
             temps = temps - 1;
             if(Utils.Possibilitat(1)){
@@ -189,7 +189,7 @@ public class TNTRun extends JocLastStanding {
 		int secs = Utils.NombreEntre(2, 8);
 		updateEffects(true);
 		sendGlobalMessage(ChatColor.AQUA + "HIPERVELOCITAT! (" + Integer.toString(secs) + "s)" );
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> updateEffects(false), 20 * 2);
+		scheduleGameplayTask(() -> updateEffects(false), 20L * secs);
 	}
 	@Override
 	protected void updateScoreBoard(Player ply) {

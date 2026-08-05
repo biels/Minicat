@@ -34,7 +34,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
 		ItemStack itemStack3 = new ItemStack(Material.DIAMOND_SWORD);
-		itemStack3.addEnchantment(Enchantment.DAMAGE_ALL, 2);
+		itemStack3.addEnchantment(Enchantment.SHARPNESS, 2);
 		items.add(itemStack3);
 		items.add(new ItemStack(Material.DIAMOND_HELMET));
 		items.add(new ItemStack(Material.DIAMOND_CHESTPLATE));
@@ -148,7 +148,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 					spawnMobsOnTree(c, EntityType.BLAZE, 4 + bonus);
 					break;
 				case BONUS:
-					spawnMobsOnTree(c, EntityType.THROWN_EXP_BOTTLE, 7 + bonus);
+					spawnMobsOnTree(c, EntityType.EXPERIENCE_BOTTLE, 7 + bonus);
 					break;
 				case MAGMA_CUBE:
 					spawnMobsOnTree(c, EntityType.MAGMA_CUBE, 3 + bonus);
@@ -184,7 +184,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 			//Teleport
 			
 			//Apply slowness
-			sk.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 12, 4));
+			sk.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 12, 4));
 		}
 	}
 	public void teleportToEscape(Skeleton sk){
@@ -213,7 +213,6 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 		if (Utils.Possibilitat(2)){return SpellType.ZOMBIE;}
 		return result;
 	}
-	@SuppressWarnings("deprecation")
 	public ItemStack getSpellItemStack(SpellType type){
 		switch(type){
 		case BLAZE:
@@ -225,15 +224,15 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 		case MINEFIELD:
 			return new ItemStack(Material.TNT);
 		case SKELETON:
-			return new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short) 0, (byte) 0);
+			return new ItemStack(Material.SKELETON_SKULL);
 		case SLIME:
 			return new ItemStack(Material.SLIME_BALL);
 		case WITCH:
-			return new ItemStack(Material.LEGACY_BREWING_STAND_ITEM);
+			return new ItemStack(Material.BREWING_STAND);
 		case WITHER:
-			return new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short) 0, (byte) 1);
+			return new ItemStack(Material.WITHER_SKELETON_SKULL);
 		case ZOMBIE:
-			return new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short) 0, (byte) 2);
+			return new ItemStack(Material.ZOMBIE_HEAD);
 		default:
 			return new ItemStack(Material.BEDROCK);
 
@@ -261,7 +260,7 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 			Location randomLoc = locs.get(Utils.NombreEntre(0, locs.size() - 1));
 			Block block = randomLoc.getBlock();
 			Material type = block.getType();
-			if ((type == Material.GRASS || type == Material.LEGACY_REDSTONE_LAMP_ON) && block.getRelative(BlockFace.UP).isEmpty()){
+			if ((type == Material.SHORT_GRASS || type == Material.REDSTONE_LAMP) && block.getRelative(BlockFace.UP).isEmpty()){
 				finalLocs.add(randomLoc);
 			}
 			//Bukkit.broadcastMessage("msg: " + Integer.toString(num) + " - - " + Integer.toString(locs.size()) + ": "  + Integer.toString(finalLocs.size()));
@@ -296,8 +295,8 @@ public class KingSkeletonChallenge extends JocCooperatiu {
 		d.add(new ItemStack(Material.ENDER_PEARL, Utils.NombreEntre(8, 16)));
 		//d.add(SpecialItemsUtils.getRandomSpecialItem(2));
 		ItemStack itemStack3 = new ItemStack(Material.GOLDEN_HELMET);
-		itemStack3.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 9);
-		itemStack3.addUnsafeEnchantment(Enchantment.DURABILITY, 9);
+		itemStack3.addUnsafeEnchantment(Enchantment.PROTECTION, 9);
+		itemStack3.addUnsafeEnchantment(Enchantment.UNBREAKING, 9);
 		d.add(itemStack3);
 		center.getBlock().setType(Material.GOLD_BLOCK);
 		Location cl = center.add(0, 1, 0);

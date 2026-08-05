@@ -46,7 +46,7 @@ public class PilotaSplash extends JocScoreRace {
 		// TODO Auto-generated method stub
 		super.donarEfectesInicials(ply);
 		//ply.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 4, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, Integer.MAX_VALUE, 4, true), true);
 
 	}
 	@Override

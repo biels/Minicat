@@ -7,6 +7,7 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
+import org.bukkit.GameRules;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -66,7 +67,7 @@ public class Torres extends JocEquips {
 	@Override
 	protected void setCustomGameRules() {
 		// TODO Auto-generated method stub
-		world.setGameRuleValue("doTileDrops", "false");
+		world.setGameRule(GameRules.BLOCK_DROPS, false);
 	}
 	@Override
 	protected void donarEfectesInicials(Player ply) {
@@ -74,8 +75,8 @@ public class Torres extends JocEquips {
 		super.donarEfectesInicials(ply);
 		int d = (int) (20 * (5 + Math.sqrt(segonsTranscorreguts()) / 9));
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 4 * 20 + d, 4, false), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 10, 2, false), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, d , 50, false), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 10, 2, false), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, d , 50, false), true);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, d, 5, false), true);
 	}
 	@Override
@@ -98,9 +99,9 @@ public class Torres extends JocEquips {
 
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		arc.addEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
-		arc.addEnchantment(Enchantment.ARROW_INFINITE, 1);
-		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+		arc.addEnchantment(Enchantment.PUNCH, 1);
+		arc.addEnchantment(Enchantment.INFINITY, 1);
+		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
 		ItemStack itemstack = new ItemStack(Material.ENCHANTED_BOOK, 1); // A stack of diamonds
 		ItemMeta meta = itemstack.getItemMeta();
 		meta.setDisplayName(ChatColor.BLUE + "Control remot");
@@ -157,7 +158,7 @@ public class Torres extends JocEquips {
 		while(eq <= 1){
 			String eqStr =  Integer.toString(eq);
 
-			//EnderCrystal cry = (EnderCrystal) world.spawnEntity(pMapaActual().ObtenirLocation("crystal" + eqStr, world).subtract(new Vector(0.5,0,0.5)), EntityType.ENDER_CRYSTAL);
+			//EnderCrystal cry = (EnderCrystal) world.spawnEntity(pMapaActual().ObtenirLocation("crystal" + eqStr, world).subtract(new Vector(0.5,0,0.5)), EntityType.END_CRYSTAL);
 			//cry.setMetadata("Equip", new FixedMetadataValue(Com.getPlugin(), eq));
 			int tId = 0;
 			ArrayList<Location> obtenirLocations = pMapaActual().ObtenirLocations("torres" + eqStr, world);
@@ -249,7 +250,7 @@ public class Torres extends JocEquips {
 		// TODO Auto-generated method stub
 		super.onEntityDamageByEntity(evt, damaged, damager);
 
-		if (evt.getEntityType() == EntityType.ENDER_CRYSTAL){
+		if (evt.getEntityType() == EntityType.END_CRYSTAL){
 
 			final EnderCrystal cry = (EnderCrystal) evt.getEntity();
 			int preequip = 0;
@@ -313,22 +314,22 @@ public class Torres extends JocEquips {
 					}
 				}
 				world.playSound(cry.getLocation(), Sound.AMBIENT_CAVE, 30F, 3F);
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+				scheduleGameplayTask(() -> {
                     for(Player p : plugin.getServer().getOnlinePlayers()){
                         p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 5 * 20, 1, false), true);
                     }
                 }, 1 * 20);
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+				scheduleGameplayTask(() -> {
                     for(Player p : plugin.getServer().getOnlinePlayers()){
                         p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 4 * 20, 3, false), true);
                     }
                 }, 25);
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+				scheduleGameplayTask(() -> {
                     for(Player p : plugin.getServer().getOnlinePlayers()){
                         p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3 * 20, 6, false), true);
                     }
                 }, 30);
-				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+				scheduleGameplayTask(() -> {
                     for(Player p : plugin.getServer().getOnlinePlayers()){
                         if(obtenirEquip(p).getId() == equip){
                             p.sendMessage(ChatColor.BOLD + "" + ChatColor.RED + "Has perdut!");
@@ -378,7 +379,7 @@ public class Torres extends JocEquips {
 				int shoots = 5;
 				int temps = 5;
 				while (i1 < shoots){
-					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+					scheduleGameplayTask(() -> {
                         int i = -3;
                         while (i <= 3){
                             float angle = plyr.getLocation().getYaw() + (7 * i) + 90;
@@ -482,7 +483,7 @@ public class Torres extends JocEquips {
 
 	public ItemStack getTurretItem() {
 		ItemStack arc = new ItemStack(Material.ARROW, 1); // A stack of diamonds
-		arc.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
+		arc.addUnsafeEnchantment(Enchantment.INFINITY, 1);
 		ItemMeta meta = arc.getItemMeta();
 		meta.setDisplayName(ChatColor.YELLOW + "Torre de defensa");
 		arc.setItemMeta(meta);
@@ -493,7 +494,7 @@ public class Torres extends JocEquips {
 		// TODO Auto-generated method stub
 		super.onEntityDamage(evt, e);
 
-		if (evt.getEntityType() == EntityType.ENDER_CRYSTAL){
+		if (evt.getEntityType() == EntityType.END_CRYSTAL){
 			//if (evt.getCause() != DamageCause.ENTITY_ATTACK){
 				evt.setCancelled(true);
 			//}
@@ -525,7 +526,7 @@ public class Torres extends JocEquips {
 					player.teleport(loc2);
 					caught.teleport(loc1);
 
-					ecaught.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, 2));
+					ecaught.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 5, 2));
 					world.playEffect(ecaught.getEyeLocation(), Effect.POTION_BREAK, 0);
 				}
 			}else{
@@ -540,16 +541,16 @@ public class Torres extends JocEquips {
 		// TODO Auto-generated method stub
 		super.onEntityExplode(evt, e);
 
-		if (evt.getEntityType() == EntityType.ENDER_CRYSTAL){
+		if (evt.getEntityType() == EntityType.END_CRYSTAL){
 			EnderCrystal cry = (EnderCrystal) evt.getEntity();
 			evt.setYield(0F);
 			JocFinalitzat();
 		}
-		if (evt.getEntityType() == EntityType.PRIMED_TNT){
+		if (evt.getEntityType() == EntityType.TNT){
 			for (Iterator<Block> iterator = evt.blockList().iterator(); iterator.hasNext();) {
 				Block b = iterator.next();
 				Material t = b.getType();
-				if(t == Material.GRASS || t == Material.DIRT || t == Material.GRAVEL)iterator.remove();
+				if(t == Material.SHORT_GRASS || t == Material.DIRT || t == Material.GRAVEL)iterator.remove();
 			}
 			getPlayers().stream().filter(p -> p.getLocation().distance(e.getLocation()) < 12).forEach(p -> {p.damage(10); p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 1 * 20, 1));});
 		}
@@ -613,7 +614,7 @@ public class Torres extends JocEquips {
 		void setEffect(Player plyr){
 			switch(tipus){
 			case DAMAGE:
-				plyr.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 34 * 20, 0, false), true);
+				plyr.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 34 * 20, 0, false), true);
 				//Bukkit.broadcastMessage(plyr.getName() + " té més dany!");
 				break;
 			case HEAL:
@@ -626,14 +627,14 @@ public class Torres extends JocEquips {
 				break;
 			case PROTECTION:
 				if (força == 3){
-					plyr.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 70 * 20, 3, false), true);
+					plyr.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 70 * 20, 3, false), true);
 				}else{
-					plyr.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 38 * 20, 1, false), true);
+					plyr.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 38 * 20, 1, false), true);
 				}
 
 				break;
 			case JUMP:
-				plyr.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 20 * 6, 4, false), true);
+				plyr.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 20 * 6, 4, false), true);
 				break;
 			default:
 				break;
@@ -660,7 +661,7 @@ public class Torres extends JocEquips {
 			}
 		}
 		void replaceItem(){
-			Com.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
+			scheduleGameplayTask(() -> {
                 ItemStack item = new ItemStack(getItem());
                 Item dropitem = world.dropItem(loc.clone().add(new Vector(0.5,1.1,0.5)), item);
                 dropitem.setVelocity(new Vector(0,0,0));
@@ -679,12 +680,12 @@ public class Torres extends JocEquips {
 				if (força == 3){
 					return(Material.DIAMOND_CHESTPLATE);
 				}
-				return(Material.LEGACY_GOLD_CHESTPLATE);
+				return(Material.GOLDEN_CHESTPLATE);
 			case JUMP:
 				if (força >= 3){
-					return(Material.LEGACY_IRON_PLATE);
+					return(Material.HEAVY_WEIGHTED_PRESSURE_PLATE);
 				}
-				return(Material.LEGACY_WOOD_PLATE);
+				return(Material.OAK_PRESSURE_PLATE);
 			default:
 				return(Material.COBBLESTONE);
 

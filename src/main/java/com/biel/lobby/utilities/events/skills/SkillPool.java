@@ -14,6 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
+import com.biel.lobby.Com;
 import com.biel.lobby.utilities.Utils;
 
 public class SkillPool {
@@ -70,7 +71,7 @@ public class SkillPool {
 				event.setWillClose(clickable);
 				//select skill
 				int pos = event.getPosition();
-				System.out.println("--Clicat--");
+				Com.getPlugin().getLogger().fine("Skill selection clicked");
 				if(clickable){
 					Skill s = registered.get(pos);
 					Skill reflectedS;
@@ -89,8 +90,7 @@ public class SkillPool {
 						}
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
-						System.out.println("--Error reflexió / removing habilitat--");
-						e.printStackTrace();
+						Com.getPlugin().getLogger().log(java.util.logging.Level.SEVERE, "Error creating or assigning a selected skill", e);
 					} 
 				}
 			}
@@ -134,7 +134,7 @@ public class SkillPool {
 	}
 	public ItemButton getUnlockerButton(Player p, int n){
 		ItemStack dBlk = new ItemStack(Material.CHEST);
-		dBlk.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 1);
+		dBlk.addUnsafeEnchantment(Enchantment.FORTUNE, 1);
 		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.AQUA + "Habilitat #" + n,  ChatColor.WHITE + "Obre l'inventari de selecció d'habilitats", Integer.toString(n)), p, event -> {
             int data = (int) event.getData();
             openSelectionMenu(event.getPlayer(), true, data);

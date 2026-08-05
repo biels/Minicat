@@ -102,7 +102,7 @@ public class ResourceRush extends JocTeamScoreRace {
 	}
 	public ArrayList<ItemStack> getChestStartingContents(int m){
 		ArrayList<ItemStack> r = new ArrayList<>();
-		r.add(new ItemStack(Material.LEGACY_LOG, 2 * m));
+		r.add(new ItemStack(Material.OAK_LOG, 2 * m));
 		r.add(new ItemStack(Material.COAL, 4 * m));
 		r.add(new ItemStack(Material.COAL, 4 * m));
 		r.add(new ItemStack(Material.IRON_INGOT, 4 * m));
@@ -271,9 +271,9 @@ public class ResourceRush extends JocTeamScoreRace {
 				getPlayer().removePotionEffect(PotionEffectType.SPEED);
 			}
 			if (SL > 0) {
-				getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, SL - 1, true, true));
+				getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 5, SL - 1, true, true));
 			}else{
-				getPlayer().removePotionEffect(PotionEffectType.SLOW);
+				getPlayer().removePotionEffect(PotionEffectType.SLOWNESS);
 			}
 		}
 		private int getModifier(int SP, int SL){
