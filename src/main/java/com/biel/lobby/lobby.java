@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
+import com.biel.lobby.agent.AgentSnapshotHttpServer;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.HologramFacade;
 import com.biel.lobby.utilities.Options;
@@ -27,6 +28,7 @@ public final class lobby extends JavaPlugin {
 	boolean ranked = true;
 	public GestorMapes gest;
 	public DataAPI dataAPI;
+	private AgentSnapshotHttpServer agentSnapshotHttpServer;
 	@SuppressWarnings("unused")
 	@Override
 	public void onEnable(){
@@ -37,12 +39,21 @@ public final class lobby extends JavaPlugin {
 		MapaResetejable.cleanupStaleRuntimeWorlds();
 
 		gest = new GestorMapes();
+		agentSnapshotHttpServer = new AgentSnapshotHttpServer(this);
+		agentSnapshotHttpServer.start();
 		dataAPI = new DataAPI();
 	}
 
 	@Override
 	public void onDisable() {
-		// TODO Insert logic to be performed when the plugin is disabled
+		if (agentSnapshotHttpServer != null) {
+			agentSnapshotHttpServer.stop();
+			agentSnapshotHttpServer = null;
+		}
+		HologramFacade.deleteAll();
+	}
+	public AgentSnapshotHttpServer getAgentSnapshotHttpServer() {
+		return agentSnapshotHttpServer;
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 		if(cmd.getName().equalsIgnoreCase("prova")){

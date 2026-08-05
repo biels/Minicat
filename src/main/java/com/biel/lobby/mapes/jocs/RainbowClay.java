@@ -28,14 +28,37 @@ import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.JocObjectius;
+import com.biel.lobby.agent.AgentSnapshotHttpServer;
+import com.biel.lobby.lobby;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.PaperMessages;
 
 public class RainbowClay extends JocObjectius {
+	private RainbowClaySnapshotPublisher agentSnapshotPublisher;
+
 	public RainbowClay() {
 		super();
 
+	}
+
+	@Override
+	public void initialize() {
+		super.initialize();
+		AgentSnapshotHttpServer endpoint = lobby.getPlugin().getAgentSnapshotHttpServer();
+		if (endpoint != null && endpoint.isRunning()) {
+			agentSnapshotPublisher = new RainbowClaySnapshotPublisher(this, endpoint);
+			agentSnapshotPublisher.start();
+		}
+	}
+
+	@Override
+	public void clearExternals() {
+		if (agentSnapshotPublisher != null) {
+			agentSnapshotPublisher.close();
+			agentSnapshotPublisher = null;
+		}
+		super.clearExternals();
 	}
 
 	@Override
