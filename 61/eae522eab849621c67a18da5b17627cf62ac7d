@@ -1,0 +1,37 @@
+src/main/java/com/biel/lobby/agent/AgentSnapshotHttpServer.java
+  s_d22295457e46f7::t_5340768454746e 1-294
+src/main/java/com/biel/lobby/mapes/jocs/RainbowClaySnapshotPublisher.java
+  s_d22295457e46f7::t_5340768454746e 1-163,165-232
+  s_d22295457e46f7::t_6ab3f9ec47e1fe 164
+src/main/java/com/biel/lobby/lobby.java
+  s_d22295457e46f7::t_5340768454746e 19,31,42-43
+  s_d22295457e46f7::t_142de50877dae5 49-56
+src/main/java/com/biel/lobby/mapes/jocs/RainbowClay.java
+  s_1d84630ccaf7cd::t_dd89e282508b5f 39
+  s_d22295457e46f7::t_5340768454746e 31-32,38,45-62
+  s_d22295457e46f7::t_8a9ea016c3042c 63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "61eae522eab849621c67a18da5b17627cf62ac7d",
+  "prompts": {},
+  "sessions": {
+    "s_1d84630ccaf7cd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fceb3-e392-77d1-9b28-95129e4b53a3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_d22295457e46f7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fcdbd-8cf2-7d71-bda1-2a659e272119",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
