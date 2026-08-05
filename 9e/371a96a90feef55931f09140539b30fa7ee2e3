@@ -1,0 +1,42 @@
+bot-runtime/src/core/decision-loop.js
+  s_6776c97f3a38dc::t_f3bb2e35a8b850 78
+bot-runtime/test/controller-input.test.js
+  s_6776c97f3a38dc::t_8c079e1806d886 39-41,43
+  s_6776c97f3a38dc::t_9a5eea92610ade 53
+bot-runtime/test/lobby.test.js
+  s_6776c97f3a38dc::t_0f032ea41fc824 265-300
+  s_fea4557cadfbef::t_aff4e07c12e478 25,57,63
+bot-runtime/src/manager.js
+  s_6776c97f3a38dc::t_fbeab26cb0a8a6 162-173
+bot-runtime/src/core/bot-runtime.js
+  s_6776c97f3a38dc::t_36b69b2c8fbc56 89-100
+  s_6776c97f3a38dc::t_514395d1dbb4c0 78-80
+bot-runtime/src/games/lobby.js
+  s_6776c97f3a38dc::t_2fc491cb189744 192-200
+  s_6776c97f3a38dc::t_11e5a1a773a65c 118-122,125-129,134-135
+  s_6776c97f3a38dc::t_e9f78c92088138 175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "9e371a96a90feef55931f09140539b30fa7ee2e3",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_fea4557cadfbef": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-alobby-course-b7172d929ee07473",
+        "model": "unknown"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
