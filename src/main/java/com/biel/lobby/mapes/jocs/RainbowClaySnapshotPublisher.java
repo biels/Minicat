@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
@@ -163,7 +164,10 @@ final class RainbowClaySnapshotPublisher {
                     "air", Integer.toString(player.getRemainingAir()),
                     "gamemode", player.getGameMode().name().toLowerCase(Locale.ROOT),
                     "alive", Boolean.toString(!player.isDead())));
-            if (player == self) appendInventory(xml, player);
+            if (player == self) {
+                appendInventory(xml, player);
+                appendEffects(xml, player);
+            }
             xml.writeEndElement();
         }
         xml.writeEndElement();
@@ -179,6 +183,24 @@ final class RainbowClaySnapshotPublisher {
             attribute(xml, "index", slot);
             attribute(xml, "itemId", item.getType().getKey().toString());
             attribute(xml, "count", item.getAmount());
+            xml.writeEndElement();
+        }
+        xml.writeEndElement();
+    }
+
+    // Published for the bot itself only. The spawn window is short and large —
+    // Strength 3 for 5s, Resistance 1 for ~19s, Slowness 1 for the first 3s —
+    // so an engagement inside it is favourable in a way it will not be forty
+    // seconds later. Without remaining durations the bot cannot see the window
+    // it is standing in.
+    private void appendEffects(XMLStreamWriter xml, Player player) throws Exception {
+        xml.writeStartElement("effects");
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            xml.writeStartElement("effect");
+            attribute(xml, "id", effect.getType().getKey().toString());
+            // Bukkit amplifiers are zero-based; level is what the game displays.
+            attribute(xml, "level", effect.getAmplifier() + 1);
+            attribute(xml, "remainingMs", effect.getDuration() < 0 ? -1L : effect.getDuration() * 50L);
             xml.writeEndElement();
         }
         xml.writeEndElement();
