@@ -1,0 +1,32 @@
+bot-runtime/src/protocol/controller-input.js
+  s_6776c97f3a38dc::t_114299f1299708 3-13
+  s_6776c97f3a38dc::t_2966eaa2601bb2 57-115
+  s_6776c97f3a38dc::t_d2f5d882711c03 23,25-35
+bot-runtime/test/controller-input.test.js
+  s_6776c97f3a38dc::t_e0074731f23d1b 36
+  s_6776c97f3a38dc::t_cdffe1bce90556 50
+  s_6776c97f3a38dc::t_93447955224bce 153-262
+bot-runtime/src/core/decision-loop.js
+  s_6776c97f3a38dc::t_f2084c8ffe19ef 13-15
+  s_6776c97f3a38dc::t_357422e9f5fe6f 47-50,53-54
+  s_6776c97f3a38dc::t_412748ad6a180f 41-46,51-52,55-58
+  s_6776c97f3a38dc::t_a21da326000437 64,71-72
+bot-runtime/src/server/ssh-snapshot-bridge.js
+  s_6776c97f3a38dc::t_ef4f8a96022195 63-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "8cb2caf813affc876c8f56dab23ac5fbb0370ee9",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
