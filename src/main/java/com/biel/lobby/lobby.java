@@ -50,6 +50,7 @@ public final class lobby extends JavaPlugin {
 			agentSnapshotHttpServer.stop();
 			agentSnapshotHttpServer = null;
 		}
+		if (dataAPI != null) dataAPI.closeConnection();
 		HologramFacade.deleteAll();
 	}
 	public AgentSnapshotHttpServer getAgentSnapshotHttpServer() {

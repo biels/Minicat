@@ -44,9 +44,17 @@ import com.biel.lobby.utilities.HologramFacade;
 public class Parkour extends JocScoreCombo{
 
 	ArrayList<ParkourStream> streams = new ArrayList<>();
+	ArrayList<Player> nativeFinishers = new ArrayList<>();
 	ParkourProvider provider = new ParkourProvider();
 	int playerCount = 0;
 	int mapLength = 40;
+	boolean nativeDatapackMap = false;
+	@Override
+	public void initialize() {
+		super.initialize();
+		nativeDatapackMap = pMapaActual().ExisteixPropietat("nativeDatapack")
+				&& Boolean.parseBoolean(pMapaActual().ObtenirPropietat("nativeDatapack"));
+	}
 	@Override
 	public String getGameName() {
 		// TODO Auto-generated method stub
@@ -103,10 +111,34 @@ public class Parkour extends JocScoreCombo{
 	protected void customJoin(Player ply) {
 		// TODO Auto-generated method stub
 		super.customJoin(ply);
+		if(nativeDatapackMap){
+			ply.removeScoreboardTag("joined");
+			ply.removeScoreboardTag("finished");
+			ply.removeScoreboardTag("ingame");
+		}
 		//updateStartingPlatforms();
 	}
 	@Override
 	protected void teletransportarTothom() {
+		if(nativeDatapackMap){
+			Location courseStart = pMapaActual().ExisteixPropietat("courseStart")
+					? pMapaActual().ObtenirLocation("courseStart", getWorld()).add(0.5, 0, 0.5)
+					: getWorld().getSpawnLocation();
+			float courseStartYaw = pMapaActual().ExisteixPropietat("courseStartYaw")
+					? pMapaActual().ObtenirPropietatDouble("courseStartYaw").floatValue() : 0F;
+			float courseStartPitch = pMapaActual().ExisteixPropietat("courseStartPitch")
+					? pMapaActual().ObtenirPropietatDouble("courseStartPitch").floatValue() : 10F;
+			courseStart.setYaw(courseStartYaw);
+			courseStart.setPitch(courseStartPitch);
+			for(Player player : getPlayers()){
+				getPlayerInfo(player).setInGame(true);
+				player.removeScoreboardTag("finished");
+				player.removeScoreboardTag("ingame");
+				player.setGameMode(GameMode.ADVENTURE);
+				player.teleport(courseStart);
+			}
+			return;
+		}
 		//Generate & TP
 		generateStreams();
 
@@ -115,6 +147,7 @@ public class Parkour extends JocScoreCombo{
 		getPlayers().forEach(p -> streams.add(new ParkourStream(p, p.getLocation().getBlock().getLocation().add(0, -1, 0))));
 	}
 	protected void updateStartingPlatforms(){
+		if(nativeDatapackMap)return;
 		ArrayList<Player> players = getPlayers();
 		if(playerCount == players.size())return;
 		Vector mv = new Vector(0, 1, 0).crossProduct(getForward());
@@ -137,6 +170,17 @@ public class Parkour extends JocScoreCombo{
 	}
 	
 	public void comprovarFinish(){
+		if(nativeDatapackMap){
+			for(Player player : getPlayers()){
+				ParkourPlayerInfo playerInfo = getPlayerInfo(player);
+				if(playerInfo.isInGame() && player.getScoreboardTags().contains("finished")){
+					nativeFinishers.add(player);
+					playerInfo.setInGame(false);
+					player.setGameMode(GameMode.SPECTATOR);
+					sendGlobalMessage(player.getName() + " ha arribat a la meta!");
+				}
+			}
+		}
 		//boolean allFinished = streams.stream().mapToInt(ParkourStream::getTargetBubbleIndex).min().getAsInt() > 100;
 		boolean allFinished = getPlayers().stream().map(p -> getPlayerInfo(p).isInGame()).allMatch(b -> b == false);
 		if(allFinished){
@@ -159,8 +203,19 @@ public class Parkour extends JocScoreCombo{
 	public void ultraHeartbeat() {
 		// TODO Auto-generated method stub
 		super.ultraHeartbeat();
-		streams.removeIf(s -> !s.isValid());
-		streams.forEach(ParkourStream::ultraTick);
+		if(!nativeDatapackMap){
+			streams.removeIf(s -> !s.isValid());
+			streams.forEach(ParkourStream::ultraTick);
+		}
+	}
+	@Override
+	public ArrayList<Player> getOrderedWinnerList(){
+		if(!nativeDatapackMap)return super.getOrderedWinnerList();
+		ArrayList<Player> orderedPlayers = new ArrayList<>(nativeFinishers);
+		for(Player player : getPlayers()){
+			if(!orderedPlayers.contains(player))orderedPlayers.add(player);
+		}
+		return orderedPlayers;
 	}
 	@Override
 	protected void customJocIniciat() {

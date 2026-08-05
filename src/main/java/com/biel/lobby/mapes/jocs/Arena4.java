@@ -1,12 +1,17 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -14,12 +19,71 @@ import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 
 public class Arena4 extends JocEquips {
+	private static final long WRONG_TARGET_MESSAGE_COOLDOWN_MILLIS = 5_000L;
+	private final Map<UUID, Long> lastWrongTargetMessage = new HashMap<>();
 
 	@Override
 	protected void customJocIniciat() {
 		// TODO Auto-generated method stub
 		super.customJocIniciat();
 		setBlockBreakPlace(false);
+		sendGlobalMessage(ChatColor.GOLD + "Arena 4: each team hunts one marked target team.");
+		sendGlobalMessage(ChatColor.YELLOW + "RED hunts YELLOW, YELLOW hunts GREEN, GREEN hunts BLUE, and BLUE hunts RED.");
+		sendGlobalMessage(ChatColor.AQUA + "You deal 2x damage and earn 3 points against your target. You cannot damage the team hunting you; other kills earn 1 point.");
+		for (Player player : getPlayers()) {
+			Arena4Equip team = (Arena4Equip) obtenirEquip(player);
+			if (team == null) continue;
+			Arena4Equip target = (Arena4Equip) team.equipObjectiu();
+			Arena4Equip hunter = getHunterOf(team);
+			sendPlayerMessage(player, ChatColor.GREEN + "Your target: " + formatTeam(target)
+					+ ChatColor.GRAY + " | " + ChatColor.RED + "Your hunter: " + formatTeam(hunter));
+		}
+	}
+
+	@Override
+	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
+		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+		if (evt.isCancelled()) return;
+		Arena4Equip attackerTeam = (Arena4Equip) obtenirEquip(damager);
+		Arena4Equip defenderTeam = (Arena4Equip) obtenirEquip(damaged);
+		if (attackerTeam == null || defenderTeam == null || attackerTeam == defenderTeam) return;
+
+		if (defenderTeam.equipObjectiu() == attackerTeam) {
+			evt.setCancelled(true);
+			sendWrongTargetMessage(damager, ChatColor.RED + "You cannot attack " + formatTeam(defenderTeam)
+					+ ChatColor.RED + "; they are hunting your team. Your target is "
+					+ formatTeam((Arena4Equip) attackerTeam.equipObjectiu()) + ChatColor.RED + ".");
+			return;
+		}
+		if (attackerTeam.equipObjectiu() == defenderTeam) {
+			evt.setDamage(evt.getDamage() * 2.0);
+			return;
+		}
+		sendWrongTargetMessage(damager, ChatColor.YELLOW + "Wrong target: " + formatTeam(defenderTeam)
+				+ ChatColor.YELLOW + " takes normal damage. Hunt "
+				+ formatTeam((Arena4Equip) attackerTeam.equipObjectiu())
+				+ ChatColor.YELLOW + " for 2x damage and 3 points.");
+	}
+
+	private Arena4Equip getHunterOf(Arena4Equip huntedTeam) {
+		for (Equip team : Equips) {
+			Arena4Equip arenaTeam = (Arena4Equip) team;
+			if (arenaTeam.equipObjectiu() == huntedTeam) return arenaTeam;
+		}
+		return null;
+	}
+
+	private String formatTeam(Arena4Equip team) {
+		if (team == null) return "unknown team";
+		return team.getChatColor() + team.getColor().name().toLowerCase(Locale.ROOT) + " team";
+	}
+
+	private void sendWrongTargetMessage(Player player, String message) {
+		long now = System.currentTimeMillis();
+		long lastMessage = lastWrongTargetMessage.getOrDefault(player.getUniqueId(), 0L);
+		if (now - lastMessage < WRONG_TARGET_MESSAGE_COOLDOWN_MILLIS) return;
+		lastWrongTargetMessage.put(player.getUniqueId(), now);
+		sendPlayerMessage(player, message);
 	}
 	@Override
 	public String getGameName() {
@@ -78,9 +142,10 @@ public class Arena4 extends JocEquips {
 			PlayerDeathEvent evt = (PlayerDeathEvent)event;
 			Player killed = evt.getEntity();
 			Player killer = killed.getKiller();
+			if (killer == null){return;}
 			Arena4Equip eqKilled = (Arena4Equip) obtenirEquip(killed);
 			Arena4Equip eqKiller = (Arena4Equip) obtenirEquip(killer);
-			if (killer == null){return;}
+			if (eqKilled == null || eqKiller == null){return;}
 			if (areEnemies(killed, killer)){
 				int suma = 0;
 				int resta = 1;

@@ -42,7 +42,7 @@ public abstract class MapaResetejable extends Mapa {
 		File dimensionsRoot = new File(new File(new File(worldContainer, "world"), "dimensions"), "minecraft");
 		for (File metadataDirectory : metadataDirectories) {
 			String worldName = metadataDirectory.getName();
-			if (!worldName.matches("[A-Za-z][A-Za-z0-9_-]*\\d+")) {
+			if (!worldName.matches("[A-Za-z][A-Za-z0-9 _-]*\\d+")) {
 				Com.getPlugin().getLogger().warning("Skipping unexpected live metadata directory: " + worldName);
 				continue;
 			}

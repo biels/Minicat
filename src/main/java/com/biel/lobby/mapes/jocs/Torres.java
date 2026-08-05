@@ -37,6 +37,7 @@ import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.MetadataValue;
@@ -53,6 +54,7 @@ import com.biel.lobby.utilities.Turret.TipusMillora;
 import com.biel.lobby.utilities.Utils;
 
 public class Torres extends JocEquips {
+	private static final double GENERAL_DAMAGE_MULTIPLIER = 0.6;
 	boolean debug = false;
 	public ArrayList<Turret> Turrets = new ArrayList<>();
 	@Override
@@ -434,9 +436,7 @@ public class Torres extends JocEquips {
 						turr.Build();
 						turr.Attack();
 						if (turr.built && debug == false) {
-							ItemStack item = stack.clone();
-							item.setAmount(1);
-							inv.removeItem(item);
+							consumeTurretItem(plyr, evt.getHand(), stack);
 						}
 					}
 				}
@@ -449,6 +449,17 @@ public class Torres extends JocEquips {
 				comprovarGuanyador();
 			}			
 		}	
+	}
+	private void consumeTurretItem(Player player, EquipmentSlot hand, ItemStack usedItem) {
+		if (usedItem.getAmount() > 1) {
+			usedItem.setAmount(usedItem.getAmount() - 1);
+			return;
+		}
+		if (hand == EquipmentSlot.OFF_HAND) {
+			player.getInventory().setItemInOffHand(new ItemStack(Material.AIR));
+		} else {
+			player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+		}
 	}
 	@Override
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
@@ -500,7 +511,16 @@ public class Torres extends JocEquips {
 			//}
 
 		}
-		evt.setDamage(evt.getDamage() * 0.6);
+		evt.setDamage(evt.getDamage() * GENERAL_DAMAGE_MULTIPLIER);
+	}
+	@Override
+	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
+		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+		if (!evt.isCancelled()) {
+			// Torres historically reduced every damage source to 60%. Restore
+			// normal damage specifically for player-versus-player combat.
+			evt.setDamage(evt.getDamage() / GENERAL_DAMAGE_MULTIPLIER);
+		}
 	}
 	@Override
 	protected void onPlayerFish(PlayerFishEvent evt, Player p) {
