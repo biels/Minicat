@@ -11,6 +11,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -402,6 +403,9 @@ public class InkWars extends JocEquips {
 		public double getWeaponSpeedModifier(){
 			return 0;
 		}
+		public double getMaxHealth(){
+			return 20;
+		}
 		public int neededReloadTicks(){
 			return 50;
 		}
@@ -560,7 +564,6 @@ public class InkWars extends JocEquips {
 
 		public MachinegunInkWeapon(Player ply) {
 			super(ply);
-			ply.setMaxHealth(20);
 		}
 		@Override
 		public int getMaxLoad() {
@@ -613,10 +616,13 @@ public class InkWars extends JocEquips {
 	class EnderInkWeapon extends ProjectileInkWeapon{
 		Player targeted;
 		int chargeTicks = 0;
-		int toolTicks = 0;
+		int toolTicks = -1;
 		public EnderInkWeapon(Player ply) {
 			super(ply);
-			ply.setMaxHealth(10);
+		}
+		@Override
+		public double getMaxHealth() {
+			return 10;
 		}
 		@Override
 		public int getMaxLoad() {
@@ -701,9 +707,9 @@ public class InkWars extends JocEquips {
 			super.tick();
 			if(toolTicks == 0){
 				getPlayer().getInventory().addItem(getToolMaterial());
-				toolTicks = 200000;
+				toolTicks = -1;
 			}
-			toolTicks--;
+			if(toolTicks > 0)toolTicks--;
 			if(chargeTicks > 0 && targeted != null){
 				rollerLinePaint(1.5 + (getWeaponLevel() / 3) + chargeTicks / (20 * 4), 1.2, targeted);
 
@@ -749,7 +755,10 @@ public class InkWars extends JocEquips {
 	class RollerInkWeapon extends InkWeapon{
 		public RollerInkWeapon(Player ply) {
 			super(ply);
-			ply.setMaxHealth(18);
+		}
+		@Override
+		public double getMaxHealth() {
+			return 18;
 		}
 		@Override
 		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
@@ -785,7 +794,10 @@ public class InkWars extends JocEquips {
 		int charges = 0;
 		public BrushInkWeapon(Player ply) {
 			super(ply);
-			ply.setMaxHealth(18);
+		}
+		@Override
+		public double getMaxHealth() {
+			return 18;
 		}
 		@Override
 		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
@@ -826,6 +838,7 @@ public class InkWars extends JocEquips {
 		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
 				Player damaged, Player damager, boolean ranged) {
 			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+			if(damager != getPlayer())return;
 			if(!ranged && damager == getPlayer() && !damaged.hasPotionEffect(PotionEffectType.WITHER) && !evt.isCancelled()){
 				if(targeted == null)targeted = damaged;
 				if(targeted != damaged){
@@ -842,7 +855,7 @@ public class InkWars extends JocEquips {
 					damaged.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, (int) Math.round(20 * (5 + 0.6 * getWeaponLevel())), Math.round(getWeaponLevel() + 2 / 5)), true);
 					getWorld().playSound(damaged.getEyeLocation(), Sound.ENTITY_GENERIC_SWIM, 1, 1.25F);
 				}
-			}else{evt.setCancelled(true);}
+			}else if(!evt.isCancelled()){evt.setCancelled(true);}
 		}
 	}
 
@@ -875,14 +888,19 @@ public class InkWars extends JocEquips {
 		public int getWeaponAlerts() {
 			return weaponAlerts;
 		}
-		public boolean isShileded(){
+		public boolean isShielded(){
 			return getShieldTicks() > 0;
 		}
 		public int getShieldTicks() {
 			return shieldTicks;
 		}
 		public void setShieldTicks(int shieldTicks) {
-			this.shieldTicks = shieldTicks;
+			boolean shieldWasInactive = this.shieldTicks <= 0;
+			this.shieldTicks = Math.max(0, shieldTicks);
+			if(shieldWasInactive && this.shieldTicks > 0){
+				getWorld().spawnParticle(Particle.END_ROD, getPlayer().getLocation().add(0, 1, 0), 18, 0.5, 0.8, 0.5, 0.02);
+				getPlayer().playSound(getPlayer().getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.7F, 1.6F);
+			}
 		}
 		@Override
 		public void ultraTick() {
@@ -900,7 +918,7 @@ public class InkWars extends JocEquips {
 				setSpeedModifier(0);
 			}
 			if(b != null && teamOwningBlock != null){
-				boolean isOnItsColor = (teamOwningBlock == e) || isShileded();
+				boolean isOnItsColor = (teamOwningBlock == e) || isShielded();
 				boolean isHighInk = highInkBlocks.containsKey(b);
 				double speedMod = 0;
 				if(isOnItsColor){speedMod += 5;}else{speedMod += -5;}
@@ -926,7 +944,16 @@ public class InkWars extends JocEquips {
 					dmgTicks = 0;
 				}
 			}
-			shieldTicks--;
+			if(shieldTicks > 0){
+				if(shieldTicks % 5 == 0){
+					getWorld().spawnParticle(Particle.END_ROD, getPlayer().getLocation().add(0, 1, 0), 3, 0.45, 0.65, 0.45, 0);
+				}
+				shieldTicks--;
+				if(shieldTicks == 0){
+					getWorld().spawnParticle(Particle.SMOKE, getPlayer().getLocation().add(0, 1, 0), 10, 0.4, 0.6, 0.4, 0.02);
+					getPlayer().playSound(getPlayer().getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.6F, 1.8F);
+				}
+			}
 			super.tick();
 		}
 		public void registerBlockPaint(EquipInkWars oldOwner){
@@ -950,7 +977,10 @@ public class InkWars extends JocEquips {
 			if (pW != null) {
 				pW.destroy();
 			}
+			double healthBeforeSwitch = getPlayer().getHealth();
+			getPlayer().setMaxHealth(newWeapon.getMaxHealth());
 			donarItemsInicials(getPlayer()); //Clears and gives starting (colored) armor
+			getPlayer().setHealth(Math.min(healthBeforeSwitch, getPlayer().getMaxHealth()));
 			this.activeWeapon = newWeapon;
 			this.activeWeapon.giveTool();
 		}
@@ -1003,7 +1033,7 @@ public class InkWars extends JocEquips {
 			this.ownedBlocks = ownedBlocks;
 		}
 		public void incrementOwnedBlocks(int increase){
-			setOwnedBlocks(getOwnedBlocks() + increase);
+			setOwnedBlocks(Math.max(0, getOwnedBlocks() + increase));
 		}
 		public double getOwnedPercent(){
 			if(getTotalPaintedBlocks() == 0)return 0;

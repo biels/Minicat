@@ -4,16 +4,31 @@ package com.biel.lobby.utilities.data;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.bukkit.entity.Player;
 
 import com.biel.BielAPI.Utils.Pair;
 public class DataAPI {
+	private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/minicat?connectTimeout=2000&socketTimeout=3000&useSSL=false";
+	private static final String DATABASE_USER = "minicat_usr";
+	private static final String DATABASE_PASSWORD = "minicat";
 	boolean datalessMode = false;
 	Logger logger = Logger.getLogger("DataAPI");
 	private final Set<String> emittedDatalessWarnings = ConcurrentHashMap.newKeySet();
+	private final Set<String> emittedTimestampWarnings = ConcurrentHashMap.newKeySet();
+	private final ThreadPoolExecutor timestampWriter = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
+			new ArrayBlockingQueue<>(4096), runnable -> {
+				Thread thread = new Thread(runnable, "Minicat timestamp writer");
+				thread.setDaemon(true);
+				return thread;
+			}, (runnable, executor) -> warnTimestampOnce("queue-full",
+					"Timestamp queue is full; dropping telemetry until the database writer catches up."));
+	private Connection timestampConnection;
 	public DataAPI() {
 
 	}
@@ -29,14 +44,8 @@ public class DataAPI {
 	public Connection connection;
 
 	void openConnection() {
-		String host = "localhost";
-		String port = "3306";
-		String db = "minicat";
-		String user = "minicat_usr";
-		String password = "minicat";
 		try {
-			connection = DriverManager.getConnection("jdbc:mysql://" + host
-					+ ":" + port + "/" + db + "?connectTimeout=2000&socketTimeout=3000&useSSL=false", user, password);
+			connection = openDatabaseConnection();
 		} catch (Exception e) {
 			datalessMode = true;
 			logger.warning("Could not connect to database; switching to dataless mode: " + e.getMessage());
@@ -46,11 +55,28 @@ public class DataAPI {
 		if(connection == null && !datalessMode)openConnection();
 	}
 	public void closeConnection() {
+		timestampWriter.shutdown();
 		try {
-			connection.close();
-		} catch (Exception e) {
-			e.printStackTrace();
+			if (!timestampWriter.awaitTermination(5, TimeUnit.SECONDS)) {
+				logger.warning("Timestamp writer did not drain within 5 seconds; remaining telemetry will be discarded.");
+				timestampWriter.shutdownNow();
+			}
+		} catch (InterruptedException exception) {
+			Thread.currentThread().interrupt();
+			timestampWriter.shutdownNow();
 		}
+		try {
+			if (timestampConnection != null) timestampConnection.close();
+			if (connection != null) connection.close();
+		} catch (SQLException exception) {
+			logger.warning("Could not close a database connection cleanly: " + exception.getMessage());
+		}
+	}
+	private Connection openDatabaseConnection() throws SQLException {
+		return DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+	}
+	private void warnTimestampOnce(String key, String message) {
+		if (emittedTimestampWarnings.add(key)) logger.warning(message);
 	}
 	
 	public void registerNewPlayer(Player player) {
@@ -341,24 +367,23 @@ public class DataAPI {
 	public MatchData registerMatchStart(int gameId, int mapId, String teams) {
 		if(datalessMode)return new DatalessMatchData();
 		repairConnection();
-		try {
-			PreparedStatement ps = connection.prepareStatement(
+		try (PreparedStatement ps = connection.prepareStatement(
 					"INSERT INTO `match_history` "
 					+ "(`game_id`, `map_id`, `teams`) VALUES "
-					+ "(?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
+					+ "(?, ?, ?);", Statement.RETURN_GENERATED_KEYS)) {
 			ps.setInt(1, gameId);
 			ps.setInt(2, mapId);
 			ps.setString(3, teams);
 			ps.executeUpdate();
 			try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
-	            if (generatedKeys.next()) {return new MatchData(generatedKeys.getInt(1));}
-	        }
-			ps.close();
-			
+				if (generatedKeys.next()) return new MatchData(generatedKeys.getInt(1));
+			}
+			logger.severe("The database did not return an id for the new match; continuing without match persistence.");
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.log(java.util.logging.Level.SEVERE,
+					"Could not register match start; continuing without match persistence.", e);
 		}
-		return null;
+		return new DatalessMatchData();
 	}
 	public void registerMatchEnd(int matchId, int winner) {
 		if(datalessMode)return;
@@ -394,10 +419,17 @@ public class DataAPI {
 	}
 	//TIMESTAMP
 	public void registerTimestamp(int matchId, int playerId, int frameId, int kills, int deaths, double damageDealt, boolean isAlive, String itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree) { //Gamemode
-		if(datalessMode)return;
-		repairConnection();
+		if (datalessMode || timestampWriter.isShutdown()) return;
+		timestampWriter.execute(() -> writeTimestamp(matchId, playerId, frameId, kills, deaths, damageDealt,
+				isAlive, blocksPlaced, blocksBroken, objectivesCompleted, spree));
+	}
+	private void writeTimestamp(int matchId, int playerId, int frameId, int kills, int deaths, double damageDealt,
+			boolean isAlive, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree) {
 		try {
-			PreparedStatement ps = connection.prepareStatement("INSERT INTO `player_match_timestamps` "
+			if (timestampConnection == null || timestampConnection.isClosed() || !timestampConnection.isValid(1)) {
+				timestampConnection = openDatabaseConnection();
+			}
+			PreparedStatement ps = timestampConnection.prepareStatement("INSERT INTO `player_match_timestamps` "
 					+ "(`match_id`, `player_id`, `frame_id`, `kills`, `deaths`, `damage_dealt`, `is_alive`, `item_in_hand`, `blocks_placed`, `blocks_broken`, `objectives_completed`, `spree`) "
 					+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?);");
 			ps.setInt(1, matchId);
@@ -407,7 +439,10 @@ public class DataAPI {
 			ps.setInt(5, deaths);
 			ps.setDouble(6, damageDealt);
 			ps.setBoolean(7, isAlive);
-//			ps.setInt(8, itemInHand);
+			// Recovered history stores legacy numeric material ids. Modern Paper
+			// exposes namespaced keys, so use the legacy "unknown" value until the
+			// telemetry column receives a dedicated schema migration.
+			ps.setInt(8, 0);
 			ps.setInt(9, blocksPlaced);
 			ps.setInt(10, blocksBroken);
 			ps.setInt(11, objectivesCompleted);
@@ -415,8 +450,15 @@ public class DataAPI {
 			ps.executeUpdate();
 			ps.close();
 			
-		} catch (SQLException e) {
-			e.printStackTrace();
+			emittedTimestampWarnings.clear();
+		} catch (SQLException exception) {
+			warnTimestampOnce("sql-" + exception.getErrorCode(),
+					"Timestamp persistence is temporarily unavailable: " + exception.getMessage());
+			try {
+				if (timestampConnection != null) timestampConnection.close();
+			} catch (SQLException ignored) {
+			}
+			timestampConnection = null;
 		}
 	}
 }

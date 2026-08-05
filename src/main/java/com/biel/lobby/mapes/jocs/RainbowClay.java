@@ -104,10 +104,12 @@ public class RainbowClay extends JocObjectius {
 
 	@Override
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
-		// TODO Auto-generated method stub
-		super.onPlayerDeath(evt, killed);
-
 		Equip team = obtenirEquip(killed);
+		if (team == null) {
+			evt.setDeathMessage(ChatColor.GRAY + killed.getName() + " ha mort.");
+			return;
+		}
+		super.onPlayerDeath(evt, killed);
 
 		evt.setDeathMessage(team.getChatColor() + killed.getName() + ChatColor.GRAY + " ha mort.");
 
@@ -130,6 +132,7 @@ public class RainbowClay extends JocObjectius {
 		ArrayList<ItemStack> items = new ArrayList<>();
 
 		Equip e = obtenirEquip(ply);
+		if (e == null) return items;
 
 		items.add(new ItemStack(Material.IRON_SWORD, 1));
 
@@ -232,6 +235,7 @@ public class RainbowClay extends JocObjectius {
 
 		Player ply = evt.getPlayer();
 		Equip team = obtenirEquip(ply);
+		if (team == null) return;
 
 		Cuboid centre = pMapaActual().ObtenirCuboid("RegC", getWorld());
 

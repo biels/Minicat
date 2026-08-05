@@ -42,7 +42,8 @@ public final class lobby extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		// TODO Insert logic to be performed when the plugin is disabled
+		if (dataAPI != null) dataAPI.closeConnection();
+		HologramFacade.deleteAll();
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 		if(cmd.getName().equalsIgnoreCase("prova")){

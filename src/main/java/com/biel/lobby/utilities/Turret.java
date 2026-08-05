@@ -20,8 +20,10 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -78,11 +80,24 @@ public class Turret extends EventBus {
 		this.autoUpgrade = autoUpgrade;
 	}
 	String invString = "";
+	private static final class TurretInventoryHolder implements InventoryHolder {
+		private final Turret turret;
+		private Inventory inventory;
+
+		private TurretInventoryHolder(Turret turret) {
+			this.turret = turret;
+		}
+
+		@Override
+		public Inventory getInventory() {
+			return inventory;
+		}
+	}
 	private int taskId;
 	private int taskEscutId;
 	//Estats
 	public int VelAtac = 22;
-	public int Atac = 2;
+	public int Atac = 4;
 	public int distAtac = 14;
 	public int xpPerTir = 1;
 	public int maxHpEscut = 0;
@@ -649,8 +664,6 @@ public class Turret extends EventBus {
 			Location loc = entity.getLocation();
 
 
-			LivingEntity shooter = (LivingEntity) proj.getShooter();
-
 			//Location land = loc.add(entity.getVelocity().normalize().multiply(0.8));
 			Arrow arrow = (Arrow)proj;
 			if((arrow.getShooter() instanceof Player)){
@@ -678,7 +691,7 @@ public class Turret extends EventBus {
 							}
 						}
 						if (hit) {
-							Hit(10);
+							Hit(15);
 							player.playSound(player.getEyeLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 0.9F);
 							arrow.remove();
 						}
@@ -733,7 +746,9 @@ public class Turret extends EventBus {
 	public void openOrRefreshInventory(Player plyr){
 		if (headless == false){
 			invString = generateInvString();
-			Inventory inv = Bukkit.getServer().createInventory(plyr, 9, invString);
+			TurretInventoryHolder holder = new TurretInventoryHolder(this);
+			Inventory inv = Bukkit.getServer().createInventory(holder, 9, invString);
+			holder.inventory = inv;
 			if (linkCreador == false){
 				for (Millora mill : Millores){
 					inv.addItem(mill.toItemStack());
@@ -779,7 +794,7 @@ public class Turret extends EventBus {
 		}
 		if (evt.getAction() == Action.LEFT_CLICK_BLOCK){
 			if (ContainsTurretBlock(evt.getClickedBlock().getLocation())){
-				Hit(3);		
+				Hit(5);
 			}
 		}
 
@@ -789,6 +804,33 @@ public class Turret extends EventBus {
 	protected void onInventoryClick(InventoryClickEvent evt, Inventory inv) {
 		// TODO Auto-generated method stub
 		super.onInventoryClick(evt, inv);
+		Inventory topInventory = evt.getView().getTopInventory();
+		if (!(topInventory.getHolder() instanceof TurretInventoryHolder holder) || holder.turret != this) return;
+
+		// The upgrade panel is a control surface, not a container. Cancel every
+		// transfer route before interpreting the click as an upgrade request.
+		evt.setCancelled(true);
+		int slot = evt.getRawSlot();
+		if (slot < 0 || slot >= topInventory.getSize() || slot >= Millores.size()) return;
+		ItemStack cursor = evt.getCursor();
+		if (cursor != null && !cursor.getType().isAir()) return;
+		if (!(evt.getWhoClicked() instanceof Player plyr)) return;
+
+		Millora upgrade = Millores.get(slot);
+		if (!upgrade.possibleUpgrade()) return;
+		if (evt.isShiftClick()) {
+			upgrade.upgradeMaximum();
+		} else if (evt.getClick().isLeftClick() || evt.getClick().isRightClick()) {
+			upgrade.lvlUp();
+		} else {
+			return;
+		}
+
+		if (anyUpgradePossible()) {
+			openOrRefreshInventory(plyr);
+		} else {
+			plyr.closeInventory();
+		}
 
 		//Bukkit.broadcastMessage(evt.getAction().name());
 		// TODO UPDATE
@@ -836,6 +878,15 @@ public class Turret extends EventBus {
 //				}
 //			}
 //		}
+	}
+
+	@Override
+	protected void onInventoryDrag(InventoryDragEvent evt, Inventory inv) {
+		super.onInventoryDrag(evt, inv);
+		Inventory topInventory = evt.getView().getTopInventory();
+		if (topInventory.getHolder() instanceof TurretInventoryHolder holder && holder.turret == this) {
+			evt.setCancelled(true);
+		}
 	}
 
 	public enum TipusMillora {MAL, VELOCITAT_ATAC, FOC, DIST_ATAC, RESISTÈNCIA, QUÍMICA, MECÀNICA, MAGNETISME, APRENENTATGE};

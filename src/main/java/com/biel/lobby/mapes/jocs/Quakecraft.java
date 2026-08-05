@@ -119,7 +119,7 @@ public class Quakecraft extends JocScoreRace {
 		ItemStack item = new ItemStack(Material.DIAMOND_HOE);
 		if(t >= 1000){return Utils.setItemNameAndLore(item, ChatColor.AQUA + "Railgun", l);}
 		if(t > 550){return Utils.setItemNameAndLore(item,  ChatColor.AQUA + "Ultimate Railgun", l);}
-		item.addEnchantment(Enchantment.POWER, 4);
+		item.addUnsafeEnchantment(Enchantment.POWER, 4);
 		if(t <= 550){return Utils.setItemNameAndLore(item, ChatColor.AQUA +"SUPER Railgun", l);}
 		return new ItemStack(Material.OAK_PLANKS);
 	}

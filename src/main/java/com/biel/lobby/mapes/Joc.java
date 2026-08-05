@@ -195,15 +195,31 @@ public abstract class Joc extends MapaResetejable {
 	public void JocFinalitzat(){
 		if (!JocIniciat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que no havia començat."); return;}
 		if (JocFinalitzat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que ja havia acabat."); return;}
-		//---
-		world.setPVP(false);
-		customJocFinalitzat();
-		clearExternals();
-		if(!won)matchData.registerEnd(-1); //Tie / no winner
-		registerTimestamps(true);
-		//---
+		// Fence gameplay first. Cleanup and persistence failures must not leave a
+		// logically completed match running forever.
 		JocFinalitzat = true;
-		updateScoreBoards();
+		try {
+			if (world != null) world.setPVP(false);
+			customJocFinalitzat();
+		} catch (RuntimeException exception) {
+			Com.getPlugin().getLogger().log(java.util.logging.Level.SEVERE,
+					"Game-specific finalization failed for " + getGameName(), exception);
+		} finally {
+			clearExternals();
+		}
+		try {
+			if(!won && matchData != null) matchData.registerEnd(-1); //Tie / no winner
+			registerTimestamps(true);
+		} catch (RuntimeException exception) {
+			Com.getPlugin().getLogger().log(java.util.logging.Level.SEVERE,
+					"Could not persist final match state for " + getGameName(), exception);
+		}
+		try {
+			updateScoreBoards();
+		} catch (RuntimeException exception) {
+			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING,
+					"Could not update final scoreboards for " + getGameName(), exception);
+		}
 	}
 	public void winGame(Player p){ //TODO
 		if(won)return;
@@ -581,7 +597,7 @@ public abstract class Joc extends MapaResetejable {
 		isSnowLauncherEnabled = true;
 		ItemStack ball = new ItemStack(Material.SNOWBALL);
 		ball.addUnsafeEnchantment(Enchantment.SILK_TOUCH, 1);
-		ball.setAmount(amount);
+		ball.setAmount(Math.max(1, amount));
 		return Utils.setItemNameAndLore(ball, "Llançador de neu", "Et transporta a l'enemic que impacti");
 	}
 	public boolean giveSnowLauncherOnKill(){
