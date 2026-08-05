@@ -1,0 +1,27 @@
+docs/architecture/inventory.md
+  s_934185706e816a::t_b985e09b66b93f 93
+  s_934185706e816a::t_124eeb8013c62e 284
+docs/architecture/perception.md
+  s_934185706e816a::t_042d72d7d924df 93-98
+  s_934185706e816a::t_31d6e9db2f8308 114-119
+bot-runtime/test/helpers/fixtures.js
+  s_934185706e816a::t_9c605e2ee70502 81
+docs/architecture/operators.md
+  s_934185706e816a::t_1098ab55dc9c36 145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "7498eba18a921e7f9723a40f2f1b50acc2d21b00",
+  "prompts": {},
+  "sessions": {
+    "s_934185706e816a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9666bbc1-ecb7-48f6-a970-0e159ef92436",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
