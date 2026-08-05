@@ -1,0 +1,38 @@
+bot-runtime/src/config.js
+  s_6776c97f3a38dc::t_26a8980b64775d 82-90
+  s_6776c97f3a38dc::t_7320496dfab127 50
+  s_6776c97f3a38dc::t_871e717dfa8e12 28
+  s_6776c97f3a38dc::t_9bf20d156e1ce8 61-67
+  s_6776c97f3a38dc::t_8a8828a04e5dcb 108
+  s_6776c97f3a38dc::t_9d94cca7686efa 5-15
+docs/architecture/inventory.md
+  s_6776c97f3a38dc::t_c25a65b0d0fe9b 245-247,249-252,254-256
+  s_6776c97f3a38dc::t_ee8f5424eb2a73 137-164
+  s_6776c97f3a38dc::t_527827a5b58030 165,169,172,175,179,181,184,187-189
+  s_6776c97f3a38dc::t_be13da5e89082d 190
+bot-runtime/test/config.test.js
+  s_6776c97f3a38dc::t_d48ca404517c65 64-115
+  s_6776c97f3a38dc::t_12938a411f182d 6
+bot-runtime/config/example.json
+  s_6776c97f3a38dc::t_3bbc2b31ea9db3 11
+bot-runtime/src/core/bot-runtime.js
+  s_6776c97f3a38dc::t_dc074354b5eeb9 46-47,49
+  s_6776c97f3a38dc::t_c990724bd3f64f 77-86
+  s_6776c97f3a38dc::t_5cfd9b86436224 14-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "edf45a4b9b48a148db53f272d3bad228b105d2b7",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
