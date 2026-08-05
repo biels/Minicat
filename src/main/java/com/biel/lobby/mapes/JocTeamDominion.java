@@ -17,8 +17,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import com.biel.lobby.Com;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
-import com.gmail.filoghost.holographicdisplays.api.Hologram;
-import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
+import com.biel.lobby.utilities.HologramFacade;
 
 public abstract class JocTeamDominion extends JocEquips {
 	public ArrayList<ControlPoint> ControlPoints = new ArrayList<>();
@@ -188,7 +187,7 @@ public abstract class JocTeamDominion extends JocEquips {
 		int ownerTeam = -1;
 		int dominatingTeamID = -1;
 		int dominationPower = 0;
-		Hologram h;
+		HologramFacade.Handle h;
 		boolean captured = false;
 		int tendency = 0;
 		float basePointReward = 3F;
@@ -228,7 +227,7 @@ public abstract class JocTeamDominion extends JocEquips {
 		}
 		public void createHolgram(){
 			if (h != null){return;}
-			h = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
+			h = HologramFacade.create(getHologramLocation());
 		}
 		public void updateHologram(){
 			if (h == null){return;}
@@ -498,37 +497,39 @@ public abstract class JocTeamDominion extends JocEquips {
 
 	}
 	public abstract class DyeColorControlPointRenderer extends ControlPointRenderer{
-		@SuppressWarnings("deprecation")
 		@Override
 		public void renderEnvironment(PhysicalControlPoint p) {
-			// TODO Auto-generated method stub
 			for (Block b : p.getEnvironmentBlocks()){
-				if(b.getType() == Material.WHITE_WOOL || b.getType() == Material.LEGACY_STAINED_CLAY || b.getType() == Material.LEGACY_STAINED_GLASS || b.getType() == Material.LEGACY_STAINED_GLASS_PANE){
-//					b.setData(getDyeColorForBlock(p, b));
-//					TODO Update to data
-				}
+				Material coloredMaterial = getColoredMaterial(b.getType(), getDyeColorForBlock(p, b));
+				if (coloredMaterial != null) b.setType(coloredMaterial, false);
 			}
 		}
-		public abstract byte getDyeColorForBlock(PhysicalControlPoint p, Block b);
+		private Material getColoredMaterial(Material currentMaterial, DyeColor color) {
+			String materialName = currentMaterial.name();
+			for (String suffix : new String[]{"_WOOL", "_TERRACOTTA", "_STAINED_GLASS", "_STAINED_GLASS_PANE"}) {
+				if (materialName.endsWith(suffix)) return Material.valueOf(color.name() + suffix);
+			}
+			return null;
+		}
+		public abstract DyeColor getDyeColorForBlock(PhysicalControlPoint p, Block b);
 	}
 	public class PieControlPointRenderer extends DyeColorControlPointRenderer{
 		@Override
-		public byte getDyeColorForBlock(PhysicalControlPoint p, Block b) {
+		public DyeColor getDyeColorForBlock(PhysicalControlPoint p, Block b) {
 			// TODO Auto-generated method stub
 			Slice sliceForBlock = getSliceForBlock(p, b);
 			if (sliceForBlock != null) {
 				return sliceForBlock.color;
 			}
-			return 0;
+			return DyeColor.WHITE;
 		}
-		@SuppressWarnings("deprecation")
 		public ArrayList<Slice> getSlices(PhysicalControlPoint p){
 			ArrayList<Slice> slices = new ArrayList<>();
 			Equip ownerTeam = p.getOwnerTeam();
 			DyeColor color =  DyeColor.WHITE;
 			if (ownerTeam != null) {color = ownerTeam.getColor();}
-			slices.add(new Slice(p.getPercent(), color.getWoolData()));
-			slices.add(new Slice(100 - p.getPercent(), DyeColor.WHITE.getWoolData()));
+			slices.add(new Slice(p.getPercent(), color));
+			slices.add(new Slice(100 - p.getPercent(), DyeColor.WHITE));
 			return slices;
 		}
 		public Slice getSliceForBlock(PhysicalControlPoint p, Block b){
@@ -556,9 +557,9 @@ public abstract class JocTeamDominion extends JocEquips {
 		}
 		class Slice {
 			double value;
-			byte color;
+			DyeColor color;
 
-			public Slice(double value, byte color) {
+			public Slice(double value, DyeColor color) {
 				this.value = value;
 				this.color = color;
 			}
@@ -566,9 +567,8 @@ public abstract class JocTeamDominion extends JocEquips {
 
 	}
 	public class BubbleControlPointRenderer extends DyeColorControlPointRenderer{
-		byte neutralColor = 0;
 		@Override
-		public byte getDyeColorForBlock(PhysicalControlPoint p, Block b) {
+		public DyeColor getDyeColorForBlock(PhysicalControlPoint p, Block b) {
 			float multiplier = p.getPercent() / 100.0F;			
 			DyeColor color =  DyeColor.CYAN;
 			double intRadius = p.getEquivalentRadius() * Math.sqrt(multiplier);
@@ -579,7 +579,7 @@ public abstract class JocTeamDominion extends JocEquips {
 				Equip ownerTeam = p.getOwnerTeam();
 				if (ownerTeam != null) {color = ownerTeam.getColor();}
 			}
-			return color.getWoolData();
+			return color;
 		}
 		
 	}

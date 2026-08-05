@@ -8,14 +8,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.connorlinfoot.bountifulapi.BountifulAPI;
+import com.biel.lobby.utilities.PaperMessages;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Wool;
 
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.Pair;
@@ -26,6 +26,8 @@ import com.biel.lobby.mapes.jocs.*;
 
 
 public class GestorMapes implements Listener{
+	public enum InstanceRemovalResult { REMOVED, NOT_FOUND, HAS_PLAYERS, EDIT_MODE, UNLOAD_FAILED }
+	public enum InstanceJoinResult { JOINED, NOT_FOUND, UNAVAILABLE }
 	public lobby plugin;
 	ArrayList<Pair<String, Double>> auto_ratings;
 	ArrayList<ContenidorMapa> Mapes = new ArrayList<>();
@@ -36,7 +38,7 @@ public class GestorMapes implements Listener{
 
 		//Mapes.add(new ContenidorJoc(ObsidianDefenders.class, "Obsidian defenders", Material.OBSIDIAN, DevelopmentState.NotWorking));
 		Mapes.add(new ContenidorJoc(Spleef.class, "Spleef", Material.SNOW, DevelopmentState.Release));
-		Mapes.add(new ContenidorJoc(RainbowClay.class, "Rainbow Clay", Material.LEGACY_HARD_CLAY, DevelopmentState.Beta));
+		Mapes.add(new ContenidorJoc(RainbowClay.class, "Rainbow Clay", Material.RED_TERRACOTTA, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(Torres.class, "Torres de defensa", Material.ARROW, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(Quakecraft.class, "Quakecraft", Material.STONE_HOE, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(Dominion.class, "Dominion", Material.DIAMOND, DevelopmentState.Beta));
@@ -65,7 +67,9 @@ public class GestorMapes implements Listener{
 		Mapes.add(new ContenidorJoc(PilotaSplash.class, "Pilota Splash", Material.SLIME_BALL, DevelopmentState.Alpha));
 		//Mapes.add(new ContenidorJoc(TempleQuest.class, "Temple Quest", Material.QUARTZ_BLOCK, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(OneInTheChamber.class, "OneInTheChamber", Material.BOW, DevelopmentState.Alpha));
-		Mapes.add(new ContenidorJoc(BedWars.class, "Bed Wars", Material.RED_BED, DevelopmentState.InDevelopment));
+		// No Mapes/BedWars template exists in either recovered server tree.
+		// Keep the implementation source, but do not advertise an instance that cannot be created.
+		// Mapes.add(new ContenidorJoc(BedWars.class, "Bed Wars", Material.RED_BED, DevelopmentState.InDevelopment));
 	}
 	public void queryAutoRatings() {
 		auto_ratings = Com.getDataAPI().getAutoRating();
@@ -107,6 +111,33 @@ public class GestorMapes implements Listener{
 		}
 		return all;
 	}
+	public List<Joc> getAllGameInstances(){
+		return getAllInstances().stream()
+				.filter(Joc.class::isInstance)
+				.map(Joc.class::cast)
+				.collect(Collectors.toList());
+	}
+	public InstanceRemovalResult removeGameInstance(String worldName){
+		for (ContenidorMapa container : Mapes){
+			if (!(container instanceof ContenidorJoc)) continue;
+			ContenidorJoc gameContainer = (ContenidorJoc) container;
+			for (Joc game : new ArrayList<>(gameContainer.Instàncies)){
+				if (game.getMapName().equalsIgnoreCase(worldName)){
+					return gameContainer.removeMap(game);
+				}
+			}
+		}
+		return InstanceRemovalResult.NOT_FOUND;
+	}
+	public InstanceJoinResult joinGameInstance(Player player, String worldName){
+		for (Joc game : getAllGameInstances()){
+			if (!game.getMapName().equalsIgnoreCase(worldName)) continue;
+			if (!game.canJoin(player)) return InstanceJoinResult.UNAVAILABLE;
+			game.Join(player);
+			return InstanceJoinResult.JOINED;
+		}
+		return InstanceJoinResult.NOT_FOUND;
+	}
 	public Mapa getMapWherePlayerIs(Player p){
 		if (lobby.isOnLobby(p)){return null;}
 		for(Mapa m : getAllInstances()){
@@ -115,6 +146,14 @@ public class GestorMapes implements Listener{
 			}
 		}
 		//Bukkit.broadcastMessage("Jugador desaparegut");
+		return null;
+	}
+	public Joc createGameInstance(String gameName, Integer mapId){
+		for (ContenidorMapa container : Mapes){
+			if (container instanceof ContenidorJoc && container.ClassMapa.getSimpleName().equalsIgnoreCase(gameName)){
+				return ((ContenidorJoc) container).addMap(mapId);
+			}
+		}
 		return null;
 	}
 	public abstract class ContenidorMapa implements Listener{
@@ -307,24 +346,35 @@ public class GestorMapes implements Listener{
 			if (map != null) {
 
 				checkNecessary(map);
-			} 
+			}
+		}
+
+		@EventHandler
+		public void onPlayerQuit(PlayerQuitEvent evt) {
+			Joc map = getInstànciaFromWorld(evt.getPlayer().getWorld());
+			if (map == null) return;
+			Bukkit.getScheduler().runTask(plugin, () -> checkNecessary(map));
 		}
 
 		void checkNecessary(Joc map){
-			if (map.getWorld() == null){ Bukkit.broadcastMessage("WORLD: null");return;}
+			if (!Instàncies.contains(map) || map.getWorld() == null) return;
 
 			if(map.getEditMode())return;
 
 			if (map.getWorld().getPlayers().size() == 0){
-				//map.JocFinalitzat();
-				map.clearExternals();
-				map.deleteVirtualWorld();
-				Instàncies.remove(map);
-				map.destroyEventBus();
-				System.gc();
-				//map = null;
-				//Bukkit.broadcastMessage("Mapa esborrat!");
+				removeMap(map);
 			}
+		}
+		InstanceRemovalResult removeMap(Joc map){
+			if (!Instàncies.contains(map)) return InstanceRemovalResult.NOT_FOUND;
+			if (map.getWorld() == null) return InstanceRemovalResult.UNLOAD_FAILED;
+			if (!map.getWorld().getPlayers().isEmpty()) return InstanceRemovalResult.HAS_PLAYERS;
+			if (map.getEditMode()) return InstanceRemovalResult.EDIT_MODE;
+			if (!map.deleteVirtualWorld()) return InstanceRemovalResult.UNLOAD_FAILED;
+			map.clearAllExternals();
+			Instàncies.remove(map);
+			map.destroyEventBus();
+			return InstanceRemovalResult.REMOVED;
 		}
 		public DyeColor getGameColor(Joc joc){
 			switch(joc.getGameState()){
@@ -388,31 +438,36 @@ public class GestorMapes implements Listener{
 			if(this.getMapCount() == 0) {
 
 				String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No hi ha mapes disponibles";
-				BountifulAPI.sendActionBar(ply, msg, 150);
+				PaperMessages.sendActionBar(ply, msg, 150);
 				ply.playSound(ply.getLocation(), Sound.ENTITY_VILLAGER_NO, 100.0F, 1.0F);
 				return;
 
 			}
 
 			for(Joc mapa : Instàncies){
-				Wool wool = new Wool(getGameColor(mapa));
-				ItemStack stack = wool.toItemStack();
-				stack.setAmount(mapa.getPlayers().size());
+				ItemStack stack = new ItemStack(getWoolMaterial(getGameColor(mapa)));
+				stack.setAmount(Math.max(1, mapa.getPlayers().size()));
 				String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
 				double gameProgressETA = mapa.getGameProgressETA();
 				String progressStr = ChatColor.AQUA + "Progrés: " + Math.round(gameProgressETA * 1000) / 10 + "% ETA";
-				menu.setOption(Instàncies.indexOf(mapa), stack, mapa.getGameName(),ChatColor.WHITE + mapa.NomWorld, ChatColor.WHITE + mapa.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + mapa.getSpectators().size(), "Temps: " + tStr, progressStr);
+				menu.setOption(Instàncies.indexOf(mapa), stack,
+						ChatColor.GREEN + "ENTRAR: " + mapa.NomWorld,
+						ChatColor.WHITE + mapa.getGameName(),
+						ChatColor.WHITE + mapa.getGameState().name(),
+						ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()),
+						ChatColor.YELLOW + "Espectadors: " + mapa.getSpectators().size(),
+						"Temps: " + tStr, progressStr);
 			}
 			MapMode mapMode = tempInstance.getMapMode();
 			if (!AlgunMapaDisponible() || mapMode == MapMode.MULTIPLE){
-				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1), ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instància");
+				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1),
+						ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instància");
 				if(mapMode == MapMode.MULTIPLE){
 					ArrayList<String> multiWorldList = tempInstance.getMultiWorldList();
 					for (int i = 0; i < multiWorldList.size(); i++) {
 						String name = multiWorldList.get(i);
 						menu.setOption(26 - i, new ItemStack(Material.EMERALD, 1),
-								ChatColor.GREEN + name, ChatColor.WHITE
-								+ "Crear una nova instància");
+								ChatColor.GREEN + name, ChatColor.WHITE + "Crear una nova instància");
 					}
 				}
 			}
@@ -441,9 +496,8 @@ public class GestorMapes implements Listener{
         });
 		List<Joc> games = getGames();
 		for(Joc mapa : games){
-			Wool wool = new Wool(DyeColor.BLACK);
-			ItemStack stack = wool.toItemStack();
-			stack.setAmount(mapa.getPlayers().size());
+			ItemStack stack = new ItemStack(Material.BLACK_WOOL);
+			stack.setAmount(Math.max(1, mapa.getPlayers().size()));
 			String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
 			menu.setOption(games.indexOf(mapa), stack, mapa.getGameName(),ChatColor.WHITE + mapa.getGameName() + " (" + mapa.NomWorld + ")", ChatColor.WHITE + mapa.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + mapa.getSpectators().size(), "Temps: " + tStr);
 		}	
@@ -464,5 +518,8 @@ public class GestorMapes implements Listener{
 	//	}
 	public List<Joc> getGames() {
 		return getAllInstances().stream().filter(m -> m instanceof Joc).map(m -> (Joc)m).collect(Collectors.toList());
+	}
+	private Material getWoolMaterial(DyeColor color) {
+		return Material.valueOf(color.name() + "_WOOL");
 	}
 }

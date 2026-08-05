@@ -44,6 +44,7 @@ import com.biel.BielAPI.events.EventUtils;
 import com.biel.lobby.Com;
 import com.biel.lobby.lobby;
 import com.biel.lobby.utilities.CBUtils;
+import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.data.MatchData;
 import com.biel.lobby.utilities.data.PlayerData;
@@ -53,12 +54,8 @@ import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
 import com.biel.lobby.utilities.events.statuseffects.AuraRendererStatusEffect;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect
 ;
-import com.connorlinfoot.bountifulapi.BountifulAPI;
-
-import org.inventivetalent.menubuilder.chat.ChatListener;
-import org.inventivetalent.menubuilder.chat.ChatMenuBuilder;
-import org.inventivetalent.menubuilder.chat.LineBuilder;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 
 public abstract class Joc extends MapaResetejable {
 	protected Boolean JocIniciat = false;
@@ -82,19 +79,12 @@ public abstract class Joc extends MapaResetejable {
 	private Long ultraHeartbeatCount = 0L;
 	private int heartbeatId = -1;
 	private Long announceCount = 0L;
-    private ArrayList<Integer> handledBukkitSchedulerTasks = new ArrayList<>();
+	private ArrayList<Integer> handledBukkitSchedulerTasks = new ArrayList<>();
+	private ArrayList<Integer> handledLifecycleSchedulerTasks = new ArrayList<>();
 	
 	public Joc() {
 		super();
 		//Bukkit.broadcastMessage("Class Joc Constructor");		
-	}
-	@Override
-	protected void finalize() throws Throwable {
-		// TODO Auto-generated method stub
-		clearExternals();
-		
-		super.finalize();
-		//System.out.println("La instància de " + getGameName() + " s'ha destruït");
 	}
 	@Override
 	public void initialize() {
@@ -108,18 +98,19 @@ public abstract class Joc extends MapaResetejable {
 		scheduleAnnouncer();
 	}
 	public void setDefaultGameRules(){
-		world.setGameRuleValue("doDaylightCycle", "false");
-		world.setGameRuleValue("doFireTick", "false");
-		world.setGameRuleValue("doMobSpawning", "false");
-		world.setGameRuleValue("doMobLoot", "false");
+		world.setGameRule(GameRules.ADVANCE_TIME, false);
+		world.setGameRule(GameRule.DO_FIRE_TICK, false);
+		world.setGameRule(GameRules.SPAWN_MOBS, false);
+		world.setGameRule(GameRules.MOB_DROPS, false);
 		if (!getResetPlayerOnRespawn()){
-			world.setGameRuleValue("keepInventory", "true");
+			world.setGameRule(GameRules.KEEP_INVENTORY, true);
 		}
 		setCustomGameRules();
 	}
 	protected abstract void setCustomGameRules();
 	public void JocIniciat(){
 		if (JocIniciat){Bukkit.broadcastMessage("S'ha intentat iniciar una partida que ja estava iniciada. Operació anul·lada!"); return;}
+		if (!canStartGame()) return;
 		Bukkit.broadcastMessage(getGameDisplayName() + "S'ha iniciat la partida!");
 		JocIniciat = true;
 		//---
@@ -138,7 +129,10 @@ public abstract class Joc extends MapaResetejable {
 		sendGameInfo();
 		//sendGlobalMessage("W:" + getWorld().getName());
 
-	}	
+	}
+	protected boolean canStartGame(){
+		return true;
+	}
 	
 	public boolean JocEnMarxa(){
 		return JocIniciat && !JocFinalitzat;
@@ -151,6 +145,10 @@ public abstract class Joc extends MapaResetejable {
 		cancelAllTasks();
 		s.clear();
 	}
+	public void clearAllExternals(){
+		clearExternals();
+		handledLifecycleSchedulerTasks.forEach(tId -> Bukkit.getScheduler().cancelTask(tId));
+	}
 	public void clearExternals(Player p){
 		
 	}
@@ -159,6 +157,31 @@ public abstract class Joc extends MapaResetejable {
 	}
 	public void handleTask(int tId){
 		handledBukkitSchedulerTasks.add(tId);
+	}
+	public void handleLifecycleTask(int taskId){
+		handledLifecycleSchedulerTasks.add(taskId);
+	}
+	public int scheduleGameplayTask(Runnable task, long delayTicks){
+		int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), task, delayTicks);
+		handleTask(taskId);
+		return taskId;
+	}
+	public int scheduleGameplayRepeatingTask(Runnable task, long delayTicks, long periodTicks){
+		int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(Com.getPlugin(), task, delayTicks, periodTicks);
+		handleTask(taskId);
+		return taskId;
+	}
+	public int scheduleTrackedBlockRemoval(Block block, long delayTicks, boolean dropItems){
+		if (world == null || block.getWorld() != world) return -1;
+		Material expectedMaterial = block.getType();
+		return scheduleGameplayTask(() -> {
+			if (world == null || block.getWorld() != world || block.getType() != expectedMaterial) return;
+			if (dropItems) {
+				block.breakNaturally();
+			} else {
+				block.setType(Material.AIR);
+			}
+		}, delayTicks);
 	}
 	private Long establirTempsInicial() {
 		return startTimeMillis = System.currentTimeMillis();
@@ -214,13 +237,21 @@ public abstract class Joc extends MapaResetejable {
 		updateEloOrdered(wList);
 	}
 	protected boolean onlyPlayersFromSameIP(){
-		String n = null;
+		String firstAddress = null;
 		for(Player p : getPlayers()){
-			String hostName = p.getAddress().getHostName();
-			if(n == null) n = hostName;
-			if(n.equals(hostName))return false;
+			java.net.InetSocketAddress socketAddress = p.getAddress();
+			if (socketAddress == null) return false;
+			java.net.InetAddress resolvedAddress = socketAddress.getAddress();
+			String numericAddress = resolvedAddress != null
+					? resolvedAddress.getHostAddress()
+					: socketAddress.getHostString();
+			if(firstAddress == null) {
+				firstAddress = numericAddress;
+			} else if(!firstAddress.equals(numericAddress)) {
+				return false;
+			}
 		}
-		return true;
+		return firstAddress != null;
 	}
 	protected boolean canBeRanked(){
 		return(segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 20) && getEloK() != 0 && Com.getPlugin().isInRankedMode() && !unfairFlag);
@@ -335,10 +366,11 @@ public abstract class Joc extends MapaResetejable {
 	}
 	@Override
 	public void Join(Player ply) {
-		// TODO Auto-generated method stub
-		if(canJoin(ply)){
-			if(getPlayers().size() == 0)setHost(ply);			
+		if (!canJoin(ply)) {
+			ply.sendMessage(ChatColor.RED + "No et pots unir a aquesta instància en el seu estat actual.");
+			return;
 		}
+		if(getPlayers().size() == 0)setHost(ply);
 		super.Join(ply);
 	}
 
@@ -371,8 +403,9 @@ public abstract class Joc extends MapaResetejable {
 		giveFixedPlaceItems(ply);
 		giveRemainingUnlockers(ply);
 		donarEfectesInicials(ply);
-		if (getStartingItems(ply) != null){			
-			Utils.donarItemsPlayer(ply, getStartingItems(ply));
+		ArrayList<ItemStack> startingItems = getStartingItems(ply);
+		if (startingItems != null){
+			Utils.donarItemsPlayer(ply, startingItems);
 		}
 	}
 	public void giveRemainingUnlockers(Player ply) {
@@ -569,11 +602,11 @@ public abstract class Joc extends MapaResetejable {
 				if (isSnowLauncherEnabled) { //TODO decide based on flag
 					evt.setCancelled(true);
 					damaged.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 1, 0));
-					damaged.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 1, 0));
+					damaged.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 1, 0));
 					//damaged.setVelocity(new Vector(0, 0.1, 0));
 					damager.teleport(damaged.getEyeLocation().add(0, 0.5, 0), TeleportCause.PLUGIN);
 					GUtils.healDamageable(damager, 0.4D);
-					damager.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 2, 1));
+					damager.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 2, 1));
 				}
 			}
 		}
@@ -585,7 +618,7 @@ public abstract class Joc extends MapaResetejable {
 			evt.setCancelled(true);
 			
 			
-			BountifulAPI.sendActionBar(damager, ChatColor.GRAY + "El jugador " + damaged.getName() + " és invulnerable.", 150);
+			PaperMessages.sendActionBar(damager, ChatColor.GRAY + "El jugador " + damaged.getName() + " és invulnerable.", 150);
 			
 			getWorld().playSound(damager.getLocation(), Sound.ENCHANT_THORNS_HIT, 1.2F, 0.88F);
 			getWorld().playEffect(damaged.getEyeLocation(), Effect.FIREWORK_SHOOT, DyeColor.BLUE.getDyeData());
@@ -641,7 +674,10 @@ public abstract class Joc extends MapaResetejable {
 	}
 	public void planificarReseteig(int delay){
 		sendGlobalMessage(ChatColor.BLUE + "Esborrant el mapa en " + Double.toString(delay/20) + "s");
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(lobby.getPlugin(), () -> allOnTheLobby(), delay);
+		int resetTaskId = Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(lobby.getPlugin(), () -> {
+			if (world != null) allOnTheLobby();
+		}, delay);
+		handleLifecycleTask(resetTaskId);
 	}
 	
 	@Override
@@ -905,23 +941,13 @@ public abstract class Joc extends MapaResetejable {
 		// String join = "\n\n    " + ChatColor.GREEN + ChatColor.UNDERLINE + host + ChatColor.RESET + ChatColor.GREEN + " t'ha convidat a " + getGameName();
 		// String join2 = "\n    " + ChatColor.GOLD + ChatColor.UNDERLINE + "Clica aquí per entrar al joc\n\n";
 		
-		TextComponent clickToJoinMsg = new TextComponent("    Fes clic aquí per a entrar a la partida");
-
-		
 		player.sendMessage(ChatColor.GREEN  + "\n\n    " +  ChatColor.ITALIC + host + ChatColor.RESET + "" + ChatColor.GREEN + " t'ha convidat a " + getGameName() + "");
-		new ChatMenuBuilder().withLine(
-			new LineBuilder().append(
-					new ChatListener() {
-						public void onClick(Player player) {
-			                // player.sendMessage("You clicked me!");
-			                Join(player);
-			            }
-					
-					},
-					clickToJoinMsg
-					
-				)
-		).show(player);
+		Component clickToJoinMsg = PaperMessages.legacy(ChatColor.GOLD + "    Fes clic aquí per a entrar a la partida")
+				// RUN_COMMAND is handled by both vanilla clients and protocol bots. Paper's
+				// server-side callback click action can be acknowledged by a non-vanilla
+				// client without ever invoking the callback.
+				.clickEvent(ClickEvent.runCommand("/minicatjoin " + getMapName()));
+		player.sendMessage(clickToJoinMsg);
 		player.sendMessage("\n");
 		
 		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 100, 0);
@@ -1120,6 +1146,10 @@ public abstract class Joc extends MapaResetejable {
 			if(name == null)return null;
 			return Bukkit.getPlayer(name);
 		}
+		private boolean hasActivePlayer() {
+			Player player = getPlayer();
+			return player != null && player.isOnline() && world != null && player.getWorld() == world;
+		}
 		public int getValue() {
 			return value;
 		}
@@ -1260,9 +1290,9 @@ public abstract class Joc extends MapaResetejable {
 				getPlayer().removePotionEffect(PotionEffectType.SPEED);
 			}
 			if (SL > 0) {
-				getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 1, SL - 1, true, true));
+				getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 1, SL - 1, true, true));
 			}else{
-				getPlayer().removePotionEffect(PotionEffectType.SLOW);
+				getPlayer().removePotionEffect(PotionEffectType.SLOWNESS);
 			}
 		}
 		public ArrayList<StatusEffect> getStatusEffects() {
@@ -1336,7 +1366,6 @@ public abstract class Joc extends MapaResetejable {
 		}
 		public void updatePlayerActionBar(){
 			if (getPlayer() == null)return;
-			// ActionBarAPI.sendActionBar(getPlayer(), getStatusEffectsText());
 		}
 		public int getAdditionalSkills() {
 			return additionalSkills;
@@ -1360,7 +1389,9 @@ public abstract class Joc extends MapaResetejable {
 			return (r < 0 ? 0 : r);
 		}
 		public Block getBlockWherePlayerStands(){
-			BlockIterator i = new BlockIterator(getWorld(), getPlayer().getLocation().toVector(), new Vector(0, -1, 0), 1D, 30);
+			Player player = getPlayer();
+			if (player == null || !player.isOnline() || world == null || player.getWorld() != world) return null;
+			BlockIterator i = new BlockIterator(getWorld(), player.getLocation().toVector(), new Vector(0, -1, 0), 1D, 30);
 			for (;i.hasNext();) {
 				Block b = i.next();
 				if(!b.isEmpty())return b;
@@ -1389,7 +1420,7 @@ public abstract class Joc extends MapaResetejable {
 	public void ultraHeartbeat(){
 		ultraHeartbeatCount++;
 		for(PlayerInfo i : InfoStorage){
-			i.ultraTick();
+			if (i.hasActivePlayer()) i.ultraTick();
 		}
 		s.tickPool();
 	}
@@ -1400,7 +1431,7 @@ public abstract class Joc extends MapaResetejable {
 		heartbeatCount++;
 		//if (!JocIniciat){startSystemTick();}
 		for(PlayerInfo i : InfoStorage){
-			i.tick();
+			if (i.hasActivePlayer()) i.tick();
 		}
 		lobbyProgressAnoouncerTick();
 		registerTimestamps(false);

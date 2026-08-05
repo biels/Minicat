@@ -68,7 +68,6 @@ public class ScoreBoardUpdater {
 		for (Equip e : j.Equips){
 			Team Ghosts = board.registerNewTeam(e.getAdjectiu());
 			for(Player p : e.getPlayers()){
-				p.setScoreboard(board);
 				Ghosts.addPlayer(p);
 				Com.setHeadColor(p, ColorConverter.chatToRaw(e.getChatColor()));
 				
@@ -78,7 +77,12 @@ public class ScoreBoardUpdater {
 			//Ghosts.setPrefix(e.getChatColor() + "");
 			//Ghosts.setPrefix(e.getChatColor() + "[" + e.getAdjectiu() +"]");		
 			
-		} 
+		}
+		for (Equip e : j.Equips) {
+			for (Player player : e.getPlayers()) {
+				PlayerTagState.assignScoreboard(player, board);
+			}
+		}
 
 	}
 	@Deprecated
@@ -88,9 +92,9 @@ public class ScoreBoardUpdater {
         Team Ghosts = board.registerNewTeam("Ghost");
         Ghosts.setCanSeeFriendlyInvisibles(true);
         Ghosts.setAllowFriendlyFire(false);
-        for(Player p : ply){
-        	p.setScoreboard(board);
-        }
+		for(Player p : ply){
+			PlayerTagState.assignScoreboard(p, board);
+		}
 	}
 	static public void setScore(Objective objective, String name, int value){
 		Score score = objective.getScore(Bukkit.getOfflinePlayer(name)); //Get a fake offline player
@@ -127,11 +131,11 @@ public class ScoreBoardUpdater {
     		setScore(objective, item, value);
     	}
 
-    	ply.setScoreboard(board);
+		PlayerTagState.assignScoreboard(ply, board);
 	}
 	static public void clearScoreBoard(Player ply){
 		ScoreboardManager mng = Bukkit.getScoreboardManager();
-		ply.setScoreboard(mng.getNewScoreboard());
+		PlayerTagState.assignScoreboard(ply, mng.getNewScoreboard());
 		
 	}
 }

@@ -28,7 +28,6 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.material.Wool;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.IconMenu;
@@ -67,16 +66,23 @@ public abstract class JocEquips extends Joc {
 	@Override
 	protected void customJocIniciat() {
 		if(generationMode == TeamGenerationMode.DEFAULT)ferEquipsEquilibrats();
-		if(generationMode == TeamGenerationMode.CUSTOM && getPlayersOutOfTeam().size() != 0){
-			sendGlobalMessage("Mode selecció d'equips personalitzats, siusplau, seleccioneu els vostres equips abans de començar la partida.");
-			anunciarEquips(null);
-		}
 		anunciarEquips(null);	
 		fixarSpawns();
 		//establirColorsNoms();
 		delayedUpdateHeadColors();
 		updateScoreBoards();
 		
+	}
+	@Override
+	protected boolean canStartGame() {
+		if (generationMode == TeamGenerationMode.CUSTOM && !getPlayersOutOfTeam().isEmpty()) {
+			String unassignedPlayers = getPlayersOutOfTeam().stream()
+					.map(Player::getName)
+					.collect(Collectors.joining(", "));
+			sendGlobalMessage(ChatColor.RED + "No es pot iniciar: selecciona un equip per a " + unassignedPlayers + ".");
+			return false;
+		}
+		return super.canStartGame();
 	}
 	public void winGame(Equip e){ //TODO
 		if(won)return;
@@ -111,7 +117,8 @@ public abstract class JocEquips extends Joc {
 		}
 	}
 	private void delayedUpdateHeadColors() {
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> updateHeadColors(), 20);
+		int taskId = Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> updateHeadColors(), 20);
+		handleTask(taskId);
 	}
 	protected void establirColorsNoms(){
 		for (Equip e : Equips){
@@ -229,7 +236,7 @@ public abstract class JocEquips extends Joc {
 	}
 	@SuppressWarnings("unchecked")
 	public <T extends Equip> T obtenirEquip(Player ply, Class<T> type){
-		if (ply == null){System.out.println("Null player");return null;}
+		if (ply == null){Com.getPlugin().getLogger().warning("No es pot obtenir l'equip d'un jugador nul");return null;}
 		String name = ply.getName();
 		for (Equip e : Equips){
 
@@ -257,6 +264,7 @@ public abstract class JocEquips extends Joc {
 	}
 	@SuppressWarnings("unchecked")
 	public <T extends Equip> T obtenirEquipEnemic(T e){
+		if (e == null) return null;
 		if (Equips.size() == 2){
 			for (Equip eq : Equips){
 				if (!eq.equals(e)){
@@ -270,16 +278,21 @@ public abstract class JocEquips extends Joc {
 	}
 	@Override
 	public Boolean areAllies(Player ply, Player ply2){
-		return obtenirEquip(ply).getPlayers().contains(ply2);
+		Equip team = obtenirEquip(ply);
+		return team != null && obtenirEquip(ply2) == team;
 	}
 	@Override
 	public Boolean areEnemies(Player ply, Player ply2){
-		return !areAllies(ply, ply2);
+		Equip firstTeam = obtenirEquip(ply);
+		Equip secondTeam = obtenirEquip(ply2);
+		return firstTeam != null && secondTeam != null && firstTeam != secondTeam;
 	}
 	@Override
 	public ArrayList<Player> getEnemies(Player p) {
+		Equip team = obtenirEquip(p);
+		if (team == null) return new ArrayList<>();
 		ArrayList<Player> enemies = getViewers();
-		enemies.removeAll(obtenirEquip(p).getPlayers());
+		enemies.removeAll(team.getPlayers());
 		return enemies; //Futurs espectadors
 	}
 	public void fixarSpawn(Player ply){
@@ -467,8 +480,7 @@ public abstract class JocEquips extends Joc {
 
         });
 		for(Equip eq : Equips){
-			Wool wool = new Wool(eq.getColor());
-			ItemStack stack = wool.toItemStack();
+			ItemStack stack = new ItemStack(Material.valueOf(eq.getColor().name() + "_WOOL"));
 			//stack.setAmount(eq.getPlayers().size());
 			menu.setOption(Equips.indexOf(eq), stack, eq.getChatColor() + "Equip " + eq.getAdjectiu());
 		}
@@ -558,18 +570,20 @@ public abstract class JocEquips extends Joc {
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
 		items.add(arc);
 		items.add(new ItemStack(Material.ARROW, 64));
 		items.add(new ItemStack(Material.OAK_LOG, 64));
-		items.add(new ItemStack(Material.LEGACY_GRILLED_PORK, 32));
+		items.add(new ItemStack(Material.COOKED_PORKCHOP, 32));
 		return items;
 	}
 	@Override
 	public void giveFixedPlaceItems(Player ply) {
-		// TODO Auto-generated method stub
 		super.giveFixedPlaceItems(ply);
-		if(isRecallEnabled() && getPlayerInfo(ply).getUnselectedSkillAmount() == 0)obtenirEquip(ply).giveRecallButton(ply);
+		Equip team = obtenirEquip(ply);
+		if (isRecallEnabled() && team != null && getPlayerInfo(ply).getUnselectedSkillAmount() == 0) {
+			team.giveRecallButton(ply);
+		}
 	}
 	protected boolean isRecallEnabled(){
 		return false;
@@ -659,12 +673,7 @@ public abstract class JocEquips extends Joc {
 			Players.add(ply.getName());
 		}
 		void removePlayer(Player ply){
-			for (String str : Players){
-				String plystr = ply.getName();
-				if(str.equals(plystr)){
-					Players.remove(str);
-				}
-			}
+			Players.removeIf(playerName -> playerName.equals(ply.getName()));
 		}
 		//-------
 		public Location getTeamSpawnLocation(){
@@ -680,7 +689,7 @@ public abstract class JocEquips extends Joc {
 		}
 		public void giveRecallButton(Player ply){
 			ItemStack dBlk = new ItemStack(Material.DIAMOND_BLOCK);
-			dBlk.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
+			dBlk.addUnsafeEnchantment(Enchantment.FORTUNE, 10);
 			ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.GREEN + "Recall",  ChatColor.WHITE + "Torna el jugador a la base."), ply, event -> RecallUtils.startRecallTeleport(event.getPlayer(), getTeamSpawnLocation()));
 			PlayerInventory inventory = ply.getInventory();
 			inventory.setItem(8, button.getItemStack());

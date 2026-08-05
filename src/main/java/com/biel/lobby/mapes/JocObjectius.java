@@ -311,11 +311,9 @@ public abstract class JocObjectius extends JocEquips {
 	}
 	public class ObjectiuBlockChange extends Objectiu{
 		Material m;
-		byte data;
-		public ObjectiuBlockChange(String nom, Location l, Material m, byte data) {
-			super(nom, l, data);
+		public ObjectiuBlockChange(String nom, Location l, Material m) {
+			super(nom, l, m);
 			this.m = m;
-			this.data = data;
 		}
 		public boolean isInsideProtectionRadius(Location l){
 			double dist = l.distance(location);
@@ -342,13 +340,11 @@ public abstract class JocObjectius extends JocEquips {
 			}
 			
 		}
-		@SuppressWarnings("deprecation")
 		public Boolean onChange(BlockPlaceEvent evt, Player p, Block blk){
 			if(canBeCompleted(p)){				
 				boolean sameType = m == blk.getType();				
-				boolean sameData = data == blk.getData();				
 				boolean sameLocation = blk.getLocation().equals(location);				
-				if(sameType && sameData && sameLocation){					
+				if(sameType && sameLocation){
 					complete(p);
 					//location.getBlock().setType(Material.GLASS);
 					return true;
@@ -365,10 +361,9 @@ public abstract class JocObjectius extends JocEquips {
 		}
 	}
 	public class ObjectiuWoolPlace extends ObjectiuBlockChange{
-		@SuppressWarnings("deprecation")
 		DyeColor color;
 		public ObjectiuWoolPlace(String nom, Location l, DyeColor color) {
-			super(nom, l, Material.WHITE_WOOL, color.getWoolData());
+			super(nom, l, Material.valueOf(color.name() + "_WOOL"));
 			this.color = color;
 		}
 		@Override
