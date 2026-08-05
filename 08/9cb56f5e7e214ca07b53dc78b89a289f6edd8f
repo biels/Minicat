@@ -1,0 +1,147 @@
+bot-runtime/src/games/base.js
+  s_6776c97f3a38dc::t_c4a67f640e56a7 4,8
+bot-runtime/src/protocol/controller-input.js
+  s_6776c97f3a38dc::t_a6187c4d0ef899 1,62-68,72-73,77,106,111,114-120,127-128
+  s_6776c97f3a38dc::t_1b5aefc7a5f5df 121-126
+bot-runtime/src/core/modes/hold.js
+  s_6776c97f3a38dc::t_ed3277ff6ae445 1,3-9,14-30,35-36
+bot-runtime/src/core/modes/index.js
+  s_6776c97f3a38dc::t_adb051053275ce 4,6-12,14-15,18-20
+bot-runtime/src/core/controller.js
+  s_6776c97f3a38dc::t_0afa3ce77c04f3 83-84
+  s_6776c97f3a38dc::t_63a21069e1abee 115
+  s_6776c97f3a38dc::t_faa69eee4ff633 12-18
+  s_6776c97f3a38dc::t_a47014c7d4ef8d 70-82,85-90
+  s_6776c97f3a38dc::t_d041f4dc4a9088 34-35
+  s_6776c97f3a38dc::t_7eb45f9fd0fad2 47-50
+  s_6776c97f3a38dc::t_4326f915df8bc0 107
+bot-runtime/src/core/modes/travel.js
+  s_6776c97f3a38dc::t_abe9ad459fcf48 1-6,10-20,22-28,30-37
+bot-runtime/test/xml-parse-command.test.js
+  s_6776c97f3a38dc::t_68cf4055e05c93 5
+  s_6776c97f3a38dc::t_ba4727f365e76c 133
+  s_6776c97f3a38dc::t_bddfdbc56f90be 252-256
+  s_6776c97f3a38dc::t_c8210086bed7f1 3-4,6-19,22-25,28,32,34-42,44-50,70,72-74,83,85-87,89-91,101,103-105,107-110,112-114,116,122,125-126,131,134,152-153,157,159,163-164,168,172,176-177,179,182-187,189-190,193,195,198,200,203,205,208,212,214-216,219-220,227,229-230,233,235-236,239,243,245-251,259-263,266-267,269-270,272-273,275-279,281-285,287-291,293-297,299-303,305-310,313-315,318-322,325-329,332-333,335-339,341-346,349-360,363-367,370-372,375-379,382-394,397-401,404-408,411-413,417,421-422,426,428,431,435,439,443,447,451,460,465,468,470-473,475-480,482-485,487-493,495-498,500-502,506,508,511,513
+  s_6776c97f3a38dc::t_1d6da7f7edc68b 124
+  s_6776c97f3a38dc::t_973ca95c762e61 26-27
+  s_6776c97f3a38dc::t_2be51abe508d8a 84
+  s_6776c97f3a38dc::t_522487a53b5ed0 43
+  s_6776c97f3a38dc::t_fae8d03ba713a8 71
+  s_6776c97f3a38dc::t_b25478fe5a6c53 88
+  s_6776c97f3a38dc::t_5b2553cc2c90b0 102
+  s_6776c97f3a38dc::t_2367cd47795bf0 106
+  s_6776c97f3a38dc::t_58b97f33d108b0 111
+  s_6776c97f3a38dc::t_038016e4dc7e02 115
+  s_6776c97f3a38dc::t_16079b145843e5 117
+  s_6776c97f3a38dc::t_49f5742329c243 123
+  s_6776c97f3a38dc::t_98271824d18a31 132
+  s_6776c97f3a38dc::t_0889c1efcbf168 135
+  s_6776c97f3a38dc::t_cb48406f106224 154
+  s_6776c97f3a38dc::t_639cb10969353c 160
+  s_6776c97f3a38dc::t_0b4f0a34e32cbc 165
+  s_6776c97f3a38dc::t_4bdd4874313f1a 169
+  s_6776c97f3a38dc::t_7dd31393ec3e30 173
+  s_6776c97f3a38dc::t_9512339341a985 178
+  s_6776c97f3a38dc::t_59e05db20a311a 188
+  s_6776c97f3a38dc::t_dc288f1f286aa1 194
+  s_6776c97f3a38dc::t_c83169d730d608 199
+  s_6776c97f3a38dc::t_ee291d06af9127 204
+  s_6776c97f3a38dc::t_b2fc881cc2bc04 209
+  s_6776c97f3a38dc::t_8700025aabf534 213
+  s_6776c97f3a38dc::t_e820f8d7c469be 221-223
+  s_6776c97f3a38dc::t_0ca4c57c3d206e 228
+  s_6776c97f3a38dc::t_90ca6dd1b5f1cf 234
+  s_6776c97f3a38dc::t_d7fd1e7a7bccb2 240
+  s_6776c97f3a38dc::t_4728b86c991d8b 268
+  s_6776c97f3a38dc::t_f5e72bc84cb183 271
+  s_6776c97f3a38dc::t_97d31287d61471 274
+  s_6776c97f3a38dc::t_ed0c3c98c7313b 280
+  s_6776c97f3a38dc::t_ec563a2a16352b 286
+  s_6776c97f3a38dc::t_4d790654dedacd 292
+  s_6776c97f3a38dc::t_6e1a0d7d1d69f8 298
+  s_6776c97f3a38dc::t_68ae661f591195 304
+  s_6776c97f3a38dc::t_1f1a0bcd2b150c 334
+  s_6776c97f3a38dc::t_07aec44a0fe74a 340
+  s_6776c97f3a38dc::t_4523c89460992d 414
+  s_6776c97f3a38dc::t_8a86540673b804 418
+  s_6776c97f3a38dc::t_209fbce7df7ddf 423
+  s_6776c97f3a38dc::t_99c5210e8a4d51 427
+  s_6776c97f3a38dc::t_1fb9031084160f 432
+  s_6776c97f3a38dc::t_4570fd8ebf7c44 436
+  s_6776c97f3a38dc::t_2686087ea1a26d 440
+  s_6776c97f3a38dc::t_f2dee7c32c2d7b 444
+  s_6776c97f3a38dc::t_bf1cba3dfcda17 448
+  s_6776c97f3a38dc::t_9fc1ac8b5611d6 452
+  s_6776c97f3a38dc::t_8998b008dc932a 459
+  s_6776c97f3a38dc::t_5066c8cc5afd11 464
+  s_6776c97f3a38dc::t_6afb82cebb7aeb 469
+  s_6776c97f3a38dc::t_4f7688ed922718 474
+  s_6776c97f3a38dc::t_c02d646fcda066 481
+  s_6776c97f3a38dc::t_adbc80ef60b6f1 486
+  s_6776c97f3a38dc::t_0f5f0b330f0026 494
+  s_6776c97f3a38dc::t_730e6f2e9127c2 499
+  s_6776c97f3a38dc::t_4d088943729c10 503
+  s_6776c97f3a38dc::t_d14f6e808412ae 507
+  s_6776c97f3a38dc::t_ded1212272ee21 512
+  s_a4e2c3cdb9422e::t_efe1bf3a17fb25 58
+bot-runtime/test/controller-input.test.js
+  s_6776c97f3a38dc::t_76813974d399d9 5,25,31-36,43,68,71-98,140,144,180,182-184,197-201,208,215-216,228-231,253,264-265,268,274-275,285-286,289,291-293
+  s_6776c97f3a38dc::t_d75929ab8102ae 60-67
+bot-runtime/src/core/combat.js
+  s_6776c97f3a38dc::t_19bc88393a39f1 7-11
+bot-runtime/test/helpers/fixtures.js
+  s_6776c97f3a38dc::t_44e9eaa3fe5641 106-107,115-119,124,131-133,139-141
+  s_6776c97f3a38dc::t_7a13e2cbc4b906 142
+bot-runtime/src/games/rainbowclay.js
+  s_6776c97f3a38dc::t_5135300d19e737 4,9
+bot-runtime/src/core/bot-runtime.js
+  s_6776c97f3a38dc::t_9470eb1be963fc 111,116-117,122
+  s_6776c97f3a38dc::t_1daa428f21f309 97,102
+  s_6776c97f3a38dc::t_360157789e7568 69,72,74-76
+  s_6776c97f3a38dc::t_64a43a7b0cef2f 25
+  s_6776c97f3a38dc::t_046dffba7166fc 6
+bot-runtime/src/protocol/xml.js
+  s_6776c97f3a38dc::t_6b6f639668fc1f 62-64
+  s_6776c97f3a38dc::t_92842256fc133b 96-98
+  s_6776c97f3a38dc::t_5a0b72055aa27b 2,12-37,67,72,75-77,81-87,90-95,100-111,113,116-126,129-135,139-143,153-155,158-164
+bot-runtime/test/modes.test.js
+  s_6776c97f3a38dc::t_20320af71ffd06 21,23-26,37,43,51,53,58,63-67,71-72,79-80,87,93-94,99,103-107
+  s_6776c97f3a38dc::t_76e7832e7cd162 108
+bot-runtime/src/agent/developer-instructions.js
+  s_6776c97f3a38dc::t_d56362e096c968 1-6,11,13-15,18-21,24-32
+bot-runtime/src/protocol/operator-grammar.js
+  s_6776c97f3a38dc::t_f89feb2fc5a45a 257-258
+  s_6776c97f3a38dc::t_917db137a82ccb 210-211
+bot-runtime/src/games/quakecraft.js
+  s_6776c97f3a38dc::t_941657f165fc95 4,6
+bot-runtime/src/core/decision-loop.js
+  s_6776c97f3a38dc::t_bc6114131af1e1 92
+  s_6776c97f3a38dc::t_2b30021779b3f4 70-71
+  s_6776c97f3a38dc::t_9aca8fd368dac9 5-6,8,25-27,67-69,72-73,78,91,93,95,97-100,102-105
+bot-runtime/src/games/index.js
+  s_6776c97f3a38dc::t_5905ccb5916241 1,3,8,16-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "089cb56f5e7e214ca07b53dc78b89a289f6edd8f",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_a4e2c3cdb9422e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-aprotocol-parser-2411e373ae0d23f4",
+        "model": "unknown"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
