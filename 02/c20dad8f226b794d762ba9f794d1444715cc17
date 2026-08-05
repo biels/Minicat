@@ -1,0 +1,23 @@
+docs/games/GAMES.md
+  s_af6f5999d39a89::t_98d0fdfd5c3bfb 60-79
+  s_af6f5999d39a89::t_292222c0d8ed1c 422-428
+docs/games/rainbowclay.md
+  s_af6f5999d39a89::t_daf9052d39c8ba 153-163,168-169
+  s_af6f5999d39a89::t_a43b6adc7c3c86 31-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "02c20dad8f226b794d762ba9f794d1444715cc17",
+  "prompts": {},
+  "sessions": {
+    "s_af6f5999d39a89": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8263531f-ab19-4490-9469-52738bb5e3f1",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
