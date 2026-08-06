@@ -1,0 +1,23 @@
+src/main/java/com/biel/lobby/utilities/ScoreBoardUpdater.java
+  s_5281647755a6a9::t_dd62158e85cbd7 6,8,10,72-75,77,89-92
+  s_5281647755a6a9::t_6ee984c1aa0712 93
+src/main/java/com/biel/lobby/utilities/PlayerTagState.java
+  s_5281647755a6a9::t_dd62158e85cbd7 35-38,40,63-67,69-71,74-94
+  s_5281647755a6a9::t_42233fa6bcdde5 95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "dfea4b5afa08e5167293ca06955f92c50ac380c8",
+  "prompts": {},
+  "sessions": {
+    "s_5281647755a6a9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd3c0-5ea1-7332-86c1-e79179cc50d0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
