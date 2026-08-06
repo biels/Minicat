@@ -1,0 +1,67 @@
+src/main/java/com/biel/lobby/mapes/jocs/Parkour.java
+  s_efe29d15e6fe75::t_45cf8cee978eef 47,51-57,114-118,123-141,150,173-183,206-218
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_6d312b3182ba71::t_179c2df6f3d975 365
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_bd7483d5177215::t_da946752450a4e 14,406-408,619,622-625,710,712,758-761,797-800,841,858,891,898-903,921,947-956,980-981,983,1036
+src/main/java/com/biel/lobby/lobby.java
+  s_6d312b3182ba71::t_87d93d9405a3d8 53
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_6d312b3182ba71::t_179c2df6f3d975 198-199,201-222
+  s_6d312b3182ba71::t_e452c244042c15 600
+src/main/java/com/biel/lobby/mapes/jocs/Quakecraft.java
+  s_6d312b3182ba71::t_87d93d9405a3d8 122
+src/main/java/com/biel/lobby/utilities/data/DataAPI.java
+  s_6d312b3182ba71::t_179c2df6f3d975 370,373,379-380,384,386
+  s_6d312b3182ba71::t_0c5ae5048b93f3 442-445
+  s_6d312b3182ba71::t_87d93d9405a3d8 7,9-10,17-19,23-31,48,58,60-72,75-80,422-427,429-432,453-461
+  s_6d312b3182ba71::t_49ca77269f3ebf 381,383
+src/main/java/com/biel/lobby/mapes/jocs/RainbowClay.java
+  s_6d312b3182ba71::t_e452c244042c15 131-135,158,261
+src/main/java/com/biel/lobby/utilities/Turret.java
+  s_6d312b3182ba71::t_d3e8e6dff6e902 807-833,883-889
+  s_6d312b3182ba71::t_26d7dd13b2cdec 23,26,83-95,749-751,890
+  s_6d312b3182ba71::t_6bb96429584ba1 694
+  s_6d312b3182ba71::t_593ba076f821f7 100,797
+  s_6d312b3182ba71::t_50ec1592788954 891
+src/main/java/com/biel/lobby/mapes/MapaResetejable.java
+  s_6d312b3182ba71::t_87d93d9405a3d8 45
+src/main/java/com/biel/lobby/mapes/jocs/Torres.java
+  s_6d312b3182ba71::t_2b51cad4475e60 57,463,514-523
+  s_6d312b3182ba71::t_322dc8ed7deee3 40,439,453-462
+src/main/java/com/biel/lobby/mapes/jocs/Arena4.java
+  s_6d312b3182ba71::t_cd460f2baccf84 4-7,14,22-23,30-86
+  s_6d312b3182ba71::t_1fe2b85590c8cb 145,148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "0e15c1a26b68f843c6ca463590366e335312c061",
+  "prompts": {},
+  "sessions": {
+    "s_6d312b3182ba71": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd2de-5bc7-7ff0-a9ed-eb15ac13d2cf",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_bd7483d5177215": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd29c-8e74-7242-a2c6-dd7cae9bb976",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_efe29d15e6fe75": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd2a2-dc3d-7c03-aa8d-89adaa2abb16",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,156 @@
+src/main/java/com/biel/lobby/lobby.java
+  s_d22295457e46f7::t_35ac9ac44e2985 37
+  s_d22295457e46f7::t_49e29c208137cb 72-74
+  s_d22295457e46f7::t_618032b2984ad0 20,49
+  s_d22295457e46f7::t_fd4b39d3f3e056 121-132
+  s_d22295457e46f7::t_5340768454746e 48,50-52
+  s_d22295457e46f7::t_85182dd7822507 54-59,94,96-107,109-112,114-119
+  s_d22295457e46f7::t_26db1d27f8041b 60-71,75-93,95
+  s_d22295457e46f7::t_5230462b116dc0 53,120,270
+src/main/java/com/biel/lobby/utilities/CBUtils.java
+  s_d22295457e46f7::t_46a450f991cf18 8
+gradle/wrapper/gradle-wrapper.properties
+  s_d22295457e46f7::t_0717e09b056ca8 6
+build.gradle
+  s_d22295457e46f7::t_a71e1ebecd2bfe 8-10
+  s_d22295457e46f7::t_ecf54355823e07 19,48-50
+  s_d22295457e46f7::t_2dd10e35bb74e3 44
+  s_d22295457e46f7::t_0717e09b056ca8 2-3,14,16,23-26,28,37-38,41-43,45-47,51,62
+  s_d22295457e46f7::t_de7755f0527de1 39-40
+  s_0ab34d1d0503c2::t_66ec9df16eb71c 11
+src/main/java/com/biel/lobby/mapes/JocEquips.java
+  s_d22295457e46f7::t_9bb7e34b05a481 483,573,577,676,692,819
+  s_d22295457e46f7::t_7ea4e872a3b1f4 239
+  s_d22295457e46f7::t_37a712760723f9 120-121
+  s_d22295457e46f7::t_cb5cf3b0575291 86,281-282,286,583-586
+  s_d22295457e46f7::t_6998bcf2625101 76-85,295
+  s_d22295457e46f7::t_fdc0d0613566e8 287-288
+src/main/java/com/biel/lobby/utilities/data/DataAPI.java
+  s_d22295457e46f7::t_c254c28a719c45 242
+  s_d22295457e46f7::t_7a4efe3614ad9d 6-7,16,24-28,74,238,291
+  s_d22295457e46f7::t_40d60915583cbe 39,42
+src/main/java/com/biel/lobby/utilities/Utils.java
+  s_d22295457e46f7::t_7ea4e872a3b1f4 557,569-570
+  s_d22295457e46f7::t_6998bcf2625101 48-50,52-54
+  s_d22295457e46f7::t_2f74a8a6d40d12 15
+  s_d22295457e46f7::t_607d2e07055676 35,531-538
+  s_d22295457e46f7::t_89c5de2aef0fdf 284,542
+src/main/java/com/biel/lobby/mapes/JocObjectius.java
+  s_d22295457e46f7::t_9bb7e34b05a481 314-315,366
+  s_d22295457e46f7::t_1ec614dfb19719 347
+src/main/java/com/biel/lobby/mapes/JocTeamDominion.java
+  s_d22295457e46f7::t_eb1005b2dcd213 503-504,507-514,518,524,531-532,560,562,571,582
+  s_d22295457e46f7::t_ecf54355823e07 20,190,230
+src/main/java/com/biel/lobby/mapes/MapaResetejable.java
+  s_d22295457e46f7::t_26db1d27f8041b 197-198,201-202,208
+  s_d22295457e46f7::t_35ac9ac44e2985 7,36-65
+  s_d22295457e46f7::t_7ea4e872a3b1f4 194
+  s_d22295457e46f7::t_73ff37b8dde8c8 223-226
+  s_d22295457e46f7::t_495a8c48c5f089 23,101,105,108-114,118,122-124,188,199-200,205,215,240-242,268,271,274,278
+  s_d22295457e46f7::t_dd165e91c7a2fb 66
+src/main/java/com/biel/lobby/LoginListener.java
+  s_d22295457e46f7::t_16cc6c6e3514d6 47,98,128-130,132,134-135,137-151,153-159,161-167
+  s_d22295457e46f7::t_2dd10e35bb74e3 17,45-46
+  s_d22295457e46f7::t_6a906771f68ff2 22,198
+  s_d22295457e46f7::t_dc49592b8a45de 48
+src/main/java/com/biel/lobby/utilities/PaperMessages.java
+  s_d22295457e46f7::t_65053d1ed45e03 8,11-12,24-32
+  s_d22295457e46f7::t_8cdad6077d7e30 33-37
+  s_d22295457e46f7::t_9bc9f9d54e543f 1-7,9-10,13-23,38-48
+src/main/java/com/biel/lobby/utilities/PlayerTagState.java
+  s_d22295457e46f7::t_6a906771f68ff2 1-21,23-25,27-32,47-105,110-130
+  s_d22295457e46f7::t_b2310f1c409fab 22,26,106-109
+  s_d22295457e46f7::t_2dd10e35bb74e3 33-46
+src/main/java/com/biel/lobby/utilities/ScoreBoardUpdater.java
+  s_d22295457e46f7::t_7445c11aac392d 80-85,95-97,134,138
+src/main/java/com/biel/lobby/utilities/Cuboid.java
+  s_d22295457e46f7::t_09d65b2947f5cf 12
+  s_d22295457e46f7::t_020d18042646e6 439,444,449,454,459,464,501,504,506,659
+src/main/resources/plugin.yml
+  s_d22295457e46f7::t_b264e8688e42dc 11-13
+  s_d22295457e46f7::t_0717e09b056ca8 9-10,59
+  s_d22295457e46f7::t_ecf54355823e07 6
+  s_d22295457e46f7::t_26db1d27f8041b 16-17
+  s_d22295457e46f7::t_fd4b39d3f3e056 27-29
+src/main/java/com/biel/lobby/utilities/FireworkEffectPlayer.java
+  s_d22295457e46f7::t_66db1655ddfeca 44,51,54
+src/main/java/com/biel/lobby/utilities/HologramFacade.java
+  s_d22295457e46f7::t_618032b2984ad0 4,6,17,25-27,30-35,62
+  s_d22295457e46f7::t_ecf54355823e07 1-3,5,7-16,18-24,28-29,36-61,63-65
+src/main/java/com/biel/lobby/Com.java
+  s_d22295457e46f7::t_89c5de2aef0fdf 271
+  s_d22295457e46f7::t_ecf54355823e07 16,72,75,81,85
+  s_d22295457e46f7::t_9bc9f9d54e543f 18,265-266
+  s_d22295457e46f7::t_6a906771f68ff2 19,134,137
+src/main/java/com/biel/lobby/utilities/Turret.java
+  s_d22295457e46f7::t_c58401a51c0227 10,178,195,198,297-300,883,888
+  s_d22295457e46f7::t_607d2e07055676 428,470
+  s_d22295457e46f7::t_fff59b06e66f9b 338,433,444,532
+  s_d22295457e46f7::t_dc0c1442334fc1 388
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_d22295457e46f7::t_85182dd7822507 151-158,524
+  s_d22295457e46f7::t_6c29290e2a58b0 17,349-356,378
+  s_d22295457e46f7::t_fd4b39d3f3e056 30,132-140,457,459
+  s_d22295457e46f7::t_65053d1ed45e03 441
+  s_d22295457e46f7::t_26db1d27f8041b 29,114-131,365,368-373,375-377
+  s_d22295457e46f7::t_aa6d2c612393f2 70-72
+  s_d22295457e46f7::t_661cdc48cfde0c 360
+  s_d22295457e46f7::t_25a4ab18a851d2 449,500
+  s_77fa70d754e711::t_ca53f295434810 453-456,458
+  s_77fa70d754e711::t_0b19ea6ff5f3cf 463-464,470
+  s_d22295457e46f7::t_9bc9f9d54e543f 11
+  s_d22295457e46f7::t_33f165cf11ab91 41,448,499,522-523
+  s_d22295457e46f7::t_37a712760723f9 374
+src/main/java/com/biel/lobby/utilities/GestorPropietats.java
+  s_d22295457e46f7::t_7ea4e872a3b1f4 35,199
+  s_d22295457e46f7::t_d66807cd9b379d 8-9
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_d22295457e46f7::t_6502ff82f75159 1392-1394,1423,1434
+  s_d22295457e46f7::t_9c04b58d67d3b8 101,103-104,106
+  s_d22295457e46f7::t_fff59b06e66f9b 164,169
+  s_d22295457e46f7::t_dce0ed7a34f691 163,174-185
+  s_d22295457e46f7::t_6998bcf2625101 113,133-135,406-408
+  s_d22295457e46f7::t_fb21bc996b0103 47,57-58,605,609,945,950,1293,1295,1486
+  s_d22295457e46f7::t_c016149fa3635c 102
+  s_d22295457e46f7::t_37a712760723f9 82-83,148-151,161-162,677-680
+  s_d22295457e46f7::t_59bc8aab7bdfd8 165-168,170-173
+  s_d22295457e46f7::t_1f9fcee191adaa 240,242-252,254
+  s_d22295457e46f7::t_9bb7e34b05a481 369-371,373
+  s_d22295457e46f7::t_018abf95284958 1149-1152
+  s_d22295457e46f7::t_65053d1ed45e03 621
+  s_d22295457e46f7::t_fd4b39d3f3e056 132,946-949
+src/main/java/com/biel/lobby/utilities/Options.java
+  s_d22295457e46f7::t_b079edc4443337 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "1cabda865bb68795be2e3e10fdb16bf887304357",
+  "prompts": {},
+  "sessions": {
+    "s_0ab34d1d0503c2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fcd7f-81a3-76e0-9180-4609456c18c1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_77fa70d754e711": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd051-5913-7f02-bb2b-cf3ef59e3454",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_d22295457e46f7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fcdbd-8cf2-7d71-bda1-2a659e272119",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

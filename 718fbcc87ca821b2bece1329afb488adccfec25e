@@ -1,0 +1,127 @@
+src/main/java/com/biel/lobby/utilities/events/skills/Skill.java
+  s_d22295457e46f7::t_abd4ff34d4000b 193-194
+src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/BerserkSkill.java
+  s_d22295457e46f7::t_89c5de2aef0fdf 29
+src/main/java/com/biel/lobby/mapes/jocs/Parkour.java
+  s_d22295457e46f7::t_ecf54355823e07 42,241,269,384,452
+  s_d22295457e46f7::t_326ec984bc3871 674,700
+  s_d22295457e46f7::t_9bc9f9d54e543f 41,281-282
+  s_d22295457e46f7::t_dc0c1442334fc1 375-376,748-749
+src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/GravityBendingSkill.java
+  s_d22295457e46f7::t_89c5de2aef0fdf 34
+src/main/java/com/biel/lobby/mapes/jocs/ResourceRush.java
+  s_d22295457e46f7::t_89c5de2aef0fdf 105,274,276
+src/main/java/com/biel/lobby/mapes/jocs/RoboRampage.java
+  s_d22295457e46f7::t_59bc8aab7bdfd8 179,199
+src/main/java/com/biel/lobby/mapes/jocs/RainbowClay.java
+  s_d22295457e46f7::t_59bc8aab7bdfd8 440
+  s_d22295457e46f7::t_214b66050d79ec 175,177,259,409,418,425-431,556,567,579,603
+  s_d22295457e46f7::t_65053d1ed45e03 215,225,248,255,280,313
+  s_d22295457e46f7::t_dc0c1442334fc1 137,155,194-197,498,504,510,558,562,569,573,581,585,593,597,607,640,646,655,660
+  s_d22295457e46f7::t_9bc9f9d54e543f 33
+  s_d22295457e46f7::t_ae4e893dc5fce1 432-433
+src/main/java/com/biel/lobby/mapes/jocs/Quakecraft.java
+  s_d22295457e46f7::t_326ec984bc3871 77,90,122,269,272,292
+src/main/java/com/biel/lobby/mapes/jocs/BaseLunar.java
+  s_d22295457e46f7::t_607d2e07055676 39,44-45,71
+src/main/java/com/biel/lobby/mapes/jocs/OneInTheChamber.java
+  s_d22295457e46f7::t_607d2e07055676 69
+src/main/java/com/biel/lobby/utilities/events/skills/SkillPool.java
+  s_d22295457e46f7::t_d66807cd9b379d 17
+  s_d22295457e46f7::t_7ea4e872a3b1f4 74,93,137
+src/main/java/com/biel/lobby/mapes/jocs/Dominion.java
+  s_d22295457e46f7::t_7ea4e872a3b1f4 46,93-94,109-111
+src/main/java/com/biel/lobby/mapes/jocs/Spleef.java
+  s_be20626190b4b7::t_b893802d2cb225 669,673
+  s_d22295457e46f7::t_86be4f66db145e 79-80,118-123,125-128,130-132,134-135,138-143,145-146,148,178,322,350,518
+  s_be20626190b4b7::t_644fdfdc7a7392 48-53,445,542,662,664-665
+  s_be20626190b4b7::t_98bd8b87adf05c 450,457,460,468,471,491,498,501,509,512
+  s_d22295457e46f7::t_a718e5971a191e 355-356,543,549,552,560,563
+  s_be20626190b4b7::t_5a14e5c09c4342 398,587-589,596,598
+  s_77fa70d754e711::t_0ed09d09f66171 666,679,681-683
+  s_d22295457e46f7::t_51c53cf3e24ae2 83-84,222
+  s_be20626190b4b7::t_5d7917c7bb99db 586,591
+  s_be20626190b4b7::t_f65b6088a174e6 45-47,374,377-379,389,392,395,397,401,407,419,581-582,642-661,668,670-672,674-678
+  s_be20626190b4b7::t_1e8823de2faa6c 547,554
+  s_77fa70d754e711::t_f328a12790c274 680
+  s_77fa70d754e711::t_21cd75eb8c39d0 667
+src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/CreeperSkill.java
+  s_d22295457e46f7::t_89c5de2aef0fdf 34
+src/main/java/com/biel/lobby/mapes/jocs/Torres.java
+  s_d22295457e46f7::t_326ec984bc3871 683,686,688
+  s_d22295457e46f7::t_59bc8aab7bdfd8 317,322,327,332,382,664
+  s_d22295457e46f7::t_eb1005b2dcd213 10,70
+  s_d22295457e46f7::t_dc0c1442334fc1 78-79,102-104,161,253,486,497,529,544,549,553,617,630,632,637
+src/main/java/com/biel/lobby/mapes/jocs/TNTRun.java
+  s_d22295457e46f7::t_51c53cf3e24ae2 70
+  s_d22295457e46f7::t_59bc8aab7bdfd8 97,101,173,192
+src/main/java/com/biel/lobby/utilities/events/skills/types/ItemAttatchedModeSkill.java
+  s_d22295457e46f7::t_7ea4e872a3b1f4 176,178
+  s_d22295457e46f7::t_d66807cd9b379d 16
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_d22295457e46f7::t_89c5de2aef0fdf 511,786,942
+  s_d22295457e46f7::t_51c53cf3e24ae2 88,523,550,564,641-642,644
+  s_d22295457e46f7::t_dce0ed7a34f691 196,203
+src/main/java/com/biel/lobby/mapes/jocs/ArenaAllvAll.java
+  s_d22295457e46f7::t_607d2e07055676 35-36,75,78,82,85
+src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/MagicArcherSkill.java
+  s_d22295457e46f7::t_d66807cd9b379d 166
+  s_d22295457e46f7::t_49523c71615ac1 27
+  s_d22295457e46f7::t_fff59b06e66f9b 230-233
+src/main/java/com/biel/lobby/mapes/jocs/RedstoneWars.java
+  s_d22295457e46f7::t_326ec984bc3871 57-58,134
+src/main/java/com/biel/lobby/mapes/jocs/KingSkeletonChallenge.java
+  s_d22295457e46f7::t_326ec984bc3871 227,231,233,235,263
+  s_d22295457e46f7::t_dc0c1442334fc1 37,151,187,298-299
+src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/FrostArcherSkill.java
+  s_d22295457e46f7::t_dce0ed7a34f691 115,122
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_d22295457e46f7::t_020d18042646e6 541
+  s_d22295457e46f7::t_326ec984bc3871 316,319,353-369,490-491
+  s_77fa70d754e711::t_ca53f295434810 339,345-348,429-436,597-600,647,652-656
+  s_d22295457e46f7::t_9b7d8edb7ac3e9 332-338
+  s_d22295457e46f7::t_6f46ef5d45211d 583-587
+  s_d22295457e46f7::t_118733fb15b9f7 281,283-285
+  s_d22295457e46f7::t_6b141ff2cfebce 504-507
+  s_d22295457e46f7::t_57ed230d7c923a 542-552,554
+src/main/java/com/biel/lobby/mapes/jocs/BoletumDTC.java
+  s_d22295457e46f7::t_554806337e5672 64-65
+src/main/java/com/biel/lobby/mapes/jocs/PilotaSplash.java
+  s_d22295457e46f7::t_37f173038f3903 49
+src/main/java/com/biel/lobby/mapes/jocs/TeamDeathMatch.java
+  s_d22295457e46f7::t_fe34c75202c90f 48-49
+src/main/java/com/biel/lobby/mapes/jocs/TeamDeathMatchJaneatorForest.java
+  s_d22295457e46f7::t_9354108b59de2c 54-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "718fbcc87ca821b2bece1329afb488adccfec25e",
+  "prompts": {},
+  "sessions": {
+    "s_77fa70d754e711": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fd051-5913-7f02-bb2b-cf3ef59e3454",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_be20626190b4b7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fce46-e3bb-7130-b42b-1ba95fa2ffcf",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_d22295457e46f7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fcdbd-8cf2-7d71-bda1-2a659e272119",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
