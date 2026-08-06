@@ -65,7 +65,6 @@ public abstract class JocEquips extends Joc {
 	}
 	@Override
 	protected void customJocIniciat() {
-		if(generationMode == TeamGenerationMode.DEFAULT)ferEquipsEquilibrats();
 		anunciarEquips(null);	
 		fixarSpawns();
 		//establirColorsNoms();
@@ -75,7 +74,10 @@ public abstract class JocEquips extends Joc {
 	}
 	@Override
 	protected boolean canStartGame() {
-		if (generationMode == TeamGenerationMode.CUSTOM && !getPlayersOutOfTeam().isEmpty()) {
+		if (generationMode == TeamGenerationMode.DEFAULT) {
+			ferEquipsEquilibrats();
+		}
+		if (!getPlayersOutOfTeam().isEmpty()) {
 			String unassignedPlayers = getPlayersOutOfTeam().stream()
 					.map(Player::getName)
 					.collect(Collectors.joining(", "));
@@ -378,24 +380,18 @@ public abstract class JocEquips extends Joc {
 		return (getPlayers().size() / (double) Equips.size());
 	}
 	public void ferEquipsAleatoris(boolean reassignar){
-		if(Equips.size() == 0)return;
-		//if(reassignar){resetTeams();}
+		if(Equips.isEmpty())return;
+		if (reassignar) {
+			initTeams();
+		}
 		ArrayList<Player> players = new ArrayList<>(getPlayers());
 		Collections.shuffle(players);
-		int next_team = 0;
-		int cycles = 0;
-		int max_cycles = Equips.size() * 4;
 		for (Player p : players) {
-			if(cycles > max_cycles){return;}
-			cycles++;
 			if(!reassignar && obtenirEquip(p) != null)continue;
-			if (next_team > Equips.size() - 1) {
-				next_team = 0;
-			}
-			Equip eq = Equips.get(next_team);
-			if(eq.getPlayers().size() >= Math.ceil(getTeamSize()))continue;
-			establirEquipJugador(p, eq);
-			next_team++;			
+			Equip smallestTeam = Equips.stream()
+					.min((left, right) -> Integer.compare(left.getPlayers().size(), right.getPlayers().size()))
+					.orElseThrow();
+			establirEquipJugador(p, smallestTeam);
 		}
 		generationMode = TeamGenerationMode.RANDOM;
 	}

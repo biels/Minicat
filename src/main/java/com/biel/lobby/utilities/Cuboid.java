@@ -436,32 +436,32 @@ public class Cuboid implements Iterable<Block>, Cloneable, ConfigurationSerializ
 		Cuboid face = getFace(dir.opposite());
 		switch (dir) {
 		case Down:
-			while (face.containsOnly(Material.AIR) && face.getLowerY() > this.getLowerY()) {
+			while (face.containsOnlyAir() && face.getLowerY() > this.getLowerY()) {
 				face = face.shift(CuboidDirection.Down, 1);
 			}
 			return new Cuboid(this.worldName, this.x1, this.y1, this.z1, this.x2, face.getUpperY(), this.z2);
 		case Up:
-			while (face.containsOnly(Material.AIR) && face.getUpperY() < this.getUpperY()) {
+			while (face.containsOnlyAir() && face.getUpperY() < this.getUpperY()) {
 				face = face.shift(CuboidDirection.Up, 1);
 			}
 			return new Cuboid(this.worldName, this.x1, face.getLowerY(), this.z1, this.x2, this.y2, this.z2);
 		case North:
-			while (face.containsOnly(Material.AIR) && face.getLowerX() > this.getLowerX()) {
+			while (face.containsOnlyAir() && face.getLowerX() > this.getLowerX()) {
 				face = face.shift(CuboidDirection.North, 1);
 			}
 			return new Cuboid(this.worldName, this.x1, this.y1, this.z1, face.getUpperX(), this.y2, this.z2);
 		case South:
-			while (face.containsOnly(Material.AIR) && face.getUpperX() < this.getUpperX()) {
+			while (face.containsOnlyAir() && face.getUpperX() < this.getUpperX()) {
 				face = face.shift(CuboidDirection.South, 1);
 			}
 			return new Cuboid(this.worldName, face.getLowerX(), this.y1, this.z1, this.x2, this.y2, this.z2);
 		case East:
-			while (face.containsOnly(Material.AIR) && face.getLowerZ() > this.getLowerZ()) {
+			while (face.containsOnlyAir() && face.getLowerZ() > this.getLowerZ()) {
 				face = face.shift(CuboidDirection.East, 1);
 			}
 			return new Cuboid(this.worldName, this.x1, this.y1, this.z1, this.x2, this.y2, face.getUpperZ());
 		case West:
-			while (face.containsOnly(Material.AIR) && face.getUpperZ() < this.getUpperZ()) {
+			while (face.containsOnlyAir() && face.getUpperZ() < this.getUpperZ()) {
 				face = face.shift(CuboidDirection.West, 1);
 			}
 			return new Cuboid(this.worldName, this.x1, this.y1, face.getLowerZ(), this.x2, this.y2, this.z2);
@@ -504,6 +504,18 @@ public class Cuboid implements Iterable<Block>, Cloneable, ConfigurationSerializ
 	public boolean containsOnly(Material material) {
 		for (Block b : this) {
 			if (b.getType() != material) return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Check if the Cuboid contains only air blocks, including cave and void air.
+	 *
+	 * @return true if every block in this Cuboid is air
+	 */
+	public boolean containsOnlyAir() {
+		for (Block b : this) {
+			if (!b.getType().isAir()) return false;
 		}
 		return true;
 	}

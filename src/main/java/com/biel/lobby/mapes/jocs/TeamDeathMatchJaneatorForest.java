@@ -59,7 +59,8 @@ public class TeamDeathMatchJaneatorForest extends JocTeamDeathMatch {
 		items.add(new ItemStack(Material.IRON_BOOTS, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		items.add(new ItemStack(Material.GOLDEN_APPLE, 2));
-		items.add(Utils.setItemNameAndLore(new ItemStack(Material.SNOWBALL, (int) Math.round(4 * (balancingMultiplier - 0.2))), "Bomba", "Explota a l'impacte"));
+		int snowballAmount = Math.max(1, (int) Math.round(4 * (balancingMultiplier - 0.2)));
+		items.add(Utils.setItemNameAndLore(new ItemStack(Material.SNOWBALL, snowballAmount), "Bomba", "Explota a l'impacte"));
 		items.add(new ItemStack(Material.ARROW, (int) (20 * balancingMultiplier)));
 		return items;
 	}

@@ -89,9 +89,7 @@ public final class PlayerTagState {
         team.prefix(PaperMessages.legacy(style.prefix()));
         team.suffix(PaperMessages.legacy(style.suffix()));
         ChatColor color = lastColor(style.prefix());
-        if (color != null) {
-            team.setColor(color);
-        }
+        team.setColor(color != null ? color : ChatColor.RESET);
     }
 
     private static ChatColor lastColor(String text) {

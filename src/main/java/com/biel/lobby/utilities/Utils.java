@@ -45,14 +45,14 @@ public class Utils {
 		// TODO Auto-generated constructor stub
 	}
 	public static ItemStack setItemNameAndLore(ItemStack item, String name, String... lore) {
-		if (item == null || item.getType().isAir() || item.getAmount() <= 0) {
-			throw new IllegalArgumentException("Cannot set metadata on an empty item stack");
+		if (item == null) {
+			throw new IllegalArgumentException("Item stack must not be null");
 		}
 		ItemMeta im = item.getItemMeta();
 		if (im == null) {
 			throw new IllegalArgumentException("Material " + item.getType() + " does not support item metadata");
 		}
-		if (!name.isEmpty()){im.setDisplayName(name);}
+		if (name != null && !name.isEmpty()){im.setDisplayName(name);}
 		im.setLore(Arrays.asList(lore));
 		item.setItemMeta(im);
 		return item;

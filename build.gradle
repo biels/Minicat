@@ -34,10 +34,10 @@ compileTestJava{
     options.encoding = defaultEncoding
 }
 dependencies {
-    implementation 'com.google.guava:guava:33.6.0-jre'
-    implementation 'commons-io:commons-io:2.21.0'
-    implementation 'commons-lang:commons-lang:2.6'
-    implementation 'com.mysql:mysql-connector-j:9.6.0'
+    compileOnly 'com.google.guava:guava:33.6.0-jre'
+    compileOnly 'commons-io:commons-io:2.21.0'
+    compileOnly 'commons-lang:commons-lang:2.6'
+    compileOnly 'com.mysql:mysql-connector-j:9.6.0'
     compileOnly 'BielAPI:BielAPI:0.0.10-SNAPSHOT'
     compileOnly fileTree(dir: 'lib', include: '*.jar', exclude: [
             'BielAPI-*.jar',
