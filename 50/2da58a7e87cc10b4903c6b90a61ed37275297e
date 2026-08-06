@@ -1,0 +1,24 @@
+bot-runtime/src/core/decision-loop.js
+  s_6776c97f3a38dc::t_199151c1d94d1f 44-51
+bot-runtime/src/core/bot-runtime.js
+  s_6776c97f3a38dc::t_5fd1ee88d89bb5 130-137,139-144
+bot-runtime/test/games.test.js
+  s_6776c97f3a38dc::t_f3998cdc37b0f1 162-196
+  s_6776c97f3a38dc::t_b7d8dc99490c29 228-230
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "502da58a7e87cc10b4903c6b90a61ed37275297e",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
