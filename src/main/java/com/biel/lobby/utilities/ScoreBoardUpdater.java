@@ -3,8 +3,11 @@ package com.biel.lobby.utilities;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -66,17 +69,15 @@ public class ScoreBoardUpdater {
 		ScoreboardManager manager = Bukkit.getScoreboardManager();
 		Scoreboard board = manager.getNewScoreboard();
 		for (Equip e : j.Equips){
-			Team Ghosts = board.registerNewTeam(e.getAdjectiu());
+			Team gameplayTeam = board.registerNewTeam(e.getAdjectiu());
+			gameplayTeam.setCanSeeFriendlyInvisibles(true);
+			gameplayTeam.setAllowFriendlyFire(false);
+			gameplayTeam.color(namedColor(e.getChatColor()));
 			for(Player p : e.getPlayers()){
-				Ghosts.addPlayer(p);
+				gameplayTeam.addEntry(p.getName());
 				Com.setHeadColor(p, ColorConverter.chatToRaw(e.getChatColor()));
 				
 			}
-			Ghosts.setCanSeeFriendlyInvisibles(true);
-			Ghosts.setAllowFriendlyFire(false);
-			//Ghosts.setPrefix(e.getChatColor() + "");
-			//Ghosts.setPrefix(e.getChatColor() + "[" + e.getAdjectiu() +"]");		
-			
 		}
 		for (Equip e : j.Equips) {
 			for (Player player : e.getPlayers()) {
@@ -84,6 +85,11 @@ public class ScoreBoardUpdater {
 			}
 		}
 
+	}
+
+	private static NamedTextColor namedColor(ChatColor color) {
+		NamedTextColor namedColor = NamedTextColor.NAMES.value(color.name().toLowerCase(Locale.ROOT));
+		return namedColor != null ? namedColor : NamedTextColor.WHITE;
 	}
 	@Deprecated
 	static public void updateSpectatorScore(ArrayList<Player> ply){

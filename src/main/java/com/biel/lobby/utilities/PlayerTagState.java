@@ -1,7 +1,6 @@
 package com.biel.lobby.utilities;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,14 +32,12 @@ public final class PlayerTagState {
     public static void remove(Player player) {
         TAGS.remove(player.getUniqueId());
         for (Player viewer : Bukkit.getOnlinePlayers()) {
-            Team team = viewer.getScoreboard().getEntryTeam(player.getName());
-            if (team == null) {
-                continue;
+            Scoreboard scoreboard = viewer.getScoreboard();
+            Team team = scoreboard.getEntryTeam(player.getName());
+            if (team != null && isPersonalTeam(team)) {
+                team.removeEntry(player.getName());
             }
-            team.removeEntry(player.getName());
-            if (team.getName().startsWith("mt_") && team.getEntries().isEmpty()) {
-                team.unregister();
-            }
+            cleanUpPersonalTeam(scoreboard, player);
         }
     }
 
@@ -63,26 +60,39 @@ public final class PlayerTagState {
     }
 
     private static void apply(Scoreboard scoreboard, Player player) {
-        TagStyle desiredStyle = style(player);
-        Team team = scoreboard.getEntryTeam(player.getName());
-        if (team != null && !team.getName().startsWith("mt_")) {
-            boolean sharedStyleMatches = team.getEntries().stream()
-                    .map(Bukkit::getPlayerExact)
-                    .filter(Objects::nonNull)
-                    .allMatch(member -> style(member).equals(desiredStyle));
-            if (!sharedStyleMatches) {
-                team = null;
-            }
+        Team currentTeam = scoreboard.getEntryTeam(player.getName());
+        if (currentTeam != null && !isPersonalTeam(currentTeam)) {
+            // Gameplay and system teams own their membership and shared styling.
+            cleanUpPersonalTeam(scoreboard, player);
+            return;
         }
-        if (team == null) {
-            String teamName = "mt_" + player.getUniqueId().toString().replace("-", "").substring(0, 12);
-            team = scoreboard.getTeam(teamName);
-            if (team == null) {
-                team = scoreboard.registerNewTeam(teamName);
-            }
+
+        Team team = currentTeam != null ? currentTeam : getOrCreatePersonalTeam(scoreboard, player);
+        if (currentTeam == null) {
             team.addEntry(player.getName());
         }
-        applyStyle(team, desiredStyle);
+        applyStyle(team, style(player));
+    }
+
+    private static boolean isPersonalTeam(Team team) {
+        return team.getName().startsWith("mt_");
+    }
+
+    private static String personalTeamName(Player player) {
+        return "mt_" + player.getUniqueId().toString().replace("-", "").substring(0, 12);
+    }
+
+    private static Team getOrCreatePersonalTeam(Scoreboard scoreboard, Player player) {
+        String teamName = personalTeamName(player);
+        Team team = scoreboard.getTeam(teamName);
+        return team != null ? team : scoreboard.registerNewTeam(teamName);
+    }
+
+    private static void cleanUpPersonalTeam(Scoreboard scoreboard, Player player) {
+        Team personalTeam = scoreboard.getTeam(personalTeamName(player));
+        if (personalTeam != null && personalTeam.getEntries().isEmpty()) {
+            personalTeam.unregister();
+        }
     }
 
     private static void applyStyle(Team team, TagStyle style) {
