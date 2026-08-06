@@ -1,0 +1,29 @@
+bot-runtime/src/core/controller.js
+  s_6776c97f3a38dc::t_eef6f0f83a1d41 110-117,120-124
+bot-runtime/src/games/lobby.js
+  s_6776c97f3a38dc::t_3d72962331525b 155-163
+  s_6776c97f3a38dc::t_1b6e87fab19630 218-221
+bot-runtime/test/lobby.test.js
+  s_6776c97f3a38dc::t_9d42e114ead4ef 145-163
+bot-runtime/test/controller-path.test.js
+  s_6776c97f3a38dc::t_fdc5198dfc3890 162,165-169,172,174-181
+  s_6776c97f3a38dc::t_75450591131aec 27-33
+bot-runtime/src/core/bot-runtime.js
+  s_6776c97f3a38dc::t_249d36d0108030 56-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "9d541eac54177f640bf61c43cd8e669a7106b5f6",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
