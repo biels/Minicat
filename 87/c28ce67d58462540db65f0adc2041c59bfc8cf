@@ -1,0 +1,21 @@
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_37c860f956d9c1::t_59390ad25aeb1e 83-85,89-92,108-109,161-167,289,549,555
+src/main/java/com/biel/lobby/RankingBook.java
+  s_37c860f956d9c1::t_59390ad25aeb1e 1-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "87c28ce67d58462540db65f0adc2041c59bfc8cf",
+  "prompts": {},
+  "sessions": {
+    "s_37c860f956d9c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afb33328-aad9-41a6-b433-7b3c288af88d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
