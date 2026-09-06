@@ -25,8 +25,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
@@ -426,9 +424,6 @@ public class Parkour extends JocScoreCombo{
 				p.teleport(getBubble().getFailTeleportPoint(startLocation));
 				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_HORSE_ARMOR, 1F, 1.1F);
 				advance(Score.FAIL);
-				
-				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 25, 129));
-				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 25, 129));
 			}
 			
 			//CHECKPOINT HANDLER
