@@ -1,6 +1,9 @@
 package com.biel.lobby.utilities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -27,11 +30,10 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionType;
-import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
-import com.biel.BielAPI.Utils.GUtils;
 import com.biel.BielAPI.events.EventBus;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips.Equip;
@@ -73,6 +75,12 @@ public class Turret extends EventBus {
 	public Boolean isAdmin = false;
 	public Boolean built = false;
 	public Boolean autoUpgrade = false;
+	/** A permanent turret is never worn down by the siege phase (the base laser). */
+	public boolean permanent = false;
+	private static final int ARROW_HIT_DAMAGE = 15;
+	private static final int MELEE_HIT_DAMAGE = 5;
+	private static final long MELEE_HIT_INTERVAL_MILLIS = 1000;
+	private final Map<UUID, Long> lastMeleeHitMillis = new HashMap<>();
 	public Boolean getAutoUpgrade() {
 		return autoUpgrade;
 	}
@@ -97,7 +105,8 @@ public class Turret extends EventBus {
 	private int taskEscutId;
 	//Estats
 	public int VelAtac = 22;
-	public int Atac = 4;
+	/** Raw arrow damage in half hearts, before the game's damage multiplier. 7 is a fully drawn vanilla bow. */
+	public int Atac = 7;
 	public int distAtac = 14;
 	public int xpPerTir = 1;
 	public int maxHpEscut = 0;
@@ -134,6 +143,14 @@ public class Turret extends EventBus {
 	}
 	public static ArrayList<Turret> getTurrets(Torres joc) {
 		return joc.Turrets;
+	}
+	/** The turret that fired this arrow, or null when the entity is not a turret arrow or the turret is gone. */
+	public static Turret fromArrow(Torres joc, Entity entity){
+		if (!(entity instanceof Arrow arrow) || !arrow.hasMetadata("Tower")) return null;
+		for (MetadataValue value : arrow.getMetadata("Tower")){
+			return getTurret(joc, value.asInt());
+		}
+		return null;
 	}
 	public static Turret getAdmin(Torres joc, Player plyr){
 		for (Turret t : getTurrets(joc)){
@@ -210,7 +227,7 @@ public class Turret extends EventBus {
 			loc.getBlock().setType(Material.NETHER_BRICK_FENCE);
 			TurretBlocks.add(loc.clone());
 			loc.setY(loc.getY() + 1);
-			loc.getBlock().setType(Material.REDSTONE_TORCH);
+			loc.getBlock().setType(Material.SEA_LANTERN); // Solid so arrows can hit the top third; the muzzle sits above it
 			TurretBlocks.add(loc.clone());
 			resetArmorCD();
 			built = true;
@@ -472,11 +489,10 @@ public class Turret extends EventBus {
 						tirsquim = 0;
 						return;
 					}
-					Location targetloc = getTarget().getEyeLocation();
-					Location spawnpoint = location.clone().add(new Location(world, 0.5, 2.6, 0.5));
-					//            		if (headless = false){
-					//            			spawnpoint = spawnpoint.add(new Vector(0, 2, 0));
-					//            		}
+					Location targetloc = target.getEyeLocation();
+					Location spawnpoint = location.clone().add(new Location(world, 0.5, 3.2, 0.5));
+					Vector horizontalToTarget = targetloc.toVector().subtract(spawnpoint.toVector()).setY(0);
+					if (horizontalToTarget.lengthSquared() > 0) spawnpoint.add(horizontalToTarget.normalize().multiply(0.7));
 					Vector rawDir = targetloc.toVector().subtract(spawnpoint.toVector());
 					Vector dir = rawDir.normalize();
 					Vector addUp = new Vector(0, rawDir.length() / 40.0,0);
@@ -625,12 +641,32 @@ public class Turret extends EventBus {
 			}
 			resetArmorCD();
 		}
-
+		destroyIfDead(loceffect);
+	}
+	/** Siege wear: hit points lost with no attacker, no shield involved. */
+	public void decay(int damage){
+		hp = hp - damage;
+		Location loceffect = location.clone().add(0.5, 1.5, 0.5);
+		world.playEffect(loceffect, Effect.SMOKE, 4);
+		destroyIfDead(loceffect);
+	}
+	public void disableShield(){
+		maxHpEscut = 0;
+		hpEscut = 0;
+		setArmorCD(-1);
+		DestroyArmor();
+	}
+	private void destroyIfDead(Location loceffect){
 		if (hp <= 0){
 			world.createExplosion(loceffect.getX(), loceffect.getY(), loceffect.getZ(), 4.6F, false, false);
 			Stop();
 			Destroy();
 		}
+	}
+	/** Enemies only: a team's own turrets, or a lone turret's creator, take no damage from them. */
+	boolean canBeAttackedBy(Player player){
+		if (equip != null) return !equip.getPlayers().contains(player);
+		return player != creador;
 	}
 	Boolean anyUpgradePossible(){
 		for (Millora mill : Millores){
@@ -653,55 +689,16 @@ public class Turret extends EventBus {
 	
 	@Override
 	protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
-		// TODO Auto-generated method stub
 		super.onProjectileHit(evt, proj);
-
-
-		if (evt.getEntity() instanceof Arrow){
-			Arrow entity = (Arrow)evt.getEntity();
-
-			World world = entity.getWorld();
-			Location loc = entity.getLocation();
-
-
-			//Location land = loc.add(entity.getVelocity().normalize().multiply(0.8));
-			Arrow arrow = (Arrow)proj;
-			if((arrow.getShooter() instanceof Player)){
-				Player player = (Player)arrow.getShooter();
-				World world1 = arrow.getWorld();
-				BlockIterator iterator = new BlockIterator(world1, arrow.getLocation().toVector(), arrow.getVelocity().normalize(), 0, 4);
-				Block hitBlock = null;
-
-				while(iterator.hasNext()) {
-					hitBlock = iterator.next();
-					// hitBlock.breakNaturally();
-					if(GUtils.isValidSolidBlock(hitBlock)){ break;}
-				}
-				if (hitBlock != null) {
-					//land.getBlock().setType(Material.IRON_BLOCK);
-					if (ContainsTurretBlock(hitBlock.getLocation())) {
-						Boolean hit = true;
-						if (equip != null) {
-							if (equip.getPlayers().contains(player) == true) {
-								hit = false;
-							}
-						} else {
-							if (player == creador) {
-								hit = false;
-							}
-						}
-						if (hit) {
-							Hit(15);
-							player.playSound(player.getEyeLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 0.9F);
-							arrow.remove();
-						}
-
-					}
-				}
-
-			}
-
-		}
+		if (!(proj instanceof Arrow arrow)) return;
+		if (arrow.hasMetadata("Tower")) return; // Turret fire does not besiege turrets
+		if (!(arrow.getShooter() instanceof Player player)) return;
+		Block hitBlock = evt.getHitBlock();
+		if (hitBlock == null || !ContainsTurretBlock(hitBlock.getLocation())) return;
+		if (!canBeAttackedBy(player)) return;
+		Hit(ARROW_HIT_DAMAGE);
+		player.playSound(player.getEyeLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 0.9F);
+		arrow.remove();
 	}
 	@Override
 	protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
@@ -793,8 +790,12 @@ public class Turret extends EventBus {
 			}
 		}
 		if (evt.getAction() == Action.LEFT_CLICK_BLOCK){
-			if (ContainsTurretBlock(evt.getClickedBlock().getLocation())){
-				Hit(5);
+			if (ContainsTurretBlock(evt.getClickedBlock().getLocation()) && canBeAttackedBy(plyr)){
+				long now = System.currentTimeMillis();
+				Long lastHit = lastMeleeHitMillis.get(plyr.getUniqueId());
+				if (lastHit != null && now - lastHit < MELEE_HIT_INTERVAL_MILLIS) return;
+				lastMeleeHitMillis.put(plyr.getUniqueId(), now);
+				Hit(MELEE_HIT_DAMAGE);
 			}
 		}
 
@@ -902,7 +903,7 @@ public class Turret extends EventBus {
 			tipus = millora;
 			switch (millora) {
 			case MAL:  name = "Fletxes esmolades";
-			Description = "+1 mal";
+			Description = "+2 mal";
 			material = Material.IRON_AXE;
 			Cost = 25;
 			break;

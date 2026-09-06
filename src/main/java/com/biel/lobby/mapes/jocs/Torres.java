@@ -51,11 +51,21 @@ import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.utilities.Turret;
 import com.biel.lobby.utilities.Turret.TipusMillora;
+import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.Utils;
 
 public class Torres extends JocEquips {
 	private static final double GENERAL_DAMAGE_MULTIPLIER = 0.6;
+	/** Respawn stun: this many seconds at the start, one more per minute played, capped. A lost fight has to cost a push. */
+	private static final int RESPAWN_STUN_BASE_SECONDS = 5;
+	private static final int RESPAWN_STUN_MAX_SECONDS = 20;
+	/** Siege phase: from this second, turrets lose their shields and wear down until only players defend. Map property SiegeStart overrides. */
+	private static final int SIEGE_START_DEFAULT_SECONDS = 8 * 60;
+	private static final int SIEGE_DECAY_INTERVAL_SECONDS = 30;
+	private static final int SIEGE_DECAY_HP = 5;
 	boolean debug = false;
+	private boolean siegeStarted = false;
+	private int secondsUntilSiegeDecay = SIEGE_DECAY_INTERVAL_SECONDS;
 	public ArrayList<Turret> Turrets = new ArrayList<>();
 	@Override
 	protected ArrayList<Equip> getDesiredTeams() {
@@ -75,9 +85,10 @@ public class Torres extends JocEquips {
 	protected void donarEfectesInicials(Player ply) {
 		// TODO Auto-generated method stub
 		super.donarEfectesInicials(ply);
-		int d = (int) (20 * (5 + Math.sqrt(segonsTranscorreguts()) / 9));
+		int stunSeconds = Math.min(RESPAWN_STUN_MAX_SECONDS, RESPAWN_STUN_BASE_SECONDS + segonsTranscorreguts() / 60);
+		int d = 20 * stunSeconds;
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 4 * 20 + d, 4, false), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20 * 10, 2, false), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, d + 5 * 20, 2, false), true);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, d , 50, false), true);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, d, 5, false), true);
 	}
@@ -139,6 +150,12 @@ public class Torres extends JocEquips {
 		return b;
 	}
 
+	int getSiegeStartSeconds(){
+		if(pMapaActual().ExisteixPropietat("SiegeStart")){
+			return pMapaActual().ObtenirPropietatInt("SiegeStart");
+		}
+		return SIEGE_START_DEFAULT_SECONDS;
+	}
 	public ArrayList<Location> getInhibitors(Equip e) {
 		return pMapaActual().ObtenirLocations("inhibitors" + e.getId(), getWorld());
 	}
@@ -181,6 +198,7 @@ public class Torres extends JocEquips {
 				if (preset == TurretPreset.LASER){ //0, 2
 					turr.getByTipus(TipusMillora.FOC).lvl = 1;
 					turr.hp = 900000;
+					turr.permanent = true;
 					turr.distAtac = turr.distAtac + 5;
 					turr.Atac = 12;
 				}
@@ -199,7 +217,6 @@ public class Torres extends JocEquips {
 //					turr.VelAtac = turr.VelAtac - 5;
 //				}
 				turr.distAtac = turr.distAtac + 4;
-				turr.Atac = turr.Atac + 3;
 				turr.Attack();
 
 				tId = tId + 1;
@@ -216,6 +233,8 @@ public class Torres extends JocEquips {
 			Turret turr = Turret.createTurret(Com.getPlugin(), p.getLocation(), p, this, obtenirEquip(p), false, true);
 			turr.xp = 20;
 		}
+		sendGlobalMessage(ChatColor.GOLD + "El setge començarà al minut " + (getSiegeStartSeconds() / 60)
+				+ ChatColor.GRAY + ": les torres perdran l'escut i es desgastaran fins caure.");
 		//Bukkit.broadcastMessage("Millora les torres de la base. La batalla començarà d'aquí a 20 segons.");
 		//		getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 		//          public void run() {
@@ -245,12 +264,39 @@ public class Torres extends JocEquips {
 			}
 		}
 		Turrets.removeAll(toRemove);
+		if(JocIniciat)tickSiege();
+	}
+	/** Runs once a second after the start. Announces the siege and then wears every standing turret down on a fixed cadence. */
+	private void tickSiege(){
+		if(!siegeStarted){
+			if(segonsTranscorreguts() < getSiegeStartSeconds())return;
+			siegeStarted = true;
+			for(Player p : getPlayers()){
+				PaperMessages.showTitle(p, 10, 60, 20, ChatColor.RED + "" + ChatColor.BOLD + "SETGE",
+						ChatColor.GRAY + "Les torres perden l'escut i es desgasten");
+			}
+			world.playSound(getHalfwayMiddle(), Sound.ENTITY_WITHER_SPAWN, 20F, 0.8F);
+			secondsUntilSiegeDecay = 1; // Shields drop with the announcement; wear follows on the cadence
+		}
+		secondsUntilSiegeDecay--;
+		if(secondsUntilSiegeDecay > 0)return;
+		secondsUntilSiegeDecay = SIEGE_DECAY_INTERVAL_SECONDS;
+		for(Turret t : new ArrayList<>(Turrets)){
+			if(!t.built || t.permanent)continue;
+			t.disableShield();
+			t.decay(SIEGE_DECAY_HP);
+		}
 	}
 	@Override
 	protected void onEntityDamageByEntity(EntityDamageByEntityEvent evt,
 			Entity damaged, Entity damager) {
 		// TODO Auto-generated method stub
 		super.onEntityDamageByEntity(evt, damaged, damager);
+		Turret shootingTurret = Turret.fromArrow(this, damager);
+		if (shootingTurret != null) {
+			// A turret's arrow deals its Atac stat, not the vanilla arrow damage that ignored every upgrade.
+			evt.setDamage(shootingTurret.Atac * GENERAL_DAMAGE_MULTIPLIER);
+		}
 
 		if (evt.getEntityType() == EntityType.END_CRYSTAL){
 
@@ -516,9 +562,10 @@ public class Torres extends JocEquips {
 	@Override
 	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-		if (!evt.isCancelled()) {
+		if (!evt.isCancelled() && Turret.fromArrow(this, evt.getDamager()) == null) {
 			// Torres historically reduced every damage source to 60%. Restore
-			// normal damage specifically for player-versus-player combat.
+			// normal damage specifically for player-versus-player combat. A turret's
+			// arrow carries its creator as shooter but is not player combat.
 			evt.setDamage(evt.getDamage() / GENERAL_DAMAGE_MULTIPLIER);
 		}
 	}
