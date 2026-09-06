@@ -17,6 +17,14 @@ public class DataAPI {
 	private static final String DATABASE_URL = "jdbc:mysql://localhost:3306/minicat?connectTimeout=2000&socketTimeout=3000&useSSL=false";
 	private static final String DATABASE_USER = "minicat_usr";
 	private static final String DATABASE_PASSWORD = "minicat";
+	//MySQL drops a connection that has been idle for wait_timeout (eight hours by
+	//default). The Connection object stays non-null once that happens, so liveness
+	//has to be asked for rather than inferred from the field being set.
+	private static final int CONNECTION_VALIDATION_TIMEOUT_SECONDS = 2;
+	//A game whose typical length is unknown counts as a half-hour game rather than a
+	//zero-length one. Callers divide by this figure, and zero makes the quotient
+	//infinite instead of merely wrong.
+	private static final double UNKNOWN_AVG_GAME_LENGTH_SECONDS = 60 * 30;
 	boolean datalessMode = false;
 	Logger logger = Logger.getLogger("DataAPI");
 	private final Set<String> emittedDatalessWarnings = ConcurrentHashMap.newKeySet();
@@ -52,7 +60,23 @@ public class DataAPI {
 		}
 	}
 	public void repairConnection(){
-		if(connection == null && !datalessMode)openConnection();
+		if(datalessMode)return;
+		try {
+			if(connection != null && connection.isValid(CONNECTION_VALIDATION_TIMEOUT_SECONDS))return;
+		} catch (SQLException exception) {
+			//A connection too broken to report its own validity is simply replaced.
+		}
+		discardUnusableConnection();
+		openConnection();
+	}
+	private void discardUnusableConnection(){
+		if(connection == null)return;
+		try {
+			connection.close();
+		} catch (SQLException exception) {
+			//It is already unusable; failing to close it changes nothing.
+		}
+		connection = null;
 	}
 	public void closeConnection() {
 		timestampWriter.shutdown();
@@ -401,21 +425,25 @@ public class DataAPI {
 		}
 	}
 	public double getAvgGameLength(int gameId) {
-		if(datalessMode)return 60*30;
+		if(datalessMode)return UNKNOWN_AVG_GAME_LENGTH_SECONDS;
+		repairConnection();
+		if(datalessMode || connection == null)return UNKNOWN_AVG_GAME_LENGTH_SECONDS;
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT AVG(TIME_TO_SEC(TIMEDIFF(end_time, start_time))) FROM match_history WHERE game_id=? && winner != -1 && end_time IS NOT NULL;");
 			sql.setInt(1, gameId);
 			ResultSet result = sql.executeQuery();
 			result.next();
-			double points = result.getDouble(1);
+			double avgGameLengthSeconds = result.getDouble(1);
+			boolean gameHasNoFinishedMatches = result.wasNull();
 			sql.close();
 			result.close();
 
-			return points;
+			if(gameHasNoFinishedMatches || avgGameLengthSeconds <= 0)return UNKNOWN_AVG_GAME_LENGTH_SECONDS;
+			return avgGameLengthSeconds;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return 0;
+		return UNKNOWN_AVG_GAME_LENGTH_SECONDS;
 	}
 	//TIMESTAMP
 	public void registerTimestamp(int matchId, int playerId, int frameId, int kills, int deaths, double damageDealt, boolean isAlive, String itemInHand, int blocksPlaced, int blocksBroken, int objectivesCompleted, int spree) { //Gamemode

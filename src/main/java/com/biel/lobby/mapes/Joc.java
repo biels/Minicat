@@ -750,7 +750,12 @@ public abstract class Joc extends MapaResetejable {
 			if(!JocIniciat)return 0;
 			if(JocFinalitzat)return 1;
 		}
-		return getGameTime().toMillis() / (double)getAvgGameLength().toMillis();
+		long avgGameLengthMillis = getAvgGameLength().toMillis();
+		//Without a reference length there is no progress to estimate. Dividing by it
+		//anyway yields Infinity, which Math.round turns into Long.MAX_VALUE at every
+		//display site - the announcer once read "Progres: 922337203685477580%".
+		if(avgGameLengthMillis <= 0)return 0;
+		return getGameTime().toMillis() / (double)avgGameLengthMillis;
 	}
 	public Duration getGameTime(){
 		return Duration.ofSeconds(segonsTranscorreguts());
