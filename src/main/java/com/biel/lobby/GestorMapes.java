@@ -1,11 +1,14 @@
 package com.biel.lobby;
 
-import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import com.biel.lobby.utilities.PaperMessages;
@@ -155,7 +158,8 @@ public class GestorMapes implements Listener{
 		}
 		return null;
 	}
-	public Joc createGameInstance(String gameName, Integer mapId){
+	/** Starts creating an instance of the named game; null when no such game is registered. */
+	public CompletableFuture<Joc> createGameInstance(String gameName, Integer mapId){
 		for (ContenidorMapa container : Mapes){
 			if (container instanceof ContenidorJoc && container.ClassMapa.getSimpleName().equalsIgnoreCase(gameName)){
 				return ((ContenidorJoc) container).addMap(mapId);
@@ -312,42 +316,86 @@ public class GestorMapes implements Listener{
 			}
 			return null;
 		}
-		public Joc addMap(Integer map){
+		/** Creations under way, by template map id (-1 for a single-map game). */
+		private final Map<Integer, CompletableFuture<Joc>> pendingCreations = new HashMap<>();
+
+		/**
+		 * Creates an instance without freezing the server: the world folder is copied
+		 * off the main thread and the world is loaded on it once the copy is done. A
+		 * second request for the same template while one is under way gets the pending
+		 * one instead of starting another. The future completes on the main thread.
+		 */
+		public CompletableFuture<Joc> addMap(Integer map){
+			Integer templateKey = map == null ? -1 : map;
+			CompletableFuture<Joc> pending = pendingCreations.get(templateKey);
+			if (pending != null) return pending;
+
+			CompletableFuture<Joc> creation = new CompletableFuture<>();
+			Joc newInstance;
 			try {
-				Joc newInstance = (Joc) ClassMapa.newInstance();
+				newInstance = (Joc) ClassMapa.newInstance();
 				if(map != null){
 					newInstance.setMultiMapId(map);
 				}
-				newInstance.initialize();
-				Instàncies.add(newInstance);
-				return newInstance;
-			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				Bukkit.broadcastMessage("Ha fallat la creaciò d'una instància: " + nom);
-				Bukkit.broadcastMessage("Error: " + e.getMessage());
-				Bukkit.broadcastMessage("ErrorType: " + e.getClass().getName());
-				if (e instanceof InvocationTargetException){
-					InvocationTargetException ex = (InvocationTargetException) e;
-					Bukkit.broadcastMessage("Message: " + ex.getTargetException().getMessage());
-					Bukkit.broadcastMessage("String: " + ex.getTargetException().toString());
-				}
-				return null;
+				newInstance.reserveLiveWorld();
+			} catch (ReflectiveOperationException | RuntimeException e) {
+				plugin.getLogger().log(Level.SEVERE, "Could not start creating an instance of " + nom, e);
+				creation.completeExceptionally(e);
+				return creation;
 			}
-		}
-		Boolean canAutoJoin(){
-			//if (AlgunMapaDisponible() == false){return false;}
-			return Instàncies.size() <= 1;
-
-		}
-		void autoJoin(Player ply){
-			if  (canAutoJoin()){
-				if(Instàncies.size() == 0){
-					addMap(null);
+			pendingCreations.put(templateKey, creation);
+			Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+				RuntimeException copyFailure = null;
+				try {
+					newInstance.copyWorldFiles();
+				} catch (RuntimeException e) {
+					copyFailure = e;
 				}
-				Instàncies.get(0).Join(ply);
+				RuntimeException outcome = copyFailure;
+				Bukkit.getScheduler().runTask(plugin, () -> finishCreation(templateKey, creation, newInstance, outcome));
+			});
+			return creation;
+		}
+		private void finishCreation(Integer templateKey, CompletableFuture<Joc> creation, Joc newInstance, RuntimeException copyFailure){
+			pendingCreations.remove(templateKey);
+			RuntimeException failure = copyFailure;
+			if (failure == null) {
+				try {
+					newInstance.initialize();
+					Instàncies.add(newInstance);
+					creation.complete(newInstance);
+					return;
+				} catch (RuntimeException e) {
+					failure = e;
+				}
 			}
-
+			plugin.getLogger().log(Level.SEVERE, "Could not create an instance of " + nom, failure);
+			if (newInstance.getWorld() != null) {
+				newInstance.deleteVirtualWorld();
+			} else {
+				newInstance.discardLiveWorldFiles();
+			}
+			newInstance.destroyEventBus();
+			creation.completeExceptionally(failure);
+		}
+		/** Sends the player into an instance once it exists, and tells them if it never does. */
+		void joinWhenCreated(CompletableFuture<Joc> creation, Player ply){
+			PaperMessages.sendActionBar(ply, ChatColor.YELLOW + "Creant una instància de " + nom + "...", 100);
+			ply.playSound(ply.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.4F);
+			creation.whenComplete((game, failure) -> {
+				if (!ply.isOnline()) return;
+				if (failure != null) {
+					ply.sendMessage(ChatColor.RED + "No s'ha pogut crear la instància de " + nom + ".");
+					return;
+				}
+				if (!lobby.isOnLobby(ply)) {
+					// They went somewhere else while the world was being copied; do not
+					// pull them out of it, just tell them where the new one is.
+					ply.sendMessage(ChatColor.GRAY + "La instància " + game.getMapName() + " ja està llesta: /minicatjoin " + game.getMapName());
+					return;
+				}
+				game.Join(ply);
+			});
 		}
 		Boolean AlgunMapaDisponible(){
 			for(Joc map : Instàncies){
@@ -458,8 +506,8 @@ public class GestorMapes implements Listener{
                     Joc map = Instàncies.get(pos); /*Open*/
                     map.Join(event.getPlayer());
                 } else {
-                    Joc nouMapa = addMap(m == MapMode.MULTIPLE ? 26 - event.getPosition() : null); /*New*/
-                    nouMapa.Join(event.getPlayer());
+                    event.setWillClose(true);
+                    joinWhenCreated(addMap(m == MapMode.MULTIPLE ? 26 - event.getPosition() : null), event.getPlayer()); /*New*/
                 }
 
             });

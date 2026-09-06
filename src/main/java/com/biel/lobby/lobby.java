@@ -2,6 +2,8 @@ package com.biel.lobby;
 
 
 
+import java.util.concurrent.CompletableFuture;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -132,12 +134,19 @@ public final class lobby extends JavaPlugin {
 					return true;
 				}
 			}
-			Joc createdGame = gest.createGameInstance(args[0], mapId);
-			if(createdGame == null){
-				sender.sendMessage(ChatColor.RED + "No s'ha pogut crear el joc " + args[0] + ".");
-			} else {
-				sender.sendMessage(ChatColor.GREEN + "Instància creada: " + createdGame.getGameName() + " / " + createdGame.getMapName());
+			CompletableFuture<Joc> creation = gest.createGameInstance(args[0], mapId);
+			if(creation == null){
+				sender.sendMessage(ChatColor.RED + "No hi ha cap joc anomenat " + args[0] + ".");
+				return true;
 			}
+			sender.sendMessage(ChatColor.GRAY + "Creant la instància de " + args[0] + "...");
+			creation.whenComplete((createdGame, failure) -> {
+				if(failure != null){
+					sender.sendMessage(ChatColor.RED + "No s'ha pogut crear el joc " + args[0] + ": " + failure.getMessage());
+				} else {
+					sender.sendMessage(ChatColor.GREEN + "Instància creada: " + createdGame.getGameName() + " / " + createdGame.getMapName());
+				}
+			});
 			return true;
 		}
 

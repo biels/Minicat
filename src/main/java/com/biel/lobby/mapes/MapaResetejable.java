@@ -30,8 +30,12 @@ public abstract class MapaResetejable extends Mapa {
 		super();
 		// TODO Auto-generated constructor stub
 	}
+	/**
+	 * Loads the live world. Its files must already be in place: an instance is made
+	 * by reserveLiveWorld() on the main thread, copyWorldFiles() off it, then this.
+	 */
 	public void initialize() {
-		createVirtualWorld();
+		loadVirtualWorld();
 	}
 	public static void cleanupStaleRuntimeWorlds() {
 		File metadataRoot = new File(FolderLiveMetadata);
@@ -95,29 +99,46 @@ public abstract class MapaResetejable extends Mapa {
 		return nouNom;
 	}
 
-	void createVirtualWorld(){
-		if (getGameName().equals("")){return;}
-		if (isWorldLoaded() == true){return;}
+	/**
+	 * Claims the next free live world name by creating its metadata directory at
+	 * once, so two instances being created at the same time cannot pick the same
+	 * name. Main thread only.
+	 */
+	public void reserveLiveWorld(){
+		if (getGameName().equals("")) throw new IllegalStateException("A game without a name cannot reserve a world");
 		NomWorld = getLiveWorldAvaliableName(FolderLiveMetadata);
-		//Copy world
+		File metadataDirectory = getLiveMetadataFile();
+		if (!metadataDirectory.mkdirs()) {
+			throw new IllegalStateException("Could not reserve live metadata directory " + metadataDirectory);
+		}
+	}
+	/**
+	 * Copies the template into the reserved live folder. Pure file work that touches
+	 * nothing in Bukkit, so it runs off the main thread: copying a world inside a
+	 * menu click used to freeze the whole server for the duration.
+	 */
+	public void copyWorldFiles(){
 		File worldOrigin = getWorldOriginMappedFile();
 		File worldLive = getLiveWorldFile();
 		File metadataDirectory = getLiveMetadataFile();
 		try {
 			copyDirectory(worldOrigin, worldLive);
-			if (!metadataDirectory.exists() && !metadataDirectory.mkdirs()) {
-				throw new IOException("Could not create live metadata directory " + metadataDirectory);
-			}
 			File sourceProperties = new File(worldOrigin, "pMapaActual.txt");
 			if (sourceProperties.isFile()) {
 				FileUtils.copyFile(sourceProperties, new File(metadataDirectory, "pMapaActual.txt"));
 			}
-			File uid = new File(worldLive.getPath() + "/" + "uid.dat");
-			uid.delete();
+			new File(worldLive, "uid.dat").delete();
 		} catch (IOException e) {
 			throw new IllegalStateException("El mon no s'ha pogut copiar: " + getGameName(), e);
 		}
-		//-----
+	}
+	/** Removes what a creation that never loaded a world left on disk. */
+	public void discardLiveWorldFiles(){
+		deleteFolder(getLiveWorldFile());
+		deleteFolder(getLiveMetadataFile());
+	}
+	private void loadVirtualWorld(){
+		if (isWorldLoaded()) return;
 		world = Bukkit.createWorld(new WorldCreator(getLiveWorldFolder()));
 		if (world == null) {
 			throw new IllegalStateException("Paper no ha pogut carregar el mon " + getLiveWorldFolder());
