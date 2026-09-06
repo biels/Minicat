@@ -1,0 +1,24 @@
+src/main/java/com/biel/lobby/utilities/data/DataAPI.java
+  s_fa2101e2c7d612::t_f557f6653e5e02 436-437,441-442,446
+  s_fa2101e2c7d612::t_ec694f52eb7488 20-27,63-79,428-430
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_fa2101e2c7d612::t_f557f6653e5e02 753-758
+src/main/java/com/biel/lobby/mapes/JocScoreRace.java
+  s_fa2101e2c7d612::t_f557f6653e5e02 130-132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ab68dea1a9da9e3f1e874fb90b39b65e86ddd151",
+  "prompts": {},
+  "sessions": {
+    "s_fa2101e2c7d612": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fc63172b-6675-413a-9dbf-432c69e53ad7",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
