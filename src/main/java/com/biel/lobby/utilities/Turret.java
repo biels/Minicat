@@ -78,6 +78,10 @@ public class Turret extends EventBus {
 	/** A permanent turret is never worn down by the siege phase (the base laser). */
 	public boolean permanent = false;
 	private static final int ARROW_HIT_DAMAGE = 15;
+	/** Hit points a placed turret gains per Escut protector level; the template's own hp is never shot at. */
+	public static final int SHIELD_UPGRADE_HP_BONUS = 2;
+	/** Both special attacks fire on this shot count instead of an arrow. */
+	private static final int SPECIAL_ATTACK_EVERY_SHOTS = 12;
 	private static final int MELEE_HIT_DAMAGE = 5;
 	private static final long MELEE_HIT_INTERVAL_MILLIS = 1000;
 	private final Map<UUID, Long> lastMeleeHitMillis = new HashMap<>();
@@ -129,6 +133,12 @@ public class Turret extends EventBus {
 		inicialitzarMillores();
 
 	}
+	public Location getLocation(){
+		return location.clone();
+	}
+	public int getUpgradeHpBonus(){
+		return SHIELD_UPGRADE_HP_BONUS * getByTipus(TipusMillora.RESISTÈNCIA).lvl;
+	}
 	public static Turret createTurret(lobby plugin, Location location, Player creador, Torres joc, Equip equip, Boolean headless, Boolean admin){
 		getTurrets(joc).add(new Turret(plugin, getTurrets(joc).size(), location, creador, joc, equip, headless, admin));
 		return getTurrets(joc).get(getTurrets(joc).size() - 1);
@@ -177,6 +187,7 @@ public class Turret extends EventBus {
 			if (t.creador == creador && t.isAdmin == false){
 				//Stats
 				t.Atac = Atac;
+				boolean fireRateChanged = t.VelAtac != VelAtac;
 				t.VelAtac = VelAtac;
 				t.distAtac = distAtac;
 				t.xpPerTir = xpPerTir;
@@ -188,6 +199,10 @@ public class Turret extends EventBus {
 				t.Millores = Millores;
 				//altres
 				t.resetArmorCD();
+				if (fireRateChanged && t.built){ // The firing task has a fixed period; only a restart applies the new one
+					t.Stop();
+					t.Attack();
+				}
 			}
 		}
 	}
@@ -378,24 +393,14 @@ public class Turret extends EventBus {
         }, CD * 20);
 		//Bukkit.broadcastMessage("CD init: " + Integer.toString(CD));
 	}
+	private static final int POTION_EFFECT_KINDS = 3; // harming lines, poison ring, weakness ring
 	public void randomPotionAttack(int attacks, int power){
 		ArrayList<Integer> chosen = new ArrayList<>();
-		int count = 0;
-		while (count <= attacks){
-			int maxid = 2;
-			int n = -1;
-			while (n == -1){
-				int newnumber = Utils.NombreEntre(0, maxid);
-				if (!chosen.contains(newnumber)){
-					n = newnumber;
-				}
-			}
-			chosen.add(n);
-			count++;
-		}
+		for (int id = 0; id < POTION_EFFECT_KINDS; id++) chosen.add(id);
+		java.util.Collections.shuffle(chosen);
 		int attackcount = 0;
 		int remainingpower = power;
-		for (int id : chosen){
+		for (int id : chosen.subList(0, Math.min(attacks, POTION_EFFECT_KINDS))){
 			PotionAttack(id, remainingpower, 20 * attackcount);
 			attackcount++;
 			remainingpower = (remainingpower / 2) + 1;
@@ -412,7 +417,7 @@ public class Turret extends EventBus {
 			faces.add(BlockFace.EAST);
 			for (BlockFace face : faces){
 				Location iLoc = location.clone();
-				int range = 8 + power;
+				int range = 2 + power;
 				int count = 0;
 				while (count <= range){
 					Block block = iLoc.getBlock().getRelative(face);
@@ -427,8 +432,7 @@ public class Turret extends EventBus {
 		}
 		if (id == 1){ //Poison
 			int radius = 6;
-			int espai = 40 - power;
-			if (espai <= 8){espai = 8;}
+			int espai = Math.max(45, 120 - power * 15);
 			ArrayList<Location> locs = Utils.getLocationsCircle(location.clone(), (double) radius, espai);
 			for (Location loc : locs){
 				tirarPoció(loc, PotionType.POISON, delayOffSet);
@@ -438,8 +442,7 @@ public class Turret extends EventBus {
 		if (id == 2){ //Poison
 			int count = 0;
 			int radius = 5;
-			int espai = 40 - (power * 2);
-			if (espai <= 5){espai = 5;}
+			int espai = Math.max(60, 120 - power * 10);
 			ArrayList<Location> locs = Utils.getLocationsCircle(location.clone(), (double) radius, espai);
 			for (Location loc : locs){
 				tirarPoció(loc, PotionType.WEAKNESS, delayOffSet + (count * 2));
@@ -478,14 +481,14 @@ public class Turret extends EventBus {
 				checkIntegrity();
 				LivingEntity target = getTarget();
 				if (target != null){
-					if (tirs >= 12 && getByTipus(TipusMillora.MECÀNICA).lvl > 0){
+					if (tirs >= SPECIAL_ATTACK_EVERY_SHOTS && getByTipus(TipusMillora.MECÀNICA).lvl > 0){
 						AtacEspecial();
 						tirs = 0;
 						return;
 					}
-					if (tirsquim >= 3 && getByTipus(TipusMillora.QUÍMICA).lvl > 0 ){//getTargets().size() > 4
+					if (tirsquim >= SPECIAL_ATTACK_EVERY_SHOTS && getByTipus(TipusMillora.QUÍMICA).lvl > 0 ){
 						int lvl = getByTipus(TipusMillora.QUÍMICA).lvl;
-						randomPotionAttack((int) (1 + Math.rint(lvl/3)), lvl * 3 + 1);
+						randomPotionAttack(1 + lvl / 3, lvl);
 						tirsquim = 0;
 						return;
 					}
@@ -562,8 +565,8 @@ public class Turret extends EventBus {
 				while (i1 < shoots){
 					joc.scheduleGameplayTask(() -> {
                         int i = 0;
-                        int espai = 32 - (getByTipus(TipusMillora.MECÀNICA).lvl * 4);
-                        while (i <= 360){
+                        int espai = 45; // 8 arrows per ring
+                        while (i < 360){
                             float angle = i;
                             double toRadians = Math.PI / 180;
                             //Location locSpawn = plyr.getLocation().add(0,1,0);
@@ -572,8 +575,7 @@ public class Turret extends EventBus {
                             Vector dir2 = spawnpoint.toVector().subtract(centerLoc.toVector()).normalize().multiply(0.5);
                             Arrow arrow = (Arrow)world.spawnEntity(spawnpoint, EntityType.ARROW);
                             //Bukkit.broadcastMessage(Float.toString(plyr.getLocation().getYaw()));
-                            //arrow.setShooter(creador);
-                            //arrow.setItem(item)
+                            arrow.setShooter(creador); // Team checks and kill credit follow the creator
                             arrow.setMetadata("Tower", new FixedMetadataValue(plugin, id));
                             arrow.setMetadata("Special", new FixedMetadataValue(plugin, true));
                             arrow.setFireTicks(200);
@@ -906,12 +908,13 @@ public class Turret extends EventBus {
 			Description = "+2 mal";
 			material = Material.IRON_AXE;
 			Cost = 25;
+			max = 5;
 			break;
 			case VELOCITAT_ATAC:  name = "Recàrrega ràpida";
-			Description = "+10% Velocitat d'atac";
+			Description = "-2 ticks de recàrrega (mín. 10)";
 			Cost = 38;
 			material = Material.FEATHER;
-			max = 10;
+			max = 6;
 			break;
 			case FOC:  name = "Fletxes infernals";
 			Description = "Les fletxes cremen als enemics";
@@ -923,6 +926,7 @@ public class Turret extends EventBus {
 			Description = "+2 blocs dist. atac";
 			material = Material.BOW;
 			Cost = 30;
+			max = 5;
 			break;
 			case RESISTÈNCIA:  name = "Escut protector";
 			Description = "-4s Regen. Escut, +6Hp escut, +2Hp";
@@ -931,25 +935,28 @@ public class Turret extends EventBus {
 			max = 20;
 			break;
 			case QUÍMICA:  name = "Química";
-			Description = "Habilitats amb pocions";
+			Description = "Pluja de pocions cada 12 tirs";
 			material = Material.BREWING_STAND;
 			Cost = 50;
+			max = 5;
 			break;
 			case MECÀNICA:  name = "Mecànica avançada";
-			Description = "Habilitats especials cada 10 tirs";
+			Description = "Anells de fletxes cada 12 tirs";
 			material = Material.PISTON;
 			Cost = 100;
 			max = 5;
 			break;
 			case MAGNETISME:  name = "Magnetisme";
-			Description = "Els atacs atreuen i alenteixen a l'enemic";
+			Description = "Les fletxes atreuen i alenteixen l'enemic";
 			material = Material.IRON_INGOT;
 			Cost = 22;
+			max = 3;
 			break;
 			case APRENENTATGE:  name = "Aprenentatge";
-			Description = "x2 punts d'experiència";
+			Description = "+1 punt d'experiència per tir";
 			material = Material.BOOK;
 			Cost = 75;
+			max = 4;
 			break;
 			default:
 				break;
@@ -1033,7 +1040,12 @@ public class Turret extends EventBus {
 			break;
 			case RESISTÈNCIA:  
 				maxHpEscut = maxHpEscut + 6;
-				hp = hp + 2;
+				hp = hp + SHIELD_UPGRADE_HP_BONUS;
+				if (isAdmin){ // Placed turrets get the bonus too; the template's hp is never shot at
+					for (Turret t : joc.Turrets){
+						if (t.creador == creador && !t.isAdmin) t.hp = t.hp + SHIELD_UPGRADE_HP_BONUS;
+					}
+				}
 				tempsEscut = tempsEscut - 4;
 				if (tempsEscut < 10){
 					tempsEscut = 10;
@@ -1046,7 +1058,7 @@ public class Turret extends EventBus {
 
 				break;
 			case APRENENTATGE:  
-				xpPerTir = xpPerTir * 2;
+				xpPerTir = xpPerTir + 1;
 				break;
 			default:
 				break;

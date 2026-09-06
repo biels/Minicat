@@ -296,6 +296,15 @@ public class Torres extends JocEquips {
 		if (shootingTurret != null) {
 			// A turret's arrow deals its Atac stat, not the vanilla arrow damage that ignored every upgrade.
 			evt.setDamage(shootingTurret.Atac * GENERAL_DAMAGE_MULTIPLIER);
+			int magnetism = shootingTurret.getByTipus(TipusMillora.MAGNETISME).lvl;
+			if (magnetism > 0 && damaged instanceof LivingEntity pulled) {
+				pulled.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * magnetism, 0), true);
+				Vector towardTurret = shootingTurret.getLocation().add(0.5, 0, 0.5).toVector().subtract(pulled.getLocation().toVector()).setY(0);
+				if (towardTurret.lengthSquared() > 0) {
+					Vector pull = towardTurret.normalize().multiply(0.35 * magnetism).setY(0.25);
+					scheduleGameplayTask(() -> pulled.setVelocity(pull), 1); // After the hit's own knockback
+				}
+			}
 		}
 
 		if (evt.getEntityType() == EntityType.END_CRYSTAL){
@@ -478,7 +487,7 @@ public class Torres extends JocEquips {
 							admin.updateChildStats();
 							turr.linkCreador = true;
 						}
-						turr.setHp((int) (15 * getBalancingMultiplier(plyr)));
+						turr.setHp((int) (15 * getBalancingMultiplier(plyr)) + (admin != null ? admin.getUpgradeHpBonus() : 0));
 						turr.Build();
 						turr.Attack();
 						if (turr.built && debug == false) {
