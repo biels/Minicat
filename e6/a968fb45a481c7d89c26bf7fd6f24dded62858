@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_6776c97f3a38dc::t_c578376bc26e0e 1056-1064
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e6a968fb45a481c7d89c26bf7fd6f24dded62858",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "unknown"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
