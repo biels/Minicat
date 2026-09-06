@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/jocs/RainbowClaySnapshotPublisher.java
+  s_c538435bc189f5::t_c6edc3611e5c51 25-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "0a349fe9c1d8b4a76c17dedfa9925f555ea8dce2",
+  "prompts": {},
+  "sessions": {
+    "s_c538435bc189f5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aeb8beca-d3ef-4246-b070-48e063f3f5ec",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
