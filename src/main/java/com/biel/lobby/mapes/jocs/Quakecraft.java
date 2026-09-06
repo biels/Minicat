@@ -74,7 +74,7 @@ public class Quakecraft extends JocScoreRace {
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
-		items.add(new ItemStack(Material.LEGACY_WOOD_HOE, 1));
+		items.add(new ItemStack(Material.WOODEN_HOE, 1));
 		return items;
 	}
 	@Override
@@ -87,7 +87,7 @@ public class Quakecraft extends JocScoreRace {
 		// TODO Auto-generated method stub
 		super.donarEfectesInicials(ply);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, Integer.MAX_VALUE, 1, true), true);
 
 	}
 	@Override
@@ -119,7 +119,7 @@ public class Quakecraft extends JocScoreRace {
 		ItemStack item = new ItemStack(Material.DIAMOND_HOE);
 		if(t >= 1000){return Utils.setItemNameAndLore(item, ChatColor.AQUA + "Railgun", l);}
 		if(t > 550){return Utils.setItemNameAndLore(item,  ChatColor.AQUA + "Ultimate Railgun", l);}
-		item.addEnchantment(Enchantment.ARROW_DAMAGE, 4);
+		item.addEnchantment(Enchantment.POWER, 4);
 		if(t <= 550){return Utils.setItemNameAndLore(item, ChatColor.AQUA +"SUPER Railgun", l);}
 		return new ItemStack(Material.OAK_PLANKS);
 	}
@@ -266,10 +266,10 @@ public class Quakecraft extends JocScoreRace {
 	}
 	private Color getColorRailgun(Player ply){
 		Material t = getRailgun(ply).getType();
-		if(t == Material.LEGACY_WOOD_HOE){return Color.RED;}
+		if(t == Material.WOODEN_HOE){return Color.RED;}
 		if(t == Material.STONE_HOE){return Color.GREEN;}
 		if(t == Material.IRON_HOE){return Color.SILVER;}
-		if(t == Material.LEGACY_GOLD_HOE){return Color.YELLOW;}
+		if(t == Material.GOLDEN_HOE){return Color.YELLOW;}
 		if(t == Material.DIAMOND_HOE){return Color.AQUA;}
 		return Color.BLACK;
 	}
@@ -289,7 +289,7 @@ public class Quakecraft extends JocScoreRace {
 			FireworkEffect r = b.build();
 			Player pArr[] = new Player[getPlayers().size()];
 			getPlayers().toArray(pArr);
-			Firework firework = (Firework) getWorld().spawnEntity(l, EntityType.FIREWORK);
+			Firework firework = (Firework) getWorld().spawnEntity(l, EntityType.FIREWORK_ROCKET);
 			FireworkMeta fireworkMeta = firework.getFireworkMeta();
 			fireworkMeta.addEffect(r);
 			fireworkMeta.setPower(1);

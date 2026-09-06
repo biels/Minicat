@@ -3,23 +3,28 @@ package com.biel.lobby.utilities.data;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import org.bukkit.entity.Player;
 
 import com.biel.BielAPI.Utils.Pair;
-import com.mysql.jdbc.Statement;
-
-
 public class DataAPI {
 	boolean datalessMode = false;
 	Logger logger = Logger.getLogger("DataAPI");
+	private final Set<String> emittedDatalessWarnings = ConcurrentHashMap.newKeySet();
 	public DataAPI() {
 
 	}
 
 	public boolean isInDatalessMode() {
 		return datalessMode;
+	}
+	private void warnDatalessOnce(String operation, String message) {
+		if (emittedDatalessWarnings.add(operation)) {
+			logger.warning(message);
+		}
 	}
 	public Connection connection;
 
@@ -31,11 +36,10 @@ public class DataAPI {
 		String password = "minicat";
 		try {
 			connection = DriverManager.getConnection("jdbc:mysql://" + host
-					+ ":" + port + "/" + db + "?autoReconnect=true&useSSL=false", user, password);
+					+ ":" + port + "/" + db + "?connectTimeout=2000&socketTimeout=3000&useSSL=false", user, password);
 		} catch (Exception e) {
-			e.printStackTrace();
 			datalessMode = true;
-			logger.warning("Could not connect to database, switching to off-server datalessMode mode.");
+			logger.warning("Could not connect to database; switching to dataless mode: " + e.getMessage());
 		}
 	}
 	public void repairConnection(){
@@ -67,7 +71,7 @@ public class DataAPI {
 	}
 	public int getPlayerId(String player) {
 		if(datalessMode){
-			logger.warning("Tried to translate player name to id in dataless mode");
+			warnDatalessOnce("player-id", "Player IDs are unavailable in dataless mode; returning the fallback ID.");
 			return -1;
 		}
 		try {
@@ -231,10 +235,11 @@ public class DataAPI {
 
 		ArrayList<Integer> r = new ArrayList<>();
 		if(datalessMode){
-			logger.warning("Tried to get ranking in dataless mode.");
+			warnDatalessOnce("ranking", "Rankings are unavailable in dataless mode; returning an empty ranking.");
 			return r;
 		}
 		repairConnection();
+		if(datalessMode || connection == null)return r;
 		try { //TODO
 			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE TIMESTAMPDIFF(DAY, players.last_played, NOW()) < 15  ORDER BY `elo` DESC;");
 			ResultSet result = sql.executeQuery();
@@ -283,7 +288,7 @@ public class DataAPI {
 	public ArrayList<Pair<String, Double>> getAutoRating() {
 		ArrayList<Pair<String, Double>> r = new ArrayList<>();
 		if(datalessMode){
-			logger.warning("Tried to access automatic rating while in dataless mode.");
+			warnDatalessOnce("automatic-rating", "Automatic game ratings are unavailable in dataless mode; using the configured order.");
 			return r;
 		}
 		try {

@@ -12,7 +12,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 
 import com.biel.lobby.mapes.JocScoreRace;
@@ -67,10 +66,7 @@ public class OneInTheChamber extends JocScoreRace {
         items.add(GUtils.createColoredArmor(Material.LEATHER_CHESTPLATE, color1));
         items.add(GUtils.createColoredArmor(Material.LEATHER_LEGGINGS, color2));
         items.add(GUtils.createColoredArmor(Material.LEATHER_BOOTS, color1));
-        @SuppressWarnings("deprecation")
-		Potion p1 = new Potion(PotionType.INSTANT_DAMAGE);
-		p1.setSplash(true);
-		items.add(p1.toItemStack(1));
+		items.add(Utils.createPotion(PotionType.HARMING, 1, true));
 		return items;
 	}
 

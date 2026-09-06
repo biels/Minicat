@@ -12,6 +12,7 @@ import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -29,9 +30,9 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.metadata.Metadatable;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
@@ -44,8 +45,14 @@ public class Utils {
 		// TODO Auto-generated constructor stub
 	}
 	public static ItemStack setItemNameAndLore(ItemStack item, String name, String... lore) {
+		if (item == null) {
+			throw new IllegalArgumentException("Item stack must not be null");
+		}
 		ItemMeta im = item.getItemMeta();
-		if (!name.isEmpty()){im.setDisplayName(name);}
+		if (im == null) {
+			throw new IllegalArgumentException("Material " + item.getType() + " does not support item metadata");
+		}
+		if (name != null && !name.isEmpty()){im.setDisplayName(name);}
 		im.setLore(Arrays.asList(lore));
 		item.setItemMeta(im);
 		return item;
@@ -250,16 +257,6 @@ public class Utils {
 		}
 		return list;
 	}
-	public static void BreakBlockLater(final Block block, int delay, final boolean give){
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
-            if (give){
-                block.breakNaturally();
-            }else{
-                block.setType(Material.AIR);
-            }
-
-        }, delay);
-	}
 	public static GestorPropietats getpMapaFromWorld(World world){
 		return new GestorPropietats(world.getWorldFolder().getAbsolutePath()  + "/" + "pMapaActual.txt");
 	}
@@ -284,7 +281,7 @@ public class Utils {
 		ArrayList<BlockFace> faces = new ArrayList<>();
 		for (BlockFace f : fToCheck){
 			Block bl = b.getRelative(f);
-			if (bl.getType() == Material.LEGACY_LOG){faces.add(f);}
+			if (Tag.LOGS.isTagged(bl.getType())){faces.add(f);}
 		}
 		return faces;
 	}
@@ -531,14 +528,18 @@ public class Utils {
 		return a.get(0);
 	}
 	public static ItemStack getRandomPotion(){
-		Potion p = new Potion(getRandomPotionType());
-		if (Utils.Possibilitat(55)){p.setSplash(true);}
-		//p.setLevel(1);
-		return p.toItemStack(1);
+		return createPotion(getRandomPotionType(), 1, Utils.Possibilitat(55));
+	}
+	public static ItemStack createPotion(PotionType type, int amount, boolean splash){
+		ItemStack potion = new ItemStack(splash ? Material.SPLASH_POTION : Material.POTION, amount);
+		PotionMeta meta = (PotionMeta) potion.getItemMeta();
+		meta.setBasePotionType(type);
+		potion.setItemMeta(meta);
+		return potion;
 	}
 	public static ArrayList<ItemStack> getBrewingItems(){
 		ArrayList<ItemStack> i = new ArrayList<>();
-		i.add(new ItemStack(Material.LEGACY_NETHER_WARTS));
+		i.add(new ItemStack(Material.NETHER_WART));
 		i.add(new ItemStack(Material.GLOWSTONE));
 		i.add(new ItemStack(Material.REDSTONE));
 		i.add(new ItemStack(Material.SPIDER_EYE));
@@ -553,7 +554,7 @@ public class Utils {
 		int lastIndex = 0;
 		ArrayList<String> parts = new ArrayList<>();
 		while(parts.size() < 3){
-			System.out.println(lastIndex);
+			Com.getPlugin().getLogger().fine("Readable-list index: " + lastIndex);
 			if (lastIndex > text.length()){
 				lastIndex = text.length() - 1;
 			}
@@ -565,8 +566,8 @@ public class Utils {
 			if (endIndex == -1){
 				endIndex = text.length();
 			}
-			System.out.println("Begin: " + beginIndex);
-			System.out.println("End: " + endIndex);
+			Com.getPlugin().getLogger().fine("Readable-list begin: " + beginIndex);
+			Com.getPlugin().getLogger().fine("Readable-list end: " + endIndex);
 
 			parts.add(text.substring(beginIndex, endIndex));
 			lastIndex = endIndex;

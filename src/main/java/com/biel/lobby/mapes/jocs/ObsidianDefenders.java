@@ -8,7 +8,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.SkullType;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -86,7 +85,7 @@ public class ObsidianDefenders extends JocEquips {
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		//		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		//		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+		//		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
 		//		items.add(arc);
 		items.add(new ItemStack(Material.ARROW, 1));
 		//items.add(new Potion(PotionType.INSTANT_DAMAGE, 1).toItemStack(2));
@@ -194,14 +193,14 @@ public class ObsidianDefenders extends JocEquips {
 								continue;
 							}
 							block.setType(Material.ICE);
-							Utils.BreakBlockLater(block, 20 * 4, false);
+								scheduleTrackedBlockRemoval(block, 20 * 4, false);
 
 						}
 						damaged.teleport(damaged.getLocation().getBlock().getLocation().add(new Vector(0.5,0,0.5)));
 						Block gblock = damaged.getLocation().add(0, 2, 0).getBlock();
 						if (gblock.getType() == Material.AIR){
 							gblock.setType(Material.GOLD_BLOCK);
-							Utils.BreakBlockLater(gblock, 20 * 4, false);
+							scheduleTrackedBlockRemoval(gblock, 20 * 4, false);
 						}
 						pPlayer(damager).EstablirPropietat("StrongBowHitCount", 1);
 
@@ -509,7 +508,7 @@ public class ObsidianDefenders extends JocEquips {
 					if(p.isDead() || !p.isOnline()){
 						continue;
 					}
-					ItemStack steveItem = new ItemStack(Material.LEGACY_SKULL_ITEM, 1, (short)SkullType.PLAYER.ordinal());
+					ItemStack steveItem = new ItemStack(Material.PLAYER_HEAD);
 					inv1.addItem(Utils.setItemName(steveItem, p.getName()));
 				}
 
@@ -521,7 +520,7 @@ public class ObsidianDefenders extends JocEquips {
 			if (stack.getType() == Material.NETHER_STAR){
 				for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
 					p.setHealth(1);
-					p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 20, 4, false), true);
+					p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 20, 4, false), true);
 				}
 				for(Player p : obtenirEquip(plyr).getPlayers()){    				
 					p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 3, false), true);
@@ -548,7 +547,7 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			if (stack.getType() == Material.STRING){
 				for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 15 * 20, 2, false), true);        				
+					p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 15 * 20, 2, false), true);
 				}
 				plyr.sendMessage("Has alentit a l'equip enemic un 40% durant 15 segons.");
 				inv.removeItem(new ItemStack(stack.getType()));
@@ -562,7 +561,7 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			if (evt.getItem().getType() == Material.PAPER){
 				for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 25 * 20, 5, false), true);        				
+					p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 25 * 20, 5, false), true);
 				}
 				plyr.sendMessage("Has esverat a l'equip enemic durant 25 segons.");
 				inv.removeItem(new ItemStack(stack.getType()));
@@ -639,10 +638,10 @@ public class ObsidianDefenders extends JocEquips {
 				//		      
 				//				Zombie slime = (Zombie)world.spawnEntity(base, EntityType.ZOMBIE);		
 				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 400 * 20, 4, false), true);
-				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 400 * 20, 1, false), true);
-				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 400 * 20, 1, false), true);
+				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 400 * 20, 1, false), true);
+				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 400 * 20, 1, false), true);
 				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 20, 1, false), true);
-				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 400 * 20, 1, false), true);
+				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 400 * 20, 1, false), true);
 				//				
 				//				//ControllableMob<Zombie> mob = ControllableMobs.assign(slime);
 				//				//mob.getActions()
@@ -784,7 +783,7 @@ public class ObsidianDefenders extends JocEquips {
 				disp = true;
 				break;
 			case COMANDANT:
-				mat = Material.LEGACY_COMMAND;
+				mat = Material.COMMAND_BLOCK;
 				Titol = "Comandant";
 				Desc = "Augmenta el mal dels aliats propers un";
 				Desc2 =	"12% i comença amb items addicionals";
@@ -940,7 +939,7 @@ public class ObsidianDefenders extends JocEquips {
 							explo = explo + 1F;
 							explo = explo + (explo * 1.012F);
 						}
-						if (inv.contains(Material.LEGACY_GOLD_SWORD) == true){
+						if (inv.contains(Material.GOLDEN_SWORD)){
 							explo = explo + (explo * 0.20F);
 						}
 						if(Ability.hasAbility(plugin, this, player, AbilityType.PIROTÈCNIC)){

@@ -1,6 +1,5 @@
 package com.biel.lobby;
 
-import com.nametagedit.plugin.NametagEdit;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -15,10 +14,12 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
 import com.biel.lobby.utilities.Utils;
+import com.biel.lobby.utilities.PlayerTagState;
 
 public class LoginListener implements Listener {
 	public lobby plugin;
@@ -39,6 +40,10 @@ public class LoginListener implements Listener {
 
 		player.setCanPickupItems(true);
 		
+	}
+	@EventHandler
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		PlayerTagState.remove(event.getPlayer());
 	}
 	@EventHandler
 	public void onFoodChange(FoodLevelChangeEvent e) {
@@ -90,10 +95,8 @@ public class LoginListener implements Listener {
 			String lastMotd = Com.getRankingString(num);
 			evt.setMotd(lastMotd);
 		} catch (Exception e) {
-
-			System.out.println("Error en carrgear el rànquing: " + e.toString());
+			plugin.getLogger().log(java.util.logging.Level.WARNING, "Error carregant el rànquing", e);
 			evt.setMotd(ChatColor.GREEN + "Carregant rànquing...");
-			e.printStackTrace();
 		}
 
 	}
@@ -122,45 +125,46 @@ public class LoginListener implements Listener {
 
 		evt.setMessage(msg);
 
-		if(
-			msg.contains("inves") ||
-			msg.contains("polla") ||
-			msg.contains("gilip") ||
-			msg.contains("tont") ||
-			msg.contains("retr") ||
-			msg.contains("retard")
-		) {
+		evt.setCancelled(true);
+		String filteredMessage = msg;
+		Bukkit.getScheduler().runTask(plugin, () -> broadcastChat(ply, filteredMessage));
 
-			if(Com.isOnLobby(evt.getPlayer())){
-				if(Utils.Possibilitat(60)) evt.setMessage("quin server més guai!!");
-				if(Utils.Possibilitat(60)) evt.setMessage("com mola el server!");
-				if(Utils.Possibilitat(10)) evt.setMessage("sou els millors!!");
+	}
+
+	private void broadcastChat(Player player, String filteredMessage) {
+		if (!player.isOnline()) return;
+
+		boolean onLobby = lobby.isOnLobby(player);
+		String message = filteredMessage;
+		if (containsFilteredWord(message)) {
+			if (onLobby) {
+				if (Utils.Possibilitat(60)) message = "quin server més guai!!";
+				if (Utils.Possibilitat(60)) message = "com mola el server!";
+				if (Utils.Possibilitat(10)) message = "sou els millors!!";
 			} else {
-				evt.setMessage("bona partida! ;)");
-				if(Utils.Possibilitat(40)) evt.setMessage("bona partida!! :D");
+				message = "bona partida! ;)";
+				if (Utils.Possibilitat(40)) message = "bona partida!! :D";
 			}
-
-			if(Utils.Possibilitat(5)) evt.setMessage("ehem.. anava a dir... millor callo xD");
-			if(Utils.Possibilitat(8)) evt.setMessage("ja començo a perdre els papers, no em feu gaire cas jaja");
-			if(Utils.Possibilitat(3)) evt.setMessage("lluiscab we love u");
-
+			if (Utils.Possibilitat(5)) message = "ehem.. anava a dir... millor callo xD";
+			if (Utils.Possibilitat(8)) message = "ja començo a perdre els papers, no em feu gaire cas jaja";
+			if (Utils.Possibilitat(3)) message = "lluiscab we love u";
 		}
 
+		Mapa map = plugin.gest.getMapWherePlayerIs(player);
+		String zone = onLobby
+				? ChatColor.GOLD + "[" + ChatColor.AQUA + "Lobby" + ChatColor.GOLD + "] " + ChatColor.GRAY
+				: map != null ? map.getMapDisplayName() + ChatColor.RESET : ChatColor.DARK_GRAY + "[Sense zona] ";
+		String playerName = (onLobby ? ChatColor.GRAY : PlayerTagState.getPrefix(player)) + player.getDisplayName();
+		Bukkit.broadcastMessage(zone + ChatColor.GRAY + playerName + ChatColor.GRAY + ": " + message);
+	}
 
-		Mapa mapa = plugin.gest.getMapWherePlayerIs(evt.getPlayer());
-		String zone = lobby.isOnLobby(ply)
-						? ChatColor.GOLD + "[" + ChatColor.AQUA + "Lobby" + ChatColor.GOLD + "] " + ChatColor.GRAY
-						: mapa.getMapDisplayName() + ChatColor.RESET;
-
-		String playerName = (
-								lobby.isOnLobby(ply)
-									? ChatColor.GRAY
-									: NametagEdit.getApi().getNametag(ply).getPrefix()
-							) + ply.getDisplayName();
-
-		Bukkit.broadcastMessage(zone + ChatColor.GRAY + playerName + ChatColor.GRAY + ": " + evt.getMessage());
-		evt.setCancelled(true);
-
+	private boolean containsFilteredWord(String message) {
+		return message.contains("inves")
+				|| message.contains("polla")
+				|| message.contains("gilip")
+				|| message.contains("tont")
+				|| message.contains("retr")
+				|| message.contains("retard");
 	}
 
 	@EventHandler

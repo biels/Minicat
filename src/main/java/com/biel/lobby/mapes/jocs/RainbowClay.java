@@ -30,7 +30,7 @@ import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.JocObjectius;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
-import com.connorlinfoot.bountifulapi.BountifulAPI;
+import com.biel.lobby.utilities.PaperMessages;
 
 public class RainbowClay extends JocObjectius {
 	public RainbowClay() {
@@ -134,7 +134,7 @@ public class RainbowClay extends JocObjectius {
 		items.add(new ItemStack(Material.IRON_SWORD, 1));
 
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
 		items.add(arc);
 
 		double balancingMultiplier = getBalancingMultiplier(e);
@@ -152,7 +152,7 @@ public class RainbowClay extends JocObjectius {
 		ItemStack pickaxe = new ItemStack(Material.DIAMOND_PICKAXE, 1);
 
 		if (balancingMultiplier > 1)
-			pickaxe.addUnsafeEnchantment(Enchantment.DIG_SPEED, (balancingMultiplier > 1.20 ? 2 : 1));
+			pickaxe.addUnsafeEnchantment(Enchantment.EFFICIENCY, (balancingMultiplier > 1.20 ? 2 : 1));
 		items.add(pickaxe);
 
 		int arrows = (int) (50 * balancingMultiplier);
@@ -172,11 +172,9 @@ public class RainbowClay extends JocObjectius {
 			block_amount = 64;
 		}
 		if (obtenirEquip(ply).getId() == 0) {
-
-			items.add(new ItemStack(Material.LEGACY_STAINED_CLAY, block_amount, (short) 14));
+			items.add(new ItemStack(Material.RED_TERRACOTTA, block_amount));
 		} else {
-
-			items.add(new ItemStack(Material.LEGACY_STAINED_CLAY, block_amount, (short) 10));
+			items.add(new ItemStack(Material.PURPLE_TERRACOTTA, block_amount));
 		}
 
 		items.add(new ItemStack(Material.COBWEB, 1));
@@ -193,10 +191,10 @@ public class RainbowClay extends JocObjectius {
 		double m = getBalancingMultiplier(obtenirEquip(ply));
 
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, (int) (30 * 10 * (m - 0.5)), 5, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 3, 1, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 20 * 30, 0, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 5, 3, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, (int) (20 * 19 * m), 1, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 3, 1, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 20 * 30, 0, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 20 * 5, 3, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, (int) (20 * 19 * m), 1, true), true);
 
 	}
 
@@ -214,7 +212,7 @@ public class RainbowClay extends JocObjectius {
 
 		if (blk.getType() == Material.OBSIDIAN) {
 			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots utilitzar aquest bloc";
-			BountifulAPI.sendActionBar(ply, msg, 150);
+			PaperMessages.sendActionBar(ply, msg, 150);
 			evt.setCancelled(true);
 			return;
 		}
@@ -224,7 +222,7 @@ public class RainbowClay extends JocObjectius {
 
 			evt.setCancelled(true);
 			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots modificar la llana";
-			BountifulAPI.sendActionBar(ply, msg, 150);
+			PaperMessages.sendActionBar(ply, msg, 150);
 		}
 	}
 
@@ -247,18 +245,18 @@ public class RainbowClay extends JocObjectius {
 
 			evt.setCancelled(true);
 			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots modificar la llana";
-			BountifulAPI.sendActionBar(ply, msg, 150);
+			PaperMessages.sendActionBar(ply, msg, 150);
 
 		}
 
 		if (centre.contains(blk) && blk.getType() == Material.CHEST) {
 			evt.setCancelled(true);
 			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots destruir els cofres del centre";
-			BountifulAPI.sendActionBar(ply, msg, 150);
+			PaperMessages.sendActionBar(ply, msg, 150);
 
 		}
 
-		if (blk.getType() == Material.LEGACY_STAINED_CLAY && blk.getData() == 11) {
+		if (blk.getType() == Material.BLUE_TERRACOTTA) {
 			evt.setCancelled(true);
 		}
 
@@ -279,7 +277,7 @@ public class RainbowClay extends JocObjectius {
 				ply.playSound(ply.getLocation(), Sound.BLOCK_CHEST_LOCKED, 100.0F, 0.0F);
 				evt.setCancelled(true);
 				String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots destruir els cofres enemics";
-				BountifulAPI.sendActionBar(ply, msg, 150);
+				PaperMessages.sendActionBar(ply, msg, 150);
 
 			}
 
@@ -312,7 +310,7 @@ public class RainbowClay extends JocObjectius {
 		if (base.contains(blk)) {
 
 			String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No pots interactuar amb els cofres enemics";
-			BountifulAPI.sendActionBar(ply, msg, 150);
+			PaperMessages.sendActionBar(ply, msg, 150);
 			ply.playSound(ply.getLocation(), Sound.BLOCK_CHEST_LOCKED, 100.0F, 0.0F);
 			evt.setCancelled(true);
 		}
@@ -408,8 +406,7 @@ public class RainbowClay extends JocObjectius {
 		super.onBlockHitByProjectile(evt, b, proj);
 		// sendGlobalMessage("Pilotassa");
 		Material t = b.getType();
-		if (t == Material.GLASS || t == Material.LEGACY_STAINED_GLASS || t == Material.LEGACY_STAINED_GLASS_PANE
-				|| t == Material.LEGACY_THIN_GLASS || t == Material.GLOWSTONE) {
+		if (isBreakableGlass(t)) {
 			b.setType(Material.AIR);
 			getWorld().playSound(b.getLocation(), Sound.BLOCK_GLASS_BREAK, 15F, 1.2F);
 			proj.remove();
@@ -418,12 +415,20 @@ public class RainbowClay extends JocObjectius {
 					continue;
 				Block relative = b.getRelative(f);
 				t = relative.getType();
-				if (t == Material.GLASS || t == Material.LEGACY_STAINED_GLASS || t == Material.LEGACY_STAINED_GLASS_PANE
-						|| t == Material.LEGACY_THIN_GLASS || t == Material.GLOWSTONE) {
+				if (isBreakableGlass(t)) {
 					relative.setType(Material.AIR);
 				}
 			}
 		}
+	}
+
+	private boolean isBreakableGlass(Material material) {
+		String materialName = material.name();
+		return material == Material.GLASS
+				|| material == Material.GLASS_PANE
+				|| material == Material.GLOWSTONE
+				|| materialName.endsWith("_STAINED_GLASS")
+				|| materialName.endsWith("_STAINED_GLASS_PANE");
 	}
 
 	@Override
@@ -432,7 +437,7 @@ public class RainbowClay extends JocObjectius {
 		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
 		if (ranged && damaged.isSneaking()) {
 			damaged.setVelocity(new Vector());
-			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> damaged.setVelocity(new Vector()), 1);
+			scheduleGameplayTask(() -> damaged.setVelocity(new Vector()), 1);
 		}
 	}
 
@@ -490,19 +495,19 @@ public class RainbowClay extends JocObjectius {
 			meta.addCustomEffect(new PotionEffect(PotionEffectType.GLOWING, 600, 1), true);
 			break;
 		case 3:
-			meta.addCustomEffect(new PotionEffect(PotionEffectType.SLOW, 120, 2), true);
+			meta.addCustomEffect(new PotionEffect(PotionEffectType.SLOWNESS, 120, 2), true);
 			break;
 		case 4:
 			meta.addCustomEffect(new PotionEffect(PotionEffectType.LEVITATION, 40, 3), true);
 			break;
 		case 5:
-			meta.addCustomEffect(new PotionEffect(PotionEffectType.CONFUSION, 280, 2), true);
+			meta.addCustomEffect(new PotionEffect(PotionEffectType.NAUSEA, 280, 2), true);
 			break;
 		case 6:
 			meta.addCustomEffect(new PotionEffect(PotionEffectType.WEAKNESS, 400, 2), true);
 			break;
 		case 7:
-			meta.addCustomEffect(new PotionEffect(PotionEffectType.JUMP, 80, 8), true);
+			meta.addCustomEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 80, 8), true);
 			break;
 		default:
 			break;
@@ -548,36 +553,36 @@ public class RainbowClay extends JocObjectius {
 				n++;
 			}
 			if (Utils.Possibilitat(2)) {
-				ItemStack item = new ItemStack(Material.LEGACY_GOLD_LEGGINGS, 1);
+				ItemStack item = new ItemStack(Material.GOLDEN_LEGGINGS, 1);
 				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+					item.addUnsafeEnchantment(Enchantment.PROTECTION, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
 					item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+					item.addUnsafeEnchantment(Enchantment.FIRE_PROTECTION, Utils.NombreEntre(1, 5));
 				llistaItems.add(item);
 				n++;
 			}
 			if (Utils.Possibilitat(2)) {
-				ItemStack item = new ItemStack(Material.LEGACY_GOLD_CHESTPLATE, 1);
+				ItemStack item = new ItemStack(Material.GOLDEN_CHESTPLATE, 1);
 				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+					item.addUnsafeEnchantment(Enchantment.PROTECTION, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
 					item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+					item.addUnsafeEnchantment(Enchantment.FIRE_PROTECTION, Utils.NombreEntre(1, 5));
 
 				llistaItems.add(item);
 				n++;
 			}
 			if (Utils.Possibilitat(2)) {
-				ItemStack item = new ItemStack(Material.LEGACY_GOLD_BOOTS, 1);
+				ItemStack item = new ItemStack(Material.GOLDEN_BOOTS, 1);
 				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+					item.addUnsafeEnchantment(Enchantment.PROTECTION, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
 					item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+					item.addUnsafeEnchantment(Enchantment.FIRE_PROTECTION, Utils.NombreEntre(1, 5));
 
 				llistaItems.add(item);
 				n++;
@@ -585,21 +590,21 @@ public class RainbowClay extends JocObjectius {
 			if (Utils.Possibilitat(2)) {
 				ItemStack item = new ItemStack(Material.GOLDEN_HELMET, 1);
 				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, Utils.NombreEntre(1, 5));
+					item.addUnsafeEnchantment(Enchantment.PROTECTION, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
 					item.addUnsafeEnchantment(Enchantment.THORNS, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(15))
-					item.addUnsafeEnchantment(Enchantment.PROTECTION_FIRE, Utils.NombreEntre(1, 5));
+					item.addUnsafeEnchantment(Enchantment.FIRE_PROTECTION, Utils.NombreEntre(1, 5));
 
 				llistaItems.add(item);
 				n++;
 			}
 			if (Utils.Possibilitat(1)) {
-				ItemStack item = new ItemStack(Material.LEGACY_GOLD_AXE, 1);
+				ItemStack item = new ItemStack(Material.GOLDEN_AXE, 1);
 				if (Utils.Possibilitat(30))
 					item.addUnsafeEnchantment(Enchantment.FIRE_ASPECT, Utils.NombreEntre(1, 5));
 				if (Utils.Possibilitat(1))
-					item.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+					item.addUnsafeEnchantment(Enchantment.SHARPNESS, 1);
 
 				llistaItems.add(item);
 				n++;
@@ -632,13 +637,13 @@ public class RainbowClay extends JocObjectius {
 					meta.addCustomEffect(new PotionEffect(PotionEffectType.ABSORPTION, 800, 4), true);
 					break;
 				case 3:
-					meta.addCustomEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 800, 2), true);
+					meta.addCustomEffect(new PotionEffect(PotionEffectType.HASTE, 800, 2), true);
 					break;
 				case 4:
 					meta.addCustomEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 1200, 1), true);
 					break;
 				case 5:
-					meta.addCustomEffect(new PotionEffect(PotionEffectType.JUMP, 320, 5), true);
+					meta.addCustomEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 320, 5), true);
 					break;
 				case 6:
 					meta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, 600, 1), true);
@@ -647,12 +652,12 @@ public class RainbowClay extends JocObjectius {
 					meta.addCustomEffect(new PotionEffect(PotionEffectType.GLOWING, 320, 1), true);
 					break;
 				case 9:
-					meta.addCustomEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 600, 1), true);
+					meta.addCustomEffect(new PotionEffect(PotionEffectType.STRENGTH, 600, 1), true);
 					break;
 				default:
 					break;
 				}
-				meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+				meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
 				meta.setDisplayName("Poció Màgica");
 				meta.setColor(Color.YELLOW);
 

@@ -278,11 +278,11 @@ public class InkWars extends JocEquips {
 			entry.getValue().setSecond(entry.getValue().getSecond() - (1.0/20.0)); //Every 20s -1
 			if(entry.getValue().getSecond() <= 0){
 				//Finally decay
-				iter.remove();    
+				iter.remove();
 				Block b = entry.getKey();
-				if (getTeamOwningBlock(b) != null) {
-//					b.setData(getTeamOwningBlock(b).getColor().getWoolData());
-					// TODO UPDATE
+				EquipInkWars owner = getTeamOwningBlock(b);
+				if (owner != null) {
+					b.setType(getPaintMaterial(b.getType(), owner.getColor()), false);
 				}
 			}else{
 				//Expansion physics
@@ -313,9 +313,10 @@ public class InkWars extends JocEquips {
 	public EquipInkWars getTeamOwningBlock(Block b){
 		if(b == null)return null;
 		if(!isPaintable(b))return null;
+		DyeColor blockColor = getPaintColor(b.getType());
 		for(Equip e : Equips){
 			EquipInkWars eq = (EquipInkWars) e;
-			if(eq.getColor().getWoolData() == b.getData() || eq.getStrongColor().getWoolData() == b.getData())return eq;
+			if(eq.getColor() == blockColor || eq.getStrongColor() == blockColor)return eq;
 		}
 		return null;
 	}
@@ -328,28 +329,44 @@ public class InkWars extends JocEquips {
             event.setWillClose(true);
             Player ply = event.getPlayer();
             int i = event.getPosition();
-            if(i == 0)getPlayerInfo(ply).setActiveWeapon(new RollerInkWeapon(ply));
-            if(i == 1)getPlayerInfo(ply).setActiveWeapon(new BrushInkWeapon(ply));
-            if(i == 2)getPlayerInfo(ply).setActiveWeapon(new MachinegunInkWeapon(ply));
-            if(i == 3)getPlayerInfo(ply).setActiveWeapon(new EnderInkWeapon(ply));
+			InkWeapon selectedWeapon = null;
+			if(i == 0)selectedWeapon = new RollerInkWeapon(ply);
+			if(i == 1)selectedWeapon = new BrushInkWeapon(ply);
+			if(i == 2)selectedWeapon = new MachinegunInkWeapon(ply);
+			if(i == 3)selectedWeapon = new EnderInkWeapon(ply);
+			if (selectedWeapon == null) return;
+			getPlayerInfo(ply).setActiveWeapon(selectedWeapon);
+			selectedWeapon.showInstructions();
             sendTeamMessage(obtenirEquip(event.getPlayer()), event.getPlayer().getName() + " has selected " + event.getMenu().getOptionNames()[i]);
         });
 		int weaponLevel = getPlayerInfo(p).getWeaponLevel();
 		String string = Integer.toString(weaponLevel);
 		String lvlString = ChatColor.GOLD + "" + ChatColor.BOLD + " [Level " + string + "]";
-		menu.setOption(0, new ItemStack(Material.STICK, 1), ChatColor.GREEN + "" + ChatColor.BOLD + "Roller" + lvlString);
-		menu.setOption(1, new ItemStack(Material.TORCH, 1), ChatColor.YELLOW + "" + ChatColor.BOLD + "Brush" + lvlString);
-		menu.setOption(2, new ItemStack(Material.SNOWBALL, 1), ChatColor.BLUE + "" + ChatColor.BOLD + "Machinegun" + lvlString);
-		menu.setOption(3, new ItemStack(Material.ENDER_PEARL, 1), ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Ender" + lvlString);
+		menu.setOption(0, new ItemStack(Material.STICK, 1), ChatColor.GREEN + "" + ChatColor.BOLD + "Roller" + lvlString, ChatColor.WHITE + "Paint a wide trail by moving.");
+		menu.setOption(1, new ItemStack(Material.TORCH, 1), ChatColor.YELLOW + "" + ChatColor.BOLD + "Brush" + lvlString, ChatColor.WHITE + "Paint a fast, narrow trail by moving.");
+		menu.setOption(2, new ItemStack(Material.SNOWBALL, 1), ChatColor.BLUE + "" + ChatColor.BOLD + "Machinegun" + lvlString, ChatColor.WHITE + "Throw ink balls to paint impact zones.");
+		menu.setOption(3, new ItemStack(Material.ENDER_PEARL, 1), ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Ender" + lvlString, ChatColor.WHITE + "Pearl control, shield, swap, and a melee baton.");
 
 		menu.open(p);
 	}
 	public boolean isPaintable(Block b){
-		ArrayList<Material> p = new ArrayList<>();
-		p.add(Material.WHITE_WOOL);p.add(Material.LEGACY_STAINED_CLAY);p.add(Material.LEGACY_STAINED_GLASS);p.add(Material.LEGACY_STAINED_GLASS_PANE);
-		//		p.add(Material.STONE);p.add(Material.STONE);p.add(Material.STONE_B)
-		Material t = b.getType();
-		return (p.contains(t));
+		return getPaintColor(b.getType()) != null;
+	}
+	private DyeColor getPaintColor(Material material){
+		String materialName = material.name();
+		for (DyeColor color : DyeColor.values()) {
+			for (String suffix : new String[]{"_WOOL", "_TERRACOTTA", "_STAINED_GLASS", "_STAINED_GLASS_PANE"}) {
+				if (materialName.equals(color.name() + suffix)) return color;
+			}
+		}
+		return null;
+	}
+	private Material getPaintMaterial(Material currentMaterial, DyeColor color){
+		String materialName = currentMaterial.name();
+		for (String suffix : new String[]{"_WOOL", "_TERRACOTTA", "_STAINED_GLASS", "_STAINED_GLASS_PANE"}) {
+			if (materialName.endsWith(suffix)) return Material.valueOf(color.name() + suffix);
+		}
+		return Material.valueOf(color.name() + "_TERRACOTTA");
 	}
 	public boolean isPaintableUnsafely(Block b){ 
 		Material t = b.getType();
@@ -409,6 +426,14 @@ public class InkWars extends JocEquips {
 			getPlayer().playSound(getPlayer().getEyeLocation(), Sound.BLOCK_PISTON_EXTEND, 1F, 1F);
 		}
 		public abstract ItemStack getToolMaterial();
+		public String[] getInstructions(){
+			return new String[0];
+		}
+		public void showInstructions(){
+			for (String line : getInstructions()) {
+				sendPlayerMessage(getPlayer(), ChatColor.LIGHT_PURPLE + "[Weapon] " + ChatColor.WHITE + line);
+			}
+		}
 		public void reloadTick(){
 			if(getLoadMaterial() == null)return;
 			if(getPlayer().getInventory().contains(getLoadMaterial().getType(), getMaxLoad()))return;
@@ -462,8 +487,8 @@ public class InkWars extends JocEquips {
 				//Register
 				if(oldOwnerTeam != newOwnerTeam)getPlayerInfo(getPlayer()).registerBlockPaint(oldOwnerTeam);
 				//Paint
-				if(forcedly)b.setType(Material.LEGACY_STAINED_CLAY);
-//				b.setData(sc.getWoolData(), false);
+				Material paintBase = forcedly ? Material.WHITE_TERRACOTTA : b.getType();
+				b.setType(getPaintMaterial(paintBase, sc), false);
 				double pInk = 0;
 				if(highInkBlocks.containsKey(b)){
 					pInk = highInkBlocks.get(b).getSecond();
@@ -476,7 +501,10 @@ public class InkWars extends JocEquips {
 		protected void paintRadius(Location c, double r, double inkAmount){
 			for(Block b : Utils.getCuboidAround(c, (int) Math.round(r)).getBlocks()) {
 				double distance = c.distance(b.getLocation());
-				if(distance <= r)paintBlock(b, inkAmount * Math.sqrt(1.0/distance)); //Area=pi*r^2 so r=sqrt(A/pi)
+				if (distance <= r) {
+					double cappedDistance = Math.max(distance, 0.25);
+					paintBlock(b, inkAmount * Math.sqrt(1.0 / cappedDistance)); //Area=pi*r^2 so r=sqrt(A/pi)
+				}
 			}
 		}
 	}
@@ -510,20 +538,20 @@ public class InkWars extends JocEquips {
 		protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
 			super.onProjectileHit(evt, proj);
 
-			if(onHoldProjectileList.contains(proj)){
-				Location loc = proj.getLocation();
-				BlockIterator iterator = new BlockIterator(getWorld(), loc.toVector(), proj.getVelocity().normalize(), 0, 4);
-				Block hitBlock = null;
-				Block preHitBlock = null;
-				while(iterator.hasNext()) {
-					preHitBlock = hitBlock;
-					hitBlock = iterator.next();
-					if(hitBlock.getType().getId()!=0) //Check all non-solid blockid's here.
-					{break;}
+			if(onHoldProjectileList.remove(proj)){
+				Block hitBlock = evt.getHitBlock();
+				Block paintCenterBlock;
+				if (hitBlock != null) {
+					paintCenterBlock = evt.getHitBlockFace() == null
+							? hitBlock : hitBlock.getRelative(evt.getHitBlockFace());
+				} else if (evt.getHitEntity() != null) {
+					hitBlock = evt.getHitEntity().getLocation().getBlock();
+					paintCenterBlock = hitBlock;
+				} else {
+					hitBlock = proj.getLocation().getBlock();
+					paintCenterBlock = hitBlock;
 				}
-				if (hitBlock != null && preHitBlock != null) {	
-					onWeaponHit(evt, proj, hitBlock, preHitBlock);
-				}
+				onWeaponHit(evt, proj, hitBlock, paintCenterBlock);
 			}
 		}
 		public abstract void onWeaponHit(ProjectileHitEvent evt, Projectile proj, Block hitBlock, Block preHitBlock);
@@ -552,7 +580,11 @@ public class InkWars extends JocEquips {
 				paintRadius(preHitBlock.getLocation(), 1.1 + Math.sqrt(getWeaponLevel() * 0.75), 4 + getWeaponLevel() / 2.0);
 				for(Player p : Utils.getNearbyPlayers(preHitBlock.getLocation(), 1 + getWeaponLevel())){
 					if(areEnemies(p, getPlayer())){
-						p.damage(2 + (6.5 + (getWeaponLevel() / 2.2)) / (p.getLocation().distance(preHitBlock.getLocation()) * (preHitBlock.getLocation().distance(getPlayer().getEyeLocation()) / 3)), getPlayer());
+						double targetDistance = Math.max(p.getLocation().distance(preHitBlock.getLocation()), 0.25);
+						double shotDistance = Math.max(preHitBlock.getLocation().distance(getPlayer().getEyeLocation()), 0.25);
+						double splashDamage = 2 + (6.5 + (getWeaponLevel() / 2.2))
+								/ (targetDistance * (shotDistance / 3));
+						p.damage(splashDamage, getPlayer());
 					}
 				}
 			}
@@ -560,6 +592,10 @@ public class InkWars extends JocEquips {
 		@Override
 		public ItemStack getLoadMaterial() {
 			return Utils.setItemName(new ItemStack(Material.SNOWBALL, 1), obtenirEquip(getPlayer()).getChatColor() + "Ink ball");
+		}
+		@Override
+		public String[] getInstructions() {
+			return new String[]{"Throw snowballs to paint and damage around their impact.", "Reload faster while standing in your base or on your team's color."};
 		}
 		@Override
 		public ItemStack getToolMaterial() {
@@ -608,12 +644,16 @@ public class InkWars extends JocEquips {
 		public ItemStack getToolMaterial() {
 			ItemStack i = new ItemStack(Material.BLAZE_ROD, 1);
 			i.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-			return i;
+			return Utils.setItemNameAndLore(i, ChatColor.GOLD + "Warp baton", ChatColor.WHITE + "Melee hit: 4 damage and knockback.", ChatColor.GRAY + "Consumed on hit; recharges after 5 seconds.");
 		}
 
 		@Override
 		public ItemStack getLoadMaterial() {
-			return Utils.setItemNameAndLore(new ItemStack(Material.ENDER_PEARL, 1), ChatColor.BLUE + "Magic ball", ChatColor.WHITE + "Makes enemies paint for you if it impacts on their face");
+			return Utils.setItemNameAndLore(new ItemStack(Material.ENDER_PEARL, 1), ChatColor.LIGHT_PURPLE + "Control pearl", ChatColor.WHITE + "Impact: paint a large zone and gain a 6s shield.", ChatColor.WHITE + "Hit enemy: their movement paints for your team for 6s.", ChatColor.WHITE + "Hit the marked enemy again: swap positions.", ChatColor.GRAY + "Reloads faster on your color or inside your base.");
+		}
+		@Override
+		public String[] getInstructions() {
+			return new String[]{"Throw a pearl at terrain to paint a large zone and gain a 6-second shield.", "Hit an enemy to make their movement paint for your team for 6 seconds; hit that marked enemy again to swap positions.", "Use the Warp baton for a knockback melee hit; it is consumed and returns after 5 seconds.", "Pearls reload faster in your base or while standing on your team's color."};
 		}
 		@Override
 		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,

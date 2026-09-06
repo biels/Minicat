@@ -17,6 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
 import com.biel.lobby.utilities.GestorPropietats;
+import com.biel.lobby.utilities.HologramFacade;
 import com.biel.lobby.utilities.Options;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.data.DataAPI;
@@ -33,6 +34,7 @@ public final class lobby extends JavaPlugin {
 		new LoginListener();
 
 		getLobbyWorld().setAutoSave(true);
+		MapaResetejable.cleanupStaleRuntimeWorlds();
 
 		gest = new GestorMapes();
 		dataAPI = new DataAPI();
@@ -43,8 +45,91 @@ public final class lobby extends JavaPlugin {
 		// TODO Insert logic to be performed when the plugin is disabled
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
+		if(cmd.getName().equalsIgnoreCase("prova")){
+			if(sender instanceof Player && !sender.isOp()){
+				sender.sendMessage(ChatColor.RED + "Aquesta ordre requereix permisos d'operador.");
+				return true;
+			}
+			if(args.length == 1 && args[0].equalsIgnoreCase("llista")){
+				if (gest.getAllGameInstances().isEmpty()) {
+					sender.sendMessage("No hi ha instàncies de joc actives.");
+				} else {
+					sender.sendMessage(ChatColor.GOLD + "Instàncies de joc actives:");
+					for (Joc game : gest.getAllGameInstances()) {
+						sender.sendMessage("- " + game.getGameName() + " / " + game.getMapName()
+								+ " (jugadors=" + game.getPlayers().size() + ", edició=" + game.getEditMode() + ")");
+					}
+				}
+				return true;
+			}
+			if(args.length >= 2 && args[0].equalsIgnoreCase("elimina")){
+				String worldName = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
+				GestorMapes.InstanceRemovalResult result = gest.removeGameInstance(worldName);
+				switch (result) {
+					case REMOVED:
+						sender.sendMessage(ChatColor.GREEN + "Instància descarregada; els fitxers temporals s'eliminaran en 10 segons.");
+						break;
+					case NOT_FOUND:
+						sender.sendMessage(ChatColor.RED + "No hi ha cap instància registrada amb aquest nom de món.");
+						break;
+					case HAS_PLAYERS:
+						sender.sendMessage(ChatColor.RED + "No es pot eliminar una instància amb jugadors.");
+						break;
+					case EDIT_MODE:
+						sender.sendMessage(ChatColor.RED + "No es pot eliminar una instància en mode d'edició.");
+						break;
+					case UNLOAD_FAILED:
+						sender.sendMessage(ChatColor.RED + "Paper no ha pogut descarregar el món; no s'ha eliminat la instància.");
+						break;
+				}
+				return true;
+			}
+			if(args.length < 1 || args.length > 2){
+				sender.sendMessage("Ús: /prova <joc> [variant] | /prova llista | /prova elimina <món>");
+				return true;
+			}
+			Integer mapId = null;
+			if(args.length == 2){
+				try {
+					mapId = Integer.valueOf(args[1]);
+				} catch (NumberFormatException exception) {
+					sender.sendMessage(ChatColor.RED + "La variant ha de ser un número.");
+					return true;
+				}
+			}
+			Joc createdGame = gest.createGameInstance(args[0], mapId);
+			if(createdGame == null){
+				sender.sendMessage(ChatColor.RED + "No s'ha pogut crear el joc " + args[0] + ".");
+			} else {
+				sender.sendMessage(ChatColor.GREEN + "Instància creada: " + createdGame.getGameName() + " / " + createdGame.getMapName());
+			}
+			return true;
+		}
 
+		if (!(sender instanceof Player)) {
+			sender.sendMessage("Aquesta ordre només es pot executar com a jugador.");
+			return true;
+		}
 		Player ply = (Player) sender;
+		if(cmd.getName().equalsIgnoreCase("minicatjoin")){
+			if(args.length == 0){
+				ply.sendMessage(ChatColor.RED + "Falta el nom de la instància.");
+				return true;
+			}
+			String worldName = String.join(" ", args);
+			GestorMapes.InstanceJoinResult result = gest.joinGameInstance(ply, worldName);
+			switch (result) {
+				case JOINED:
+					break;
+				case NOT_FOUND:
+					ply.sendMessage(ChatColor.RED + "Aquesta instància ja no existeix.");
+					break;
+				case UNAVAILABLE:
+					ply.sendMessage(ChatColor.RED + "Aquesta instància ja no admet jugadors.");
+					break;
+			}
+			return true;
+		}
 		if(cmd.getName().equalsIgnoreCase("m")){
 
 			gest.ObrirMenuMapes(ply);

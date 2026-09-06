@@ -9,7 +9,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 
 import com.biel.lobby.mapes.JocScoreRace;
@@ -33,12 +32,8 @@ public class ArenaAllvAll extends JocScoreRace {
 		ArrayList<ItemStack> items = new ArrayList<>();
 		items.add(new ItemStack(Material.WOODEN_SWORD, 1));
 		items.add(new ItemStack(Material.BOW, 1));
-		Potion p1 = new Potion(PotionType.INSTANT_DAMAGE);
-		p1.setSplash(true);
-		items.add(p1.toItemStack(1));
-		Potion p2 = new Potion(PotionType.SLOWNESS);
-		p2.setSplash(true);
-		items.add(p2.toItemStack(2));
+		items.add(Utils.createPotion(PotionType.HARMING, 1, true));
+		items.add(Utils.createPotion(PotionType.SLOWNESS, 2, true));
 		items.add(new ItemStack(Material.ARROW, 5));
 		items.add(new ItemStack(Material.CHAINMAIL_HELMET, 1));
 		items.add(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1));
@@ -77,25 +72,17 @@ public class ArenaAllvAll extends JocScoreRace {
 		super.onPlayerDeathByPlayer(evt, killed, killer);
 		incrementScore(killer);
 		if (getSpree(killer) == 1){
-			Potion p1 = new Potion(PotionType.SPEED);
-			p1.setSplash(true);
-			killer.getInventory().addItem(p1.toItemStack(1));
+			killer.getInventory().addItem(Utils.createPotion(PotionType.SWIFTNESS, 1, true));
 		}
 		if (getSpree(killer) == 2){
-			Potion p1 = new Potion(PotionType.POISON);
-			p1.setSplash(true);
-			killer.getInventory().addItem(p1.toItemStack(1));
+			killer.getInventory().addItem(Utils.createPotion(PotionType.POISON, 1, true));
 			getPlayerInfo(killer).addAdditionalSkill();
 		}
 		if (getSpree(killer) == 3){
-			Potion p1 = new Potion(PotionType.REGEN);
-			p1.setSplash(true);
-			killer.getInventory().addItem(p1.toItemStack(1));
+			killer.getInventory().addItem(Utils.createPotion(PotionType.REGENERATION, 1, true));
 		}
 		if (getSpree(killer) >= 4){
-			Potion p1 = new Potion(Utils.getRandomPotionType());
-			p1.setSplash(true);
-			killer.getInventory().addItem(p1.toItemStack(1));
+			killer.getInventory().addItem(Utils.createPotion(Utils.getRandomPotionType(), 1, true));
 		}
 		evt.getDrops().clear();
 		evt.setDeathMessage(killer.getName() + " ha matat a " + killed.getName() + " [+1]");

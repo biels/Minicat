@@ -6,10 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import com.gmail.filoghost.holographicdisplays.api.Hologram;
-import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
-import com.gmail.filoghost.holographicdisplays.api.VisibilityManager;
-import com.nametagedit.plugin.NametagEdit;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -17,12 +13,14 @@ import org.bukkit.plugin.Plugin;
 
 import com.biel.lobby.utilities.CBUtils;
 import com.biel.lobby.utilities.ColorConverter;
+import com.biel.lobby.utilities.HologramFacade;
 import com.biel.lobby.utilities.Options;
+import com.biel.lobby.utilities.PaperMessages;
+import com.biel.lobby.utilities.PlayerTagState;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.data.DataAPI;
 import com.biel.lobby.utilities.data.PlayerData;
-import com.connorlinfoot.titleapi.TitleAPI;
 
 public class Com {
  //HIO
@@ -71,22 +69,20 @@ public class Com {
 	}
 
 
-	private static HashMap<UUID, Hologram> playerHologramMap = new HashMap<UUID, Hologram>();
+	private static HashMap<UUID, HologramFacade.Handle> playerHologramMap = new HashMap<UUID, HologramFacade.Handle>();
 	private static void showRanking(Player player) {
 
-		Hologram hologram;
+		HologramFacade.Handle hologram;
 		if(playerHologramMap.containsKey(player.getUniqueId())) {
 			hologram = playerHologramMap.get(player.getUniqueId());
 			hologram.clearLines();
 		} else {
 			Location hologramLocation = new Location(getLobbyWorld(), -283, 72.5, 26);
-			hologram = HologramsAPI.createHologram(getPlugin(), hologramLocation);
+			hologram = HologramFacade.create(hologramLocation);
 			playerHologramMap.put(player.getUniqueId(), hologram);
 		}
 
-		VisibilityManager visibilityManager = hologram.getVisibilityManager();
-		visibilityManager.showTo(player);
-		visibilityManager.setVisibleByDefault(false);
+		hologram.showOnlyTo(player);
 
 		hologram.appendTextLine(ChatColor.AQUA + "MINICAT RANKING");
 		hologram.appendTextLine("");
@@ -135,10 +131,10 @@ public class Com {
 		setHeadColor(ply, ColorConverter.chatToRaw(color));
 	}
 	public static void setHeadColor(Player ply, String color){
-		NametagEdit.getApi().setPrefix(ply, color);
+		PlayerTagState.setPrefix(ply, color);
 	}
 	public static void setSuffix(Player ply, String suffix){
-		NametagEdit.getApi().setSuffix(ply, suffix);
+		PlayerTagState.setSuffix(ply, suffix);
 	}
 	public static void displayRanking(Player p){
 		if(Com.getDataAPI().isInDatalessMode()){
@@ -266,12 +262,13 @@ public class Com {
 		f.add(ChatColor.WHITE + "" + bold + "MINICAT");
 		int i = 0;
 		for (String s : f){
-			Bukkit.getScheduler().runTaskLater(getPlugin(), () -> TitleAPI.sendTitle(p,0,6,0,s,Integer.toString(Bukkit.getOnlinePlayers().size())), 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
+			Bukkit.getScheduler().runTaskLater(getPlugin(), () -> PaperMessages.showTitle(p, 0, 6, 0, s,
+					Integer.toString(Bukkit.getOnlinePlayers().size())), 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
 			i++;
 		}
 	}
 	public static Material getSkullIconMaterial(Player p){
-		Material m = Material.LEGACY_SKULL_ITEM;
+		Material m = Material.PLAYER_HEAD;
 		if(Stream.of("amiguet", "pilota", "ball", "").anyMatch(s -> (p.getName().equalsIgnoreCase(s) || p.getName().contains(s))))
 			m = Material.SLIME_BALL;
 		return m;

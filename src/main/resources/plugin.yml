@@ -3,14 +3,19 @@ main: com.biel.lobby.lobby
 description: Main plugin for the minicat (1.0) server.
 depend:
 - BielAPI
+- DecentHolograms
 loadBefore:
 - AuthMe
-version: 1.3
-api-version: 1.16
+version: 1.4-dev
+api-version: '26.2'
+libraries:
+- commons-io:commons-io:2.21.0
+- commons-lang:commons-lang:2.6
+- com.mysql:mysql-connector-j:9.6.0
 commands:
   prova:
-    description: Prova.
-    usage: /r [Mapa] El mapa es pot indicar pel seu ID o pel seu nom
+    description: Crea, llista o elimina instàncies de diagnòstic operatiu.
+    usage: /prova <joc> [variant] | /prova llista | /prova elimina <món>
   mapes:
     description: Mostra una llista dels mapes.
     usage: /mapes
@@ -20,6 +25,9 @@ commands:
   m:
     description: Mostra l'inventari del teletransportador.
     usage: /m
+  minicatjoin:
+    description: Entra en una instància registrada des d'una invitació.
+    usage: /minicatjoin <món>
   a:
     description: Mostra totes les partides en curs.
     usage: /a

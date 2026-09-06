@@ -17,7 +17,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -37,17 +36,13 @@ public class BaseLunar extends JocScoreRace {
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
 		ItemStack esp = new ItemStack(Material.WOODEN_SWORD, 1); // A stack of diamonds
-		esp.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
+		esp.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
 		esp.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
 		items.add(esp);
 		items.add(new ItemStack(Material.WOODEN_SWORD, 1));
 		items.add(new ItemStack(Material.BOW, 1));
-		Potion p1 = new Potion(PotionType.INSTANT_DAMAGE);
-		p1.setSplash(true);
-		items.add(p1.toItemStack(1));
-		Potion p2 = new Potion(PotionType.INSTANT_HEAL);
-		p2.setSplash(true);
-		items.add(p2.toItemStack(1));
+		items.add(Utils.createPotion(PotionType.HARMING, 1, true));
+		items.add(Utils.createPotion(PotionType.HEALING, 1, true));
 		items.add(new ItemStack(Material.ARROW, 50));
 		items.add(getSnowLauncher(10));
 		//Glass
@@ -73,7 +68,7 @@ public class BaseLunar extends JocScoreRace {
 		// TODO Auto-generated method stub
 		super.donarEfectesInicials(ply);
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 3, true), true);
-		ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 3, true), true);
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, Integer.MAX_VALUE, 3, true), true);
 
 	}
 	@Override

@@ -51,15 +51,16 @@ public class TeamDeathMatchJaneatorForest extends JocTeamDeathMatch {
 		double balancingMultiplier = getBalancingMultiplier(ply);
 		items.add(new ItemStack(Material.STONE_SWORD, 1));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		//arc.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
+		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
+		//arc.addUnsafeEnchantment(Enchantment.INFINITY, 1);
 		items.add(arc);
 		items.add(new ItemStack(Material.CHAINMAIL_HELMET, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
 		items.add(new ItemStack(Material.IRON_BOOTS, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		items.add(new ItemStack(Material.GOLDEN_APPLE, 2));
-		items.add(Utils.setItemNameAndLore(new ItemStack(Material.SNOWBALL, (int) Math.round(4 * (balancingMultiplier - 0.2))), "Bomba", "Explota a l'impacte"));
+		int snowballAmount = Math.max(1, (int) Math.round(4 * (balancingMultiplier - 0.2)));
+		items.add(Utils.setItemNameAndLore(new ItemStack(Material.SNOWBALL, snowballAmount), "Bomba", "Explota a l'impacte"));
 		items.add(new ItemStack(Material.ARROW, (int) (20 * balancingMultiplier)));
 		return items;
 	}

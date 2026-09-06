@@ -112,14 +112,14 @@ public class FrostArcherSkill extends InherentSkill {
 				continue;
 			}
 			block.setType(Material.ICE);
-			Utils.BreakBlockLater(block, (int) (20 * getModifier()), false);
+			getGame().scheduleTrackedBlockRemoval(block, (int) (20 * getModifier()), false);
 			
 		}
 		damaged.teleport(damaged.getLocation().getBlock().getLocation().add(new Vector(0.5,0,0.5)));
 		Block gblock = damaged.getLocation().add(0, 2, 0).getBlock();
 		if (gblock.getType() == Material.AIR){
 			gblock.setType(Material.GOLD_BLOCK);
-			Utils.BreakBlockLater(gblock, (int) (20 * getModifier()), false);
+			getGame().scheduleTrackedBlockRemoval(gblock, (int) (20 * getModifier()), false);
 		}
 		damaged.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_BURP, 1, 0.5F);
 		//Remove aura

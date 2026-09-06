@@ -26,7 +26,7 @@ public class Options {
 		PlayerInventory inventory = ply.getInventory();
 		inventory.clear();
 		ItemStack dBlk = new ItemStack(Material.DIAMOND_BLOCK);
-		dBlk.addUnsafeEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 10);
+		dBlk.addUnsafeEnchantment(Enchantment.FORTUNE, 10);
 		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.AQUA + "Teletransportador",  ChatColor.WHITE + "Obre l'inventari de teletransport."), ply, event -> lobby.getPlugin().gest.ObrirMenuMapes(Bukkit.getPlayer(ply.getName())));
 		inventory.setItem(1, button.getItemStack());
 		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_INGOT), ChatColor.GOLD + "Ranking " + ChatColor.YELLOW + "(" + "#" + playerData.getRank() + ")",  ChatColor.WHITE + "Mostra el rànquing de jugadors.", ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + ChatColor.YELLOW + " #" + playerData.getRank()), ply, event -> Com.displayRanking(event.getPlayer()));

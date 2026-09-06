@@ -31,7 +31,7 @@ public class GravityBendingSkill extends InherentSkill {
 	@Override
 	public Material getMaterial() {
 		// TODO Auto-generated method stub
-		return Material.LEGACY_GOLD_BOOTS;
+		return Material.GOLDEN_BOOTS;
 	}
 	@Override
 	public String getName() {

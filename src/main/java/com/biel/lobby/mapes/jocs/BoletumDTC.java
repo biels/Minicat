@@ -61,8 +61,8 @@ public class BoletumDTC extends JocObjectius {
 		Equip e = obtenirEquip(ply);
 		items.add(new ItemStack(Material.STONE_SWORD, 1));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		arc.addUnsafeEnchantment(Enchantment.DURABILITY, 10);
-		arc.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
+		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
+		arc.addUnsafeEnchantment(Enchantment.INFINITY, 1);
 		items.add(arc);
 		items.add(new ItemStack(Material.DIAMOND_PICKAXE, 1));
 		items.add(new ItemStack(Material.IRON_AXE));

@@ -1,30 +1,31 @@
 plugins {
-    id "org.sonarqube" version "2.6"
+    id 'java'
+    id 'idea'
 }
 
-apply plugin: 'java'
-apply plugin: 'idea'
-archivesBaseName = 'minicat'
 version = '1.0-SNAPSHOT'
+
+base {
+    archivesName = 'minicat'
+}
 
 repositories {
     mavenCentral()
-    //mavenLocal() Enable to compile with BielAPI preinstalled on mavenlocal
-   /* maven{
-        //Repository url is ok, but server seems to be (temporarily, 02/01/17) serving wrong content
-        //url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
-    }*/
+    mavenLocal()
     maven {
-        url "https://hub.spigotmc.org/nexus/content/repositories/snapshots"
+        url = uri('https://repo.papermc.io/repository/maven-public/')
     }
     maven {
-        url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        url = uri('https://jitpack.io')
     }
 }
 
-jar {
-
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
+
 def defaultEncoding = 'UTF-8'
 compileJava{
     options.encoding = defaultEncoding
@@ -33,18 +34,21 @@ compileTestJava{
     options.encoding = defaultEncoding
 }
 dependencies {
-    compile group: 'com.google.guava', name: 'guava', version: '19.0'
-    compile 'org.apache.commons:commons-io:1.3.2'
-    //Enable if you have BielAPI installed on maven local
-    //compile 'BielAPI:BielAPI:0.0.8-SNAPSHOT'
-    compile fileTree(dir: 'lib', include: '*.jar')
-    //Enable to use automatic download, when avaliable
-    //compile 'org.spigotmc:spigot-api:1.10-R0.1-SNAPSHOT'
-//    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.15'
-
-    compileOnly "org.spigotmc:spigot-api:1.16.4-R0.1-SNAPSHOT"
-//    compileOnly "org.spigotmc:spigot:1.16.4-R0.1-SNAPSHOT"
-    testCompileOnly  "org.spigotmc:spigot-api:1.16.4-R0.1-SNAPSHOT"
+    compileOnly 'com.google.guava:guava:33.6.0-jre'
+    compileOnly 'commons-io:commons-io:2.21.0'
+    compileOnly 'commons-lang:commons-lang:2.6'
+    compileOnly 'com.mysql:mysql-connector-j:9.6.0'
+    compileOnly 'BielAPI:BielAPI:0.0.10-SNAPSHOT'
+    compileOnly fileTree(dir: 'lib', include: '*.jar', exclude: [
+            'BielAPI-*.jar',
+            'NametagEdit*.jar',
+            'spigot-*.jar'
+    ])
+    compileOnly 'io.papermc.paper:paper-api:26.2.build.92-stable'
+    compileOnly('com.github.decentsoftware-eu.decentholograms:plugin:2.10.1') {
+        transitive = false
+    }
+    testCompileOnly 'io.papermc.paper:paper-api:26.2.build.92-stable'
 
 }
 

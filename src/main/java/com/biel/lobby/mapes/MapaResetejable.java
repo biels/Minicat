@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
@@ -19,6 +20,7 @@ import com.biel.lobby.utilities.GestorPropietats;
 
 public abstract class MapaResetejable extends Mapa {
 	static String FolderLiveWorlds = "LiveWorlds"; 
+	static String FolderLiveMetadata = "LiveMetadata";
 	static String FolderMaps = "mapes"; 
 	static String FolderCopies = "copies";
 	private int multiMapId;
@@ -30,6 +32,37 @@ public abstract class MapaResetejable extends Mapa {
 	}
 	public void initialize() {
 		createVirtualWorld();
+	}
+	public static void cleanupStaleRuntimeWorlds() {
+		File metadataRoot = new File(FolderLiveMetadata);
+		File[] metadataDirectories = metadataRoot.listFiles(File::isDirectory);
+		if (metadataDirectories == null) return;
+
+		File worldContainer = Bukkit.getWorldContainer();
+		File dimensionsRoot = new File(new File(new File(worldContainer, "world"), "dimensions"), "minecraft");
+		for (File metadataDirectory : metadataDirectories) {
+			String worldName = metadataDirectory.getName();
+			if (!worldName.matches("[A-Za-z][A-Za-z0-9_-]*\\d+")) {
+				Com.getPlugin().getLogger().warning("Skipping unexpected live metadata directory: " + worldName);
+				continue;
+			}
+			if (Bukkit.getWorld(worldName) != null) {
+				Com.getPlugin().getLogger().warning("Skipping loaded runtime world during startup cleanup: " + worldName);
+				continue;
+			}
+
+			File legacyWorldDirectory = new File(worldContainer, worldName);
+			File paperWorldDirectory = new File(dimensionsRoot, worldName.toLowerCase(Locale.ROOT));
+			try {
+				FileUtils.deleteDirectory(legacyWorldDirectory);
+				FileUtils.deleteDirectory(paperWorldDirectory);
+				FileUtils.deleteDirectory(metadataDirectory);
+				Com.getPlugin().getLogger().info("Removed stale runtime world: " + worldName);
+			} catch (IOException exception) {
+				Com.getPlugin().getLogger().log(java.util.logging.Level.SEVERE,
+						"Could not remove stale runtime world " + worldName, exception);
+			}
+		}
 	}
 	String getLiveWorldAvaliableName(String where){
 		String nouNom = "";
@@ -65,21 +98,30 @@ public abstract class MapaResetejable extends Mapa {
 	void createVirtualWorld(){
 		if (getGameName().equals("")){return;}
 		if (isWorldLoaded() == true){return;}
-		NomWorld = getLiveWorldAvaliableName(FolderLiveWorlds);
+		NomWorld = getLiveWorldAvaliableName(FolderLiveMetadata);
 		//Copy world
 		File worldOrigin = getWorldOriginMappedFile();
 		File worldLive = getLiveWorldFile();
+		File metadataDirectory = getLiveMetadataFile();
 		try {
 			copyDirectory(worldOrigin, worldLive);
+			if (!metadataDirectory.exists() && !metadataDirectory.mkdirs()) {
+				throw new IOException("Could not create live metadata directory " + metadataDirectory);
+			}
+			File sourceProperties = new File(worldOrigin, "pMapaActual.txt");
+			if (sourceProperties.isFile()) {
+				FileUtils.copyFile(sourceProperties, new File(metadataDirectory, "pMapaActual.txt"));
+			}
 			File uid = new File(worldLive.getPath() + "/" + "uid.dat");
 			uid.delete();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			Bukkit.broadcastMessage("El mon no s'ha pogut copiar");
-			e.printStackTrace();
+			throw new IllegalStateException("El mon no s'ha pogut copiar: " + getGameName(), e);
 		}
 		//-----
 		world = Bukkit.createWorld(new WorldCreator(getLiveWorldFolder()));
+		if (world == null) {
+			throw new IllegalStateException("Paper no ha pogut carregar el mon " + getLiveWorldFolder());
+		}
 		updateWorldToRegisteredHandler();
 	}
 	private void updateWorldToRegisteredHandler() {
@@ -143,30 +185,34 @@ public abstract class MapaResetejable extends Mapa {
 		return result;
 	}
 	private String getLiveWorldFolder() {
-		return FolderLiveWorlds + "/" + NomWorld;
+		return NomWorld;
 	}
 	public static void deleteLiveWorldsFolder(){
 		try {
 			FileUtils.deleteDirectory(new File(FolderLiveWorlds));
 		} catch (IOException e) {
-			System.out.println("Error borrando los liveworlds");
+			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING, "Error esborrant els mons temporals", e);
 		}
 	}
-	public void deleteVirtualWorld(){
-		Bukkit.unloadWorld(world, false);
+	public boolean deleteVirtualWorld(){
+		if (world == null) return false;
+		File worldLive = world.getWorldFolder();
+		File metadataDirectory = getLiveMetadataFile();
+		if (!Bukkit.unloadWorld(world, false)) return false;
+		world = null;
 		Com.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
-            File worldLive = getLiveWorldFile();
             deleteFolder(worldLive);
+			deleteFolder(metadataDirectory);
             Bukkit.broadcastMessage("Mapa esborrat! - " + NomWorld);
         }, 200L);
-
+		return true;
 	}
 	public void save(){
 		if (EditMode){
 			world.save();
 			//Copy world
 			File worldOrigin = getWorldOriginMappedFile();
-			File worldLive = getLiveWorldFile();
+			File worldLive = world.getWorldFolder();
 			String copyName = getLiveWorldAvaliableName(FolderCopies);
 			File worldCopy = new File(FolderCopies + "/" + copyName);
 			try {
@@ -174,6 +220,10 @@ public abstract class MapaResetejable extends Mapa {
 				copyDirectory(worldOrigin, worldCopy);
 				//Save
 				copyDirectory(worldLive, worldOrigin);
+				File liveProperties = new File(getLiveMetadataFile(), "pMapaActual.txt");
+				if (liveProperties.isFile()) {
+					FileUtils.copyFile(liveProperties, new File(worldOrigin, "pMapaActual.txt"));
+				}
 				Bukkit.broadcastMessage(ChatColor.GOLD + "Mapa guardat (" + NomWorld + "), copia de seguretat (" + copyName + ")");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -186,6 +236,9 @@ public abstract class MapaResetejable extends Mapa {
 	}
 	private File getLiveWorldFile() {
 		return new File(getLiveWorldFolder());
+	}
+	private File getLiveMetadataFile() {
+		return new File(FolderLiveMetadata, NomWorld);
 	}
 	private File getMapOriginFile() {
 		return new File(FolderMaps + "/" + getGameName());
@@ -212,17 +265,17 @@ public abstract class MapaResetejable extends Mapa {
 		sendGlobalMessage("Mode edició = " + Boolean.toString(editMode));
 	}
 	public GestorPropietats pMapaActual(){
-		return new GestorPropietats(getLiveWorldFolder() + "/" + "pMapaActual.txt");
+		return new GestorPropietats(new File(getLiveMetadataFile(), "pMapaActual.txt").getPath());
 	}
 	public GestorPropietats pTemp(){
-		return new GestorPropietats(getLiveWorldFolder() + "/" + "pTemp.txt");
+		return new GestorPropietats(new File(getLiveMetadataFile(), "pTemp.txt").getPath());
 	}
 	public GestorPropietats pPlayer(Player ply){
-		File playersFolder = new File(getLiveWorldFolder() + "/" + "pPlayers");
+		File playersFolder = new File(getLiveMetadataFile(), "pPlayers");
 		if (!playersFolder.exists()) {
 			playersFolder.mkdir();
 		}
-		return new GestorPropietats(getLiveWorldFolder() + "/" + "pPlayers" + "/" + ply.getName() + ".txt");
+		return new GestorPropietats(new File(playersFolder, ply.getName() + ".txt").getPath());
 	}
 	@Override
 	protected synchronized void gameEvent(Event event) {

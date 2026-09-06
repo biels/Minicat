@@ -7,6 +7,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.PistonMoveReaction;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -24,7 +25,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
@@ -175,7 +175,7 @@ public class Turret extends EventBus {
 			if (loc.getBlock().getType() != Material.AIR){
 				return false;
 			}
-			if(loc.getBlock().getRelative(BlockFace.DOWN).getType() == Material.LEGACY_LEAVES){
+			if(Tag.LEAVES.isTagged(loc.getBlock().getRelative(BlockFace.DOWN).getType())){
 				return false;
 			}
 		}
@@ -192,10 +192,10 @@ public class Turret extends EventBus {
 			loc.getBlock().setType(mat);
 			TurretBlocks.add(loc.clone());
 			loc.setY(loc.getY() + 1);
-			loc.getBlock().setType(Material.LEGACY_NETHER_FENCE);
+			loc.getBlock().setType(Material.NETHER_BRICK_FENCE);
 			TurretBlocks.add(loc.clone());
 			loc.setY(loc.getY() + 1);
-			loc.getBlock().setType(Material.LEGACY_REDSTONE_TORCH_ON);
+			loc.getBlock().setType(Material.REDSTONE_TORCH);
 			TurretBlocks.add(loc.clone());
 			resetArmorCD();
 			built = true;
@@ -283,11 +283,6 @@ public class Turret extends EventBus {
 		ArmorBlocks.clear();
 		while (h >= 0){
 			Location iLoc = location.clone().add(new Vector(0,h,0));
-			ArrayList <Byte> dirs = new ArrayList<>();
-			dirs.add((byte) 0x2);
-			dirs.add((byte) 0x3);
-			dirs.add((byte) 0x4);
-			dirs.add((byte) 0x5);
 			ArrayList <BlockFace> faces = new ArrayList<>();
 			faces.add(BlockFace.NORTH);
 			faces.add(BlockFace.SOUTH);
@@ -299,7 +294,10 @@ public class Turret extends EventBus {
 				if (block.getType() != Material.AIR && block.getPistonMoveReaction() != PistonMoveReaction.BREAK){
 					continue;
 				}
-				block.setType(Material.LEGACY_WALL_SIGN);
+				block.setType(Material.OAK_WALL_SIGN, false);
+				Directional signData = (Directional) block.getBlockData();
+				signData.setFacing(face);
+				block.setBlockData(signData, false);
 				Sign sign = (Sign)block.getState();
 				if (creador != null){
 					sign.setLine(1,creador.getName());
@@ -309,8 +307,6 @@ public class Turret extends EventBus {
 				}
 
 				sign.update();
-//              TODO UPDATE
-//				block.setData(dirs.get(faces.indexOf(face)));
 				ArmorBlocks.add(block.getLocation());
 			}
 			h = h - 1;
@@ -339,7 +335,7 @@ public class Turret extends EventBus {
 		//Bukkit.broadcastMessage("CD i!");
 		plugin.getServer().getScheduler().cancelTask(taskEscutId);
 		if (CD < 0){return;}
-		taskEscutId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+		taskEscutId = joc.scheduleGameplayTask(() -> {
             //Bukkit.broadcastMessage("CD acabat!");
 
             hpEscut = maxHpEscut;
@@ -389,7 +385,7 @@ public class Turret extends EventBus {
 				while (count <= range){
 					Block block = iLoc.getBlock().getRelative(face);
 					Location loc = block.getLocation().clone();
-					tirarPoció(loc, PotionType.INSTANT_DAMAGE, (3 * count) + 1 + delayOffSet);
+					tirarPoció(loc, PotionType.HARMING, (3 * count) + 1 + delayOffSet);
 					iLoc = loc;
 					count++;
 				}
@@ -429,13 +425,12 @@ public class Turret extends EventBus {
 		dir.add(addUp);
 		ThrownPotion potion = (ThrownPotion)world.spawnEntity(spawnpoint.add(dir.multiply(0.65)), EntityType.SPLASH_POTION);
 		potion.setVelocity(dir);
-		Potion pot = new Potion(type).splash();
-		ItemStack stack1 = pot.toItemStack(1);
+		ItemStack stack1 = Utils.createPotion(type, 1, true);
 		potion.setItem(stack1);
 		potion.setShooter(creador);
 	}
 	public void tirarPoció(final Location loc, final PotionType type, int delay){
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> tirarPoció(loc, type), delay);
+		joc.scheduleGameplayTask(() -> tirarPoció(loc, type), delay);
 	}
 	public void checkIntegrity(){
 		if(built && canBuild()){
@@ -446,7 +441,7 @@ public class Turret extends EventBus {
 		//if (headless = false){
 		if (built == false){return;}
 		//}
-		taskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable(){
+		taskId = joc.scheduleGameplayRepeatingTask(new Runnable(){
 			public void run() {
 				checkIntegrity();
 				LivingEntity target = getTarget();
@@ -472,14 +467,11 @@ public class Turret extends EventBus {
 					Vector addUp = new Vector(0, rawDir.length() / 40.0,0);
 					dir.add(addUp);
 					Arrow arrow = (Arrow)world.spawnEntity(spawnpoint, EntityType.ARROW);
-					//TNTPrimed arrow = (TNTPrimed)world.spawnEntity(spawnpoint, EntityType.PRIMED_TNT);
+					//TNTPrimed arrow = (TNTPrimed)world.spawnEntity(spawnpoint, EntityType.TNT);
 					arrow.setShooter(creador);
 					if (foc == true){arrow.setFireTicks(20); world.playEffect(spawnpoint, Effect.MOBSPAWNER_FLAMES, 0);}
 					arrow.setMetadata("Tower", new FixedMetadataValue(plugin, id));
 					arrow.setMetadata("Special", new FixedMetadataValue(plugin, false));
-					arrow.setBounce(false);
-					arrow.setKnockbackStrength(0);
-					
 					arrow.setVelocity(dir.multiply(3.4));
 
 					world.playSound(spawnpoint, Sound.ENTITY_IRON_GOLEM_ATTACK, 1, 0.3F);
@@ -537,7 +529,7 @@ public class Turret extends EventBus {
 				int shoots = 1 + getByTipus(TipusMillora.MECÀNICA).lvl;
 				int temps = 5;
 				while (i1 < shoots){
-					plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+					joc.scheduleGameplayTask(() -> {
                         int i = 0;
                         int espai = 32 - (getByTipus(TipusMillora.MECÀNICA).lvl * 4);
                         while (i <= 360){
@@ -685,7 +677,6 @@ public class Turret extends EventBus {
 								hit = false;
 							}
 						}
-						arrow.setBounce(hit);
 						if (hit) {
 							Hit(10);
 							player.playSound(player.getEyeLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 0.9F);
@@ -889,12 +880,12 @@ public class Turret extends EventBus {
 			break;
 			case QUÍMICA:  name = "Química";
 			Description = "Habilitats amb pocions";
-			material = Material.LEGACY_BREWING_STAND_ITEM;
+			material = Material.BREWING_STAND;
 			Cost = 50;
 			break;
 			case MECÀNICA:  name = "Mecànica avançada";
 			Description = "Habilitats especials cada 10 tirs";
-			material = Material.LEGACY_PISTON_BASE;
+			material = Material.PISTON;
 			Cost = 100;
 			max = 5;
 			break;
@@ -1013,6 +1004,3 @@ public class Turret extends EventBus {
 	}
 
 }
-
-
-

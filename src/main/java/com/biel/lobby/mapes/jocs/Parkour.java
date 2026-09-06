@@ -38,9 +38,8 @@ import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
 import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
-import com.connorlinfoot.titleapi.TitleAPI;
-import com.gmail.filoghost.holographicdisplays.api.Hologram;
-import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
+import com.biel.lobby.utilities.PaperMessages;
+import com.biel.lobby.utilities.HologramFacade;
 
 public class Parkour extends JocScoreCombo{
 
@@ -239,7 +238,7 @@ public class Parkour extends JocScoreCombo{
 			ArrayList<Vector> positions = new ArrayList<>();
 			ArrayList<CheckpointHandler> checkpointHandlers = new ArrayList<>();
 			Score score;
-			Hologram h;
+			HologramFacade.Handle h;
 			public BubbleHandler(int providerBubbleIndex) {
 				super();
 				this.providerBubbleIndex = providerBubbleIndex;
@@ -267,7 +266,7 @@ public class Parkour extends JocScoreCombo{
 			}
 			public void createHolgram(){
 				if (h != null){return;}
-				h = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
+				h = HologramFacade.create(getHologramLocation());
 			}
 			public void updateHologram(){
 				if (h == null){return;}
@@ -279,7 +278,8 @@ public class Parkour extends JocScoreCombo{
 				createHolgram();
 			}
 			public void showScore (Score score){
-				TitleAPI.sendTitle(getPlayer(),1,4,2,score.getFormattedString(),ChatColor.DARK_AQUA + "x" + getCombo(getPlayer()));
+				PaperMessages.showTitle(getPlayer(), 1, 4, 2, score.getFormattedString(),
+						ChatColor.DARK_AQUA + "x" + getCombo(getPlayer()));
 			}
 			public void advance(Score score){
 				ParkourPlayerInfo i = getPlayerInfo(getPlayer());
@@ -372,8 +372,8 @@ public class Parkour extends JocScoreCombo{
 				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_HORSE_ARMOR, 1F, 1.1F);
 				advance(Score.FAIL);
 				
-				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, 25, 129));
-				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 25, 129));
+				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 25, 129));
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 25, 129));
 			}
 			
 			//CHECKPOINT HANDLER
@@ -381,7 +381,7 @@ public class Parkour extends JocScoreCombo{
 				int checkpointIndex;
 				boolean completed;
 				boolean wasPlayerInsideRange = false;
-				Hologram ho;
+				HologramFacade.Handle ho;
 				public CheckpointHandler(int checkpointIndex) {
 					super();
 					this.checkpointIndex = checkpointIndex;
@@ -449,7 +449,7 @@ public class Parkour extends JocScoreCombo{
 				}
 				public void createHolgram(){
 					if (ho != null){return;}
-					ho = HologramsAPI.createHologram(Com.getPlugin(), getHologramLocation());
+					ho = HologramFacade.create(getHologramLocation());
 				}
 				public void updateHologram(){
 					if (ho == null){createHolgram();}
@@ -671,7 +671,7 @@ public class Parkour extends JocScoreCombo{
 					blocks.add(lc);materials.add((t == 1 ? Material.PACKED_ICE : Material.QUARTZ_BLOCK));
 					Vector dlc = lc.clone().add(d);
 					Material mat = Material.QUARTZ_BLOCK;
-					if(t == 1)if(GUtils.Possibilitat(30))mat = Material.LEGACY_IRON_FENCE;
+					if(t == 1)if(GUtils.Possibilitat(30))mat = Material.IRON_BARS;
 					if(t == 2)if(GUtils.Possibilitat(60))mat = Material.PACKED_ICE;
 					blocks.add(dlc);materials.add(mat);
 					checkpoints.add(new Checkpoint(dlc));
@@ -697,7 +697,7 @@ public class Parkour extends JocScoreCombo{
 				checkpoints.add(new Checkpoint(getZero()));
 				for(int i = 1; i < 15; i++){
 					if (Utils.Possibilitat(80)){
-						blocks.add(getForward().multiply(i));materials.add(Material.LEGACY_STAINED_GLASS_PANE);
+						blocks.add(getForward().multiply(i));materials.add(Material.WHITE_STAINED_GLASS_PANE);
 						if (i % 3 == 0) checkpoints.add(new Checkpoint(getForward().multiply(i)));
 					}
 				}
@@ -745,8 +745,8 @@ public class Parkour extends JocScoreCombo{
 					blocks.add(getForward().multiply(2 * i));materials.add(Material.QUARTZ_BLOCK);
 					blocks.add(getForward().multiply(2 * i + 1).add(getRight().multiply(2)));materials.add(Material.QUARTZ_BLOCK);
 					if(i < n - 1){
-						blocks.add(getForward().multiply(2 * i + 1).add(getUp()));materials.add(Material.FENCE);
-						blocks.add(getForward().multiply(2 * i + 2).add(getRight().multiply(2)).add(getUp()));materials.add(Material.FENCE);
+						blocks.add(getForward().multiply(2 * i + 1).add(getUp()));materials.add(Material.OAK_FENCE);
+						blocks.add(getForward().multiply(2 * i + 2).add(getRight().multiply(2)).add(getUp()));materials.add(Material.OAK_FENCE);
 					}
 				}
 				blocks.stream().filter(b -> materialGetter.apply(b) == Material.QUARTZ_BLOCK).forEach(b -> checkpoints.add(new Checkpoint(b, 0.9)));

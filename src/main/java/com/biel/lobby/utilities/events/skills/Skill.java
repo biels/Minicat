@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -191,9 +190,8 @@ public abstract class Skill extends PlayerWorldEventBus {
 		return 32;
 	}
 	protected ItemStack getItemStack(){
-		ItemStack i = Utils.setItemNameAndLore(new ItemStack(getMaterial(), 1, getDamageValue(), getData()), getTierChatColor() + getName(), getLoreArr());
-		//ItemStack i = new ItemStack(getMaterial());
-		i.addUnsafeEnchantment(Enchantment.DEPTH_STRIDER, getTier());
+		ItemStack i = Utils.setItemNameAndLore(new ItemStack(getMaterial()), getTierChatColor() + getName(), getLoreArr());
+		i.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
 		return i;//"[Line1]", "[Line2]", "Info{Current/Max}");
 	}
 	//-END-OLD-
