@@ -22,8 +22,22 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 final class RainbowClaySnapshotPublisher {
-    private static final long SNAPSHOT_PERIOD_TICKS = 100;
-    private static final long SNAPSHOT_TTL_MS = 7_500;
+    // A snapshot must reach the bot young and stay valid for a whole turn, and at
+    // 100 ticks / 7500 ms it could do neither. The bot refuses to think against a
+    // snapshot with less than its decision budget left, so the budget could never
+    // exceed 6750 ms - and a live match on 2026-08-06 threw away every reply the
+    // model produced, because the model needs longer than that to produce one.
+    //
+    // Two seconds between captures means a bot fetching at any moment holds one
+    // that is almost new. Fifteen seconds of life then covers the fetch, the
+    // thinking and the round trip with room to spare.
+    private static final long SNAPSHOT_PERIOD_TICKS = 40;
+    // Safe to lengthen because of what this snapshot carries: team rosters,
+    // objective positions and their alive/completed state, the match phase. None
+    // of it moves quickly. Everything that does - where a player is standing, what
+    // block is underfoot - reaches the bot through its own client every turn and
+    // never through here.
+    private static final long SNAPSHOT_TTL_MS = 15_000;
 
     private final RainbowClay game;
     private final AgentSnapshotHttpServer endpoint;
