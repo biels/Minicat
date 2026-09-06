@@ -63,6 +63,15 @@ public class Torres extends JocEquips {
 	private static final int SIEGE_START_DEFAULT_SECONDS = 8 * 60;
 	private static final int SIEGE_DECAY_INTERVAL_SECONDS = 30;
 	private static final int SIEGE_DECAY_HP = 5;
+	/** Kit tiers by point total: kills give 3, beacons 10. One tier every two kills keeps the kit moving in a 15 minute match. */
+	private static final int KIT_TIER_IRON_HELMET = 6;
+	private static final int KIT_TIER_DIAMOND_CHESTPLATE = 12;
+	private static final int KIT_TIER_DIAMOND_BOOTS = 18;
+	private static final int KIT_TIER_DIAMOND_SWORD = 24;
+	private static final int KIT_TIER_TURRET = 30;
+	/** Bonus pickups reappear this fast. Resistance II lasts 38 s, so the protection pot must not respawn faster than the buff wears off. */
+	private static final int BONUS_RESPAWN_TICKS = 40 * 20;
+	private static final int PROTECTION_BONUS_RESPAWN_TICKS = 90 * 20;
 	boolean debug = false;
 	private boolean siegeStarted = false;
 	private int secondsUntilSiegeDecay = SIEGE_DECAY_INTERVAL_SECONDS;
@@ -103,12 +112,11 @@ public class Torres extends JocEquips {
 		Equip e = obtenirEquip(ply);
 		PlayerInfo i = getPlayerInfo(ply);
 		int v = i.getValue();
-		items.add(new ItemStack((v > 120 ? Material.DIAMOND_SWORD : Material.IRON_SWORD), 1));
-		//if(v > 140)items.add(new ItemStack(Material.DIAMOND_AXE, 1));
-		if(v > 140)items.add(getTurretItem());
-		items.add((v > 60 ? new ItemStack(Material.DIAMOND_CHESTPLATE, 1) : Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e)));
-		items.add((v > 30 ? new ItemStack(Material.IRON_HELMET, 1) : Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e)));
-		items.add((v > 90 ? new ItemStack(Material.DIAMOND_BOOTS, 1) : Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e)));
+		items.add(new ItemStack((v >= KIT_TIER_DIAMOND_SWORD ? Material.DIAMOND_SWORD : Material.IRON_SWORD), 1));
+		if(v >= KIT_TIER_TURRET)items.add(getTurretItem());
+		items.add((v >= KIT_TIER_DIAMOND_CHESTPLATE ? new ItemStack(Material.DIAMOND_CHESTPLATE, 1) : Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e)));
+		items.add((v >= KIT_TIER_IRON_HELMET ? new ItemStack(Material.IRON_HELMET, 1) : Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e)));
+		items.add((v >= KIT_TIER_DIAMOND_BOOTS ? new ItemStack(Material.DIAMOND_BOOTS, 1) : Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e)));
 
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
 		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
@@ -247,8 +255,9 @@ public class Torres extends JocEquips {
 	public enum TipusBonus {HEAL, SPEED, DAMAGE, PROTECTION, JUMP};
 	public void GenerarBonus(String pArr, TipusBonus tipus){
 		ArrayList<Location> bonus = pMapaActual().ObtenirLocations(pArr ,world);
+		int respawnTicks = tipus == TipusBonus.PROTECTION ? PROTECTION_BONUS_RESPAWN_TICKS : BONUS_RESPAWN_TICKS;
 		for(Location loc : bonus){
-			Bonus bo = new Bonus(Com.getPlugin(), tipus, loc, 0, 40 * 20);
+			new Bonus(Com.getPlugin(), tipus, loc, 0, respawnTicks);
 		}
 	}
 
