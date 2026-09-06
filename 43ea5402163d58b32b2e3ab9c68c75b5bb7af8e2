@@ -1,0 +1,27 @@
+bot-runtime/src/protocol/operator-grammar.js
+  s_934185706e816a::t_0fd6bcd09dc335 1-346
+docs/architecture/operators.md
+  s_934185706e816a::t_677b0bdd7dda29 87-95
+  s_934185706e816a::t_591ecee5b22bf0 396-409
+docs/architecture/inventory.md
+  s_934185706e816a::t_a952b3c8d8eba2 268
+  s_934185706e816a::t_e7488454a55362 118
+bot-runtime/test/operator-grammar.test.js
+  s_934185706e816a::t_691662addd0284 1-225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "43ea5402163d58b32b2e3ab9c68c75b5bb7af8e2",
+  "prompts": {},
+  "sessions": {
+    "s_934185706e816a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9666bbc1-ecb7-48f6-a970-0e159ef92436",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+bot-runtime/test/match-entry.test.js
+  s_6776c97f3a38dc::t_dd677b2a1c217a 63-64,70-88
+  s_6776c97f3a38dc::t_4d1a527b0795bd 248-282
+  s_6776c97f3a38dc::t_1196d2924d82cc 307-316
+  s_6776c97f3a38dc::t_1bff3b624f23d9 1-62,65-69,89-191,221-247,283-306,317-381,386,388-393,396-473
+  s_6776c97f3a38dc::t_733b86520925a8 203-211
+  s_6776c97f3a38dc::t_57278b526caba7 382-385,387,394-395
+  s_6776c97f3a38dc::t_4dcff3153c865d 192-202,212-220
+bot-runtime/src/config.js
+  s_6776c97f3a38dc::t_8d21152e4d2b18 32-38
+  s_6776c97f3a38dc::t_7d2d1d5b1e38aa 125-146
+  s_6776c97f3a38dc::t_ea64e700ba2beb 88
+  s_6776c97f3a38dc::t_1d1da8016d612b 45
+bot-runtime/test/config.test.js
+  s_6776c97f3a38dc::t_433250d2e0b0e0 172-222
+bot-runtime/src/core/bot-runtime.js
+  s_6776c97f3a38dc::t_1090e9b6890780 11
+  s_6776c97f3a38dc::t_30afb45a363e84 80
+bot-runtime/src/core/match-entry.js
+  s_6776c97f3a38dc::t_6096a31480037a 280,283,288,298-309
+  s_6776c97f3a38dc::t_67edc2cb340886 26-30
+  s_6776c97f3a38dc::t_fd0be56fe3df22 335-338,340,342-343,347-350
+  s_6776c97f3a38dc::t_04873cb6b6f77b 195-198
+  s_6776c97f3a38dc::t_ae37f5d496ad69 325-328
+  s_6776c97f3a38dc::t_82006b2b6e58ab 103-105,109-127,134-137
+  s_6776c97f3a38dc::t_331863e2eeb53a 147-150,152-153
+  s_6776c97f3a38dc::t_f08aad72e7c79d 270-278,281,284-287,290-297
+  s_6776c97f3a38dc::t_7c6194071600ad 180-191,194,199-202
+  s_6776c97f3a38dc::t_ffbe4a06bd7a71 60-67
+  s_6776c97f3a38dc::t_5d428aa95fdf74 1-25,31-59,68-100,106-108,128-133,138-146,151,154-179,192-193,203-269,279,282,289,310-324,329-334,339,341,344-346,351-370,372,374-384
+  s_6776c97f3a38dc::t_db6ea7bb15c39e 371,373
+  s_6776c97f3a38dc::t_26508b8021a780 101-102
+bot-runtime/src/core/controller.js
+  s_6776c97f3a38dc::t_c1ffc189e65781 17-18
+bot-runtime/src/protocol/controller-input.js
+  s_6776c97f3a38dc::t_75e5d789781d42 90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "5e9b5951a15c8deeae3e7cbc1e84245c16a97414",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

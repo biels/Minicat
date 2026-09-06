@@ -1,0 +1,31 @@
+bot-runtime/src/server/ssh-snapshot-bridge.js
+  s_c538435bc189f5::t_86346e51869ebf 59-65
+  s_c538435bc189f5::t_407588aed85f6b 12-16
+bot-runtime/src/config.js
+  s_c538435bc189f5::t_d4a43296f1a3ea 59-62
+bot-runtime/src/core/current-instance.js
+  s_c538435bc189f5::t_6d360b26381e14 1-48
+bot-runtime/src/core/bot-runtime.js
+  s_c538435bc189f5::t_0174445d74df70 12
+  s_c538435bc189f5::t_a89ad132ba8100 50-53
+bot-runtime/test/current-instance.test.js
+  s_c538435bc189f5::t_b99953eca9bf93 1-83
+docs/architecture/inventory.md
+  s_c538435bc189f5::t_6c02899bb7736f 380-392
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "81de6cafee6d4f39d728f0375e7ebf512b5aa851",
+  "prompts": {},
+  "sessions": {
+    "s_c538435bc189f5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aeb8beca-d3ef-4246-b070-48e063f3f5ec",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

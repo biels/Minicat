@@ -1,0 +1,36 @@
+bot-runtime/test/helpers/fixtures.js
+  s_934185706e816a::t_6cd6a0450f9c0c 1-133
+bot-runtime/test/xml-parse-command.test.js
+  s_934185706e816a::t_dacf4c1cf82159 1-298,308,319-330
+  s_934185706e816a::t_963830994986e6 299-307,309-318
+bot-runtime/package.json
+  s_934185706e816a::t_c86f55bcd588f9 9
+bot-runtime/README.md
+  s_934185706e816a::t_95f515977753fe 93-103
+  s_934185706e816a::t_fce91de8e4d051 87
+  s_934185706e816a::t_6543337abe765e 111
+bot-runtime/test/xml-parse-server-snapshot.test.js
+  s_934185706e816a::t_ca228de1a82606 1-66
+bot-runtime/test/controller-input.test.js
+  s_934185706e816a::t_1fefb9840651e3 1-162
+docs/architecture/inventory.md
+  s_934185706e816a::t_7f0365096db3e4 156-159
+  s_934185706e816a::t_4845331451ffaf 275
+  s_934185706e816a::t_5c6d830924071c 119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "fe357391087dd937ae7214373ac7d54463b82ae9",
+  "prompts": {},
+  "sessions": {
+    "s_934185706e816a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9666bbc1-ecb7-48f6-a970-0e159ef92436",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+docs/games/GAMES.md
+  s_af6f5999d39a89::t_f737bd47eca5cd 21-31
+  s_af6f5999d39a89::t_cda300fcb2601f 551-566
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "78e4fd8a3bada8d4260c295a441d793d3a1c35d1",
+  "prompts": {},
+  "sessions": {
+    "s_af6f5999d39a89": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8263531f-ab19-4490-9469-52738bb5e3f1",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

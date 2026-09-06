@@ -1,0 +1,28 @@
+bot-runtime/test/config.test.js
+  s_6776c97f3a38dc::t_17ed62118543f5 116-167
+bot-runtime/src/config.js
+  s_6776c97f3a38dc::t_9fd10be4f421fe 23-31
+  s_6776c97f3a38dc::t_00d75e3eb65a03 70-77
+  s_6776c97f3a38dc::t_9b53da2b2a5f7d 46-47,55-58
+  s_6776c97f3a38dc::t_a86753bed361bc 92-118
+bot-runtime/config/scripted.example.json
+  s_6776c97f3a38dc::t_9f53519fac38b2 1-39
+bot-runtime/config/fleet.example.json
+  s_6776c97f3a38dc::t_e767195c1e7527 7-13,16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "8843881dee03b73b291f8ca23773c4042a5b254d",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

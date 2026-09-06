@@ -1,0 +1,29 @@
+docs/architecture/combat.md
+  s_934185706e816a::t_2877b02d50af39 3-7
+bot-runtime/src/core/combat.js
+  s_934185706e816a::t_c25d2bd11a7cc2 1-165,169-199
+  s_934185706e816a::t_d969cc0c6a8fa2 166-168
+docs/architecture/inventory.md
+  s_934185706e816a::t_93ec3ed10b6843 264-265
+  s_934185706e816a::t_62818fb51d6dc9 115-116
+bot-runtime/test/combat.test.js
+  s_934185706e816a::t_a4d2fc55007487 1-177,181,186,201-229
+  s_934185706e816a::t_b4341d7c0a582d 178-180,185,187-200
+  s_934185706e816a::t_5d98c6a4dfd1dd 182-184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "8889e9650783e1cad65f9cf34a19d09a46b67829",
+  "prompts": {},
+  "sessions": {
+    "s_934185706e816a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9666bbc1-ecb7-48f6-a970-0e159ef92436",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

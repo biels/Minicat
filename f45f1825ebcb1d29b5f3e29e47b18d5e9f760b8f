@@ -1,0 +1,151 @@
+_archived/bot-controllers/agy-thinking-loop.js
+  s_af6f5999d39a89::t_887e37912ca876 1-91
+_archived/bot-controllers/gemini36flash-low.js
+  s_d22295457e46f7::t_297c4846abbca5 1-201
+_archived/bot-controllers/minicat-g56s-low.js
+  s_d22295457e46f7::t_8be1df940e7e60 1-201
+_archived/bot-controllers/third-bot-stack.js
+  s_af6f5999d39a89::t_ac109edf95bd15 1-35
+_archived/mineflayer-rainbowclay-poc/.env.example
+  s_abd2c16031dd69::t_e96eb86e9c3d4a 1-9
+_archived/mineflayer-rainbowclay-poc/.gitignore
+  s_abd2c16031dd69::t_beb542fd28f783 1-4
+_archived/mineflayer-rainbowclay-poc/README.md
+  s_af6f5999d39a89::t_c30a613169b37a 1-179
+_archived/mineflayer-rainbowclay-poc/package-lock.json
+  s_abd2c16031dd69::t_2a92ed9f9d3f15 1-961
+_archived/mineflayer-rainbowclay-poc/package.json
+  s_d22295457e46f7::t_52210bb93068aa 1-15
+_archived/mineflayer-rainbowclay-poc/scripts/smoke-live.sh
+  s_d22295457e46f7::t_c8be3f19bdc9b0 1-115
+_archived/mineflayer-rainbowclay-poc/src/mineflayer-rainbowclay-bot.js
+  s_d22295457e46f7::t_8dabb20578008b 1-700
+agent/ensure-minicat-agent-http-token.ps1
+  s_af6f5999d39a89::t_9ec79bc2db71fc 1-33
+agent/test-minicat-agent-http.ps1
+  s_af6f5999d39a89::t_542a503cf5d7ff 1-89
+bot-runtime/README.md
+  s_af6f5999d39a89::t_73789ffdb664d4 1-131
+bot-runtime/config/example.json
+  s_af6f5999d39a89::t_fd19436216dc50 1-38
+bot-runtime/package-lock.json
+  s_d22295457e46f7::t_17125a86793d97 1-1102
+bot-runtime/src/config.js
+  s_d22295457e46f7::t_3e8a51fcc473f2 1-58
+bot-runtime/src/core/bot-runtime.js
+  s_d22295457e46f7::t_99334736d0b4ff 1-101
+bot-runtime/src/core/trusted-invite.js
+  s_d22295457e46f7::t_faa2cb96f4a592 1-34
+bot-runtime/src/index.js
+  s_d22295457e46f7::t_f7081d10916227 1-18
+bot-runtime/src/manager.js
+  s_d22295457e46f7::t_adc0f3c3bd141f 1-259
+docs/minicat-agent-endpoint.md
+  s_af6f5999d39a89::t_fa1fe3556b54ff 1-80
+docs/minicat-database-recovery.md
+  s_af6f5999d39a89::t_c7016584373926 1-155
+docs/minicat-paper-26.2-migration.md
+  s_af6f5999d39a89::t_a9713bdbd07e4a 1-461
+docs/minicat-paper-26.2-operations.md
+  s_af6f5999d39a89::t_aabed2ae5eafcb 1-227
+docs/minicat-paper-26.2-plugin-research.md
+  s_af6f5999d39a89::t_ac547b8873a190 1-139
+docs/minicat-paper-26.2-plugin-staging.md
+  s_af6f5999d39a89::t_10488920908937 1-71
+docs/minicat-postgresql-migration.md
+  s_af6f5999d39a89::t_fafb0cc5f97980 1-181
+docs/rainbowclay-agent-protocol-spec.md
+  s_af6f5999d39a89::t_7928af5675300b 1-446
+ops/database/compare-minicat-mysql56-physical.ps1
+  s_af6f5999d39a89::t_d38344a44b40b4 1-81
+ops/database/compare-minicat-timestamp-generations.ps1
+  s_af6f5999d39a89::t_99e2c3866aa90e 1-119
+ops/database/deploy-minicat-mysql8012-live.ps1
+  s_af6f5999d39a89::t_1f9269fa411011 1-191
+ops/database/diagnose-minicat-mysql8012-service.ps1
+  s_af6f5999d39a89::t_0640a799ac70f0 1-25
+ops/database/export-minicat-mysql8012-canonical.ps1
+  s_af6f5999d39a89::t_c3f49f6136e674 1-73
+ops/database/prepare-minicat-mysql56-recovery.ps1
+  s_af6f5999d39a89::t_76cfacefb62a49 1-101
+ops/database/prepare-minicat-mysql8012-recovery.ps1
+  s_af6f5999d39a89::t_edd71f9b07b6fb 1-103
+ops/database/preserve-minicat-database-additional-sources.ps1
+  s_af6f5999d39a89::t_6e0943c18b7c41 1-81
+ops/database/preserve-minicat-database-backup.ps1
+  s_af6f5999d39a89::t_791dc26e8e8b49 1-89
+ops/database/recover-minicat-mysql56-physical.ps1
+  s_af6f5999d39a89::t_9e38bd548dd3d0 1-127
+ops/database/recover-minicat-mysql8012-tablespaces.ps1
+  s_af6f5999d39a89::t_e0ad3c7fc88899 1-229
+ops/database/restore-minicat-mysql56-logical.ps1
+  s_af6f5999d39a89::t_5af89cff9492f7 1-203
+ops/deploy/deploy-minicat-paper-26.2.ps1
+  s_af6f5999d39a89::t_a41fa5f8116f99 1-88
+ops/deploy/inspect-minicat-paper-26.2.ps1
+  s_af6f5999d39a89::t_d577cb02f896a9 1-37
+ops/deploy/install-minicat-paper-26.2-task.ps1
+  s_af6f5999d39a89::t_3346dd9ef6593c 1-24
+ops/deploy/open-minicat-paper-26.2-test-firewall.ps1
+  s_af6f5999d39a89::t_acb5f33c124907 1-9
+ops/deploy/run-minicat-paper-26.2-console.ps1
+  s_af6f5999d39a89::t_2da9b7cc20b376 1-27
+ops/deploy/send-minicat-paper-26.2-command.ps1
+  s_af6f5999d39a89::t_ca5cb238b17a90 1-30
+ops/deploy/start-minicat-paper-26.2-test.ps1
+  s_af6f5999d39a89::t_2e5f01b3786f46 1-58
+ops/deploy/status-minicat-paper-26.2-supervisor.ps1
+  s_af6f5999d39a89::t_8d770ba4d98df8 1-60
+ops/deploy/supervise-minicat-paper-26.2.ps1
+  s_af6f5999d39a89::t_2292e606c32b92 1-74
+ops/deploy/test-minicat-supervisor-scripts.ps1
+  s_af6f5999d39a89::t_862e74a8459781 1-18
+ops/verify/inventory-minicat-paper-26.2-maps.ps1
+  s_af6f5999d39a89::t_c690228051bcd3 1-25
+ops/verify/smoke-minicat-paper-26.2.ps1
+  s_af6f5999d39a89::t_240851959bd054 1-85
+ops/verify/smoke-minicat-registered-games.sh
+  s_af6f5999d39a89::t_b2e900b603458c 1-81
+ops/verify/validate-minicat-live-db.ps1
+  s_af6f5999d39a89::t_85547da0bb5268 1-32
+ops/verify/verify-minicat-paper-db-connection.ps1
+  s_af6f5999d39a89::t_6bd632087d4ebe 1-29
+ops/verify/verify-minicat-runtime-world-absent.ps1
+  s_af6f5999d39a89::t_a4da783552d293 1-20
+ops/world/apply-rainbowclay-uuid-repair.ps1
+  s_af6f5999d39a89::t_8c6b91b7872fc7 1-122
+ops/world/archive-failed-rainbowclay-probe.ps1
+  s_af6f5999d39a89::t_32c394c11826a6 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "f45f1825ebcb1d29b5f3e29e47b18d5e9f760b8f",
+  "prompts": {},
+  "sessions": {
+    "s_abd2c16031dd69": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fce8f-f427-7e10-97cb-400e4bb01352",
+        "model": "gpt-5.3-codex-spark"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_af6f5999d39a89": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8263531f-ab19-4490-9469-52738bb5e3f1",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_d22295457e46f7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fcdbd-8cf2-7d71-bda1-2a659e272119",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

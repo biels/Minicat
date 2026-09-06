@@ -1,0 +1,36 @@
+bot-runtime/test/terrain-grid.test.js
+  s_6776c97f3a38dc::t_183ee423329cbb 1-193,212-231
+  s_6776c97f3a38dc::t_fc7c30a4eaed7f 194-211
+bot-runtime/src/core/terrain-grid.js
+  s_6776c97f3a38dc::t_11880904bd0e31 261
+  s_6776c97f3a38dc::t_7fecd2c1886508 234
+  s_6776c97f3a38dc::t_4256beaafaee77 45-51
+  s_6776c97f3a38dc::t_9a4ea54a16bb7b 321-327
+  s_6776c97f3a38dc::t_b489a9b8fe62b5 84
+  s_6776c97f3a38dc::t_98054ffd7d2563 222,226
+  s_6776c97f3a38dc::t_b5caef58bd8615 74
+  s_6776c97f3a38dc::t_c9c32b4b340915 101-102
+  s_6776c97f3a38dc::t_3ca9a738c51586 87-88
+  s_6776c97f3a38dc::t_4a75f930b4da4e 1-44,52-73,75-83,85-86,89-100,103-221,223-225,227-233,235-260,262-320,328-365
+bot-runtime/src/core/perception.js
+  s_6776c97f3a38dc::t_11c00746db07cd 60-70
+  s_6776c97f3a38dc::t_927ce8646933e6 2,7-16
+  s_6776c97f3a38dc::t_898e15fffc12db 46
+  s_6776c97f3a38dc::t_0850760934282a 52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "bce09444aebf61ef7a26fd3a81312862a95f0833",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

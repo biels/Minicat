@@ -1,0 +1,21 @@
+docs/architecture/inventory.md
+  s_6776c97f3a38dc::t_f313b997be4ba7 357-374
+  s_6776c97f3a38dc::t_52725c529e42a1 303-306,308-317
+  s_6776c97f3a38dc::t_5bfc35a60bdfbc 384-399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "1ee681293446c18096a72840c73eaa69e4316c6d",
+  "prompts": {},
+  "sessions": {
+    "s_6776c97f3a38dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18ed3310-950d-41dd-aea0-f08b7f5181df",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

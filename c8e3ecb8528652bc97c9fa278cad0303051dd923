@@ -1,0 +1,33 @@
+docs/README.md
+  s_af6f5999d39a89::t_4287b9a357656b 1-55
+docs/architecture/protocol.md
+  s_af6f5999d39a89::t_94341549c3a711 1-89
+README.md
+  s_af6f5999d39a89::t_e7d746ba614752 26-28,30-33
+docs/architecture/combat.md
+  s_af6f5999d39a89::t_ccbf28c74d0f7a 1-109
+docs/games/rainbowclay.md
+  s_af6f5999d39a89::t_3f66ca3b7857a9 1-94
+docs/architecture/bot-architecture.md
+  s_af6f5999d39a89::t_e733065cbf6b01 1-115
+docs/architecture/perception.md
+  s_af6f5999d39a89::t_b2ef5c8b0dd759 1-112
+docs/archive/rainbowclay-protocol-spec-1.0.md
+  s_af6f5999d39a89::t_2d297ad7843a8b 3-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "c8e3ecb8528652bc97c9fa278cad0303051dd923",
+  "prompts": {},
+  "sessions": {
+    "s_af6f5999d39a89": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8263531f-ab19-4490-9469-52738bb5e3f1",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+bot-runtime/src/config.js
+  s_934185706e816a::t_6f52a2878a2352 56-76
+bot-runtime/test/strategist.test.js
+  s_934185706e816a::t_50dca11d3267c2 1-187
+bot-runtime/test/config.test.js
+  s_934185706e816a::t_3796ca3b90bd8f 1-67
+bot-runtime/README.md
+  s_934185706e816a::t_741ccc9c9ecdd7 15-20
+  s_934185706e816a::t_a0b9e1af983217 64-67
+  s_934185706e816a::t_76b6545da92c43 94-95
+bot-runtime/src/agent/strategist.js
+  s_934185706e816a::t_0e29a15743ae32 1-46
+bot-runtime/src/core/bot-runtime.js
+  s_934185706e816a::t_b626f936df4df7 8
+  s_934185706e816a::t_79e4021afcb102 62
+docs/architecture/inventory.md
+  s_934185706e816a::t_733deadb8c1e04 145-148
+  s_934185706e816a::t_bb741d7c920a18 106
+  s_934185706e816a::t_03d21f5eb283a3 261-262
+  s_934185706e816a::t_f453b4119954c4 296-298
+  s_934185706e816a::t_860dd5fbc3695a 112
+bot-runtime/src/agent/index.js
+  s_934185706e816a::t_4c184382fcd93e 1-14
+bot-runtime/src/agent/ra-strategist.js
+  s_934185706e816a::t_f06813757e3b82 1-217
+bot-runtime/scripts/check-sources.js
+  s_934185706e816a::t_88b048ac717b34 18
+bot-runtime/config/example.json
+  s_934185706e816a::t_c029d1cc82c798 28-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "980d3908275d65f84b528b61df6d0f8b1076a4b1",
+  "prompts": {},
+  "sessions": {
+    "s_934185706e816a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9666bbc1-ecb7-48f6-a970-0e159ef92436",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
