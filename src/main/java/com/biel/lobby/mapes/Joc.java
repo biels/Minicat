@@ -334,11 +334,6 @@ public abstract class Joc extends MapaResetejable {
 	double getEloK(){
 		return getEloBaseK() * getEloM();
 	}
-	/** The menu line describing what a map plays for. */
-	public static String describeRanking(double baseK){
-		if (baseK <= 0) return ChatColor.DARK_GRAY + "Rànquing: no puntua";
-		return ChatColor.LIGHT_PURPLE + "Rànquing: puntua (K " + Math.round(baseK) + ")";
-	}
 	
 	double getEloM(){
 		return 1;

@@ -80,10 +80,16 @@ public class GestorMapes implements Listener{
 	}
 	public void ObrirMenuMapes(Player ply){
 		queryAutoRatings();
-		IconMenu menu = new IconMenu(ChatColor.RED + "Tots els mapes", (int) (9 * (Math.ceil(Mapes.size() / 9) + 1)), event -> {
+		int size = (int) (9 * (Math.ceil(Mapes.size() / 9) + 1));
+		int rankingBookSlot = size - 1;
+		IconMenu menu = new IconMenu(ChatColor.RED + "Tots els mapes", size, event -> {
 
 			event.setWillClose(false);
             int pos = event.getPosition();
+            if (pos == rankingBookSlot) {
+                RankingBook.open(event.getPlayer());
+                return;
+            }
             ContenidorMapa cont = Mapes.get(pos);
             cont.playerClick(event.getPlayer());
 
@@ -99,7 +105,8 @@ public class GestorMapes implements Listener{
 			menu.setOption(Mapes.indexOf(mapa), icon, mapa.getDisplayName(), mapa.getDescription());
 
 		}
-
+		menu.setOption(rankingBookSlot, new ItemStack(Material.WRITTEN_BOOK),
+				ChatColor.LIGHT_PURPLE + "Rànquing", ChatColor.WHITE + "Quins jocs puntuen i amb quin pes");
 
 		menu.open(ply);
 	}
@@ -150,6 +157,13 @@ public class GestorMapes implements Listener{
 		}
 		//Bukkit.broadcastMessage("Jugador desaparegut");
 		return null;
+	}
+	/** Every registered game, in menu order. */
+	public List<ContenidorJoc> getGameContainers(){
+		return Mapes.stream()
+				.filter(ContenidorJoc.class::isInstance)
+				.map(ContenidorJoc.class::cast)
+				.collect(Collectors.toList());
 	}
 	/** The registry entry for a game class, or null when the class is not registered. */
 	public ContenidorJoc getGameContainer(Class<?> gameClass){
@@ -270,18 +284,12 @@ public class GestorMapes implements Listener{
 
 			ArrayList<String> l = super.getDescription();
 			l.add(0, getRatingString() + ChatColor.DARK_GRAY + " (" + Math.round(getRating() * 10D) / 10D + "%)");
-			l.add(1, rankingLine(developmentState.getDefaultEloK()));
 
 			if(this.getMapCount() == 0) {
-				l.add(2, ChatColor.RED + "No hi ha mapes disponibles");
+				l.add(1, ChatColor.RED + "No hi ha mapes disponibles");
 			}
 
 			return l;
-		}
-		/** What a game or map plays for, as the menu shows it; maps may override the game's default K. */
-		String rankingLine(double baseK){
-			if (!plugin.isInRankedMode()) return ChatColor.DARK_GRAY + "Rànquing desactivat al servidor";
-			return Joc.describeRanking(baseK);
 		}
 		@Override
 		public int getPlayerAmount() {
@@ -531,7 +539,6 @@ public class GestorMapes implements Listener{
 						ChatColor.GREEN + "ENTRAR: " + mapa.NomWorld,
 						ChatColor.WHITE + mapa.getGameName(),
 						ChatColor.WHITE + mapa.getGameState().name(),
-						rankingLine(mapa.getEloBaseK()),
 						ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()),
 						ChatColor.YELLOW + "Espectadors: " + mapa.getSpectators().size(),
 						"Temps: " + tStr, progressStr);
@@ -539,15 +546,13 @@ public class GestorMapes implements Listener{
 			MapMode mapMode = tempInstance.getMapMode();
 			if (!AlgunMapaDisponible() || mapMode == MapMode.MULTIPLE){
 				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1),
-						ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instància",
-						rankingLine(tempInstance.getTemplateEloBaseK(null)));
+						ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instància");
 				if(mapMode == MapMode.MULTIPLE){
 					ArrayList<String> multiWorldList = tempInstance.getMultiWorldList();
 					for (int i = 0; i < multiWorldList.size(); i++) {
 						String name = multiWorldList.get(i);
 						menu.setOption(26 - i, new ItemStack(Material.EMERALD, 1),
-								ChatColor.GREEN + name, ChatColor.WHITE + "Crear una nova instància",
-								rankingLine(tempInstance.getTemplateEloBaseK(name)));
+								ChatColor.GREEN + name, ChatColor.WHITE + "Crear una nova instància");
 					}
 				}
 			}
