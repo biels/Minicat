@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/jocs/Parkour.java
+  s_5e8f1a418f6bb2::t_6555cc4a8f6e0f 326-330
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "83e3b94199736db817b147b021c130924ff1610b",
+  "prompts": {},
+  "sessions": {
+    "s_5e8f1a418f6bb2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6922af1e-ee04-4b08-8afa-6034d436602d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
