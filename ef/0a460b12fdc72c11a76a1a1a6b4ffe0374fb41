@@ -1,0 +1,29 @@
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_37c860f956d9c1::t_76ddbf13ceb536 45,288-296,305-306,314-319,330-340,769-776
+  s_37c860f956d9c1::t_1554bce070d52e 48,320-328
+src/main/java/com/biel/lobby/utilities/data/PlayerData.java
+  s_37c860f956d9c1::t_76ddbf13ceb536 45
+src/main/java/com/biel/lobby/mapes/JocEquips.java
+  s_37c860f956d9c1::t_76ddbf13ceb536 103-104,107-118
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_37c860f956d9c1::t_76ddbf13ceb536 151-157,212-227,269,272,277-281,486
+  s_37c860f956d9c1::t_1554bce070d52e 494-495,501-502
+src/main/java/com/biel/lobby/mapes/MapaResetejable.java
+  s_37c860f956d9c1::t_1554bce070d52e 270-279
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ef0a460b12fdc72c11a76a1a1a6b4ffe0374fb41",
+  "prompts": {},
+  "sessions": {
+    "s_37c860f956d9c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afb33328-aad9-41a6-b433-7b3c288af88d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
