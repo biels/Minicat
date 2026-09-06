@@ -1,0 +1,23 @@
+src/main/java/com/biel/lobby/lobby.java
+  s_37c860f956d9c1::t_5b181c7f4fa88c 5-6,137-140,142-149
+src/main/java/com/biel/lobby/mapes/MapaResetejable.java
+  s_37c860f956d9c1::t_5b181c7f4fa88c 33-36,38,102-108,110-120,130,134-141
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_37c860f956d9c1::t_5b181c7f4fa88c 7,9-11,161-162,319-334,336,340-344,346-369,372-398,509-510
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "a4a78c515e829a835b2c6e785f4e476c92d8d19c",
+  "prompts": {},
+  "sessions": {
+    "s_37c860f956d9c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afb33328-aad9-41a6-b433-7b3c288af88d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
