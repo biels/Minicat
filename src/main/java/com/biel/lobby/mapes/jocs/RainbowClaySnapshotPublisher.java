@@ -21,6 +21,18 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+// UNDER REVIEW - 2026-09-06.
+//
+// This publishes, for every player in a RainbowClay instance, their position, health,
+// team and objective state, and for the requesting player their inventory and potion
+// effects, to the loopback agent endpoint so a bot can play the match. Whether that
+// is acceptable on a public server, and what exactly may be published about people
+// who are not bots, has not been decided.
+//
+// Until it is, this never starts on its own. The endpoint being up (the launcher's
+// -Dminicat.agent-http.enabled) is transport, not consent. Publishing runs only while
+// an operator has switched it on with /minicatai on, which is off at every server
+// start, and /minicatai off withdraws every instance immediately.
 final class RainbowClaySnapshotPublisher {
     // A snapshot must reach the bot young and stay valid for a whole turn, and at
     // 100 ticks / 7500 ms it could do neither. The bot refuses to think against a
@@ -42,6 +54,7 @@ final class RainbowClaySnapshotPublisher {
     private final RainbowClay game;
     private final AgentSnapshotHttpServer endpoint;
     private final AtomicLong sequence = new AtomicLong();
+    private int publishTaskId = -1;
     private boolean closed;
 
     RainbowClaySnapshotPublisher(RainbowClay game, AgentSnapshotHttpServer endpoint) {
@@ -51,12 +64,16 @@ final class RainbowClaySnapshotPublisher {
 
     void start() {
         publish();
-        game.scheduleGameplayRepeatingTask(this::publish, SNAPSHOT_PERIOD_TICKS, SNAPSHOT_PERIOD_TICKS);
+        publishTaskId = game.scheduleGameplayRepeatingTask(this::publish, SNAPSHOT_PERIOD_TICKS, SNAPSHOT_PERIOD_TICKS);
     }
 
     void close() {
         if (closed) return;
         closed = true;
+        if (publishTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(publishTaskId);
+            publishTaskId = -1;
+        }
         endpoint.unpublish(game.getMapName());
     }
 

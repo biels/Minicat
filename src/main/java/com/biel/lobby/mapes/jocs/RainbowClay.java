@@ -45,19 +45,34 @@ public class RainbowClay extends JocObjectius {
 	@Override
 	public void initialize() {
 		super.initialize();
-		AgentSnapshotHttpServer endpoint = lobby.getPlugin().getAgentSnapshotHttpServer();
-		if (endpoint != null && endpoint.isRunning()) {
-			agentSnapshotPublisher = new RainbowClaySnapshotPublisher(this, endpoint);
-			agentSnapshotPublisher.start();
+		if (lobby.getPlugin().isAgentSnapshotsEnabled()) {
+			startAgentSnapshots();
 		}
+	}
+
+	/**
+	 * Begins publishing this instance to the agent endpoint. Called for new instances
+	 * while /minicatai is on, and for running ones the moment it is switched on. A
+	 * no-op when already publishing or when the endpoint was never started.
+	 */
+	public void startAgentSnapshots() {
+		if (agentSnapshotPublisher != null) return;
+		AgentSnapshotHttpServer endpoint = lobby.getPlugin().getAgentSnapshotHttpServer();
+		if (endpoint == null || !endpoint.isRunning()) return;
+		agentSnapshotPublisher = new RainbowClaySnapshotPublisher(this, endpoint);
+		agentSnapshotPublisher.start();
+	}
+
+	/** Stops publishing and withdraws what was published. Called on /minicatai off and on teardown. */
+	public void stopAgentSnapshots() {
+		if (agentSnapshotPublisher == null) return;
+		agentSnapshotPublisher.close();
+		agentSnapshotPublisher = null;
 	}
 
 	@Override
 	public void clearExternals() {
-		if (agentSnapshotPublisher != null) {
-			agentSnapshotPublisher.close();
-			agentSnapshotPublisher = null;
-		}
+		stopAgentSnapshots();
 		super.clearExternals();
 	}
 

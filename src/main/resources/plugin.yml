@@ -31,6 +31,9 @@ commands:
   minicatstart:
     description: Inicia la instància on és el jugador, respectant les regles del joc.
     usage: /minicatstart
+  minicatai:
+    description: Activa o desactiva el mode IA (instantànies de RainbowClay per als jugadors IA). Desactivat a cada arrencada; només operadors o consola.
+    usage: /minicatai on|off
   a:
     description: Mostra totes les partides en curs.
     usage: /a

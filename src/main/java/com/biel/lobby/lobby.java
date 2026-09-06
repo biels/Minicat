@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
+import com.biel.lobby.mapes.jocs.RainbowClay;
 import com.biel.lobby.agent.AgentSnapshotHttpServer;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.HologramFacade;
@@ -29,6 +30,9 @@ public final class lobby extends JavaPlugin {
 	public GestorMapes gest;
 	public DataAPI dataAPI;
 	private AgentSnapshotHttpServer agentSnapshotHttpServer;
+	// Off at every start. Only an operator's /minicatai on turns it on, never launcher
+	// configuration: the endpoint being up is transport, not consent to publish players.
+	private boolean agentSnapshotsEnabled = false;
 	@SuppressWarnings("unused")
 	@Override
 	public void onEnable(){
@@ -55,6 +59,25 @@ public final class lobby extends JavaPlugin {
 	}
 	public AgentSnapshotHttpServer getAgentSnapshotHttpServer() {
 		return agentSnapshotHttpServer;
+	}
+	public boolean isAgentSnapshotsEnabled() {
+		return agentSnapshotsEnabled;
+	}
+	private void setAgentSnapshotsEnabled(boolean enabled, CommandSender changedBy) {
+		agentSnapshotsEnabled = enabled;
+		for (Joc game : gest.getAllGameInstances()) {
+			if (!(game instanceof RainbowClay)) continue;
+			if (enabled) ((RainbowClay) game).startAgentSnapshots(); else ((RainbowClay) game).stopAgentSnapshots();
+		}
+		getLogger().info("Agent snapshots " + (enabled ? "enabled" : "disabled") + " by " + changedBy.getName());
+		Bukkit.broadcastMessage(ChatColor.GRAY + "Mode IA " + (enabled ? "activat" : "desactivat") + ": les partides de RainbowClay "
+				+ (enabled ? "publiquen" : "ja no publiquen") + " instantànies per als jugadors IA.");
+		if (enabled && !isAgentEndpointRunning()) {
+			changedBy.sendMessage(ChatColor.YELLOW + "El punt d'accés d'instantànies està aturat (minicat.agent-http.enabled); cap instància publicarà fins que el servidor arrenqui amb ell.");
+		}
+	}
+	private boolean isAgentEndpointRunning() {
+		return agentSnapshotHttpServer != null && agentSnapshotHttpServer.isRunning();
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 		if(cmd.getName().equalsIgnoreCase("prova")){
@@ -115,6 +138,25 @@ public final class lobby extends JavaPlugin {
 			} else {
 				sender.sendMessage(ChatColor.GREEN + "Instància creada: " + createdGame.getGameName() + " / " + createdGame.getMapName());
 			}
+			return true;
+		}
+
+		if(cmd.getName().equalsIgnoreCase("minicatai")){
+			if(sender instanceof Player && !sender.isOp()){
+				sender.sendMessage(ChatColor.RED + "Aquesta ordre requereix permisos d'operador.");
+				return true;
+			}
+			if(args.length == 1 && args[0].equalsIgnoreCase("on")){
+				setAgentSnapshotsEnabled(true, sender);
+				return true;
+			}
+			if(args.length == 1 && args[0].equalsIgnoreCase("off")){
+				setAgentSnapshotsEnabled(false, sender);
+				return true;
+			}
+			sender.sendMessage("Mode IA: " + (agentSnapshotsEnabled ? ChatColor.GREEN + "activat" : ChatColor.RED + "desactivat")
+					+ ChatColor.RESET + " · punt d'accés d'instantànies: " + (isAgentEndpointRunning() ? "en marxa" : "aturat"));
+			sender.sendMessage("Ús: /minicatai on | /minicatai off | /minicatai");
 			return true;
 		}
 
