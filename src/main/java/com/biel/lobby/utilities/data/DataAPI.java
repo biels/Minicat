@@ -3,6 +3,7 @@ package com.biel.lobby.utilities.data;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -124,20 +125,20 @@ public class DataAPI {
 			warnDatalessOnce("player-id", "Player IDs are unavailable in dataless mode; returning the fallback ID.");
 			return -1;
 		}
+		repairConnection();
+		if(connection == null) return -1;
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `player_id` FROM `players` WHERE username=?;");
 			sql.setString(1, player);
 			ResultSet result = sql.executeQuery();
-			result.next();
-			int id = result.getInt("player_id");
+			int id = result.next() ? result.getInt("player_id") : -1;
 			sql.close();
 			result.close();
-
 			return id;
 		} catch (SQLException e) {
-			//e.printStackTrace();
+			logger.warning("Could not look up the id of " + player + ": " + e.getMessage());
 		}
-		return 0;
+		return -1;
 	}
 	public String getPlayerName(int id) { 
 		try {
@@ -228,24 +229,30 @@ public class DataAPI {
 			e.printStackTrace();
 		}
 	}
-	public double getElo(int id) {
+	/**
+	 * A player's rating, or empty when the database cannot answer. Empty must stay
+	 * empty: this used to return 0 on any failure, and the caller's read-then-write
+	 * then persisted 0 plus the match delta as the player's new rating.
+	 */
+	public OptionalDouble readElo(int id) {
 		if(datalessMode){
-			return 1200;
+			return OptionalDouble.of(1200);
 		}
+		if(id < 0) return OptionalDouble.empty();
+		repairConnection();
+		if(connection == null) return OptionalDouble.empty();
 		try {
 			PreparedStatement sql = connection.prepareStatement("SELECT `elo` FROM `players` WHERE player_id=?;");
 			sql.setInt(1, id);
 			ResultSet result = sql.executeQuery();
-			result.next();
-			double points = result.getDouble("elo");
+			OptionalDouble points = result.next() ? OptionalDouble.of(result.getDouble("elo")) : OptionalDouble.empty();
 			sql.close();
 			result.close();
-
 			return points;
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.warning("Could not read the rating of player " + id + ": " + e.getMessage());
 		}
-		return 0;
+		return OptionalDouble.empty();
 	}
 	public double getAvgElo() {
 		if(datalessMode){
@@ -270,6 +277,8 @@ public class DataAPI {
 			logger.info("New value for elo of player " + id + " would be " + newValue);
 			return;
 		}
+		repairConnection();
+		if(connection == null) return;
 		try {
 			PreparedStatement ps = connection.prepareStatement("UPDATE `players` SET `elo`=?, `last_played`=NOW() WHERE player_id=?");
 			ps.setDouble(1, newValue);

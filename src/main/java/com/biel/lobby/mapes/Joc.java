@@ -6,6 +6,8 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.OptionalDouble;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -281,10 +283,12 @@ public abstract class Joc extends MapaResetejable {
 		}
 		ArrayList<Player> loosers = new ArrayList<>();
 		getPlayers().forEach(p -> {if(!winners.contains(p))loosers.add(p);});
-		ArrayList<Double> elo_winners = new ArrayList<>();
-		winners.forEach(p -> elo_winners.add(new PlayerData(p.getName()).getElo()));
-		ArrayList<Double> elo_loosers = new ArrayList<>();
-		loosers.forEach(p -> elo_loosers.add(new PlayerData(p.getName()).getElo()));
+		ArrayList<Double> elo_winners = readRatings(winners);
+		ArrayList<Double> elo_loosers = readRatings(loosers);
+		if(elo_winners == null || elo_loosers == null){
+			announceRatingsUnavailable();
+			return;
+		}
 		ArrayList<ArrayList<Double>> changes = EloUtils.calculateEloGroupChange(elo_winners, elo_loosers, getEloK(), false);
 		// Results come back in player order. Looking a change up by its value, as this
 		// used to, collided whenever two players earned the same amount - which every
@@ -300,16 +304,41 @@ public abstract class Joc extends MapaResetejable {
 			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al rànquing");
 			return;
 		}
-		ArrayList<Double> elo_winners = new ArrayList<>();
-		orderedWinners.forEach(p -> elo_winners.add(new PlayerData(p.getName()).getElo()));
+		ArrayList<Double> elo_winners = readRatings(orderedWinners);
+		if(elo_winners == null){
+			announceRatingsUnavailable();
+			return;
+		}
 		ArrayList<Double> changes = EloUtils.calculateEloGroupChange(elo_winners, getEloK(), false);
 		for (int i = 0; i < orderedWinners.size(); i++) registerEloChange(orderedWinners.get(i), changes.get(i));
 	}
+	/**
+	 * Every player's stored rating, in the same order, or null when any of them
+	 * cannot be read. A match is rated with real ratings or not at all: a stand-in
+	 * value for one player would move everyone else's rating by the wrong amount.
+	 */
+	private ArrayList<Double> readRatings(List<Player> players){
+		ArrayList<Double> ratings = new ArrayList<>(players.size());
+		for(Player p : players){
+			OptionalDouble rating = new PlayerData(p.getName()).readElo();
+			if(rating.isEmpty()) return null;
+			ratings.add(rating.getAsDouble());
+		}
+		return ratings;
+	}
+	private void announceRatingsUnavailable(){
+		Com.getPlugin().getLogger().warning("Ratings unavailable at the end of " + getGameName() + " / " + getMapName() + "; the match was not rated");
+		sendGlobalMessage(ChatColor.RED + "No s'ha pogut llegir l'elo d'algun jugador; aquesta partida no puntua.");
+	}
 	protected void registerEloChange(Player p, double change){
 		PlayerData playerData = new PlayerData(p.getName());
-		playerData.addElo(change);
-		String cStr = (change > 0 ? ChatColor.DARK_GREEN + "+" : ChatColor.DARK_RED + "") + Double.toString(Math.round(change * 10)/10);
-		p.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + "(" + cStr  + ChatColor.WHITE + ")");
+		if(!playerData.addElo(change)){
+			Com.getPlugin().getLogger().warning("Could not update the rating of " + p.getName() + " after " + getGameName() + ": the database did not answer");
+			p.sendMessage(ChatColor.RED + "No s'ha pogut actualitzar el teu elo.");
+			return;
+		}
+		String cStr = (change > 0 ? ChatColor.DARK_GREEN + "+" : ChatColor.DARK_RED + "") + String.format(Locale.ROOT, "%.1f", change);
+		p.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + " (" + cStr  + ChatColor.WHITE + ")");
 	}
 	/**
 	 * The rating weight this map plays for before team balance is applied: the map's
@@ -766,7 +795,8 @@ public abstract class Joc extends MapaResetejable {
 		if(!JocEnMarxa() || getEloK() == 0 || getPlayers().size() <= 1 || !Com.getPlugin().isInRankedMode()) return 0;
 		double progress = getGameProgressETA();
 		if(progress < 0.25) return 0;
-		double maxPunish = 4.2 + getEloK() / 8 + getAvgGameLength().toHours() * 4;
+		// Hours as a fraction: toHours() truncates, which made this term zero for every game shorter than an hour.
+		double maxPunish = 4.2 + getEloK() / 8 + getAvgGameLength().toMillis() / 3_600_000d * 4;
 		if(progress > 0.8) return maxPunish;
 		return Math.max(0, maxPunish * (progress - 0.2));
 	}

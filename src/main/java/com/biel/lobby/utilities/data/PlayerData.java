@@ -1,5 +1,7 @@
 package com.biel.lobby.utilities.data;
 
+import java.util.OptionalDouble;
+
 import org.bukkit.entity.Player;
 
 import com.biel.lobby.Com;
@@ -44,14 +46,23 @@ public class PlayerData {
 	public void addScore(double amount){
 		setScore(getScore() + amount);
 	}
+	/** The rating, or empty when the database cannot answer right now. */
+	public OptionalDouble readElo(){
+		return Com.getDataAPI().readElo(id);
+	}
+	/** The rating for display; 0 stands in when it cannot be read. Never feed this back into a write. */
 	public double getElo(){
-		return Com.getDataAPI().getElo(id);
+		return readElo().orElse(0);
 	}
 	public void setElo(double value){
 		Com.getDataAPI().setElo(id, value);
 	}
-	public void addElo(double amount){
-		setElo(getElo() + amount);
+	/** Applies a change on top of the stored rating; false, and nothing written, when the rating could not be read. */
+	public boolean addElo(double amount){
+		OptionalDouble current = readElo();
+		if (current.isEmpty()) return false;
+		setElo(current.getAsDouble() + amount);
+		return true;
 	}
 	public double getRelativeElo(){
 		return getElo() - Com.getDataAPI().getAvgElo();
