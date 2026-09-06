@@ -323,6 +323,11 @@ public class Parkour extends JocScoreCombo{
 			}
 			public void updateHologram(){
 				if (h == null){return;}
+				if (score == Score.FAIL){ // The hologram stands at the fail teleport point, in the player's face
+					h.delete();
+					h = null;
+					return;
+				}
 				h.clearLines();
 				h.appendTextLine((score == null ? (isTargeted() ? ChatColor.GREEN : ChatColor.YELLOW) + "" + ChatColor.BOLD + "+" : score.getFormattedString()));
 			}
