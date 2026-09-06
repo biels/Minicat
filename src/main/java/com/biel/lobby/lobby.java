@@ -142,6 +142,15 @@ public final class lobby extends JavaPlugin {
 			}
 			return true;
 		}
+		if(cmd.getName().equalsIgnoreCase("minicatstart")){
+			Mapa currentMap = gest.getMapWherePlayerIs(ply);
+			if (!(currentMap instanceof Joc)) {
+				ply.sendMessage(ChatColor.RED + "Has d'estar en una partida per iniciar-la.");
+				return true;
+			}
+			((Joc) currentMap).iniciarCommand(ply);
+			return true;
+		}
 		if(cmd.getName().equalsIgnoreCase("m")){
 
 			gest.ObrirMenuMapes(ply);
