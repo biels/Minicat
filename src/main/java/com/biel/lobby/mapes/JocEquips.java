@@ -100,17 +100,22 @@ public abstract class JocEquips extends Joc {
 		JocFinalitzat();
 		updateElo(e.getPlayers());
 	}
+	/** From this share of the largest team missing on the smallest, the match plays for nothing. */
+	private static final double MAX_RANKED_TEAM_IMBALANCE = 1 / 3D;
 	@Override
 	double getEloM() {
-		double m = 1 - Math.sqrt(getAvgNumericDeviation());
-		if(getAvgNumericDeviation() > 0.3)m = 0;
-		return m;
+		// This used to test whether the average team size was a whole number, which
+		// called 3v1 perfectly balanced and 3v2 unrankable. The gap between the teams
+		// is what decides whether a result means anything.
+		double imbalance = getTeamSizeImbalance();
+		if(imbalance >= MAX_RANKED_TEAM_IMBALANCE) return 0;
+		return 1 - Math.sqrt(imbalance);
 	}
-	public double getAvgNumericDeviation() {
-		return Math.abs(getAvgTeamSize() - Math.round(getAvgTeamSize()));
-	}
-	public double getAvgTeamSize() {
-		return Equips.stream().mapToInt(e -> e.getPlayers().size()).average().getAsDouble();
+	/** Gap between the largest and smallest team as a share of the largest: 0 when even, 1/3 for 3v2, 2/3 for 3v1. */
+	public double getTeamSizeImbalance() {
+		java.util.IntSummaryStatistics sizes = Equips.stream().mapToInt(e -> e.getPlayers().size()).summaryStatistics();
+		if(sizes.getMax() == 0) return 0;
+		return (sizes.getMax() - sizes.getMin()) / (double) sizes.getMax();
 	}
 	protected void raisePlayersToSpectatorZone(){
 		for(Player p : getPlayers()){
@@ -418,7 +423,6 @@ public abstract class JocEquips extends Joc {
 		// sendGlobalMessage(MessageFormat.format("Desviació típica: {0}, Temps: {1}ms, Cicles: {2}, Vel:{3}ms/c", Math.sqrt(bestVariance), millis, cycles, Math.round(millis * 100/(double)cycles) / 100D));
 		final List<List<Player>> finalTeams = bestTeams;
 		if(finalTeams != null)finalTeams.forEach(t -> t.forEach(p -> establirEquipJugador(p, Equips.get(finalTeams.indexOf(t)))));
-		// sendGlobalMessage("D: " + getAvgNumericDeviation());
 		generationMode = TeamGenerationMode.BALANCED;
 	}
 	public static double variance(List<Double> values){

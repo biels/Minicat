@@ -42,7 +42,7 @@ public class PlayerData {
 		Com.getDataAPI().setScore(id, value);
 	}
 	public void addScore(double amount){
-		setMoney(getScore() + amount);
+		setScore(getScore() + amount);
 	}
 	public double getElo(){
 		return Com.getDataAPI().getElo(id);

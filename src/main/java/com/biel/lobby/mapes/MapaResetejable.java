@@ -267,6 +267,16 @@ public abstract class MapaResetejable extends Mapa {
 	public GestorPropietats pMapaActual(){
 		return new GestorPropietats(new File(getLiveMetadataFile(), "pMapaActual.txt").getPath());
 	}
+	/**
+	 * The properties a template map would start with, read from the template itself,
+	 * so a menu can describe a map before any instance of it exists. Null when the
+	 * template has no properties file. Pass null for a single-map game.
+	 */
+	public GestorPropietats pTemplate(String templateMapName){
+		File templateFolder = templateMapName == null ? getMapOriginFile() : new File(getMapOriginFile(), templateMapName);
+		File properties = new File(templateFolder, "pMapaActual.txt");
+		return properties.isFile() ? new GestorPropietats(properties.getPath()) : null;
+	}
 	public GestorPropietats pTemp(){
 		return new GestorPropietats(new File(getLiveMetadataFile(), "pTemp.txt").getPath());
 	}

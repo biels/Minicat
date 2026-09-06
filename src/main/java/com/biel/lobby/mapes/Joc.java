@@ -42,8 +42,10 @@ import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.BielAPI.events.EventUtils;
 import com.biel.lobby.Com;
+import com.biel.lobby.GestorMapes;
 import com.biel.lobby.lobby;
 import com.biel.lobby.utilities.CBUtils;
+import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.data.MatchData;
@@ -283,9 +285,15 @@ public abstract class Joc extends MapaResetejable {
 		winners.forEach(p -> elo_winners.add(new PlayerData(p.getName()).getElo()));
 		ArrayList<Double> elo_loosers = new ArrayList<>();
 		loosers.forEach(p -> elo_loosers.add(new PlayerData(p.getName()).getElo()));
-		ArrayList<ArrayList<Double>> r = EloUtils.calculateEloGroupChange(elo_winners, elo_loosers, getEloK(), false);
-		r.get(0).forEach(e -> registerEloChange(winners.get(r.get(0).indexOf(e)), e));
-		r.get(1).forEach(e -> registerEloChange(loosers.get(r.get(1).indexOf(e)), e));
+		ArrayList<ArrayList<Double>> changes = EloUtils.calculateEloGroupChange(elo_winners, elo_loosers, getEloK(), false);
+		// Results come back in player order. Looking a change up by its value, as this
+		// used to, collided whenever two players earned the same amount - which every
+		// pair of newcomers does, since they all start at the average - and applied it
+		// twice to the first while the second got nothing.
+		ArrayList<Double> winnerChanges = changes.get(0);
+		ArrayList<Double> looserChanges = changes.get(1);
+		for (int i = 0; i < winners.size(); i++) registerEloChange(winners.get(i), winnerChanges.get(i));
+		for (int i = 0; i < loosers.size(); i++) registerEloChange(loosers.get(i), looserChanges.get(i));
 	}
 	protected void updateEloOrdered(ArrayList<Player> orderedWinners){
 		if(!canBeRanked()){
@@ -294,8 +302,8 @@ public abstract class Joc extends MapaResetejable {
 		}
 		ArrayList<Double> elo_winners = new ArrayList<>();
 		orderedWinners.forEach(p -> elo_winners.add(new PlayerData(p.getName()).getElo()));
-		ArrayList<Double> r = EloUtils.calculateEloGroupChange(elo_winners, getEloK(), false);
-		r.forEach(e -> registerEloChange(orderedWinners.get(r.indexOf(e)), e));
+		ArrayList<Double> changes = EloUtils.calculateEloGroupChange(elo_winners, getEloK(), false);
+		for (int i = 0; i < orderedWinners.size(); i++) registerEloChange(orderedWinners.get(i), changes.get(i));
 	}
 	protected void registerEloChange(Player p, double change){
 		PlayerData playerData = new PlayerData(p.getName());
@@ -303,12 +311,33 @@ public abstract class Joc extends MapaResetejable {
 		String cStr = (change > 0 ? ChatColor.DARK_GREEN + "+" : ChatColor.DARK_RED + "") + Double.toString(Math.round(change * 10)/10);
 		p.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + "(" + cStr  + ChatColor.WHITE + ")");
 	}
-	double getEloK(){
-		int r = 12;
-		if(pMapaActual().ExisteixPropietat("K")){
-			r = pMapaActual().ObtenirPropietatInt("K");
+	/**
+	 * The rating weight this map plays for before team balance is applied: the map's
+	 * own K property when it has one, else the default for the game's development
+	 * state, so experimental games still count but lightly. Zero means unranked.
+	 */
+	public double getEloBaseK(){
+		return eloBaseKFrom(pMapaActual());
+	}
+	/** What a template map would play for, before any instance of it exists. Null name for a single-map game. */
+	public double getTemplateEloBaseK(String templateMapName){
+		return eloBaseKFrom(pTemplate(templateMapName));
+	}
+	private double eloBaseKFrom(GestorPropietats properties){
+		if(properties != null && properties.ExisteixPropietat("K")){
+			return properties.ObtenirPropietatInt("K");
 		}
-		return r * getEloM();
+		GestorMapes.ContenidorJoc registration = Com.getGest().getGameContainer(getClass());
+		// A game outside the registry cannot be reached from the menu; it plays for nothing.
+		return registration == null ? 0 : registration.getDevelopmentState().getDefaultEloK();
+	}
+	double getEloK(){
+		return getEloBaseK() * getEloM();
+	}
+	/** The menu line describing what a map plays for. */
+	public static String describeRanking(double baseK){
+		if (baseK <= 0) return ChatColor.DARK_GRAY + "Rànquing: no puntua";
+		return ChatColor.LIGHT_PURPLE + "Rànquing: puntua (K " + Math.round(baseK) + ")";
 	}
 	
 	double getEloM(){
@@ -737,13 +766,14 @@ public abstract class Joc extends MapaResetejable {
 		registerEloChange(ply, amount * -1);
 	}
 	public double getPunishForLeaving(Player ply){
-		double max_punish = 4.2 + getEloK() / 8 + getAvgGameLength().toHours() * 4;
-		double p = max_punish;
-		if(getGameProgressETA() < 0.25)p = 0;
-		p = max_punish * (getGameProgressETA() - 0.2);
-		if(getGameProgressETA() > 0.8)p = max_punish;
-		if(!JocEnMarxa() || getEloK() == 0 || getPlayers().size() <= 1)p = 0;
-		return Math.max(0, p);
+		// A leaver is punished only where the match could have counted: the same
+		// conditions a result needs, plus enough of the match played to have mattered.
+		if(!JocEnMarxa() || getEloK() == 0 || getPlayers().size() <= 1 || !Com.getPlugin().isInRankedMode()) return 0;
+		double progress = getGameProgressETA();
+		if(progress < 0.25) return 0;
+		double maxPunish = 4.2 + getEloK() / 8 + getAvgGameLength().toHours() * 4;
+		if(progress > 0.8) return maxPunish;
+		return Math.max(0, maxPunish * (progress - 0.2));
 	}
 	public double getGameProgressETA(){
 		if(!JocEnMarxa()){

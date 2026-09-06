@@ -148,6 +148,13 @@ public class GestorMapes implements Listener{
 		//Bukkit.broadcastMessage("Jugador desaparegut");
 		return null;
 	}
+	/** The registry entry for a game class, or null when the class is not registered. */
+	public ContenidorJoc getGameContainer(Class<?> gameClass){
+		for (ContenidorMapa container : Mapes){
+			if (container instanceof ContenidorJoc && container.ClassMapa == gameClass) return (ContenidorJoc) container;
+		}
+		return null;
+	}
 	public Joc createGameInstance(String gameName, Integer mapId){
 		for (ContenidorMapa container : Mapes){
 			if (container instanceof ContenidorJoc && container.ClassMapa.getSimpleName().equalsIgnoreCase(gameName)){
@@ -202,7 +209,22 @@ public class GestorMapes implements Listener{
 		abstract void playerClick(Player ply);
 
 	}
-	public enum DevelopmentState {NotWorking, KnownIssues, InDevelopment, PreAlpha, Alpha, Beta, Release}
+	/**
+	 * How finished a game is. Besides labelling the menu it sets the rating weight a
+	 * game plays for unless its map says otherwise: experimental games still count,
+	 * but lightly, so a broken round cannot move anyone far.
+	 */
+	public enum DevelopmentState {
+		NotWorking(0), KnownIssues(2), InDevelopment(2), PreAlpha(2), Alpha(4), Beta(8), Release(12);
+		private final int defaultEloK;
+		DevelopmentState(int defaultEloK) {
+			this.defaultEloK = defaultEloK;
+		}
+		/** Rating weight (ELO K) for games in this state when the map defines no K of its own. */
+		public int getDefaultEloK() {
+			return defaultEloK;
+		}
+	}
 	public class ContenidorJoc extends ContenidorMapa{
 		public ContenidorJoc(Class<?> classMapa, String nom, Material mat, DevelopmentState s) {
 			super(classMapa, nom, mat);
@@ -244,12 +266,18 @@ public class GestorMapes implements Listener{
 
 			ArrayList<String> l = super.getDescription();
 			l.add(0, getRatingString() + ChatColor.DARK_GRAY + " (" + Math.round(getRating() * 10D) / 10D + "%)");
+			l.add(1, rankingLine(developmentState.getDefaultEloK()));
 
 			if(this.getMapCount() == 0) {
-				l.add(1, ChatColor.RED + "No hi ha mapes disponibles");
+				l.add(2, ChatColor.RED + "No hi ha mapes disponibles");
 			}
 
 			return l;
+		}
+		/** What a game or map plays for, as the menu shows it; maps may override the game's default K. */
+		String rankingLine(double baseK){
+			if (!plugin.isInRankedMode()) return ChatColor.DARK_GRAY + "Rànquing desactivat al servidor";
+			return Joc.describeRanking(baseK);
 		}
 		@Override
 		public int getPlayerAmount() {
@@ -455,6 +483,7 @@ public class GestorMapes implements Listener{
 						ChatColor.GREEN + "ENTRAR: " + mapa.NomWorld,
 						ChatColor.WHITE + mapa.getGameName(),
 						ChatColor.WHITE + mapa.getGameState().name(),
+						rankingLine(mapa.getEloBaseK()),
 						ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()),
 						ChatColor.YELLOW + "Espectadors: " + mapa.getSpectators().size(),
 						"Temps: " + tStr, progressStr);
@@ -462,13 +491,15 @@ public class GestorMapes implements Listener{
 			MapMode mapMode = tempInstance.getMapMode();
 			if (!AlgunMapaDisponible() || mapMode == MapMode.MULTIPLE){
 				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1),
-						ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instància");
+						ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instància",
+						rankingLine(tempInstance.getTemplateEloBaseK(null)));
 				if(mapMode == MapMode.MULTIPLE){
 					ArrayList<String> multiWorldList = tempInstance.getMultiWorldList();
 					for (int i = 0; i < multiWorldList.size(); i++) {
 						String name = multiWorldList.get(i);
 						menu.setOption(26 - i, new ItemStack(Material.EMERALD, 1),
-								ChatColor.GREEN + name, ChatColor.WHITE + "Crear una nova instància");
+								ChatColor.GREEN + name, ChatColor.WHITE + "Crear una nova instància",
+								rankingLine(tempInstance.getTemplateEloBaseK(name)));
 					}
 				}
 			}
