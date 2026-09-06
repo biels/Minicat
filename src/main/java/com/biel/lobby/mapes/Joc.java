@@ -1053,7 +1053,15 @@ public abstract class Joc extends MapaResetejable {
 		PlayerInfo i = getPlayerInfo(p);
 		i.lastMoveEvent = ZonedDateTime.now();
 		Vector v = Utils.CrearVector(evt.getFrom(), evt.getTo());
-		if(v.getX() > 0.01 || v.getZ() > 0.01 || evt.getFrom().getYaw() - evt.getTo().getYaw() > 1)
+		// Moving or turning at all clears spawn immunity. The magnitudes are taken
+		// as absolute values because the test used to be signed: a player who only
+		// ever walked in -X/-Z, or who only ever turned one way, stayed immune for
+		// the whole life. Immunity is set true on every respawn, so that made a
+		// player unkillable by accident depending on which way they happened to
+		// face - and in Quakecraft it also broke the railgun chain, since the
+		// victim collector skips immune players entirely.
+		float yawTurn = Math.abs(evt.getFrom().getYaw() - evt.getTo().getYaw());
+		if(Math.abs(v.getX()) > 0.01 || Math.abs(v.getZ()) > 0.01 || yawTurn > 1)
 			i.setImmune(false);
 	}
 	
