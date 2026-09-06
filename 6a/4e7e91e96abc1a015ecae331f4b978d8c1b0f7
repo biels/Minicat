@@ -1,0 +1,19 @@
+README.md
+  s_37c860f956d9c1::t_eb3028f74d32bc 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "6a4e7e91e96abc1a015ecae331f4b978d8c1b0f7",
+  "prompts": {},
+  "sessions": {
+    "s_37c860f956d9c1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afb33328-aad9-41a6-b433-7b3c288af88d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
