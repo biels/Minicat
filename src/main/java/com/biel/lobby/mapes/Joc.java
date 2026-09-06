@@ -195,15 +195,31 @@ public abstract class Joc extends MapaResetejable {
 	public void JocFinalitzat(){
 		if (!JocIniciat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que no havia començat."); return;}
 		if (JocFinalitzat){Bukkit.broadcastMessage("S'ha intentat finalitzar una partida que ja havia acabat."); return;}
-		//---
-		world.setPVP(false);
-		customJocFinalitzat();
-		clearExternals();
-		if(!won)matchData.registerEnd(-1); //Tie / no winner
-		registerTimestamps(true);
-		//---
+		// Fence gameplay first. Cleanup and persistence failures must not leave a
+		// logically completed match running forever.
 		JocFinalitzat = true;
-		updateScoreBoards();
+		try {
+			if (world != null) world.setPVP(false);
+			customJocFinalitzat();
+		} catch (RuntimeException exception) {
+			Com.getPlugin().getLogger().log(java.util.logging.Level.SEVERE,
+					"Game-specific finalization failed for " + getGameName(), exception);
+		} finally {
+			clearExternals();
+		}
+		try {
+			if(!won && matchData != null) matchData.registerEnd(-1); //Tie / no winner
+			registerTimestamps(true);
+		} catch (RuntimeException exception) {
+			Com.getPlugin().getLogger().log(java.util.logging.Level.SEVERE,
+					"Could not persist final match state for " + getGameName(), exception);
+		}
+		try {
+			updateScoreBoards();
+		} catch (RuntimeException exception) {
+			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING,
+					"Could not update final scoreboards for " + getGameName(), exception);
+		}
 	}
 	public void winGame(Player p){ //TODO
 		if(won)return;
@@ -581,7 +597,7 @@ public abstract class Joc extends MapaResetejable {
 		isSnowLauncherEnabled = true;
 		ItemStack ball = new ItemStack(Material.SNOWBALL);
 		ball.addUnsafeEnchantment(Enchantment.SILK_TOUCH, 1);
-		ball.setAmount(amount);
+		ball.setAmount(Math.max(1, amount));
 		return Utils.setItemNameAndLore(ball, "Llançador de neu", "Et transporta a l'enemic que impacti");
 	}
 	public boolean giveSnowLauncherOnKill(){
@@ -734,7 +750,12 @@ public abstract class Joc extends MapaResetejable {
 			if(!JocIniciat)return 0;
 			if(JocFinalitzat)return 1;
 		}
-		return getGameTime().toMillis() / (double)getAvgGameLength().toMillis();
+		long avgGameLengthMillis = getAvgGameLength().toMillis();
+		//Without a reference length there is no progress to estimate. Dividing by it
+		//anyway yields Infinity, which Math.round turns into Long.MAX_VALUE at every
+		//display site - the announcer once read "Progres: 922337203685477580%".
+		if(avgGameLengthMillis <= 0)return 0;
+		return getGameTime().toMillis() / (double)avgGameLengthMillis;
 	}
 	public Duration getGameTime(){
 		return Duration.ofSeconds(segonsTranscorreguts());
@@ -1037,7 +1058,15 @@ public abstract class Joc extends MapaResetejable {
 		PlayerInfo i = getPlayerInfo(p);
 		i.lastMoveEvent = ZonedDateTime.now();
 		Vector v = Utils.CrearVector(evt.getFrom(), evt.getTo());
-		if(v.getX() > 0.01 || v.getZ() > 0.01 || evt.getFrom().getYaw() - evt.getTo().getYaw() > 1)
+		// Moving or turning at all clears spawn immunity. The magnitudes are taken
+		// as absolute values because the test used to be signed: a player who only
+		// ever walked in -X/-Z, or who only ever turned one way, stayed immune for
+		// the whole life. Immunity is set true on every respawn, so that made a
+		// player unkillable by accident depending on which way they happened to
+		// face - and in Quakecraft it also broke the railgun chain, since the
+		// victim collector skips immune players entirely.
+		float yawTurn = Math.abs(evt.getFrom().getYaw() - evt.getTo().getYaw());
+		if(Math.abs(v.getX()) > 0.01 || Math.abs(v.getZ()) > 0.01 || yawTurn > 1)
 			i.setImmune(false);
 	}
 	

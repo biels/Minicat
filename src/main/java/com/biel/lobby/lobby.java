@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
+import com.biel.lobby.agent.AgentSnapshotHttpServer;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.HologramFacade;
 import com.biel.lobby.utilities.Options;
@@ -27,6 +28,7 @@ public final class lobby extends JavaPlugin {
 	boolean ranked = true;
 	public GestorMapes gest;
 	public DataAPI dataAPI;
+	private AgentSnapshotHttpServer agentSnapshotHttpServer;
 	@SuppressWarnings("unused")
 	@Override
 	public void onEnable(){
@@ -37,12 +39,22 @@ public final class lobby extends JavaPlugin {
 		MapaResetejable.cleanupStaleRuntimeWorlds();
 
 		gest = new GestorMapes();
+		agentSnapshotHttpServer = new AgentSnapshotHttpServer(this);
+		agentSnapshotHttpServer.start();
 		dataAPI = new DataAPI();
 	}
 
 	@Override
 	public void onDisable() {
-		// TODO Insert logic to be performed when the plugin is disabled
+		if (agentSnapshotHttpServer != null) {
+			agentSnapshotHttpServer.stop();
+			agentSnapshotHttpServer = null;
+		}
+		if (dataAPI != null) dataAPI.closeConnection();
+		HologramFacade.deleteAll();
+	}
+	public AgentSnapshotHttpServer getAgentSnapshotHttpServer() {
+		return agentSnapshotHttpServer;
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 		if(cmd.getName().equalsIgnoreCase("prova")){
@@ -128,6 +140,15 @@ public final class lobby extends JavaPlugin {
 					ply.sendMessage(ChatColor.RED + "Aquesta instància ja no admet jugadors.");
 					break;
 			}
+			return true;
+		}
+		if(cmd.getName().equalsIgnoreCase("minicatstart")){
+			Mapa currentMap = gest.getMapWherePlayerIs(ply);
+			if (!(currentMap instanceof Joc)) {
+				ply.sendMessage(ChatColor.RED + "Has d'estar en una partida per iniciar-la.");
+				return true;
+			}
+			((Joc) currentMap).iniciarCommand(ply);
 			return true;
 		}
 		if(cmd.getName().equalsIgnoreCase("m")){

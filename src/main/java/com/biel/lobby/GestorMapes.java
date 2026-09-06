@@ -362,6 +362,7 @@ public class GestorMapes implements Listener{
 			if(map.getEditMode())return;
 
 			if (map.getWorld().getPlayers().size() == 0){
+				if (map.JocEnMarxa()) map.JocFinalitzat();
 				removeMap(map);
 			}
 		}

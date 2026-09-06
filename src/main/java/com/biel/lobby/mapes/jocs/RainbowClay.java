@@ -28,14 +28,37 @@ import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.GUtils;
 import com.biel.lobby.mapes.JocObjectius;
+import com.biel.lobby.agent.AgentSnapshotHttpServer;
+import com.biel.lobby.lobby;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.PaperMessages;
 
 public class RainbowClay extends JocObjectius {
+	private RainbowClaySnapshotPublisher agentSnapshotPublisher;
+
 	public RainbowClay() {
 		super();
 
+	}
+
+	@Override
+	public void initialize() {
+		super.initialize();
+		AgentSnapshotHttpServer endpoint = lobby.getPlugin().getAgentSnapshotHttpServer();
+		if (endpoint != null && endpoint.isRunning()) {
+			agentSnapshotPublisher = new RainbowClaySnapshotPublisher(this, endpoint);
+			agentSnapshotPublisher.start();
+		}
+	}
+
+	@Override
+	public void clearExternals() {
+		if (agentSnapshotPublisher != null) {
+			agentSnapshotPublisher.close();
+			agentSnapshotPublisher = null;
+		}
+		super.clearExternals();
 	}
 
 	@Override
@@ -104,10 +127,12 @@ public class RainbowClay extends JocObjectius {
 
 	@Override
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
-		// TODO Auto-generated method stub
-		super.onPlayerDeath(evt, killed);
-
 		Equip team = obtenirEquip(killed);
+		if (team == null) {
+			evt.setDeathMessage(ChatColor.GRAY + killed.getName() + " ha mort.");
+			return;
+		}
+		super.onPlayerDeath(evt, killed);
 
 		evt.setDeathMessage(team.getChatColor() + killed.getName() + ChatColor.GRAY + " ha mort.");
 
@@ -130,6 +155,7 @@ public class RainbowClay extends JocObjectius {
 		ArrayList<ItemStack> items = new ArrayList<>();
 
 		Equip e = obtenirEquip(ply);
+		if (e == null) return items;
 
 		items.add(new ItemStack(Material.IRON_SWORD, 1));
 
@@ -232,6 +258,7 @@ public class RainbowClay extends JocObjectius {
 
 		Player ply = evt.getPlayer();
 		Equip team = obtenirEquip(ply);
+		if (team == null) return;
 
 		Cuboid centre = pMapaActual().ObtenirCuboid("RegC", getWorld());
 

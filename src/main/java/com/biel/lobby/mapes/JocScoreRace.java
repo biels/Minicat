@@ -127,7 +127,9 @@ public abstract class JocScoreRace extends Joc {
 		ArrayList<Player> w = getOrderedWinnerList();
 		if(w.size() == 0)return 0;
 		int best = getScore(w.get(0));
-		double bestToFinishRatio = best / (double)getFinishScore();
+		int finishScore = getFinishScore();
+		//Same reasoning as Joc.getGameProgressETA: a zero target is unknowable, not instant.
+		double bestToFinishRatio = finishScore > 0 ? best / (double)finishScore : 0;
 		return super.getGameProgressETA() * 0.2 + bestToFinishRatio * 0.8;
 	}
 	@Override

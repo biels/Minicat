@@ -28,6 +28,9 @@ commands:
   minicatjoin:
     description: Entra en una instància registrada des d'una invitació.
     usage: /minicatjoin <món>
+  minicatstart:
+    description: Inicia la instància on és el jugador, respectant les regles del joc.
+    usage: /minicatstart
   a:
     description: Mostra totes les partides en curs.
     usage: /a
