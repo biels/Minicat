@@ -1,7 +1,7 @@
 # Minicat
 Public minigame minecraft server
 
-> IP: ordinadorcasa.no-ip.org:12345
+> IP: bcn.protocolapp.net:12346
 
 > Telegram: [https://telegram.me/servidorminicat](https://telegram.me/servidorminicat)
 
