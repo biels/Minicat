@@ -82,6 +82,9 @@ public class Arena4 extends JocTeamScoreRace {
 	private static final int FONT_MAX_DYE_LYING_AROUND = 6;
 	private static final int HOLOGRAM_REFRESH_SECONDS = 5;
 	private static final int SHOPKEEPER_ADOPTION_DELAY_TICKS = 40;
+	/** A map's shopkeeper posted higher than this above its base is brought down to the base's level. */
+	private static final int SHOPKEEPER_MAX_HEIGHT_ABOVE_BASE = 2;
+	private static final int SHOPKEEPER_LANDING_RADIUS = 5;
 	/** Chunks kept loaded beyond the box the bases span, so the shops and cages of every quarter are in it. */
 	private static final int CHUNK_MARGIN = 2;
 	/** A fallback shopkeeper stands this far from its base toward the middle, or further if that spot is not on the ground. */
@@ -583,6 +586,7 @@ public class Arena4 extends JocTeamScoreRace {
 				vilatà.remove();
 				continue;
 			}
+			aterrar(vilatà, propietari);
 			obrirBotiga(vilatà, new Botiga(botiguer, propietari));
 			cobertes.add(new Botiga(botiguer, propietari));
 		}
@@ -594,6 +598,33 @@ public class Arena4 extends JocTeamScoreRace {
 			}
 		}
 		refrescarRètols();
+	}
+
+	/**
+	 * A shopkeeper posted above its base level comes down beside its post. The 2013
+	 * map's Arma-man stands on a booth seven blocks up a solid pillar, which a player
+	 * can neither reach nor trade with from below; the nearest standing spot at the
+	 * base's height around the pillar is where it does business now.
+	 */
+	private void aterrar(Villager vilatà, Equip propietari) {
+		Location post = vilatà.getLocation();
+		int nivell = propietari.getTeamSpawnLocation().getBlockY();
+		if (post.getBlockY() <= nivell + SHOPKEEPER_MAX_HEIGHT_ABOVE_BASE) return;
+		Location millor = null;
+		double millorDistància = Double.MAX_VALUE;
+		for (int dx = -SHOPKEEPER_LANDING_RADIUS; dx <= SHOPKEEPER_LANDING_RADIUS; dx++) {
+			for (int dz = -SHOPKEEPER_LANDING_RADIUS; dz <= SHOPKEEPER_LANDING_RADIUS; dz++) {
+				Location peus = new Location(world, post.getBlockX() + dx + 0.5, nivell, post.getBlockZ() + dz + 0.5);
+				if (!peus.getBlock().isPassable() || !peus.getBlock().getRelative(0, 1, 0).isPassable()
+						|| peus.getBlock().getRelative(0, -1, 0).isPassable()) continue;
+				double distància = dx * dx + dz * dz;
+				if (distància < millorDistància) {
+					millorDistància = distància;
+					millor = peus;
+				}
+			}
+		}
+		if (millor != null) vilatà.teleport(millor);
 	}
 
 	private static Botiguer botiguerPelNom(Villager vilatà) {
