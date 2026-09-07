@@ -142,17 +142,35 @@ public class SkillPool {
 		button.setData(n);
 		return button;
 	}
+	/**
+	 * Tops the player up to {@code amount} unlocker buttons, counting the ones already
+	 * carried, in the first free slots from the right of the hotbar and then from the
+	 * end of the main inventory. Skipping occupied slots used to be done by stepping
+	 * the loop counter back, which re-tried the same occupied slot forever: a player
+	 * awarded a skill mid-life with anything in slot 8 froze the server.
+	 */
 	public void giveUnlockers(Player p, int amount){
-		if(p == null)return;
-		if(amount == 0)return;
-		boolean lasSlotOccupied = p.getInventory().getItem(8) == null;
-		int startingN = getSkillsForPlayer(p).size() + 1;
-		for (int i = 0; i < amount; i++) {
-			int j = 8 - i;
-			if (j < 0) j = 35 - i;if (j < 0) j = 26 - (i + 18);if (j < 0) j = 17 - i;if (j < 0) break;
-			if(p.getInventory().getItem(j) != null){i--; continue;}
-			ItemButton unlockerButton = getUnlockerButton(p, startingN + i);
-			p.getInventory().setItem(j, unlockerButton.getItemStack());
+		if(p == null || amount <= 0)return;
+		int carried = 0;
+		for (ItemStack s : p.getInventory().getContents()) {
+			if (isUnlocker(s)) carried++;
+		}
+		int missing = amount - carried;
+		int startingN = getSkillsForPlayer(p).size() + carried + 1;
+		int placed = 0;
+		for (int order = 0; order < 36 && placed < missing; order++) {
+			// Hotbar slots 8..0 first, then 35..9.
+			int candidate = order < 9 ? 8 - order : 35 - (order - 9);
+			if (p.getInventory().getItem(candidate) != null) continue;
+			p.getInventory().setItem(candidate, getUnlockerButton(p, startingN + placed).getItemStack());
+			placed++;
+		}
+	}
+	private boolean isUnlocker(ItemStack s){
+		try {
+			return s != null && s.getType() == Material.CHEST && getUnlockerID(s) != -1;
+		} catch (NumberFormatException notANumberedLore) {
+			return false;
 		}
 	}
 	public void giveRemainingUnlockers(Player p){
