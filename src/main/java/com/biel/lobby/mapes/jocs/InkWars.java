@@ -68,7 +68,8 @@ public class InkWars extends JocEquips {
 		i.add("You win by having more than 80% of the map painted");
 		i.add("In this map you level up every " + getBlockCountToLevelUp() + " effectively painted blocks");
 		i.add("The ink won't dry instantly, use it to your advantage");
-		i.add("You reload x4 faster on top of a owned block");
+		i.add("Sneak on your own colour to dive into the ink: invisible, fast, healing, and you swim up your own walls");
+		i.add("You reload x4 faster on your own colour, x8 while submerged");
 		return i;
 	}
 	@Override
@@ -104,13 +105,20 @@ public class InkWars extends JocEquips {
 	protected void customJocIniciat() {
 		super.customJocIniciat();
 		setGiveStartingItemsRespawn(false);
-		initializeLevels();
+		armPlayers();
 	}
-	public void initializeLevels() {
+	public void armPlayers() {
 		for(Player p : getPlayers()){
-			InkWarsPlayerInfo i = getPlayerInfo(p);
-			i.setWeaponLevel(1);
+			getPlayerInfo(p).setWeaponLevel(1);
+			armWithRollerIfUnarmed(p);
 		}
+	}
+	/** Nobody walks onto the field with empty hands: the Roller is the default until the selector at the base says otherwise. */
+	void armWithRollerIfUnarmed(Player p) {
+		InkWarsPlayerInfo info = getPlayerInfo(p);
+		if (info.getActiveWeapon() != null) return;
+		info.setActiveWeapon(new RollerInkWeapon(p));
+		sendPlayerMessage(p, ChatColor.YELLOW + "You start with the Roller. Change weapon at the selector in your base.");
 	}
 
 	@Override
@@ -223,39 +231,28 @@ public class InkWars extends JocEquips {
 		for(Player p : getPlayers()){				
 			EquipInkWars e = obtenirEquip(p);
 			InkWarsPlayerInfo i = getPlayerInfo(p);
+			armWithRollerIfUnarmed(p);
 			boolean isInBaseRange = p.getLocation().distance(e.getTeamSpawnLocation()) < 10;
 			if (isInBaseRange){
 				if(!p.getInventory().contains(Material.CRAFTING_TABLE)){
 					giveWeaponSelectionButton(p);
 					sendPlayerMessage(p, ChatColor.YELLOW + "You can now select your ink weapon!");
 				}
-			}else{
-				if(p.getInventory().contains(Material.CRAFTING_TABLE)){
-					p.getInventory().remove(Material.CRAFTING_TABLE);
-
-					InkWeapon activeWeapon = i.getActiveWeapon();
-					if (activeWeapon == null) {
-						String message = "Don't go to battle with your hands tied behind your back!";
-						if(i.getWeaponAlerts() == 2)message = "JUST CHOOSE A WEAPON!";
-						if(i.getWeaponAlerts() == 3)message = "OKAY, CONTEMPLATE YOUR DEFEAT.";
-						if(i.getWeaponAlerts() >= 4)message = "Won't say anything more.";
-						sendPlayerMessage(p, ChatColor.BOLD + message);
-						i.registerWeaponAlert();
-						e.teleportToTeamSpawn(p);
-					}
-
-				}
+			}else if(p.getInventory().contains(Material.CRAFTING_TABLE)){
+				p.getInventory().remove(Material.CRAFTING_TABLE);
 			}
 			//Keep track of player's level based on his alive block count
 			if(i.getAlivePaintedBlocks() > i.getWeaponLevel() * getBlockCountToLevelUp()){
 				i.setWeaponLevel(i.getWeaponLevel() + 1);
+				p.playSound(p.getEyeLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 1.3F);
+				getWorld().spawnParticle(Particle.HAPPY_VILLAGER, p.getLocation().add(0, 1, 0), 20, 0.6, 0.8, 0.6, 0);
 				sendPlayerMessage(p, ChatColor.AQUA + "Level Up! You are now level " + i.getWeaponLevel());
 				sendTeamMessage(e, ChatColor.GRAY + "The player " + ChatColor.YELLOW + p.getName() + ChatColor.GRAY + " is now level " + ChatColor.YELLOW + i.getWeaponLevel() + ChatColor.WHITE + "!");
 			}
 		}
 	}
 	int getBlockCountToLevelUp(){ //Configurable for multi-map
-		int r = 500;
+		int r = 150;
 		if(pMapaActual().ExisteixPropietat("LevelUpBlocks")){
 			r = pMapaActual().ObtenirPropietatInt("LevelUpBlocks");
 		}
@@ -276,7 +273,7 @@ public class InkWars extends JocEquips {
 		Iterator<Entry<Block, Pair<String, Double>>> iter = highInkBlocks.entrySet().iterator();
 		while (iter.hasNext()) {
 			Entry<Block, Pair<String, Double>> entry = iter.next();
-			entry.getValue().setSecond(entry.getValue().getSecond() - (1.0/20.0)); //Every 20s -1
+			entry.getValue().setSecond(entry.getValue().getSecond() - (1.0/20.0)); // The ink dries by 1 every second
 			if(entry.getValue().getSecond() <= 0){
 				//Finally decay
 				iter.remove();
@@ -400,7 +397,8 @@ public class InkWars extends JocEquips {
 		public void tick(){
 			reloadTick();
 		}
-		public double getWeaponSpeedModifier(){
+		/** Extra Speed potion levels the weapon grants wherever its owner stands. */
+		public int getSpeedLevelBonus(){
 			return 0;
 		}
 		public double getMaxHealth(){
@@ -410,13 +408,17 @@ public class InkWars extends JocEquips {
 			return 50;
 		}
 		public int reloadTickIncrement(){ 
+			InkWarsPlayerInfo info = getPlayerInfo(getPlayer());
+			if(info.isSubmerged())return 8;
 			int i = 1;
 			EquipInkWars e = obtenirEquip(getPlayer());
-			EquipInkWars teamOwningBlock = getPlayerInfo(getPlayer()).getTeamColorWherePlayerStands();
-			boolean isOnItsColor = teamOwningBlock == e;
+			boolean isOnItsColor = info.getTeamColorWherePlayerStands() == e;
 			boolean isInBaseRange = getPlayer().getLocation().distance(e.getTeamSpawnLocation()) < 10;
 			if(isOnItsColor || isInBaseRange)i += 4;
 			return i;
+		}
+		boolean isSubmerged(){
+			return getPlayerInfo(getPlayer()).isSubmerged();
 		}
 		public int getMaxLoad(){
 			return 64;
@@ -483,16 +485,17 @@ public class InkWars extends JocEquips {
 				EquipInkWars oldOwnerTeam = getTeamOwningBlock(b);
 				if(oldOwnerTeam != newOwnerTeam && oldOwnerTeam != null){
 					if(highInkBlocks.containsKey(b)){
-						double ink = highInkBlocks.get(b).getSecond();
-						//if(Utils.Possibilitat(ink, 0.28 + Math.sqrt(getWeaponLevel()) / 2))return;
-						return;
+						// Wet enemy ink resists: the wetter, the likelier the stroke slides off; a higher level bites through more often
+						double wetInk = highInkBlocks.get(b).getSecond();
+						if(Math.random() < wetInk / (wetInk + 0.5 + Math.sqrt(getWeaponLevel()) / 2))return;
 					}
 				}
 				//Register
 				if(oldOwnerTeam != newOwnerTeam)getPlayerInfo(getPlayer()).registerBlockPaint(oldOwnerTeam);
 				//Paint
 				Material paintBase = forcedly ? Material.WHITE_TERRACOTTA : b.getType();
-				b.setType(getPaintMaterial(paintBase, sc), false);
+				Material painted = getPaintMaterial(paintBase, sc);
+				if(b.getType() != painted)b.setType(painted, false);
 				double pInk = 0;
 				if(highInkBlocks.containsKey(b)){
 					pInk = highInkBlocks.get(b).getSecond();
@@ -531,6 +534,11 @@ public class InkWars extends JocEquips {
 			if(s instanceof Player){
 				Player p = (Player) s;
 				if(p == getPlayer()){
+					if(isSubmerged()){ // Surface first: nothing is thrown from under the ink
+						evt.setCancelled(true);
+						p.playSound(p.getEyeLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.6F, 0.8F);
+						return;
+					}
 					registerProjectile(proj);
 				}
 			}
@@ -635,9 +643,8 @@ public class InkWars extends JocEquips {
 			return 2;
 		}
 		@Override
-		public double getWeaponSpeedModifier() {
-			// TODO Auto-generated method stub
-			return 8;
+		public int getSpeedLevelBonus() {
+			return 1;
 		}
 		@Override
 		public int neededReloadTicks() {
@@ -749,14 +756,6 @@ public class InkWars extends JocEquips {
 				paintRadius(killed.getEyeLocation(), getWeaponLevel() + Math.round(chargeTicks / (20 * 1.5)), 4.5 + getWeaponLevel() * 0.25);
 			}
 		}
-		@Override
-		protected void onPlayerDeathByPlayer(PlayerDeathEvent evt,
-				Player killed, Player killer) {
-			super.onPlayerDeathByPlayer(evt, killed, killer);
-			if(killer == getPlayer()){				
-				paintRadius(killed.getEyeLocation(), Math.sqrt(getWeaponLevel()) + 7, 5 + getWeaponLevel() / 3);
-			}
-		}
 
 	}
 	class RollerInkWeapon extends InkWeapon{
@@ -770,7 +769,7 @@ public class InkWars extends JocEquips {
 		@Override
 		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
 			super.onPlayerMove(evt, p);
-			if(p == getPlayer()){
+			if(p == getPlayer() && !isSubmerged()){
 				rollerLinePaint(getWidth(), 1.2 + getWeaponLevel() / 8.0, getPlayer());				
 			}
 		}
@@ -812,7 +811,7 @@ public class InkWars extends JocEquips {
 		@Override
 		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
 			super.onPlayerMove(evt, p);
-			if(p == getPlayer()){
+			if(p == getPlayer() && !isSubmerged()){
 				rollerLinePaint(getWidth(), 3.2 + getWeaponLevel() / 1.8, getPlayer());				
 			}
 		}
@@ -821,9 +820,8 @@ public class InkWars extends JocEquips {
 		}
 
 		@Override
-		public double getWeaponSpeedModifier() {
-			// TODO Auto-generated method stub
-			return 10;
+		public int getSpeedLevelBonus() {
+			return 1;
 		}
 		@Override
 		public ItemStack getLoadMaterial() {
@@ -878,9 +876,10 @@ public class InkWars extends JocEquips {
 		private int alivePaintedBlocks = 0;
 		private InkWeapon activeWeapon = null;
 		private int weaponLevel = 1;
-		private int weaponAlerts = 0;
 		private int dmgTicks = 0;
 		private int shieldTicks = 0;
+		private boolean submerged = false;
+		private int submergedTicks = 0;
 		//-----
 
 		public InkWarsPlayerInfo() {
@@ -891,12 +890,6 @@ public class InkWars extends JocEquips {
 		}
 		public int getAlivePaintedBlocks() {
 			return alivePaintedBlocks;
-		}
-		public void registerWeaponAlert(){
-			weaponAlerts++;
-		}
-		public int getWeaponAlerts() {
-			return weaponAlerts;
 		}
 		public boolean isShielded(){
 			return getShieldTicks() > 0;
@@ -914,57 +907,122 @@ public class InkWars extends JocEquips {
 		}
 		@Override
 		public void ultraTick() {
-			//			EquipInkWars ownerTeam = getTeamOwningBlock(b);
-			//			if(oldOwnerTeam != newOwnerTeam && oldOwnerTeam != null){
-			//				if(highInkBlocks.containsKey(b)){
-			//					double ink = highInkBlocks.get(b).getSecond();
-			//					if(Utils.Possibilitat(ink, 0.2 + Math.sqrt(getWeaponLevel()) / 2))return;
-			//				}
-			//			}
-			EquipInkWars e = obtenirEquip(getPlayer());
-			Block b = getBlockWherePlayerStands();
-			EquipInkWars teamOwningBlock = getTeamColorWherePlayerStands();
-			if(teamOwningBlock == null){
-				setSpeedModifier(0);
+			super.ultraTick();
+			Player p = getPlayer();
+			EquipInkWars team = obtenirEquip(p);
+			EquipInkWars colourUnderfoot = getTeamColorWherePlayerStands();
+			boolean onOwnColour = colourUnderfoot == team;
+			boolean onEnemyColour = colourUnderfoot != null && !onOwnColour && !isShielded();
+			Block ownWallAhead = ownWallAhead(team);
+
+			boolean wantsToSwim = p.isSneaking() && getActiveWeapon() != null && (onOwnColour || ownWallAhead != null);
+			if(wantsToSwim && !submerged)dive();
+			if(!wantsToSwim && submerged)surface();
+			if(submerged)tickSubmerged(team, ownWallAhead);
+
+			applyInkSpeed(onOwnColour, onEnemyColour);
+			tickEnemyInkDamage(onEnemyColour);
+			tickShield();
+		}
+		public boolean isSubmerged(){
+			return submerged;
+		}
+		/** Sneaking on the team's own colour with a weapon in hand: the body goes under the ink, the armour with it, only a ripple stays visible. */
+		private void dive(){
+			submerged = true;
+			submergedTicks = 0;
+			Player p = getPlayer();
+			p.getInventory().setArmorContents(null);
+			p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 0.7F);
+			getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
+		}
+		/** Coming out of the ink: armour back, a splash of paint where the body surfaces. */
+		private void surface(){
+			if(!submerged)return;
+			surfaceQuietly();
+			Player p = getPlayer();
+			p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 1.3F);
+			getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
+			InkWeapon weapon = getActiveWeapon();
+			if(weapon != null)weapon.paintRadius(p.getLocation(), 1.5, 2);
+		}
+		/** The flag and the armour only, for a death or a weapon change that re-issues the kit anyway. */
+		private void surfaceQuietly(){
+			submerged = false;
+			Player p = getPlayer();
+			p.removePotionEffect(PotionEffectType.INVISIBILITY);
+			Utils.donarItemsPlayer(p, getStartingItems(p));
+		}
+		/** The own-colour wall the player faces, at feet or head height, or null. That wall is swimmable. */
+		private Block ownWallAhead(EquipInkWars team){
+			Player p = getPlayer();
+			Vector facing = p.getLocation().getDirection().setY(0);
+			if(facing.lengthSquared() < 0.01)return null;
+			facing.normalize();
+			Block feet = p.getLocation().getBlock();
+			int dx = (int) Math.round(facing.getX());
+			int dz = (int) Math.round(facing.getZ());
+			for(int dy = 0; dy <= 1; dy++){
+				Block wall = feet.getRelative(dx, dy, dz);
+				if(getTeamOwningBlock(wall) == team)return wall;
 			}
-			if(b != null && teamOwningBlock != null){
-				boolean isOnItsColor = (teamOwningBlock == e) || isShielded();
-				boolean isHighInk = highInkBlocks.containsKey(b);
-				double speedMod = 0;
-				if(isOnItsColor){speedMod += 5;}else{speedMod += -5;}
-				if(isHighInk){speedMod *= 2;}				
-				if (getActiveWeapon() != null) {
-					speedMod += getActiveWeapon().getWeaponSpeedModifier();
-				}
-				double dmgTickIncrement = (isOnItsColor ? -8 : 20) ;
-				setSpeedModifier(speedMod/2);
-				dmgTicks += dmgTickIncrement;
-				if(dmgTicks < 0)dmgTicks = 0;
-				if(dmgTicks >= 20){	
-					//					if(isHighInk){
-					//						Player painter = Bukkit.getPlayer(highInkBlocks.get(b).getFirst());
-					//						if(painter != null){
-					//							getPlayer().damage(1, painter);
-					//						}else{
-					//							getPlayer().damage(1);	
-					//						}
-					//					}else{
-					//					}
-					getPlayer().damage(1);						
-					dmgTicks = 0;
-				}
+			return null;
+		}
+		/** Submerged: unseen, healing, a ripple in the team colour, up the own-colour wall ahead at full speed; every block the body touches is wetted again. */
+		private void tickSubmerged(EquipInkWars team, Block ownWallAhead){
+			Player p = getPlayer();
+			submergedTicks++;
+			p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 40, 0, true, false));
+			p.setFallDistance(0);
+			if(submergedTicks % 20 == 0)Utils.healDamageable(p, 1.0);
+			if(submergedTicks % 2 == 0){
+				Particle.DustOptions ripple = new Particle.DustOptions(team.getStrongColor().getColor(), 1.4F);
+				getWorld().spawnParticle(Particle.DUST, p.getLocation().add(0, 0.15, 0), 4, 0.45, 0.05, 0.45, 0, ripple);
 			}
-			if(shieldTicks > 0){
-				if(shieldTicks % 5 == 0){
-					getWorld().spawnParticle(Particle.END_ROD, getPlayer().getLocation().add(0, 1, 0), 3, 0.45, 0.65, 0.45, 0);
-				}
-				shieldTicks--;
-				if(shieldTicks == 0){
-					getWorld().spawnParticle(Particle.SMOKE, getPlayer().getLocation().add(0, 1, 0), 10, 0.4, 0.6, 0.4, 0.02);
-					getPlayer().playSound(getPlayer().getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.6F, 1.8F);
-				}
+			InkWeapon weapon = getActiveWeapon();
+			Block floor = getBlockWherePlayerStands();
+			if(floor != null && getTeamOwningBlock(floor) == team)weapon.paintBlock(floor, 1.5);
+			if(ownWallAhead != null){
+				weapon.paintBlock(ownWallAhead, 1.5);
+				Vector facing = p.getLocation().getDirection().setY(0).normalize();
+				p.setVelocity(new Vector(facing.getX() * 0.12, 0.28, facing.getZ() * 0.12));
 			}
-			super.tick();
+		}
+		/** Own colour is fast, enemy colour is mud. Potion levels refreshed every tick so they vanish the moment the ground changes. */
+		private void applyInkSpeed(boolean onOwnColour, boolean onEnemyColour){
+			Player p = getPlayer();
+			int speedLevels = 0;
+			if(onOwnColour)speedLevels += 1;
+			if(submerged)speedLevels += 1;
+			if(getActiveWeapon() != null)speedLevels += getActiveWeapon().getSpeedLevelBonus();
+			int slownessLevels = onEnemyColour && !submerged ? 2 : 0;
+			if(speedLevels > 0)p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 5, speedLevels - 1, true, false));
+			else p.removePotionEffect(PotionEffectType.SPEED);
+			if(slownessLevels > 0)p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 5, slownessLevels - 1, true, false));
+			else p.removePotionEffect(PotionEffectType.SLOWNESS);
+		}
+		/** Enemy ink stings, one heart a second; it does not execute. */
+		private void tickEnemyInkDamage(boolean onEnemyColour){
+			if(!onEnemyColour){
+				dmgTicks = 0;
+				return;
+			}
+			dmgTicks++;
+			if(dmgTicks >= 20){
+				getPlayer().damage(1);
+				dmgTicks = 0;
+			}
+		}
+		private void tickShield(){
+			if(shieldTicks <= 0)return;
+			if(shieldTicks % 5 == 0){
+				getWorld().spawnParticle(Particle.END_ROD, getPlayer().getLocation().add(0, 1, 0), 3, 0.45, 0.65, 0.45, 0);
+			}
+			shieldTicks--;
+			if(shieldTicks == 0){
+				getWorld().spawnParticle(Particle.SMOKE, getPlayer().getLocation().add(0, 1, 0), 10, 0.4, 0.6, 0.4, 0.02);
+				getPlayer().playSound(getPlayer().getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.6F, 1.8F);
+			}
 		}
 		public void registerBlockPaint(EquipInkWars oldOwner){
 			paintedBlockCount++;
@@ -975,6 +1033,7 @@ public class InkWars extends JocEquips {
 			e.incrementOwnedBlocks(1);
 		}
 		public void registerDeath(){
+			surfaceQuietly();
 			alivePaintedBlocks *= 0.8; //Reduce player points by 20%
 			getPlayer().setLevel(alivePaintedBlocks);
 			sendPlayerMessage(getPlayer(), ChatColor.RED + "You have lost 20% of your points");
@@ -987,6 +1046,8 @@ public class InkWars extends JocEquips {
 			if (pW != null) {
 				pW.destroy();
 			}
+			submerged = false;
+			getPlayer().removePotionEffect(PotionEffectType.INVISIBILITY);
 			double healthBeforeSwitch = getPlayer().getHealth();
 			getPlayer().setMaxHealth(newWeapon.getMaxHealth());
 			donarItemsInicials(getPlayer()); //Clears and gives starting (colored) armor
@@ -1022,6 +1083,16 @@ public class InkWars extends JocEquips {
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
 		super.onPlayerDeath(evt, killed);
 		getPlayerInfo(killed).registerDeath();
+	}
+	@Override
+	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
+		super.onPlayerDeathByPlayer(evt, killed, killer);
+		InkWeapon killerWeapon = getPlayerInfo(killer).getActiveWeapon();
+		if (killerWeapon == null) return;
+		// The splat: a kill is painted where the body fell, whatever the weapon
+		killerWeapon.paintRadius(killed.getLocation(), 3 + Math.sqrt(killerWeapon.getWeaponLevel()), 6);
+		getWorld().playSound(killed.getLocation(), Sound.ENTITY_SLIME_DEATH, 1F, 0.8F);
+		getWorld().playSound(killed.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 1F, 0.9F);
 	}
 	class EquipInkWars extends Equip{ //Special team class for this game mode
 		private DyeColor strongColor; 
