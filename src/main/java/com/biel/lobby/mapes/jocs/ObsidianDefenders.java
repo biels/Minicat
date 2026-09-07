@@ -79,6 +79,7 @@ import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
+import com.biel.lobby.minions.Lane;
 import com.biel.lobby.minions.Minion;
 import com.biel.lobby.minions.SnowmanMinion;
 import com.biel.lobby.utilities.PaperMessages;
@@ -87,6 +88,10 @@ import com.biel.lobby.utilities.Utils;
 
 import io.papermc.paper.registry.RegistryAccess;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.block.data.Rotatable;
 import io.papermc.paper.registry.RegistryKey;
 
 /**
@@ -283,13 +288,13 @@ public class ObsidianDefenders extends JocEquips {
 	/** What the booths sell. Prices in gold nuggets; an ingot pays for ten. */
 	private enum Mercaderia {
 		FLETXES(Material.ARROW, 8, 3, "8 fletxes", null),
-		ESTRELLES(Material.FIREWORK_STAR, 2, 10, "2 estrelles de foc", "Permet disparar fletxes explosives des de llocs elevats."),
+		ESTRELLES(Material.FIREWORK_STAR, 2, 10, "2 estrelles de foc", null),
 		ESPASA_FERRO(Material.IRON_SWORD, 1, 10, "Espasa de ferro", null),
 		ARC(Material.BOW, 1, 12, "Arc", null),
 		PIC_FERRO(Material.IRON_PICKAXE, 1, 12, "Pic de ferro", "+30 dany al golem"),
 		PITRAL_FERRO(Material.IRON_CHESTPLATE, 1, 18, "Pitral de ferro", null),
 		BLOC_OR(Material.GOLD_BLOCK, 1, 25, "Bloc d'or", "+2 or cada " + (CICLE_COFRES_TICKS / 20) + " segons"),
-		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu que marxa cap a la base enemiga disparant (màx. " + MAX_SNOWMEN_PER_PLAYER + ")"),
+		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", null),
 		QUARS(Material.QUARTZ, 1, 15, "Quars", "Mentre el portis, els teus nous ninots disparen un 50 % més ràpid"),
 		CALCES_DIAMANT(Material.DIAMOND_LEGGINGS, 1, 30, "Calces de diamant", null),
 		ESPASA_DIAMANT(Material.DIAMOND_SWORD, 1, 40, "Espasa de diamant", null);
@@ -305,6 +310,63 @@ public class ObsidianDefenders extends JocEquips {
 			this.preu = preu;
 			this.nom = nom;
 			this.descripció = descripció;
+		}
+	}
+
+	/**
+	 * The items the game hands out, named and explained on their tooltip from one place:
+	 * chest loot, booth purchases, the pickaxes and the star an arrow needs. The tooltip
+	 * is the quietest channel there is: read only when hovered, never repeated.
+	 */
+	private enum Objecte {
+		ESTRELLA_DEL_NETHER(Material.NETHER_STAR, "Estrella del Nether", "Clic dret: enemics a 1 cor i lents 20 s,", "aliats ràpids 20 s.", "Es converteix en estrella de foc."),
+		ESTRELLA_DE_FOC(Material.FIREWORK_STAR, "Estrella de foc", "Amb ella a l'inventari, una fletxa disparada", "des de dalt explota en caure."),
+		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma", "Clic dret: crema tot l'equip enemic 3 s."),
+		MARAGDA(Material.EMERALD, "Maragda", "Clic dret: +1 cor a tot el teu equip."),
+		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que va cap a la base enemiga disparant (màx. " + MAX_SNOWMEN_PER_PLAYER + ")."),
+		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender", "Llança-la per teletransportar-te on caigui."),
+		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or", "A l'inventari: fletxes explosives un 20 % més fortes."),
+		PIC_DE_DIAMANT(Material.DIAMOND_PICKAXE, "Pic de diamant", "Trenca l'obsidiana de la base enemiga.", "Encanta'l a una taula: Eficiència.", "Qui et mati es queda un pic d'or."),
+		PIC_D_OR(Material.GOLDEN_PICKAXE, "Pic d'or", "A la mà en matar: or x3.", "A l'inventari: +3 or cada cicle.");
+
+		final Material material;
+		final String nom;
+		final List<String> llegenda;
+		Objecte(Material material, String nom, String... llegenda) {
+			this.material = material;
+			this.nom = nom;
+			this.llegenda = List.of(llegenda);
+		}
+
+		static Objecte de(Material material) {
+			for (Objecte o : values()) if (o.material == material) return o;
+			return null;
+		}
+
+		/** Names and explains the item when the game has words for it; returns the same stack. */
+		static ItemStack descriure(ItemStack item) {
+			Objecte objecte = item == null ? null : de(item.getType());
+			if (objecte == null) return item;
+			ItemMeta meta = item.getItemMeta();
+			meta.displayName(Component.text(objecte.nom, NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+			List<Component> lore = new ArrayList<>();
+			for (String línia : objecte.llegenda) lore.add(Component.text(línia, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+			meta.lore(lore);
+			item.setItemMeta(meta);
+			return item;
+		}
+	}
+
+	/** Spends one of the stack in hand. Named items do not match a bare ItemStack, so the stack itself is shrunk. */
+	private static void consumirUn(ItemStack stack) {
+		stack.setAmount(stack.getAmount() - 1);
+	}
+
+	private static void treureUn(Inventory inv, Material material) {
+		for (ItemStack item : inv.getContents()) {
+			if (item == null || item.getType() != material) continue;
+			item.setAmount(item.getAmount() - 1);
+			return;
 		}
 	}
 
@@ -374,6 +436,12 @@ public class ObsidianDefenders extends JocEquips {
 	/** An enchanting table of the map and, for the ones in a base, the team whose base it is. */
 	private record TaulaDEncantar(Forja forja, Integer equip) {}
 	private final Map<Block, TaulaDEncantar> taulesDEncantar = new HashMap<>();
+	/** The sign the plugin stands on each table → the table; a click on the sign is a click on the table. */
+	private final Map<Block, Block> rètolsDeTaula = new HashMap<>();
+	/** Player → the one-shot hints already shown: a line above the hotbar the first time they come near a thing. */
+	private final Map<UUID, Set<String>> hintsShown = new HashMap<>();
+	private static final double HINT_DISTANCE = 4;
+	private static final long HINT_TICKS = 80;
 	/** A base's tables stand at the base's level within the sign radius; anything higher is the canopy. */
 	private static final int ALÇADA_TAULES_DE_BASE = 3;
 	private static final String[] NIVELLS_ROMANS = { "", "I", "II", "III", "IV", "V" };
@@ -399,6 +467,7 @@ public class ObsidianDefenders extends JocEquips {
 		emptyDispensers();
 		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
 		scheduleGameplayRepeatingTask(this::tickControlPoints, 20, 20);
+		scheduleGameplayRepeatingTask(this::tickHints, 30, 20);
 		scheduleGameplayRepeatingTask(this::apareixerPicDiamant, PRIMER_PIC_TICKS, PERIODE_PIC_TICKS);
 		guardiàTornaAlSegon = (int) (GOLEM_INICIAL_TICKS / 20);
 		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
@@ -452,13 +521,10 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected ArrayList<String> getGameInfo(Player p) {
 		ArrayList<String> info = new ArrayList<>();
-		info.add("Fes explotar la TNT de la base enemiga. L'obsidiana es pot trencar.");
-		info.add("Els cofres de la jungla canvien de lloc cada 32 s; el pic de diamant cau al mig als 3 min.");
-		info.add("L'or paga tot: matar, obrir cofres, matar el Guardià.");
-		info.add("El Guardià viu sota el mig: matar-lo dona " + OR_PER_GOLEM + " d'or i 3 min de Resistència i Velocitat.");
-		info.add("Una bola de neu llançada fa aparèixer un ninot de neu que marxa cap a la base enemiga disparant (màxim " + MAX_SNOWMEN_PER_PLAYER + " per jugador).");
-		info.add("Trepitja la teva placa als punts de control del mig: cada punt capturat carrega el pont del teu equip.");
-		info.add("Les taules d'encantar de la base fan encantaments senzills amb or; els altars de dalt de la capçada, els bons.");
+		// Three lines; the rest is taught where it happens: item tooltips, signs, the one-shot hints and the sounds.
+		info.add("Fes explotar la TNT de la base enemiga. L'obsidiana es pot trencar; el pic de diamant cau al mig als 3 min.");
+		info.add("L'or paga tot: cofres de la jungla, kills, captures, el Guardià. Es gasta a les botigues i a les taules d'encantar.");
+		info.add("Els punts de control del mig carreguen el pont del teu equip; les torres de llums mostren les dues barres.");
 		return info;
 	}
 
@@ -588,6 +654,7 @@ public class ObsidianDefenders extends JocEquips {
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.GOLDEN_SWORD));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.IRON_SWORD));
 		if (Utils.Possibilitat(15)) loot.add(llibreEncantatAleatori());
+		loot.replaceAll(Objecte::descriure);
 		return loot;
 	}
 
@@ -674,7 +741,7 @@ public class ObsidianDefenders extends JocEquips {
 			meta.setDamage(Material.DIAMOND_PICKAXE.getMaxDurability() - 1);
 			pic.setItemMeta(meta);
 		}
-		world.dropItem(puntPicDiamant(), pic).setVelocity(new Vector(0, 0, 0));
+		world.dropItem(puntPicDiamant(), Objecte.descriure(pic)).setVelocity(new Vector(0, 0, 0));
 		if (!primerPicAnunciat) {
 			sendGlobalMessage(ChatColor.AQUA + "Ha aparegut el primer pic de diamant!");
 			primerPicAnunciat = true;
@@ -1155,7 +1222,9 @@ public class ObsidianDefenders extends JocEquips {
 		});
 		for (Mercaderia m : mercaderies) {
 			ArrayList<String> info = new ArrayList<>();
-			if (m.descripció != null) info.add(ChatColor.GRAY + m.descripció);
+			Objecte objecte = Objecte.de(m.material);
+			if (objecte != null) for (String línia : objecte.llegenda) info.add(ChatColor.GRAY + línia);
+			else if (m.descripció != null) info.add(ChatColor.GRAY + m.descripció);
 			info.add(ChatColor.WHITE + "Preu: " + ChatColor.GOLD + m.preu + " or");
 			menu.setOption(mercaderies.indexOf(m), new ItemStack(m.material, m.quantitat), ChatColor.YELLOW + m.nom, info);
 		}
@@ -1167,7 +1236,7 @@ public class ObsidianDefenders extends JocEquips {
 			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
 			return;
 		}
-		Utils.giveItemStack(new ItemStack(m.material, m.quantitat), p);
+		Utils.giveItemStack(Objecte.descriure(new ItemStack(m.material, m.quantitat)), p);
 		p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1F, 1F);
 		updateScoreBoard(p);
 	}
@@ -1207,6 +1276,7 @@ public class ObsidianDefenders extends JocEquips {
 	 */
 	private void registrarTaulesDEncantar() {
 		taulesDEncantar.clear();
+		rètolsDeTaula.clear();
 		if (Equips.size() < 2) return;
 		Location a = Equips.get(0).getTeamSpawnLocation(), b = Equips.get(1).getTeamSpawnLocation();
 		int minX = Math.min(a.getBlockX(), b.getBlockX()) - RADI_RÈTOLS, maxX = Math.max(a.getBlockX(), b.getBlockX()) + RADI_RÈTOLS;
@@ -1220,9 +1290,60 @@ public class ObsidianDefenders extends JocEquips {
 				if (alNivellDeLaBase && aLaBase) registre = new TaulaDEncantar(Forja.BASE, e.getId());
 			}
 			taulesDEncantar.put(taula, registre);
+			posarRètolDeTaula(taula, registre.forja());
 		}
 		long alsAltars = taulesDEncantar.values().stream().filter(t -> t.forja() == Forja.CAPÇADA).count();
 		plugin.getLogger().info(getGameName() + " " + getMapName() + ": " + (taulesDEncantar.size() - alsAltars) + " base enchanting tables and " + alsAltars + " canopy altars");
+	}
+
+	/** A waxed sign standing on the table, turned to its open side, saying what it is in three words. */
+	private void posarRètolDeTaula(Block taula, Forja forja) {
+		Block sobre = taula.getRelative(BlockFace.UP);
+		if (!sobre.getType().isAir()) return;
+		BlockFace obert = null;
+		for (BlockFace cara : List.of(BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST)) {
+			Block costat = taula.getRelative(cara);
+			if (costat.isPassable() && costat.getRelative(BlockFace.UP).isPassable()) { obert = cara; break; }
+		}
+		if (obert == null) return;
+		sobre.setType(Material.OAK_SIGN, false);
+		if (sobre.getBlockData() instanceof Rotatable rotatable) {
+			rotatable.setRotation(obert);
+			sobre.setBlockData(rotatable, false);
+		}
+		if (forja == Forja.BASE) escriureRètol(sobre, ChatColor.GOLD + "Taula", ChatColor.GOLD + "d'encantar", ChatColor.GRAY + "paga amb or", "");
+		else escriureRètol(sobre, ChatColor.LIGHT_PURPLE + "Altar de la", ChatColor.LIGHT_PURPLE + "capçada", ChatColor.GRAY + "encantaments", ChatColor.GRAY + "forts");
+		if (sobre.getState() instanceof Sign rètol) {
+			rètol.setWaxed(true);
+			rètol.update(true, false);
+		}
+		rètolsDeTaula.put(sobre, taula);
+	}
+
+	/** Once per player per match, a line above the hotbar the first time they stand near a table, a plate or the bridge button. */
+	private void tickHints() {
+		if (!JocEnMarxa()) return;
+		for (Player p : getPlayers()) {
+			Location at = p.getLocation();
+			for (Map.Entry<Block, TaulaDEncantar> taula : taulesDEncantar.entrySet()) {
+				if (!aProp(at, taula.getKey())) continue;
+				if (taula.getValue().forja() == Forja.BASE) hint(p, "taula", "Taula d'encantar: clic dret amb l'eina a la mà. Es paga amb or.");
+				else hint(p, "altar", "Altar de la capçada: els encantaments forts. Clic dret amb l'eina a la mà.");
+			}
+			for (ControlPoint point : controlPoints) {
+				for (Block plate : point.plateByTeam.values()) if (aProp(at, plate)) hint(p, "placa", "Punt de control: 3 s sobre la placa del teu color per capturar-lo.");
+			}
+			for (Block botó : botonsPont.keySet()) if (aProp(at, botó)) hint(p, "botó", "Botó del pont: amb la barra plena, prem-lo per desplegar el pont sobre el fossat enemic.");
+		}
+	}
+
+	private static boolean aProp(Location at, Block block) {
+		return block.getLocation().add(0.5, 0.5, 0.5).distance(at) <= HINT_DISTANCE;
+	}
+
+	private void hint(Player p, String clau, String text) {
+		if (!hintsShown.computeIfAbsent(p.getUniqueId(), id -> new HashSet<>()).add(clau)) return;
+		PaperMessages.sendActionBar(p, ChatColor.YELLOW + text, HINT_TICKS);
 	}
 
 	/** A click on a table: never the vanilla screen; the team's tables refuse the enemy. */
@@ -1271,6 +1392,8 @@ public class ObsidianDefenders extends JocEquips {
 		}
 		item.addUnsafeEnchantment(encantament.encantament, nivell);
 		p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1F, 1F);
+		// An altar purchase is heard, softly, by the whole map: a strong player is up on the canopy.
+		if (forja == Forja.CAPÇADA) for (Player v : world.getPlayers()) if (v != p) v.playSound(v.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 0.4F, 1F);
 		p.sendMessage(ChatColor.LIGHT_PURPLE + encantament.nom + " " + NIVELLS_ROMANS[nivell] + ChatColor.WHITE + " (" + ChatColor.GOLD + "-" + encantament.preu(nivell) + " or" + ChatColor.WHITE + ")");
 		updateScoreBoard(p);
 	}
@@ -1873,7 +1996,7 @@ public class ObsidianDefenders extends JocEquips {
 			evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + " que tenia pic de diamant!(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
 			killer.sendMessage(ChatColor.GOLD + "+3 Or passiu! (pic d'or)");
 			killer.sendMessage(ChatColor.GOLD + "Matar un enemic amb el pic d'or et dona x3 or");
-			inventory.addItem(new ItemStack(Material.GOLDEN_PICKAXE, 1));
+			inventory.addItem(Objecte.descriure(new ItemStack(Material.GOLDEN_PICKAXE, 1)));
 		}
 		if (player.getInventory().contains(Material.GOLDEN_PICKAXE)) {
 			player.getInventory().remove(Material.GOLDEN_PICKAXE);
@@ -1904,9 +2027,9 @@ public class ObsidianDefenders extends JocEquips {
 				evt.setCancelled(true);
 				return;
 			}
-			if (clicat.getType() == Material.ENCHANTING_TABLE) {
+			if (clicat.getType() == Material.ENCHANTING_TABLE || rètolsDeTaula.containsKey(clicat)) {
 				evt.setCancelled(true);
-				TaulaDEncantar taula = taulesDEncantar.get(clicat);
+				TaulaDEncantar taula = taulesDEncantar.get(rètolsDeTaula.getOrDefault(clicat, clicat));
 				if (taula != null && evt.getHand() == EquipmentSlot.HAND) obrirTaulaDEncantar(plyr, taula);
 				return;
 			}
@@ -1950,6 +2073,7 @@ public class ObsidianDefenders extends JocEquips {
 			sendGlobalMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha utilitzat una" + ChatColor.BOLD + " nether star" + ChatColor.RESET + "!");
 			// The star turns into the charge that makes arrows explosive.
 			stack.setType(Material.FIREWORK_STAR);
+			Objecte.descriure(stack);
 		}
 		if (stack.getType() == Material.ARROW) {
 			if (stack.getEnchantments().size() >= 1) {
@@ -1957,7 +2081,7 @@ public class ObsidianDefenders extends JocEquips {
 					p.setHealth(Math.max(0, p.getHealth() - 3));
 				}
 				plyr.sendMessage("-1 cor a tot l'equip enemic.");
-				inv.removeItem(new ItemStack(stack.getType()));
+				consumirUn(stack);
 			}
 		}
 		if (stack.getType() == Material.MAGMA_CREAM) {
@@ -1965,35 +2089,35 @@ public class ObsidianDefenders extends JocEquips {
 				p.setFireTicks(3 * 20);
 			}
 			plyr.sendMessage("Has cremat a l'equip enemic.");
-			inv.removeItem(new ItemStack(stack.getType()));
+			consumirUn(stack);
 		}
 		if (stack.getType() == Material.STRING) {
 			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 15 * 20, 2, false), true);
 			}
 			plyr.sendMessage("Has alentit a l'equip enemic un 40% durant 15 segons.");
-			inv.removeItem(new ItemStack(stack.getType()));
+			consumirUn(stack);
 		}
 		if (stack.getType() == Material.SPIDER_EYE) {
 			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 8 * 20, 1, false), true);
 			}
 			plyr.sendMessage("Has enverinat a l'equip enemic durant 8 segons.");
-			inv.removeItem(new ItemStack(stack.getType()));
+			consumirUn(stack);
 		}
 		if (stack.getType() == Material.PAPER) {
 			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 25 * 20, 5, false), true);
 			}
 			plyr.sendMessage("Has esverat a l'equip enemic durant 25 segons.");
-			inv.removeItem(new ItemStack(stack.getType()));
+			consumirUn(stack);
 		}
 		if (stack.getType() == Material.COCOA_BEANS) {
 			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6 * 20, 100, false), true);
 			}
 			plyr.sendMessage("Tots a l'aigua!");
-			inv.removeItem(new ItemStack(stack.getType()));
+			consumirUn(stack);
 		}
 		if (stack.getType() == Material.EMERALD) {
 			for (Player p : obtenirEquip(plyr).getPlayers()) {
@@ -2004,21 +2128,21 @@ public class ObsidianDefenders extends JocEquips {
 				p.setHealth(newHealth);
 			}
 			plyr.sendMessage("Has curat 1 cor al teu equip.");
-			inv.removeItem(new ItemStack(stack.getType()));
+			consumirUn(stack);
 		}
 		if (stack.getType() == Material.SUGAR) {
 			for (Player p : obtenirEquip(plyr).getPlayers()) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 15 * 20, 2, false), true);
 			}
 			plyr.sendMessage("Has augmentat la velocitat del teu equip durant 15 segons.");
-			inv.removeItem(new ItemStack(stack.getType()));
+			consumirUn(stack);
 		}
 		if (stack.getType() == Material.GLASS) {
 			for (Player p : obtenirEquip(plyr).getPlayers()) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 15 * 20, 1, false), true);
 			}
 			plyr.sendMessage("El teu equip és invisible durant 15 segons.");
-			inv.removeItem(new ItemStack(stack.getType()));
+			consumirUn(stack);
 		}
 		if (stack.getType() == Material.BLAZE_POWDER) {
 			Player pObj = null;
@@ -2034,7 +2158,7 @@ public class ObsidianDefenders extends JocEquips {
 			if (pObj != null) {
 				int kills = pTemp().ObtenirPropietatInt(plyr.getName() + "Morts");
 				pObj.setFireTicks((5 + kills + (plyr.getLevel() / 2)) * 20);
-				inv.removeItem(new ItemStack(stack.getType()));
+				consumirUn(stack);
 				pTemp().EstablirPropietat("LastIgnitePlayerVictim", pObj.getName());
 				pTemp().EstablirPropietat("LastIgnitePlayerKiller", plyr.getName());
 			} else {
@@ -2078,15 +2202,15 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	/**
-	 * The team's lane, {@code lane<team>_N} in the map file (laid in game with
-	 * {@code /p lane0_1} and so on, read at every throw so a lane laid mid-match counts),
-	 * else straight at the enemy spawn.
+	 * The team's lane, {@code lane<team>_N} in the map file from {@code _0} upward (laid in
+	 * game with {@code /p lane0_0 x,y,z} and so on, read at every throw so a lane laid
+	 * mid-match counts), else straight at the enemy spawn.
 	 */
-	private List<Location> snowmanLane(Equip team) {
-		List<Location> lane = new ArrayList<>();
-		for (Location waypoint : pMapaActual().ObtenirLocations("lane" + team.getId(), world)) lane.add(waypoint.add(0.5, 1, 0.5));
-		if (lane.isEmpty()) lane.add(obtenirEquipEnemic(team).getTeamSpawnLocation());
-		return lane;
+	private Lane snowmanLane(Equip team) {
+		List<Location> waypoints = new ArrayList<>();
+		for (Location waypoint : pMapaActual().ObtenirLocations("lane" + team.getId(), world)) waypoints.add(waypoint.add(0.5, 1, 0.5));
+		if (waypoints.isEmpty()) waypoints.add(obtenirEquipEnemic(team).getTeamSpawnLocation());
+		return Lane.of(waypoints);
 	}
 
 	/** The block the snowball stopped against, the impact block and its neighbours above and below, first one a golem can stand in. */
@@ -2156,7 +2280,7 @@ public class ObsidianDefenders extends JocEquips {
 			if (inv.contains(Material.FIREWORK_STAR)) {
 				pTemp().EstablirPropietat("Explo", Long.toString(Calendar.getInstance().getTimeInMillis()));
 				pTemp().EstablirPropietat("ExploPlayer", player.getName());
-				inv.removeItem(new ItemStack(Material.FIREWORK_STAR, 1));
+				treureUn(inv, Material.FIREWORK_STAR);
 				int mortsExplotats = pTemp().ObtenirPropietatInt(player.getName() + "MortsExplotats");
 				int morts = pTemp().ObtenirPropietatInt(player.getName() + "Morts");
 

@@ -24,8 +24,8 @@ import com.biel.lobby.utilities.PaperMessages;
  * The Obsidian Defenders snowman (2013): a snow golem owned by the player who threw the
  * snowball, marching along its team's lane toward the enemy base and shooting enemies
  * within eight blocks on the way (Biel, 2026-09-07: "they should follow the natural path").
- * It joins the lane at the waypoint nearest to where it lands and walks the rest. Its
- * numbers are fixed at birth; what a hit on a player is worth is the game's rule, passed in.
+ * It joins the lane on the leg nearest to where it lands and walks the rest ({@link Lane#ahead}).
+ * Its numbers are fixed at birth; what a hit on a player is worth is the game's rule, passed in.
  */
 public final class SnowmanMinion extends Minion {
 	public static final double MAX_HEALTH = 5;
@@ -47,13 +47,13 @@ public final class SnowmanMinion extends Minion {
 
 	private final int cooldownTicks;
 	private final SnowballHit hitOnPlayer;
-	private final List<Location> lane;
+	private final Lane lane;
 
-	/** {@code lane}: the waypoints from this team's base to the enemy's, in order; at least one. */
-	public SnowmanMinion(JocEquips game, Equip team, Player owner, int cooldownTicks, List<Location> lane, SnowballHit hitOnPlayer) {
+	/** {@code lane}: this team's lane, base to enemy base. */
+	public SnowmanMinion(JocEquips game, Equip team, Player owner, int cooldownTicks, Lane lane, SnowballHit hitOnPlayer) {
 		super(game, team, owner);
 		this.cooldownTicks = cooldownTicks;
-		this.lane = List.copyOf(lane);
+		this.lane = lane;
 		this.hitOnPlayer = hitOnPlayer;
 	}
 
@@ -77,16 +77,7 @@ public final class SnowmanMinion extends Minion {
 	protected void installGoals(Mob mob) {
 		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, ACQUIRE_RADIUS, true, RESCAN_TICKS, this::isEnemy));
 		Bukkit.getMobGoals().addGoal(mob, 2, new RangedAttackGoal(mob, 0, RANGE, cooldownTicks, false, MARCH_SPEED, Volley.innate()));
-		Bukkit.getMobGoals().addGoal(mob, 3, new WaypointWalkGoal(mob, laneFrom(mob.getLocation()), MARCH_SPEED, ARRIVE_DISTANCE));
-	}
-
-	/** The lane from its nearest waypoint onward, so a snowman thrown mid-map does not walk back to the start. */
-	private List<Location> laneFrom(Location here) {
-		int nearest = 0;
-		for (int i = 1; i < lane.size(); i++) {
-			if (lane.get(i).distanceSquared(here) < lane.get(nearest).distanceSquared(here)) nearest = i;
-		}
-		return lane.subList(nearest, lane.size());
+		Bukkit.getMobGoals().addGoal(mob, 3, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), MARCH_SPEED, ARRIVE_DISTANCE));
 	}
 
 	@Override
