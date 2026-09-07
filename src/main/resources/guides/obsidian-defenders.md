@@ -1,9 +1,24 @@
 # Obsidian Defenders
 
 ## inici
-- Obre una bretxa a l'obsidiana de la base enemiga i trepitja el detonador que hi apareix. El pic de diamant cau al mig als {PIC_PRIMER_MIN} min.
-- L'or paga tot: cofres de la jungla, kills, captures, el Guardià. Es gasta a les botigues i a les taules d'encantar.
-- Els punts de control del mig carreguen el pont del teu equip; les torres de llums mostren les dues barres.
+- Objectiu: entra a la cambra d'obsidiana enemiga i trepitja el detonador. Utilitza el pic de diamant que apareix al mig del mapa.
+- Ara: tens {OR_INICIAL} d'or. Compra un arc o una espasa de ferro a la botiga de la base.
+- Després: al minut {GUARDIA_MIN} el Guardià es desperta al mig, i una bola de neu llançada es torna un ninot que lluita per tu.
+
+## títol inici
+- Trenca l'obsidiana enemiga i trepitja el detonador
+
+## barra objectiu
+- Objectiu: entra a la cambra d'obsidiana enemiga i trepitja el detonador
+
+## pista paradista
+- Paradista: clic dret per veure què ven. Es paga amb or.
+
+## pista cofre
+- Cofre de la jungla: agafa l'or i el que hi hagi. Els cofres es tanquen i se n'obren d'altres cada {COFRES_S} s.
+
+## pista bola
+- Bola de neu: llança-la i on caigui surt un ninot que lluita per tu.
 
 ## objecte ESTRELLA_DEL_NETHER
 - Clic dret: es carrega {ESTRELLA_CARREGA_S} s i els enemics
@@ -71,6 +86,11 @@
 
 ## pista estrella
 - Estrella infernal: clic dret, {ESTRELLA_CARREGA_S} s de càrrega, i els enemics a {ESTRELLA_RADI} blocs queden a 1 cor.
+
+## pàgina Per començar
+{{inici}}
+
+La resta d'aquest llibre explica cada cosa. Torna-hi amb /guia quan vulguis.
 
 ## pàgina Com es guanya
 Sota cada sala d'aparició hi ha una cambra d'obsidiana amb TNT a dins.

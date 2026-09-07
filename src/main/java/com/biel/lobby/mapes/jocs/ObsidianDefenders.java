@@ -125,6 +125,8 @@ public class ObsidianDefenders extends JocEquips {
 	/** The first chest cycle waits this long, so no prize is announced before anyone has left the spawn (Biel, 2026-09-08). */
 	private static final long FIRST_CHEST_CYCLE_TICKS = 15 * 20;
 	private static final double RECALL_SECONDS = 3;
+	/** The objective stays on a boss bar at the top of the screen this long after the start, draining, then goes (Biel, 2026-09-08: what a first-timer must know). */
+	private static final int OBJECTIVE_BAR_SECONDS = 60;
 	private static final int MAX_COFRES_OBERTS = 8;
 	private static final long PRIMER_PIC_TICKS = 3 * 60 * 20;
 	private static final long PERIODE_PIC_TICKS = 2 * 60 * 20;
@@ -311,6 +313,8 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<UUID, Integer> segonsÚltimCopRebut = new HashMap<>();
 	private UUID golemActual;
 	private BossBar barraGuardià;
+	private BossBar objectiveBar;
+	private int objectiveBarTask = -1;
 	private int tascaAuraGuardià = -1;
 	private int passosAura = 0;
 	private int segonsPresènciaGuardià = 0;
@@ -653,6 +657,7 @@ public class ObsidianDefenders extends JocEquips {
 		registerControlPointsAndLamps();
 		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
 		Bukkit.getPluginManager().registerEvents(worldListener, plugin);
+		showObjective();
 		emptyDispensers();
 		scheduleGameplayRepeatingTask(this::cicleCofres, FIRST_CHEST_CYCLE_TICKS, CICLE_COFRES_TICKS);
 		scheduleGameplayRepeatingTask(this::tickControlPoints, 20, 20);
@@ -1031,7 +1036,7 @@ public class ObsidianDefenders extends JocEquips {
 				loot.add(new ItemStack(Material.GOLD_NUGGET, Utils.Possibilitat(8) ? Utils.NombreEntre(2, 4) : 1));
 			}
 		}
-		if (Utils.Possibilitat(5)) loot.add(new ItemStack(Material.GOLD_INGOT, Utils.NombreEntre(1, 2)));
+		if (Utils.Possibilitat(5)) loot.add(new ItemStack(Material.GOLD_NUGGET, 10 * Utils.NombreEntre(1, 2)));
 		if (Utils.Possibilitat(20)) loot.add(new ItemStack(Material.EMERALD));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.MAGMA_CREAM));
 		if (Utils.Possibilitat(14)) loot.add(new ItemStack(Material.SNOWBALL));
@@ -1134,6 +1139,7 @@ public class ObsidianDefenders extends JocEquips {
 		Item item = evt.getItem();
 		if (item.getItemStack().getType() == Material.GOLD_NUGGET || item.getItemStack().getType() == Material.GOLD_INGOT) refreshGoldSoon(p);
 		Objecte objecte = Objecte.de(item.getItemStack());
+		if (objecte == Objecte.BOLA_DE_NEU) hint(p, "bola");
 		if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) hint(p, "superninot");
 		if (objecte == Objecte.ESTRELLA_DEL_NETHER) hint(p, "estrella");
 		if (item.getItemStack().getType() != Material.DIAMOND_PICKAXE) return;
@@ -1263,6 +1269,7 @@ public class ObsidianDefenders extends JocEquips {
 	protected void customLeave(Player ply, List<String> attatchments) {
 		super.customLeave(ply, attatchments);
 		if (barraGuardià != null) ply.hideBossBar(barraGuardià);
+		if (objectiveBar != null) ply.hideBossBar(objectiveBar);
 		cancelStarCharge(ply);
 		setMaxHealth(ply, FULL_MAX_HEALTH);
 		Block shown = shownPressedPlate.remove(ply.getUniqueId());
@@ -1534,7 +1541,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	private void refreshGoldSoon(Player p) {
 		if (world == null || p.getWorld() != world || !JocEnMarxa()) return;
-		scheduleGameplayTask(() -> { if (p.isOnline()) updateScoreBoard(p); }, 1);
+		scheduleGameplayTask(() -> { if (p.isOnline()) { ajuntarOr(p); updateScoreBoard(p); } }, 1);
 	}
 
 	/**
@@ -1675,6 +1682,7 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	public void clearExternals() {
 		HandlerList.unregisterAll(worldListener);
+		hideObjective();
 		apagarAuraDelGuardià();
 		for (UUID id : botiguers.keySet()) {
 			Entity botiguer = Bukkit.getEntity(id);
@@ -1787,18 +1795,9 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	private boolean gastarOr(Player p, int preu) {
+		ajuntarOr(p);
 		if (orDisponible(p) < preu) return false;
-		Inventory inv = p.getInventory();
-		int nuggets = 0;
-		for (ItemStack item : inv.getContents()) {
-			if (item != null && item.getType() == Material.GOLD_NUGGET) nuggets += item.getAmount();
-		}
-		int lingots = 0;
-		while (nuggets + 10 * lingots < preu) lingots++;
-		if (lingots > 0) inv.removeItem(new ItemStack(Material.GOLD_INGOT, lingots));
-		int aPagarEnNuggets = preu - 10 * lingots;
-		if (aPagarEnNuggets > 0) inv.removeItem(new ItemStack(Material.GOLD_NUGGET, aPagarEnNuggets));
-		if (aPagarEnNuggets < 0) inv.addItem(new ItemStack(Material.GOLD_NUGGET, -aPagarEnNuggets));
+		p.getInventory().removeItem(new ItemStack(Material.GOLD_NUGGET, preu));
 		return true;
 	}
 
@@ -1868,6 +1867,13 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			for (Block botó : botonsPont.keySet()) if (aProp(at, botó)) hint(p, "botó");
 			for (Block detonator : teamByDetonator.keySet()) if (aProp(at, detonator)) hint(p, "detonador");
+			for (UUID shopkeeper : botiguers.keySet()) {
+				Entity villager = Bukkit.getEntity(shopkeeper);
+				if (villager != null && villager.getWorld() == world && villager.getLocation().distance(at) <= HINT_DISTANCE) hint(p, "paradista");
+			}
+			for (Location chestSpot : pMapaActual().ObtenirLocations("cofres", world)) {
+				if (chestSpot.getBlock().getType() == Material.CHEST && aProp(at, chestSpot.getBlock())) hint(p, "cofre");
+			}
 			Equip team = obtenirEquip(p);
 			if (team == null) continue;
 			for (Equip enemy : Equips) {
@@ -2382,8 +2388,7 @@ public class ObsidianDefenders extends JocEquips {
 	//---------- Gold ----------
 
 	public void donarOr(Player plyr, int Or) {
-		ItemStack itemstack = new ItemStack(Material.GOLD_NUGGET, Or);
-		Utils.giveItemStack(itemstack, plyr);
+		giveOrDrop(plyr, new ItemStack(Material.GOLD_NUGGET, Or));
 		pPlayer(plyr).IncrementarPropietat("Or", Or);
 		ajuntarOr(plyr);
 		updateScoreBoard(plyr);
@@ -2420,21 +2425,18 @@ public class ObsidianDefenders extends JocEquips {
 		}
 	}
 	/** Ten nuggets become an ingot. */
+	/**
+	 * Gold is nuggets and nothing else (Biel, 2026-09-08: "uncraft automatically, the number
+	 * on the scoreboard should always match the amount of gold nuggets"): any ingot that gets
+	 * into the inventory becomes ten nuggets, stacked to 64. It used to be the other way round.
+	 */
 	public void ajuntarOr(Player p) {
 		Inventory inv = p.getInventory();
-		for (ItemStack d : inv.getContents()) {
-			if (d == null) {
-				continue;
-			}
-			if (d.getType() == Material.GOLD_NUGGET) {
-				if (d.getAmount() >= 10) {
-					int lingots = d.getAmount() / 10;
-					int nuggElim = lingots * 10;
-					inv.addItem(new ItemStack(Material.GOLD_INGOT, lingots));
-					inv.removeItem(new ItemStack(Material.GOLD_NUGGET, nuggElim));
-				}
-			}
-		}
+		int lingots = 0;
+		for (ItemStack d : inv.getContents()) if (d != null && d.getType() == Material.GOLD_INGOT) lingots += d.getAmount();
+		if (lingots == 0) return;
+		inv.remove(Material.GOLD_INGOT);
+		giveOrDrop(p, new ItemStack(Material.GOLD_NUGGET, lingots * 10));
 	}
 
 	//---------- Deaths ----------
@@ -2869,6 +2871,32 @@ public class ObsidianDefenders extends JocEquips {
 		Minion minion = minionOf(damager);
 		if (minion == null && damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) minion = minionOf(shooter);
 		return minion;
+	}
+
+	//---------- The first minute: what a newcomer must know, on the screen and not in the chat ----------
+
+	/** A title with the one sentence that wins, and a boss bar with it that drains over the first minute. */
+	private void showObjective() {
+		String sentence = GUIDE.line("barra objectiu");
+		for (Player p : getPlayers()) PaperMessages.showTitle(p, 10, 80, 20, ChatColor.GOLD + getGameName(), ChatColor.WHITE + GUIDE.line("títol inici"));
+		objectiveBar = BossBar.bossBar(PaperMessages.legacy(ChatColor.GOLD + sentence), 1F, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS);
+		for (Player p : getPlayers()) p.showBossBar(objectiveBar);
+		int[] left = {OBJECTIVE_BAR_SECONDS};
+		objectiveBarTask = scheduleGameplayRepeatingTask(() -> {
+			left[0]--;
+			if (left[0] <= 0 || !JocEnMarxa()) {
+				hideObjective();
+				return;
+			}
+			objectiveBar.progress(left[0] / (float) OBJECTIVE_BAR_SECONDS);
+		}, 20, 20);
+	}
+
+	private void hideObjective() {
+		if (objectiveBarTask != -1) Bukkit.getScheduler().cancelTask(objectiveBarTask);
+		objectiveBarTask = -1;
+		if (objectiveBar != null && world != null) for (Player p : world.getPlayers()) p.hideBossBar(objectiveBar);
+		objectiveBar = null;
 	}
 
 	//---------- The infernal star: a charge everyone hears, then a blast within its radius ----------
