@@ -1,0 +1,33 @@
+src/main/java/com/biel/lobby/mapes/jocs/Arena4.java
+  s_7b6c09563aa3f2::t_8ca82b1afe60e4 41,818
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_7b6c09563aa3f2::t_8ca82b1afe60e4 14,420,425
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_7b6c09563aa3f2::t_8ca82b1afe60e4 50,1103
+src/main/java/com/biel/lobby/minions/LaneMinion.java
+  s_7b6c09563aa3f2::t_8ca82b1afe60e4 16,61
+src/main/java/com/biel/lobby/utilities/Catalan.java
+  s_7b6c09563aa3f2::t_8ca82b1afe60e4 1-33
+src/main/java/com/biel/lobby/LoginListener.java
+  s_7b6c09563aa3f2::t_8ca82b1afe60e4 22,54,56
+src/main/java/com/biel/lobby/lobby.java
+  s_7b6c09563aa3f2::t_8ca82b1afe60e4 24,153
+src/main/java/com/biel/lobby/minions/SnowmanMinion.java
+  s_7b6c09563aa3f2::t_8ca82b1afe60e4 32,177
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f7c0c8262dab087bd828f89595590072b926f79e",
+  "prompts": {},
+  "sessions": {
+    "s_7b6c09563aa3f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "45ffe817-45cc-4ba0-b329-948f96d377bb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
