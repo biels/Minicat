@@ -702,6 +702,15 @@ public class ObsidianDefenders extends JocEquips {
 		if (++segonsPresènciaGuardià % SEGONS_ENTRE_BRUNZITS_GUARDIÀ == 0) world.playSound(golem.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.7F, 1F);
 	}
 
+	/** A player who leaves the match (/l, a teleport out, a quit) must not carry the Guardian's bar to the lobby. */
+	@Override
+	protected void customLeave(Player ply, List<String> attatchments) {
+		super.customLeave(ply, attatchments);
+		if (barraGuardià != null) ply.hideBossBar(barraGuardià);
+		Block shown = shownPressedPlate.remove(ply.getUniqueId());
+		if (shown != null) ply.sendBlockChange(shown.getLocation(), shown.getBlockData());
+	}
+
 	private void apagarAuraDelGuardià() {
 		if (tascaAuraGuardià != -1) {
 			Bukkit.getScheduler().cancelTask(tascaAuraGuardià);
