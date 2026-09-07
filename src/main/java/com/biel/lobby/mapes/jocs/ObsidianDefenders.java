@@ -235,8 +235,8 @@ public class ObsidianDefenders extends JocEquips {
 	 * this long.
 	 */
 	private static final double SNOWBALL_DAMAGE = 2;
-	private static final double SNOWBALL_KNOCKBACK = 0.55;
-	private static final double SNOWBALL_KNOCKBACK_LIFT = 0.25;
+	private static final double SNOWBALL_KNOCKBACK = 0.8;
+	private static final double SNOWBALL_KNOCKBACK_LIFT = 0.3;
 	private static final int SNOWBALL_FIRE_TICKS = 60;
 	private static final int SNOWMAN_HITS_TO_ARM_CAGE = 3;
 	private static final int ICE_CAGE_TICKS = 60;
