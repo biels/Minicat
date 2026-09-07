@@ -1,0 +1,22 @@
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_7b6c09563aa3f2::t_f0cf98a210df96 176-177,361,368-369,373-376,378,384-394,398-402,405-408,411,846,2186,2386-2388,2411,2413-2414,2417-2421
+src/main/java/com/biel/lobby/minions/SnowmanMinion.java
+  s_7b6c09563aa3f2::t_f0cf98a210df96 43-46,60-67,79-80,88-93,97,102-124,167,169,204,208-226
+  s_7b6c09563aa3f2::t_8077bc90ac44be 227
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "437fdc919c79a0df90887a7acd86cf76747b35e8",
+  "prompts": {},
+  "sessions": {
+    "s_7b6c09563aa3f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "45ffe817-45cc-4ba0-b329-948f96d377bb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
