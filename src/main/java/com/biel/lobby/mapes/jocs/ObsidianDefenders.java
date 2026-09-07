@@ -26,10 +26,18 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.block.Container;
+import org.bukkit.block.Dispenser;
+import org.bukkit.block.Dropper;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Leaves;
+import org.bukkit.block.data.Lightable;
+import org.bukkit.block.data.Powerable;
+import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import java.util.function.Predicate;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
@@ -154,10 +162,51 @@ public class ObsidianDefenders extends JocEquips {
 	/** Team id → the plank columns of the bridge over that team's moat, deploy order. */
 	private final Map<Integer, List<List<Block>>> pontsPerMoat = new HashMap<>();
 	private final Set<Integer> pontsDesplegats = new HashSet<>();
+	private final List<ControlPoint> controlPoints = new ArrayList<>();
+	/** Team id → that base's redstone lamps, nearest the spawn first: the bridge bar in light. */
+	private final Map<Integer, List<Block>> lampsByTeam = new HashMap<>();
+	/** Team id → seconds of captured-point time not yet turned into a square. */
+	private final Map<Integer, Integer> pointSecondsByTeam = new HashMap<>();
+	/** Player → the plate shown pressed for them; the real block never changes. */
+	private final Map<UUID, Block> shownPressedPlate = new HashMap<>();
+	private final Set<UUID> refusedOnPlate = new HashSet<>();
+
+	/** A middle room: one plate per team, the lamp beside each plate, and who holds it. */
+	private static final class ControlPoint {
+		final Map<Integer, Block> plateByTeam = new HashMap<>();
+		final Map<Integer, Block> lampByTeam = new HashMap<>();
+		Integer owner = null;
+
+		Integer teamOfPlate(Block block) {
+			for (Map.Entry<Integer, Block> plate : plateByTeam.entrySet()) if (plate.getValue().equals(block)) return plate.getKey();
+			return null;
+		}
+
+		Location centre() {
+			Location sum = null;
+			for (Block plate : plateByTeam.values()) sum = sum == null ? plate.getLocation() : sum.add(plate.getLocation());
+			return sum.multiply(1.0 / plateByTeam.size());
+		}
+	}
 
 	private static final int PONT_CÀRREGA_MÀXIMA = 6;
-	private static final int PONT_CÀRREGA_PER_CICLE = 1;
-	private static final int PONT_CÀRREGA_PER_MORT = 2;
+	/**
+	 * The control points (docs/games/obsidian-defenders/middle-plates-design.md): each
+	 * middle room holds a red and a blue plate; stepping on your colour's plate captures
+	 * the point for your team until the enemy steps on theirs. Every captured point earns
+	 * its team a bridge square every SECONDS_PER_POINT_SQUARE seconds; the capture itself
+	 * pays the capturer.
+	 */
+	private static final int SECONDS_PER_POINT_SQUARE = 5;
+	private static final int GOLD_PER_CAPTURE = 5;
+	/** Plates are looked for between the two spawns, this far either side of the line joining them, at the map's play heights. */
+	private static final int PLATE_BAND_HALF_WIDTH = 60;
+	private static final int SCAN_MIN_Y = 30;
+	private static final int SCAN_MAX_Y = 70;
+	/** Plates closer than this belong to the same control point; a point's lamp is within it of its plate. */
+	private static final double CONTROL_POINT_RADIUS = 8;
+	/** Who is shown a plate pressed: everyone this close to it. */
+	private static final double PLATE_VIEW_DISTANCE = 16;
 	private static final long PONT_TICKS_PER_COLUMNA = 10;
 	private static final long PONT_TICKS_DESPLEGAT = 45 * 20;
 	private static final int PONT_ALÇADA = 37;
@@ -233,7 +282,10 @@ public class ObsidianDefenders extends JocEquips {
 		registrarNuclis();
 		registrarControlsIParades();
 		registrarPonts();
+		registerControlPointsAndLamps();
+		emptyDispensers();
 		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
+		scheduleGameplayRepeatingTask(this::tickControlPoints, 20, 20);
 		scheduleGameplayRepeatingTask(this::apareixerPicDiamant, PRIMER_PIC_TICKS, PERIODE_PIC_TICKS);
 		guardiàTornaAlSegon = (int) (GOLEM_INICIAL_TICKS / 20);
 		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
@@ -292,6 +344,7 @@ public class ObsidianDefenders extends JocEquips {
 		info.add("L'or paga tot: matar, obrir cofres, matar el Guardià.");
 		info.add("El Guardià viu sota el mig: matar-lo dona " + OR_PER_GOLEM + " d'or i 3 min de Resistència i Velocitat.");
 		info.add("Una bola de neu llançada fa aparèixer un ninot de neu que dispara als enemics (màxim " + MAX_SNOWMEN_PER_PLAYER + " per jugador).");
+		info.add("Trepitja la teva placa als punts de control del mig: cada punt capturat carrega el pont del teu equip.");
 		return info;
 	}
 
@@ -380,7 +433,6 @@ public class ObsidianDefenders extends JocEquips {
 			donarOrPassiu(p);
 			desgastarEquipament(p);
 		}
-		for (Equip e : Equips) carregarPont(e, PONT_CÀRREGA_PER_CICLE);
 	}
 
 	private void tancarCofre(Block b) {
@@ -530,10 +582,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	private void apareixerGolem() {
 		if (!JocEnMarxa() || !pMapaActual().ExisteixPropietat("Golem")) return;
-		Location punt = puntDelGuardià().add(0.5, 1, 0.5);
-		Block b = punt.getBlock();
-		if (b.getState() instanceof Chest cofre) cofre.getInventory().clear();
-		b.setType(Material.AIR);
+		Location punt = guardianSpawnPoint();
 		IronGolem golem = world.spawn(punt, IronGolem.class);
 		golem.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 400 * 20, 1, true), true);
 		golem.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 400 * 20, 1, true), true);
@@ -561,6 +610,14 @@ public class ObsidianDefenders extends JocEquips {
 
 	private Location puntDelGuardià() {
 		return pMapaActual().ObtenirLocation("Golem", world);
+	}
+
+	/** Beside the hut's chest, which stays as loot for whoever gets there first: the doorway side, else above the chest. */
+	private Location guardianSpawnPoint() {
+		Block cofre = puntDelGuardià().getBlock().getRelative(BlockFace.UP);
+		Block costat = cofre.getRelative(BlockFace.SOUTH);
+		Block peus = costat.isPassable() && costat.getRelative(BlockFace.UP).isPassable() ? costat : cofre.getRelative(BlockFace.UP);
+		return peus.getLocation().add(0.5, 0, 0.5);
 	}
 
 	private boolean ésElGolem(Entity e) {
@@ -1096,6 +1153,7 @@ public class ObsidianDefenders extends JocEquips {
 	private void mostrarCàrregaPont(Equip e) {
 		Block rètol = rètolsPont.get(e.getId());
 		if (rètol != null) escriureRètol(rètol, etiquetaPont(e, "Pont enemic"), barraPont(e), "", "");
+		lightLamps(e);
 		for (Player p : e.getPlayers()) updateScoreBoard(p);
 	}
 
@@ -1139,6 +1197,230 @@ public class ObsidianDefenders extends JocEquips {
 		for (Block b : columna) b.setType(posar ? Material.OAK_PLANKS : Material.AIR);
 		Location so = columna.get(0).getLocation();
 		world.playSound(so, posar ? Sound.BLOCK_PISTON_EXTEND : Sound.BLOCK_PISTON_CONTRACT, 1F, 1F);
+	}
+
+	//---------- The control points, the base lamps and the dispensers ----------
+
+	/**
+	 * Finds the coloured plates between the bases, groups them into control points by
+	 * proximity, and finds each base's lamp bank. A plate's team is the majority colour
+	 * among its eight horizontal neighbours at its level and one below; a plate with no
+	 * colour (the keep doors) is not a control point.
+	 */
+	private void registerControlPointsAndLamps() {
+		controlPoints.clear();
+		lampsByTeam.clear();
+		pointSecondsByTeam.clear();
+		if (Equips.size() < 2) return;
+		Location a = Equips.get(0).getTeamSpawnLocation(), b = Equips.get(1).getTeamSpawnLocation();
+		int minX = Math.min(a.getBlockX(), b.getBlockX()), maxX = Math.max(a.getBlockX(), b.getBlockX());
+		int midZ = (a.getBlockZ() + b.getBlockZ()) / 2;
+		for (Block plate : blocksBetween(minX, midZ - PLATE_BAND_HALF_WIDTH, maxX, midZ + PLATE_BAND_HALF_WIDTH, m -> Tag.PRESSURE_PLATES.isTagged(m))) {
+			Equip team = teamOfColourAround(plate);
+			if (team == null) continue;
+			ControlPoint point = null;
+			for (ControlPoint candidate : controlPoints) {
+				if (candidate.centre().distance(plate.getLocation()) <= CONTROL_POINT_RADIUS) point = candidate;
+			}
+			if (point == null) {
+				point = new ControlPoint();
+				controlPoints.add(point);
+			}
+			point.plateByTeam.put(team.getId(), plate);
+		}
+		for (ControlPoint point : controlPoints) {
+			for (Map.Entry<Integer, Block> plate : point.plateByTeam.entrySet()) {
+				Block lamp = nearestBlock(plate.getValue().getLocation(), CONTROL_POINT_RADIUS, m -> m == Material.REDSTONE_LAMP);
+				if (lamp != null) point.lampByTeam.put(plate.getKey(), lamp);
+			}
+			showControlPoint(point);
+			plugin.getLogger().info(getGameName() + " " + getMapName() + ": control point at " + point.centre().toVector() + " with plates " + point.plateByTeam.keySet() + " and lamps " + point.lampByTeam.keySet());
+		}
+		for (Equip e : Equips) {
+			Location base = e.getTeamSpawnLocation();
+			List<Block> lamps = blocksBetween(base.getBlockX() - RADI_RÈTOLS, base.getBlockZ() - RADI_RÈTOLS, base.getBlockX() + RADI_RÈTOLS, base.getBlockZ() + RADI_RÈTOLS, m -> m == Material.REDSTONE_LAMP);
+			lamps.removeIf(l -> l.getLocation().distance(base) > RADI_RÈTOLS);
+			lamps.sort((l1, l2) -> Double.compare(l1.getLocation().distance(base), l2.getLocation().distance(base)));
+			lampsByTeam.put(e.getId(), lamps);
+			lightLamps(e);
+			plugin.getLogger().info(getGameName() + " " + getMapName() + ": base" + e.getId() + " has " + lamps.size() + " lamps");
+		}
+		if (controlPoints.isEmpty()) plugin.getLogger().warning(getGameName() + " " + getMapName() + ": no coloured plates between the bases; the bridge cannot be charged");
+	}
+
+	/** Every block of a kind in the box, at the map's play heights. */
+	private List<Block> blocksBetween(int minX, int minZ, int maxX, int maxZ, Predicate<Material> kind) {
+		List<Block> blocks = new ArrayList<>();
+		for (int x = minX; x <= maxX; x++) {
+			for (int z = minZ; z <= maxZ; z++) {
+				for (int y = SCAN_MIN_Y; y <= SCAN_MAX_Y; y++) {
+					Block block = world.getBlockAt(x, y, z);
+					if (kind.test(block.getType())) blocks.add(block);
+				}
+			}
+		}
+		return blocks;
+	}
+
+	private Block nearestBlock(Location centre, double radius, Predicate<Material> kind) {
+		Block nearest = null;
+		int r = (int) Math.ceil(radius);
+		for (int dx = -r; dx <= r; dx++) {
+			for (int dy = -r; dy <= r; dy++) {
+				for (int dz = -r; dz <= r; dz++) {
+					Block block = centre.getBlock().getRelative(dx, dy, dz);
+					if (!kind.test(block.getType()) || block.getLocation().distance(centre) > radius) continue;
+					if (nearest == null || block.getLocation().distance(centre) < nearest.getLocation().distance(centre)) nearest = block;
+				}
+			}
+		}
+		return nearest;
+	}
+
+	/** The team whose colour (wool, carpet, concrete, terracotta) rings the plate, if one does. */
+	private Equip teamOfColourAround(Block plate) {
+		Equip best = null;
+		int bestCount = 0;
+		for (Equip e : Equips) {
+			String prefix = e.getColor().name() + "_";
+			int count = 0;
+			for (int dx = -1; dx <= 1; dx++) {
+				for (int dz = -1; dz <= 1; dz++) {
+					if (dx == 0 && dz == 0) continue;
+					for (int dy = -1; dy <= 0; dy++) {
+						if (plate.getRelative(dx, dy, dz).getType().name().startsWith(prefix)) count++;
+					}
+				}
+			}
+			if (count > bestCount) {
+				best = e;
+				bestCount = count;
+			}
+		}
+		return best;
+	}
+
+	private ControlPoint controlPointOf(Block plate) {
+		for (ControlPoint point : controlPoints) if (point.teamOfPlate(plate) != null) return point;
+		return null;
+	}
+
+	private int pointsHeldBy(Equip team) {
+		int held = 0;
+		for (ControlPoint point : controlPoints) if (point.owner != null && point.owner == team.getId()) held++;
+		return held;
+	}
+
+	/**
+	 * Once a second: captures for whoever stands on their colour's plate, the pressed look
+	 * for whoever stepped off, and a bridge square per captured point every five seconds.
+	 */
+	private void tickControlPoints() {
+		if (!JocEnMarxa()) return;
+		for (Player p : getPlayers()) {
+			UUID id = p.getUniqueId();
+			Block feet = p.getLocation().getBlock();
+			ControlPoint point = controlPointOf(feet);
+			Block shown = shownPressedPlate.get(id);
+			if (point == null) {
+				if (shown != null) showPlateReleased(p, shown);
+				refusedOnPlate.remove(id);
+				continue;
+			}
+			if (!feet.equals(shown)) {
+				if (shown != null) showPlateReleased(p, shown);
+				showPlatePressed(p, feet);
+			}
+			Equip team = obtenirEquip(p);
+			if (team == null || team.getId() != point.teamOfPlate(feet)) {
+				if (refusedOnPlate.add(id)) rebutjarElementEnemic(p);
+				continue;
+			}
+			if (point.owner != null && point.owner == team.getId()) continue;
+			capture(point, team, p);
+		}
+		for (Equip e : Equips) {
+			int held = pointsHeldBy(e);
+			if (held == 0) continue;
+			int seconds = pointSecondsByTeam.merge(e.getId(), held, Integer::sum);
+			while (seconds >= SECONDS_PER_POINT_SQUARE) {
+				seconds -= SECONDS_PER_POINT_SQUARE;
+				carregarPont(e, 1);
+			}
+			pointSecondsByTeam.put(e.getId(), seconds);
+		}
+	}
+
+	private void capture(ControlPoint point, Equip team, Player captor) {
+		point.owner = team.getId();
+		showControlPoint(point);
+		donarOr(captor, GOLD_PER_CAPTURE);
+		sendGlobalMessage(ChatColor.GRAY + captor.getName() + " ha capturat el punt de control (" + team.getChatColor() + pointsHeldBy(team) + ChatColor.GRAY + "/" + controlPoints.size() + ")");
+		world.playSound(point.centre(), Sound.BLOCK_BEACON_POWER_SELECT, 1F, 1.2F);
+		for (Player p : team.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6F, 1.6F);
+	}
+
+	/** The lamp beside the owner's plate is lit, the other one dark. */
+	private void showControlPoint(ControlPoint point) {
+		for (Map.Entry<Integer, Block> lamp : point.lampByTeam.entrySet()) {
+			setLit(lamp.getValue(), point.owner != null && point.owner.equals(lamp.getKey()));
+		}
+	}
+
+	/** Shows the plate pressed to everyone near it and plays the click; the real block stays unpressed. */
+	private void showPlatePressed(Player p, Block plate) {
+		shownPressedPlate.put(p.getUniqueId(), plate);
+		BlockData pressed = plate.getBlockData().clone();
+		if (pressed instanceof Powerable powerable) powerable.setPowered(true);
+		for (Player viewer : world.getPlayers()) {
+			if (viewer.getLocation().distance(plate.getLocation()) <= PLATE_VIEW_DISTANCE) viewer.sendBlockChange(plate.getLocation(), pressed);
+		}
+		world.playSound(plate.getLocation(), Sound.BLOCK_STONE_PRESSURE_PLATE_CLICK_ON, 0.3F, 0.6F);
+	}
+
+	private void showPlateReleased(Player p, Block plate) {
+		shownPressedPlate.remove(p.getUniqueId());
+		for (Player viewer : world.getPlayers()) {
+			if (viewer.getLocation().distance(plate.getLocation()) <= PLATE_VIEW_DISTANCE) viewer.sendBlockChange(plate.getLocation(), plate.getBlockData());
+		}
+		world.playSound(plate.getLocation(), Sound.BLOCK_STONE_PRESSURE_PLATE_CLICK_OFF, 0.3F, 0.5F);
+	}
+
+	/** The base lamps mirror the bar: with six lamps one per square, otherwise proportionally. */
+	private void lightLamps(Equip e) {
+		List<Block> lamps = lampsByTeam.getOrDefault(e.getId(), List.of());
+		if (lamps.isEmpty()) return;
+		int lit = càrregaPont.getOrDefault(e.getId(), 0) * lamps.size() / PONT_CÀRREGA_MÀXIMA;
+		for (int i = 0; i < lamps.size(); i++) setLit(lamps.get(i), i < lit);
+	}
+
+	/** No physics, so the dormant wiring beside a lamp cannot switch it back. */
+	private static void setLit(Block lamp, boolean lit) {
+		if (!(lamp.getBlockData() instanceof Lightable lightable) || lightable.isLit() == lit) return;
+		lightable.setLit(lit);
+		lamp.setBlockData(lightable, false);
+	}
+
+	/** The 2013 currency dispensers hold gold nobody should reach: emptied at the start, refused on click and never fired. */
+	private void emptyDispensers() {
+		for (Equip e : Equips) {
+			Location base = e.getTeamSpawnLocation();
+			for (Block block : blocksBetween(base.getBlockX() - RADI_RÈTOLS, base.getBlockZ() - RADI_RÈTOLS, base.getBlockX() + RADI_RÈTOLS, base.getBlockZ() + RADI_RÈTOLS, m -> m == Material.DISPENSER || m == Material.DROPPER)) {
+				if (block.getState() instanceof Container container) container.getInventory().clear();
+			}
+		}
+	}
+
+	@Override
+	protected void onInventoryOpen(InventoryOpenEvent evt, Inventory inv) {
+		super.onInventoryOpen(evt, inv);
+		if (inv.getHolder() instanceof Dispenser || inv.getHolder() instanceof Dropper) evt.setCancelled(true);
+	}
+
+	@Override
+	protected void onBlockDispense(BlockDispenseEvent evt, Block blk) {
+		super.onBlockDispense(evt, blk);
+		evt.setCancelled(true);
 	}
 
 	//---------- Gold ----------
@@ -1277,7 +1559,6 @@ public class ObsidianDefenders extends JocEquips {
 			Or = 0;
 		} else {
 			if (!explotat) killer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 40, 3));
-			carregarPont(obtenirEquip(killer), PONT_CÀRREGA_PER_MORT);
 		}
 		Inventory inventory = killer.getInventory();
 		inventory.addItem(new ItemStack(Material.GOLD_NUGGET, Or));
@@ -1328,8 +1609,19 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected void onPlayerInteract(PlayerInteractEvent evt, Player plyr) {
 		super.onPlayerInteract(evt, plyr);
+		if (evt.getAction() == Action.PHYSICAL && evt.getClickedBlock() != null && controlPointOf(evt.getClickedBlock()) != null) {
+			// The plate never depresses, so the 2013 wiring behind it never runs; the press is shown and heard anyway.
+			evt.setCancelled(true);
+			if (JocEnMarxa() && !evt.getClickedBlock().equals(shownPressedPlate.get(plyr.getUniqueId()))) showPlatePressed(plyr, evt.getClickedBlock());
+			return;
+		}
 		if (evt.getAction() == Action.RIGHT_CLICK_BLOCK && evt.getClickedBlock() != null) {
 			Block clicat = evt.getClickedBlock();
+			if (clicat.getType() == Material.DISPENSER || clicat.getType() == Material.DROPPER) {
+				// The 2013 currency dispensers: never fired, never opened.
+				evt.setCancelled(true);
+				return;
+			}
 			if (Tag.BUTTONS.isTagged(clicat.getType()) || clicat.getType() == Material.LEVER) {
 				// The map's 2013 redstone stays dead: the plugin does what the signs promise.
 				evt.setCancelled(true);
