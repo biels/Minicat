@@ -20,6 +20,8 @@ import org.bukkit.block.Chest;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
@@ -177,6 +179,14 @@ public class Utils {
 		ply.setFoodLevel(20);
 		ply.setExhaustion(20);
 		ply.setFallDistance(0);
+		resetMovementAttributes(ply);
+	}
+	/** Gravity, fall damage and jump back to vanilla: a game that bends them hands the player back whole. */
+	public static void resetMovementAttributes(Player ply){
+		for(Attribute attribute : new Attribute[]{Attribute.GRAVITY, Attribute.FALL_DAMAGE_MULTIPLIER, Attribute.JUMP_STRENGTH}){
+			AttributeInstance instance = ply.getAttribute(attribute);
+			if(instance != null)instance.setBaseValue(instance.getDefaultValue());
+		}
 	}
 	public static void clearEffects(Player ply){
 		for(PotionEffect effect : ply.getActivePotionEffects()){

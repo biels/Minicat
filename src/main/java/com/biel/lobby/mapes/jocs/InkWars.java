@@ -2,6 +2,7 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
@@ -14,6 +15,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -62,12 +64,14 @@ public class InkWars extends JocEquips {
 	 * speed lost per tick with the keys against it (the brake); the share of speed kept per tick when coasting; how far the heading turns per tick;
 	 * and below this speed the heading simply snaps to the keys, so a standing squid sets off in any direction.
 	 */
-	static final double SQUID_TOP_SPEED = 0.55;
-	static final double SQUID_ACCELERATION = 0.02;
-	static final double SQUID_BRAKE = 0.035;
-	static final double SQUID_COAST = 0.985;
-	static final double SQUID_TURN_RATE = Math.toRadians(4.5);
+	static final double SQUID_TOP_SPEED = 0.85;
+	static final double SQUID_ACCELERATION = 0.03;
+	static final double SQUID_BRAKE = 0.03;
+	static final double SQUID_COAST = 0.992;
+	static final double SQUID_TURN_RATE = Math.toRadians(3.5);
 	static final double SQUID_CRAWL_SPEED = 0.06;
+	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. */
+	static final double INK_GRAVITY = 0.05;
 	static final double CLIMB_SPEED = 0.28;
 	/** Ink charge gained per block swum; a full charge is one surge. */
 	static final double CHARGE_PER_BLOCK = 0.09;
@@ -111,8 +115,9 @@ public class InkWars extends JocEquips {
 	protected void donarEfectesInicials(Player ply) {
 		// TODO Auto-generated method stub
 		super.donarEfectesInicials(ply);
-		double m = getBalancingMultiplier(obtenirEquip(ply));
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 3, true), true);
+		ply.getAttribute(Attribute.GRAVITY).setBaseValue(INK_GRAVITY);
+		ply.getAttribute(Attribute.FALL_DAMAGE_MULTIPLIER).setBaseValue(0);
 	}
 	@Override
 	public boolean getResetPlayerOnRespawn() {
@@ -626,8 +631,8 @@ public class InkWars extends JocEquips {
 		/** A surge waiting for the landing after the body left the ink in the air; negative when none. */
 		private double pendingSurge = -1;
 		private Vector flight = new Vector();
-		/** The barrier only this client sees in its head block, forcing the crawl pose while submerged on a floor. */
-		private Location fakeCeiling = null;
+		/** The barriers only this client sees at head height around it, forcing the crawl pose while submerged on a floor; a patch, so a step never uncovers the head for a tick. */
+		private final HashSet<Location> fakeCeiling = new HashSet<>();
 
 		public InkWarsPlayerInfo() {
 			super();
@@ -757,10 +762,7 @@ public class InkWars extends JocEquips {
 			return getTeamOwningBlock(beside) == team || getTeamOwningBlock(beside.getRelative(BlockFace.UP)) == team;
 		}
 		private BlockFace facingSide(){
-			Vector direction = getPlayer().getLocation().getDirection();
-			if(Math.abs(direction.getX()) < 0.05 && Math.abs(direction.getZ()) < 0.05)return null;
-			if(Math.abs(direction.getX()) > Math.abs(direction.getZ()))return direction.getX() > 0 ? BlockFace.EAST : BlockFace.WEST;
-			return direction.getZ() > 0 ? BlockFace.SOUTH : BlockFace.NORTH;
+			return sideOf(getPlayer().getLocation().getDirection());
 		}
 		/** Submerged: unseen, healing, a ripple in the team colour that thickens with speed, every block the body touches wet again, ink charging with the distance swum. */
 		private void tickSubmerged(EquipInkWars team, Vector moved){
@@ -792,12 +794,43 @@ public class InkWars extends JocEquips {
 				tickCrawlPose();
 			}
 		}
-		/** The squid on a floor runs on the cart model; the vertical velocity is left to gravity. */
+		/**
+		 * The squid on a floor runs on the cart model. The vertical velocity is what the client will do on its own next tick, read from what it just did,
+		 * so a jump is never overwritten by the server's stale idea of it. A wall that stops the body turns it back into a player and throws it off the wall.
+		 */
 		private void tickFloorSwim(Vector moved){
-			steer(moved);
 			Player p = getPlayer();
-			double fall = p.getVelocity().getY();
+			double observedSpeed = Math.sqrt(moved.getX() * moved.getX() + moved.getZ() * moved.getZ());
+			if(speed > 0.15 && observedSpeed < speed * 0.3 && deflectOffWall())return;
+			steer(moved);
+			double fall = (moved.getY() - INK_GRAVITY) * 0.98;
 			p.setVelocity(new Vector(momentum.getX(), fall, momentum.getZ()));
+		}
+		/**
+		 * The wall the heading ran into, if there is one: the body comes out of the ink as a player and keeps its speed along the wall while the part that went into
+		 * the wall comes back out of it, damped, along the wall's normal. Returns false when nothing solid is there to bounce off.
+		 */
+		private boolean deflectOffWall(){
+			Player p = getPlayer();
+			BlockFace side = sideOf(heading);
+			if(side == null)return false;
+			Block feet = p.getLocation().getBlock();
+			if(!solid.test(feet.getRelative(side)) && !solid.test(feet.getRelative(side).getRelative(BlockFace.UP)))return false;
+			Vector normal = side.getDirection().multiply(-1);
+			double intoWall = momentum.dot(normal); // negative: the momentum pointed into the wall
+			Vector alongWall = momentum.clone().subtract(normal.clone().multiply(intoWall));
+			Vector thrown = alongWall.multiply(0.9).add(normal.clone().multiply(-intoWall * 0.6));
+			swimForm = false;
+			p.setVelocity(new Vector(thrown.getX(), 0.15, thrown.getZ()));
+			setMomentum(new Vector());
+			p.playSound(p.getLocation(), Sound.BLOCK_SLIME_BLOCK_HIT, 1F, 0.8F);
+			PaperMessages.sendActionBar(p, ChatColor.GRAY + "Off the wall", 20);
+			return true;
+		}
+		private BlockFace sideOf(Vector direction){
+			if(Math.abs(direction.getX()) < 0.05 && Math.abs(direction.getZ()) < 0.05)return null;
+			if(Math.abs(direction.getX()) > Math.abs(direction.getZ()))return direction.getX() > 0 ? BlockFace.EAST : BlockFace.WEST;
+			return direction.getZ() > 0 ? BlockFace.SOUTH : BlockFace.NORTH;
 		}
 		/**
 		 * The cart. What the client moved beyond the momentum pushed last tick is the keys; only their direction counts.
@@ -812,7 +845,7 @@ public class InkWars extends JocEquips {
 			boolean pressing = keys.lengthSquared() > 0.0004;
 			if(pressing)keys.normalize();
 
-			if(speed > 0.1 && observedSpeed < speed * 0.3)speed *= 0.6; // stopped by something
+			if(speed > 0.1 && observedSpeed < speed * 0.3)speed *= 0.6; // stopped by something that is not a wall
 			if(!pressing){
 				speed *= SQUID_COAST;
 			}else if(speed < SQUID_CRAWL_SPEED){
@@ -866,23 +899,34 @@ public class InkWars extends JocEquips {
 		 */
 		private void tickCrawlPose(){
 			Player p = getPlayer();
-			Block head = p.getLocation().getBlock().getRelative(BlockFace.UP);
-			boolean wanted = p.getLocation().getPitch() > -30 && head.isPassable();
-			if(!wanted){
+			if(p.getLocation().getPitch() <= -30){
 				dropFakeCeiling();
 				return;
 			}
-			Location wantedAt = head.getLocation();
-			if(fakeCeiling != null && fakeCeiling.equals(wantedAt))return;
-			dropFakeCeiling();
-			p.sendBlockChange(wantedAt, Material.BARRIER.createBlockData());
-			fakeCeiling = wantedAt;
+			Block head = p.getLocation().getBlock().getRelative(BlockFace.UP);
+			HashSet<Location> wanted = new HashSet<>();
+			for(int dx = -1; dx <= 1; dx++){
+				for(int dz = -1; dz <= 1; dz++){
+					Block cell = head.getRelative(dx, 0, dz);
+					if(cell.isPassable())wanted.add(cell.getLocation());
+				}
+			}
+			for(Location gone : new ArrayList<>(fakeCeiling)){
+				if(wanted.contains(gone))continue;
+				p.sendBlockChange(gone, gone.getBlock().getBlockData());
+				fakeCeiling.remove(gone);
+			}
+			for(Location fresh : wanted){
+				if(fakeCeiling.add(fresh))p.sendBlockChange(fresh, Material.BARRIER.createBlockData());
+			}
 		}
 		private void dropFakeCeiling(){
-			if(fakeCeiling == null)return;
+			if(fakeCeiling.isEmpty())return;
 			Player p = getPlayer();
-			if(p != null && fakeCeiling.getWorld() == p.getWorld())p.sendBlockChange(fakeCeiling, fakeCeiling.getBlock().getBlockData());
-			fakeCeiling = null;
+			for(Location fake : fakeCeiling){
+				if(p != null && fake.getWorld() == p.getWorld())p.sendBlockChange(fake, fake.getBlock().getBlockData());
+			}
+			fakeCeiling.clear();
 		}
 		/** Own colour is fast, enemy colour is mud. Under the ink the squid carries itself, no potion. Refreshed every tick so they vanish the moment the ground changes. */
 		private void applyInkSpeed(boolean onOwnColour, boolean onEnemyColour){
