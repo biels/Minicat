@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.PaperMessages;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -416,12 +417,12 @@ public class GestorMapes implements Listener{
 		}
 		/** Sends the player into an instance once it exists, and tells them if it never does. */
 		void joinWhenCreated(CompletableFuture<Joc> creation, Player ply){
-			PaperMessages.sendActionBar(ply, ChatColor.YELLOW + "Creant una instància de " + nom + "...", 100);
+			PaperMessages.sendActionBar(ply, ChatColor.YELLOW + "Creant una instància " + Catalan.de(nom) + "...", 100);
 			ply.playSound(ply.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.4F);
 			creation.whenComplete((game, failure) -> {
 				if (!ply.isOnline()) return;
 				if (failure != null) {
-					ply.sendMessage(ChatColor.RED + "No s'ha pogut crear la instància de " + nom + ".");
+					ply.sendMessage(ChatColor.RED + "No s'ha pogut crear la instància " + Catalan.de(nom) + ".");
 					return;
 				}
 				if (!lobby.isOnLobby(ply)) {

@@ -13,6 +13,7 @@ import com.biel.BielAPI.ai.NearestTargetGoal;
 import com.biel.BielAPI.ai.WaypointWalkGoal;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
+import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.PaperMessages;
 
 /**
@@ -57,7 +58,7 @@ public final class LaneMinion extends Minion {
 		if (mob.getAttribute(Attribute.ATTACK_DAMAGE) == null) mob.registerAttribute(Attribute.ATTACK_DAMAGE);
 		mob.getAttribute(Attribute.ATTACK_DAMAGE).setBaseValue(kind.attackDamage());
 		mob.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(FOLLOW_RANGE);
-		String owned = ownerName() == null ? "" : " de " + ownerName();
+		String owned = ownerName() == null ? "" : " " + Catalan.de(ownerName());
 		mob.customName(PaperMessages.legacy(team().getChatColor() + kind.label() + owned));
 		mob.setCustomNameVisible(true);
 		return mob;

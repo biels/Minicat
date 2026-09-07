@@ -38,6 +38,7 @@ import org.bukkit.util.Vector;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.lobby.Com;
 import com.biel.lobby.mapes.JocTeamScoreRace;
+import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.HologramFacade;
 import com.biel.lobby.utilities.PaperMessages;
@@ -814,7 +815,7 @@ public class Arena4 extends JocTeamScoreRace {
 		}
 		Set<Equip> equips = equipsQuePaguen(comprador, m.moneda);
 		if (!gastarTint(p, equips, m.preu)) {
-			sendPlayerMessage(p, ChatColor.RED + "Et falten " + (m.preu - comptarTint(p, equips)) + " de " + nomDeLaMoneda(comprador, m.moneda)
+			sendPlayerMessage(p, ChatColor.RED + "Et falten " + (m.preu - comptarTint(p, equips)) + " " + Catalan.de(nomDeLaMoneda(comprador, m.moneda))
 					+ " per a " + m.nom.toLowerCase() + ".");
 			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
 			return;

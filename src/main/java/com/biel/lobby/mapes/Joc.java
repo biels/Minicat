@@ -47,6 +47,7 @@ import com.biel.BielAPI.events.EventUtils;
 import com.biel.lobby.Com;
 import com.biel.lobby.GestorMapes;
 import com.biel.lobby.lobby;
+import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.CBUtils;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.PaperMessages;
@@ -1099,7 +1100,7 @@ public abstract class Joc extends MapaResetejable {
                 if (anArray >= 110F) status = "està durant més del previst";
                 if (anArray >= 200F) status = "està durant el doble del previst";
                 if (anArray >= 210F) status = "durarà tota l'eterinitat";
-                Com.sendLobbyMessage(ChatColor.GRAY + "La partida de " + ChatColor.DARK_AQUA + getGameName() + ChatColor.GRAY + " " + status);
+                Com.sendLobbyMessage(ChatColor.GRAY + "La partida " + Catalan.de(ChatColor.DARK_AQUA + getGameName()) + ChatColor.GRAY + " " + status);
                 if (anArray >= 150) {
                     sendGlobalMessage("És possible que la partida s'hagi estancat. En aquest cas, feu /l i començeu-ne una de nova.");
                 }

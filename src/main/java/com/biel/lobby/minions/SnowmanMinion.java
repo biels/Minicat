@@ -29,6 +29,7 @@ import com.biel.BielAPI.ai.WaypointWalkGoal;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
+import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.PaperMessages;
 
@@ -173,7 +174,7 @@ public final class SnowmanMinion extends Minion {
 		golem.setHealth(kind.maxHealth);
 		golem.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(FOLLOW_RANGE);
 		golem.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, PotionEffect.INFINITE_DURATION, 0, true, false));
-		golem.customName(PaperMessages.legacy(team().getChatColor() + (hero ? "Superninot de " : "Ninot de ") + kind.label + " de " + ownerName()));
+		golem.customName(PaperMessages.legacy(team().getChatColor() + (hero ? "Superninot de " : "Ninot de ") + kind.label + " " + Catalan.de(ownerName())));
 		golem.setCustomNameVisible(true);
 		golem.setGlowing(hero);
 		if (hero) {

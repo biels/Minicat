@@ -21,6 +21,7 @@ import com.biel.lobby.mapes.MapaResetejable;
 import com.biel.lobby.mapes.TemplateImport;
 import com.biel.lobby.mapes.jocs.RainbowClay;
 import com.biel.lobby.agent.AgentSnapshotHttpServer;
+import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.HologramFacade;
 import com.biel.lobby.utilities.Options;
@@ -149,7 +150,7 @@ public final class lobby extends JavaPlugin {
 				sender.sendMessage(ChatColor.RED + "No hi ha cap joc anomenat " + args[0] + ".");
 				return true;
 			}
-			sender.sendMessage(ChatColor.GRAY + "Creant la instància de " + args[0] + "...");
+			sender.sendMessage(ChatColor.GRAY + "Creant la instància " + Catalan.de(args[0]) + "...");
 			creation.whenComplete((createdGame, failure) -> {
 				if(failure != null){
 					sender.sendMessage(ChatColor.RED + "No s'ha pogut crear el joc " + args[0] + ": " + failure.getMessage());

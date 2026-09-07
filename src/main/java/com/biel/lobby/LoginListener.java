@@ -19,6 +19,7 @@ import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
 import com.biel.lobby.mapes.Joc;
+import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.PlayerTagState;
 
@@ -50,9 +51,9 @@ public class LoginListener implements Listener {
 		if (previous != null) {
 			Joc.Seat seat = previous.seatOf(player.getUniqueId());
 			if (previous.getGameState() == Joc.GameState.Complete) {
-				player.sendMessage(ChatColor.GRAY + "La partida de " + previous.getGameName() + " ha acabat mentre eres fora.");
+				player.sendMessage(ChatColor.GRAY + "La partida " + Catalan.de(previous.getGameName()) + " ha acabat mentre eres fora.");
 			} else if (seat.getState() == Joc.Seat.State.VACANT) {
-				player.sendMessage(ChatColor.GRAY + "Vas abandonar la partida de " + previous.getGameName() + ".");
+				player.sendMessage(ChatColor.GRAY + "Vas abandonar la partida " + Catalan.de(previous.getGameName()) + ".");
 			}
 		}
 		
