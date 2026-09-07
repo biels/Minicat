@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/JocTeamScoreRace.java
+  s_9f54f79b43c50d::t_2a8fb9b4bed02a 20-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "96120d2efe99a08e7a9132f83374bcd9788102f1",
+  "prompts": {},
+  "sessions": {
+    "s_9f54f79b43c50d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "93a49d3e-f400-48cf-9e8d-60a529c7ee0d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
