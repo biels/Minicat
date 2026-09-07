@@ -49,16 +49,21 @@ import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.WitherSkeleton;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -146,6 +151,16 @@ public class ObsidianDefenders extends JocEquips {
 	 */
 	private static final int SUDDEN_DEATH_SECOND = 15 * 60;
 	private static final int SUDDEN_DEATH_WARNING_SECONDS = 60;
+	/** The dead wait as spectators (JoniMega, 2026-09-07: "apareixes més ràpid del que puc picar"): this long at the start, growing with the match, capped. */
+	private static final int RESPAWN_WAIT_BASE_SECONDS = 3;
+	private static final int RESPAWN_WAIT_MINUTES_PER_EXTRA_SECOND = 2;
+	private static final int RESPAWN_WAIT_MAX_SECONDS = 12;
+	/** A snowman within this distance of a control point its team does not hold leaves the lane for that point's plate. */
+	private static final double SNOWMAN_POST_RADIUS = 14;
+	/** The one-shot hint about the breach shows within this distance of an enemy core. */
+	private static final double VAULT_HINT_DISTANCE = 7;
+	/** The map scans are checked again this long after the start, since a fast recreate once returned base0 without its bridge sign or lamps. */
+	private static final long REGISTRATION_CHECK_TICKS = 60;
 	/** Each death to a wither skeleton costs this much max health on respawn, down to the floor. */
 	private static final double WITHER_DEATH_MAX_HEALTH_LOSS = 2;
 	private static final double MIN_MAX_HEALTH = 4;
@@ -213,11 +228,15 @@ public class ObsidianDefenders extends JocEquips {
 	/** Quartz in the thrower's inventory makes the new snowman fire a third faster, as in 2013. */
 	private static final double SNOWMAN_QUARTZ_COOLDOWN_FACTOR = 2.0 / 3;
 	/**
-	 * Snowballs (Biel, 2026-09-07: effects, not damage): a neu snowman slows this long per
-	 * hit, a magma one burns this long; every snowman arms its cage after this many hits on
-	 * players, and the next hit shuts its victim in ice for this long.
+	 * Snowballs (Biel, 2026-09-07 night, after playing: "should not slow, a bit more damage,
+	 * more knockback, then after a few hits the ice cage"): this much damage and a shove of
+	 * this strength per hit, a magma one burns this long on top; every snowman arms its
+	 * cage after this many hits on players, and the next hit shuts its victim in ice for
+	 * this long.
 	 */
-	private static final int SNOWBALL_SLOWNESS_TICKS = 80;
+	private static final double SNOWBALL_DAMAGE = 2;
+	private static final double SNOWBALL_KNOCKBACK = 0.55;
+	private static final double SNOWBALL_KNOCKBACK_LIFT = 0.25;
 	private static final int SNOWBALL_FIRE_TICKS = 60;
 	private static final int SNOWMAN_HITS_TO_ARM_CAGE = 3;
 	private static final int ICE_CAGE_TICKS = 60;
@@ -420,7 +439,7 @@ public class ObsidianDefenders extends JocEquips {
 		ESTRELLA_DE_FOC(Material.FIREWORK_STAR, "Estrella de foc", "Amb ella a l'inventari, una fletxa disparada", "des de dalt explota en caure."),
 		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma", "Clic dret: crema tot l'equip enemic 3 s."),
 		MARAGDA(Material.EMERALD, "Maragda", "Clic dret: +1 cor a tot el teu equip."),
-		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí cap a la base enemiga.", "Alenteix; amb el cap de gel, el proper cop", "tanca l'enemic en gel " + ICE_CAGE_TICKS / 20 + " s (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots).", "Si el teu equip ha matat el Guardià, crema."),
+		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí i pren els punts de control.", "Empeny; amb el cap de gel, el proper cop", "tanca l'enemic en gel " + ICE_CAGE_TICKS / 20 + " s (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots).", "Si el teu equip ha matat el Guardià, crema."),
 		BOLA_DE_NEU_ENCANTADA(Material.SNOWBALL, true, "Bola de neu encantada", "Llança-la: apareix un superninot, que fa", "tot el que fa un ninot amb molt més abast", "i dispara x3 el primer minut, x2 després."),
 		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender", "Llança-la per teletransportar-te on caigui."),
 		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or", "A l'inventari: fletxes explosives un 20 % més fortes."),
@@ -588,6 +607,8 @@ public class ObsidianDefenders extends JocEquips {
 		registrarTaulesDEncantar();
 		registrarPonts();
 		registerControlPointsAndLamps();
+		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
+		Bukkit.getPluginManager().registerEvents(plateGuard, plugin);
 		emptyDispensers();
 		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
 		scheduleGameplayRepeatingTask(this::tickControlPoints, 20, 20);
@@ -965,27 +986,13 @@ public class ObsidianDefenders extends JocEquips {
 		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.EXPERIENCE_BOTTLE, Utils.NombreEntre(1, 3)));
 		if (Utils.Possibilitat(5)) loot.add(new ItemStack(Material.ENDER_PEARL));
 		if (Utils.Possibilitat(NETHER_STAR_CHEST_CHANCE)) loot.add(new ItemStack(Material.NETHER_STAR));
-		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.BOOK));
+		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.ARROW, 4));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.GOLDEN_SWORD));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.IRON_SWORD));
-		if (Utils.Possibilitat(15)) loot.add(llibreEncantatAleatori());
+		// No anvil on the map and the tables sell enchantments, so no books (JoniMega, 2026-09-07): nuggets instead.
+		if (Utils.Possibilitat(15)) loot.add(new ItemStack(Material.GOLD_NUGGET, 3));
 		loot.replaceAll(Objecte::descriure);
 		return loot;
-	}
-
-	private ItemStack llibreEncantatAleatori() {
-		Registry<Enchantment> registre = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
-		List<Enchantment> encantaments = registre.stream().toList();
-		Enchantment ench = encantaments.get(Utils.NombreEntre(0, encantaments.size() - 1));
-		if (Utils.Possibilitat(5)) ench = Enchantment.PROTECTION;
-		if (Utils.Possibilitat(5)) ench = Enchantment.SHARPNESS;
-		if (Utils.Possibilitat(5)) ench = Enchantment.POWER;
-		ItemStack llibre = new ItemStack(Material.ENCHANTED_BOOK);
-		if (llibre.getItemMeta() instanceof EnchantmentStorageMeta meta) {
-			meta.addStoredEnchant(ench, Utils.NombreEntre(3, 4), true);
-			llibre.setItemMeta(meta);
-		}
-		return llibre;
 	}
 
 	/** One nugget per cycle, more for holding a gold block or the gold pickaxe, and a bonus for both. */
@@ -1447,6 +1454,31 @@ public class ObsidianDefenders extends JocEquips {
 		}
 	}
 
+	/** A snowman posted on a plate would depress it for real: the 2013 wiring stays dormant for minions as it does for players. */
+	private final Listener plateGuard = new Listener() {
+		@EventHandler
+		public void onEntityInteract(EntityInteractEvent evt) {
+			if (world == null || evt.getBlock().getWorld() != world || minionOf(evt.getEntity()) == null) return;
+			if (Tag.PRESSURE_PLATES.isTagged(evt.getBlock().getType())) evt.setCancelled(true);
+		}
+	};
+
+	/**
+	 * Three seconds after the start, what the scans should have found is checked once
+	 * more: the instance recreated at 23:12 on 2026-09-07, 35 s after one of the same name
+	 * was deleted, found no bridge sign and no lamps for base0 while base1 was whole.
+	 */
+	private void verifyRegistrations() {
+		if (!JocEnMarxa()) return;
+		List<String> missing = new ArrayList<>();
+		for (Equip e : Equips) if (!rètolsPont.containsKey(e.getId())) missing.add("bridge sign of base" + e.getId());
+		if (controlPoints.isEmpty()) missing.add("control points");
+		if (missing.isEmpty()) return;
+		plugin.getLogger().warning(getGameName() + " " + getMapName() + ": " + missing + " missing " + REGISTRATION_CHECK_TICKS / 20 + " s after the start; scanning again");
+		if (missing.stream().anyMatch(m -> m.startsWith("bridge sign"))) registrarControlsIParades();
+		registerControlPointsAndLamps();
+	}
+
 	private final List<Block> boothSigns = new ArrayList<>();
 	private final List<Sign> unusedSigns = new ArrayList<>();
 
@@ -1568,6 +1600,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	public void clearExternals() {
+		HandlerList.unregisterAll(plateGuard);
 		apagarAuraDelGuardià();
 		for (UUID id : botiguers.keySet()) {
 			Entity botiguer = Bukkit.getEntity(id);
@@ -1750,6 +1783,16 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			for (Block botó : botonsPont.keySet()) if (aProp(at, botó)) hint(p, "botó", "Botó del pont: amb la barra plena, prem-lo per desplegar el pont sobre el fossat enemic.");
 			for (Block detonator : teamByDetonator.keySet()) if (aProp(at, detonator)) hint(p, "detonador", "Detonador: si un enemic el trepitja, la TNT de la base explota.");
+			Equip team = obtenirEquip(p);
+			if (team == null) continue;
+			for (Equip enemy : Equips) {
+				if (enemy == team) continue;
+				for (Vector core : nuclisPerEquip.getOrDefault(enemy.getId(), Set.of())) {
+					if (core.toLocation(world).add(0.5, 0.5, 0.5).distance(at) > VAULT_HINT_DISTANCE) continue;
+					hint(p, "cambra", "La cambra enemiga: trenca un bloc de l'anell d'obsidiana amb el pic de diamant i trepitja el detonador que hi apareix.");
+					break;
+				}
+			}
 		}
 	}
 
@@ -2099,6 +2142,17 @@ public class ObsidianDefenders extends JocEquips {
 				continue;
 			}
 			standing.computeIfAbsent(point, k -> new HashMap<>()).putIfAbsent(team.getId(), p);
+		}
+		// A snowman standing on its team's plate captures and holds like a player; the credit is its owner's.
+		for (Equip e : Equips) {
+			for (Minion minion : minionsOf(e)) {
+				if (!(minion instanceof SnowmanMinion snowman) || snowman.mob() == null) continue;
+				Block feet = snowman.mob().getLocation().getBlock();
+				ControlPoint point = controlPointOf(feet);
+				if (point == null || !Integer.valueOf(e.getId()).equals(point.teamOfPlate(feet))) continue;
+				Player owner = snowman.owner();
+				if (owner != null) standing.computeIfAbsent(point, k -> new HashMap<>()).putIfAbsent(e.getId(), owner);
+			}
 		}
 		for (ControlPoint point : controlPoints) channel(point, standing.getOrDefault(point, Map.of()));
 		for (Equip e : Equips) {
@@ -2612,11 +2666,7 @@ public class ObsidianDefenders extends JocEquips {
 	private void throwSnowman(Player thrower, ProjectileHitEvent evt, Location impact) {
 		Equip team = obtenirEquip(thrower);
 		if (!JocEnMarxa() || team == null) return;
-		Location spot = snowmanSpotNear(evt, impact);
-		if (spot == null) {
-			thrower.sendMessage(ChatColor.GRAY + "La bola de neu s'ha fos.");
-			return;
-		}
+		Location spot = snowmanSpotNear(evt, impact, thrower);
 		List<Minion> mine = new ArrayList<>();
 		for (Minion minion : minionsOf(thrower)) if (minion instanceof SnowmanMinion) mine.add(minion);
 		mine.sort((a, b) -> Integer.compare(a.bornAtSecond(), b.bornAtSecond()));
@@ -2632,7 +2682,7 @@ public class ObsidianDefenders extends JocEquips {
 		SnowmanKind kind = team == guardianSlayerTeam ? SnowmanKind.MAGMA : SnowmanKind.NEU;
 		boolean hero = evt.getEntity() instanceof Snowball ball && Objecte.de(ball.getItem()) == Objecte.BOLA_DE_NEU_ENCANTADA;
 		int cooldown = thrower.getInventory().contains(Material.QUARTZ) ? (int) Math.round(kind.cooldownTicks * SNOWMAN_QUARTZ_COOLDOWN_FACTOR) : kind.cooldownTicks;
-		SnowmanMinion snowman = new SnowmanMinion(this, team, thrower, kind, cooldown, hero, snowmanLane(team), this::snowballHit);
+		SnowmanMinion snowman = new SnowmanMinion(this, team, thrower, kind, cooldown, hero, snowmanLane(team), this::snowballHit, this::snowmanPost);
 		enlist(snowman, spot);
 		world.playSound(spot, Sound.ENTITY_SNOW_GOLEM_AMBIENT, 1F, 1F);
 		world.playSound(spot, kind == SnowmanKind.MAGMA ? Sound.BLOCK_FIRE_AMBIENT : Sound.BLOCK_SNOW_PLACE, 1F, 1F);
@@ -2641,6 +2691,24 @@ public class ObsidianDefenders extends JocEquips {
 			world.spawnParticle(Particle.END_ROD, spot.clone().add(0, 1, 0), 40, 0.4, 0.8, 0.4, 0.08);
 		}
 		PaperMessages.sendActionBar(thrower, ChatColor.WHITE + (hero ? "Superninot de " : "Ninot de ") + kind.label + " " + (mine.size() + 1) + "/" + MAX_SNOWMEN_PER_PLAYER, 60);
+	}
+
+	/**
+	 * A snowman passing a control point its team does not hold leaves the lane for the
+	 * team's plate there, captures it like a player and stands guard (Biel, 2026-09-07
+	 * night: "snowmen felt useless"; minions matter when they push objectives).
+	 */
+	private Location snowmanPost(SnowmanMinion snowman) {
+		Mob body = snowman.mob();
+		if (body == null) return null;
+		int team = snowman.team().getId();
+		for (ControlPoint point : controlPoints) {
+			if (point.owner != null && point.owner == team) continue;
+			if (point.centre().distance(body.getLocation()) > SNOWMAN_POST_RADIUS) continue;
+			Block plate = point.plateByTeam.get(team);
+			if (plate != null) return plate.getLocation().add(0.5, 0, 0.5);
+		}
+		return null;
 	}
 
 	/**
@@ -2655,20 +2723,39 @@ public class ObsidianDefenders extends JocEquips {
 		return Lane.of(waypoints);
 	}
 
-	/** The block the snowball stopped against, then the impact block and its neighbours: the first one a golem can stand in. */
-	private static Location snowmanSpotNear(ProjectileHitEvent evt, Location impact) {
+	/**
+	 * The block the snowball stopped against, then the impact block and rings around it,
+	 * then the thrower's own feet: a thrown ball always makes a snowman (Biel, 2026-09-07
+	 * night: "s'ha fos should not happen").
+	 */
+	private static Location snowmanSpotNear(ProjectileHitEvent evt, Location impact, Player thrower) {
 		if (evt.getHitBlock() != null && evt.getHitBlockFace() != null) {
 			Block beside = evt.getHitBlock().getRelative(evt.getHitBlockFace());
 			if (canStandIn(beside)) return beside.getLocation().add(0.5, 0, 0.5);
 		}
-		return standingSpotNear(impact);
+		Location spot = standingSpotNear(impact);
+		if (spot == null) spot = standingSpotNear(thrower.getLocation());
+		return spot != null ? spot : thrower.getLocation();
 	}
 
-	/** The block at the location and its neighbours above and below, the first one a mob can stand in; null when none. */
+	private static final int STANDING_SPOT_SEARCH_RADIUS = 4;
+	private static final int STANDING_SPOT_SEARCH_HEIGHT = 3;
+
+	/** The nearest block around the location a mob can stand in, searched in growing rings up to the radius and a few blocks up and down; null when none. */
 	private static Location standingSpotNear(Location around) {
-		Block block = around.getBlock();
-		for (Block candidate : List.of(block, block.getRelative(BlockFace.UP), block.getRelative(BlockFace.DOWN), block.getRelative(0, 2, 0))) {
-			if (canStandIn(candidate)) return candidate.getLocation().add(0.5, 0, 0.5);
+		Block centre = around.getBlock();
+		for (int ring = 0; ring <= STANDING_SPOT_SEARCH_RADIUS; ring++) {
+			for (int dy = 0; dy <= STANDING_SPOT_SEARCH_HEIGHT; dy++) {
+				for (int sign : dy == 0 ? new int[] {1} : new int[] {1, -1}) {
+					for (int dx = -ring; dx <= ring; dx++) {
+						for (int dz = -ring; dz <= ring; dz++) {
+							if (Math.max(Math.abs(dx), Math.abs(dz)) != ring) continue;
+							Block candidate = centre.getRelative(dx, dy * sign, dz);
+							if (canStandIn(candidate)) return candidate.getLocation().add(0.5, 0, 0.5);
+						}
+					}
+				}
+			}
 		}
 		return null;
 	}
@@ -2690,7 +2777,7 @@ public class ObsidianDefenders extends JocEquips {
 	 * here).
 	 */
 	private void snowballHit(SnowmanMinion snowman, EntityDamageByEntityEvent evt, Player victim) {
-		evt.setDamage(1);
+		evt.setDamage(SNOWBALL_DAMAGE);
 		int now = segonsTranscorreguts();
 		boolean inGrace = iceCageGraceUntil.getOrDefault(victim.getUniqueId(), 0) > now;
 		if (snowman.cageArmed() && !inGrace) {
@@ -2699,16 +2786,24 @@ public class ObsidianDefenders extends JocEquips {
 			iceCageGraceUntil.put(victim.getUniqueId(), now + ICE_CAGE_TICKS / 20 + ICE_CAGE_GRACE_SECONDS);
 			PaperMessages.sendActionBar(victim, ChatColor.AQUA + "Congelat!", 40);
 		} else {
-			switch (snowman.kind()) {
-				case NEU -> victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, SNOWBALL_SLOWNESS_TICKS, 0, true, true));
-				case MAGMA -> {
-					victim.setFireTicks(Math.max(victim.getFireTicks(), SNOWBALL_FIRE_TICKS));
-					world.playSound(victim.getLocation(), Sound.ENTITY_GENERIC_BURN, 0.6F, 1.2F);
-				}
+			shove(snowman, victim);
+			if (snowman.kind() == SnowmanKind.MAGMA) {
+				victim.setFireTicks(Math.max(victim.getFireTicks(), SNOWBALL_FIRE_TICKS));
+				world.playSound(victim.getLocation(), Sound.ENTITY_GENERIC_BURN, 0.6F, 1.2F);
 			}
 			if (!inGrace) snowman.chargeCage(SNOWMAN_HITS_TO_ARM_CAGE);
 		}
 		segonsÚltimCopRebut.put(victim.getUniqueId(), now);
+	}
+
+	/** The snowball's own knockback is small; the snowman pushes its victim away from itself, a little upward, on the next tick so it lands after vanilla's. */
+	private void shove(SnowmanMinion snowman, Player victim) {
+		Mob body = snowman.mob();
+		if (body == null) return;
+		Vector away = victim.getLocation().toVector().subtract(body.getLocation().toVector()).setY(0);
+		if (away.lengthSquared() < 0.01) return;
+		Vector push = away.normalize().multiply(SNOWBALL_KNOCKBACK).setY(SNOWBALL_KNOCKBACK_LIFT);
+		scheduleGameplayTask(() -> { if (victim.isOnline() && !victim.isDead()) victim.setVelocity(victim.getVelocity().add(push)); }, 1);
 	}
 
 	/** The minion that landed the killing hit, by its body or by its projectile, if one did. */
@@ -2794,6 +2889,12 @@ public class ObsidianDefenders extends JocEquips {
 		}
 		sendGlobalMessage(ChatColor.DARK_RED + "Mort sobtada: " + ChatColor.WHITE + "tothom a 1 cor. A partir d'ara cada kill aixeca un esquelet wither al costat del mort, que marxa cap a la base enemiga i lluita per qui l'ha aixecat; morir per un esquelet costa 1 cor de vida màxima.");
 		updateScoreBoards();
+	}
+
+	/** Three seconds at the start, one more every two minutes, twelve at most: at minute fifteen the dead wait long enough for a breach. */
+	@Override
+	protected int respawnWaitSeconds(Player p) {
+		return Math.min(RESPAWN_WAIT_MAX_SECONDS, RESPAWN_WAIT_BASE_SECONDS + segonsTranscorreguts() / 60 / RESPAWN_WAIT_MINUTES_PER_EXTRA_SECOND);
 	}
 
 	/** A player who died to a wither skeleton comes back with less: one heart of max health per such death, never below two. */

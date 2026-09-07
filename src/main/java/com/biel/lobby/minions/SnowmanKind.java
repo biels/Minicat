@@ -12,8 +12,8 @@ import org.bukkit.Material;
  * {@link SnowmanMinion#chargeCage}.
  */
 public enum SnowmanKind {
-	NEU("neu", null, 8, 20),
-	MAGMA("magma", Material.MAGMA_BLOCK, 8, 30);
+	NEU("neu", null, 12, 20),
+	MAGMA("magma", Material.MAGMA_BLOCK, 12, 30);
 
 	/** Player-facing word, as in "Ninot de magma". */
 	public final String label;

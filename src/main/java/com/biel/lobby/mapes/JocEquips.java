@@ -8,6 +8,9 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
@@ -23,6 +26,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -38,6 +42,7 @@ import org.bukkit.util.Vector;
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.BielAPI.Utils.RecallUtils;
+import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.Com;
 import com.biel.lobby.minions.Minion;
 import com.biel.lobby.utilities.ColorConverter;
@@ -737,8 +742,80 @@ public abstract class JocEquips extends Joc {
 		for (Minion minion : new ArrayList<>(minions)) minion.tick();
 	}
 
+	//---------- Death timer: the dead wait as spectators (Biel, 2026-09-07 night: "that should be the standard in all death timers") ----------
+
+	/** Seconds a player waits, as a spectator at the team spawn, before coming back; zero respawns at once. Games override. */
+	protected int respawnWaitSeconds(Player p) {
+		return 0;
+	}
+
+	/** The wait is over: the player stands at the team spawn, alive and immune until they move. */
+	protected void onRespawnWaitOver(Player p) {
+	}
+
+	private final Map<UUID, Integer> respawnWaitTasks = new HashMap<>();
+
+	@Override
+	protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {
+		super.onPlayerRespawnAfterTick(evt, p);
+		int wait = respawnWaitSeconds(p);
+		if (wait <= 0 || isSpectator(p)) return;
+		beginRespawnWait(p, wait);
+	}
+
+	private void beginRespawnWait(Player p, int seconds) {
+		cancelRespawnWait(p, false);
+		Equip team = obtenirEquip(p);
+		Location spawn = team != null ? team.getTeamSpawnLocation() : p.getLocation();
+		p.setGameMode(GameMode.SPECTATOR);
+		p.teleport(spawn.clone().add(0, 2, 0));
+		int[] left = {seconds};
+		int[] task = new int[1];
+		task[0] = scheduleGameplayRepeatingTask(() -> {
+			if (!p.isOnline() || !JocEnMarxa()) {
+				Bukkit.getScheduler().cancelTask(task[0]);
+				respawnWaitTasks.remove(p.getUniqueId());
+				return;
+			}
+			if (left[0] > 0) {
+				PaperMessages.showTitle(p, 0, 25, 5, ChatColor.RED + "Has mort", ChatColor.GRAY + "Tornes en " + left[0] + " s");
+				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.6F, 0.8F);
+				left[0]--;
+				return;
+			}
+			Bukkit.getScheduler().cancelTask(task[0]);
+			respawnWaitTasks.remove(p.getUniqueId());
+			p.setGameMode(GameMode.SURVIVAL);
+			p.teleport(spawn);
+			getPlayerInfo(p).setImmune(true);
+			PaperMessages.showTitle(p, 0, 15, 10, "", ChatColor.GREEN + "Endavant!");
+			p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7F, 1.4F);
+			onRespawnWaitOver(p);
+		}, 0, 20);
+		respawnWaitTasks.put(p.getUniqueId(), task[0]);
+	}
+
+	/** Ends a wait early, on leaving or at the end of the match; back to survival so the lobby receives a normal player. */
+	private void cancelRespawnWait(Player p, boolean restore) {
+		Integer task = respawnWaitTasks.remove(p.getUniqueId());
+		if (task == null) return;
+		Bukkit.getScheduler().cancelTask(task);
+		if (restore && p.getGameMode() == GameMode.SPECTATOR) p.setGameMode(GameMode.SURVIVAL);
+	}
+
+	@Override
+	protected void customLeave(Player ply, List<String> attatchments) {
+		cancelRespawnWait(ply, true);
+		super.customLeave(ply, attatchments);
+	}
+
 	@Override
 	public void clearExternals() {
+		for (UUID id : new ArrayList<>(respawnWaitTasks.keySet())) {
+			Player waiting = Bukkit.getPlayer(id);
+			if (waiting != null) cancelRespawnWait(waiting, true);
+			else respawnWaitTasks.remove(id);
+		}
 		for (Minion minion : minions) minion.remove();
 		minions.clear();
 		super.clearExternals();
