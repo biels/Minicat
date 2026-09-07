@@ -113,8 +113,10 @@ public class ObsidianDefenders extends JocEquips {
 	private static final double RADI_AURA_GUARDIÀ = 1.2;
 	private static final long AURA_GUARDIÀ_PERIODE_TICKS = 5;
 	private static final double FRACCIÓ_VIDA_ENFURISMAT = 0.3;
-	/** Players this close to the Guardian see its boss bar: the hut, the canal, the sewers and the deck above. */
-	private static final double DISTÀNCIA_BARRA_GUARDIÀ = 24;
+	/** Players this close to the Guardian see its boss bar: the hut and the canal in front of it, not the deck above. */
+	private static final double DISTÀNCIA_BARRA_GUARDIÀ = 12;
+	/** The scoreboard countdown to the Guardian's return moves in steps of this many seconds, so the sidebar does not tick. */
+	private static final int GUARDIAN_COUNTDOWN_STEP_SECONDS = 15;
 	/** The beam over the lair starts on the deck block above the Golem property (nine blocks up on the 2013 map) and rises this far. */
 	private static final int FEIX_GUARDIÀ_BASE = 9;
 	private static final int FEIX_GUARDIÀ_ALÇADA = 10;
@@ -152,6 +154,7 @@ public class ObsidianDefenders extends JocEquips {
 	private boolean guardiàAnunciat = false;
 	/** Game second at which the Guardian (re)appears; read only while it is dead. */
 	private int guardiàTornaAlSegon = 0;
+	private String lastGuardianCountdownShown = "";
 	private boolean primerPicAnunciat = false;
 	/** Team id → bridge charge, 0..PONT_CÀRREGA_MÀXIMA. */
 	private final Map<Integer, Integer> càrregaPont = new HashMap<>();
@@ -681,7 +684,8 @@ public class ObsidianDefenders extends JocEquips {
 	private void presènciaDelGuardià() {
 		IronGolem golem = guardiàViu();
 		if (golem == null) {
-			if (guardiàTornaAlSegon > segonsTranscorreguts()) updateScoreBoards();
+			// The sidebar is refreshed only when the coarse countdown changes.
+			if (guardiàTornaAlSegon > segonsTranscorreguts() && !estatGuardià().equals(lastGuardianCountdownShown)) updateScoreBoards();
 			return;
 		}
 		BossBar barra = barraGuardià();
@@ -711,6 +715,8 @@ public class ObsidianDefenders extends JocEquips {
 		if (guardiàViu() != null) return "viu";
 		int segons = guardiàTornaAlSegon - segonsTranscorreguts();
 		if (segons <= 0) return "arriba";
+		int step = GUARDIAN_COUNTDOWN_STEP_SECONDS;
+		segons = (segons + step - 1) / step * step;
 		return String.format("%d:%02d", segons / 60, segons % 60);
 	}
 
@@ -1906,15 +1912,15 @@ public class ObsidianDefenders extends JocEquips {
 			list.add(ChatColor.GREEN + "Kills: " + pPlayer(ply).ObtenirPropietatInt("Assassinats"));
 			list.add(ChatColor.RED + "Morts: " + pPlayer(ply).ObtenirPropietatInt("Morts"));
 			list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
-			if (pMapaActual().ExisteixPropietat("Golem")) list.add(ChatColor.AQUA + "Guardià: " + estatGuardià());
+			if (pMapaActual().ExisteixPropietat("Golem")) {
+				// Aqua only while it lives; grey and coarse while it is dead, so the line does not pull the eye.
+				String estat = estatGuardià();
+				lastGuardianCountdownShown = estat;
+				list.add((guardiàViu() != null ? ChatColor.AQUA : ChatColor.GRAY) + "Guardià: " + estat);
+			}
 			Equip equip = obtenirEquip(ply);
 			if (equip != null) list.add(etiquetaPont(equip, "Pont: ") + barraPont(equip));
-			if (Ability.hasAbility(plugin, this, ply, AbilityType.ESPADATXI)) {
-				list.add(ChatColor.BLUE + "Espadatxí: " + pPlayer(ply).ObtenirPropietatInt("StrongHitCount"));
-			}
-			if (Ability.hasAbility(plugin, this, ply, AbilityType.ARQUER_DE_GEL)) {
-				list.add(ChatColor.BLUE + "Arquer de gel: " + pPlayer(ply).ObtenirPropietatInt("StrongBowHitCount"));
-			}
+			// The 2015 ability counters are not shown: that layer is dead code until it is rebuilt on the skill pool.
 			ScoreBoardUpdater.setScoreBoard(ply, "Estadístiques", list, null);
 		}
 	}
