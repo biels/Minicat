@@ -1776,7 +1776,7 @@ public class ObsidianDefenders extends JocEquips {
 		List<Encantament> ofertes = new ArrayList<>();
 		for (Encantament encantament : Encantament.values()) if (encantament.nivellSegüent(forja, item) > 0) ofertes.add(encantament);
 		if (ofertes.isEmpty()) {
-			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			playEnchantRefused(p);
 			boolean resEncantable = item == null || item.getType() == Material.AIR || Arrays.stream(Encantament.values()).noneMatch(e -> e.encantament.canEnchantItem(item));
 			p.sendMessage(ChatColor.GRAY + (resEncantable
 					? "Agafa a la mà el que vols encantar: espasa, arc, pic o armadura."
@@ -1798,13 +1798,19 @@ public class ObsidianDefenders extends JocEquips {
 		menu.open(p);
 	}
 
+	/** A table is not a villager: a refused enchantment fizzles, a hiss and a low note, instead of the villager's grunt. */
+	private static void playEnchantRefused(Player p) {
+		p.playSound(p.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 0.8F, 0.7F);
+		p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.6F, 0.5F);
+	}
+
 	/** The item is read again at the click: the hand may have changed while the menu was open. */
 	private void encantar(Player p, Forja forja, Encantament encantament) {
 		ItemStack item = p.getInventory().getItemInMainHand();
 		int nivell = encantament.nivellSegüent(forja, item);
 		int falta = nivell == 0 ? 0 : encantament.preu(nivell) - orDisponible(p);
 		if (!JocEnMarxa() || nivell == 0 || falta > 0 || !gastarOr(p, encantament.preu(nivell))) {
-			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			playEnchantRefused(p);
 			if (falta > 0) PaperMessages.sendActionBar(p, ChatColor.RED + "Et falten " + falta + " or", 60);
 			return;
 		}
