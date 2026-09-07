@@ -1,0 +1,61 @@
+src/main/java/com/biel/lobby/utilities/events/skills/SkillPool.java
+  s_21b915178320f8::t_d9ff540eea45e9 41
+src/main/java/com/biel/lobby/lobby.java
+  s_21b915178320f8::t_ca58eed5871765 117-119
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_21b915178320f8::t_ca58eed5871765 33,165-178,471-472,476,487
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_21b915178320f8::t_ca58eed5871765 1179,1189-1200
+src/main/java/com/biel/lobby/mapes/jocs/Parkour.java
+  s_21b915178320f8::t_c9dfa222f8eb67 45-46,176,206,213-218,251,257,261,264-266,271-276,294,859-860
+src/main/java/com/biel/lobby/mapes/jocs/Spleef.java
+  s_21b915178320f8::t_ca58eed5871765 263
+src/main/java/com/biel/lobby/utilities/Turret.java
+  s_21b915178320f8::t_52ad6bd9f66bc6 1063
+  s_21b915178320f8::t_f40c2b044d9641 6,50-54,129-130,145-155,184,193,204,309-310,366-367,482,522,595,618,688,736
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_21b915178320f8::t_ac30ac5233ea3a 12,73-74,122-278,281,283-330,466-467,502,518,540-544,549-551,568,573-574,588-591,601-604,606-607,611,704-707,716,803,811,813-815,821-822,854,867,872,1044,1047-1048,1050,1052,1054,1463-1466,1468
+  s_21b915178320f8::t_d1cee8630d4ddd 1459-1462,1467
+  s_21b915178320f8::t_c1f948fcefe1ef 1476-1478,1547,1549,1552
+  s_21b915178320f8::t_73e3359c64156d 279-280,282,1057
+src/main/java/com/biel/lobby/utilities/events/skills/Skill.java
+  s_21b915178320f8::t_d9ff540eea45e9 5,19-22,29,40,42-45,48-50,59-60,70-72,95-97
+src/main/java/com/biel/lobby/mapes/JocScoreCombo.java
+  s_21b915178320f8::t_ca58eed5871765 268-272
+src/main/java/com/biel/lobby/LoginListener.java
+  s_21b915178320f8::t_ca58eed5871765 21,41-57
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_21b915178320f8::t_c9dfa222f8eb67 617,623-628,677,685,691-692,719,738,748-749,800,805-807,839,854-856
+src/main/java/com/biel/lobby/mapes/JocEquipsLastStanding.java
+  s_21b915178320f8::t_c1f948fcefe1ef 4-6,17-18,88,90,92-100,102-104,107-110,113-116,118-120,124,129-132,142-147,149
+  s_21b915178320f8::t_7eb536c05296a3 148
+src/main/java/com/biel/lobby/mapes/JocLastStanding.java
+  s_21b915178320f8::t_c1f948fcefe1ef 4,7,12-17,19,21,23-31,34-36,40-43,46-50,52-53,59-64,68-69,71,76,78-79,82-85,87,89,94-95
+  s_21b915178320f8::t_d1cee8630d4ddd 54-55
+src/main/java/com/biel/lobby/mapes/JocEquips.java
+  s_21b915178320f8::t_ca58eed5871765 109-114,120-124
+  s_21b915178320f8::t_56de62a30e0c79 115-119
+  s_21b915178320f8::t_c1f948fcefe1ef 286-292,810-816
+src/main/java/com/biel/lobby/mapes/JocObjectius.java
+  s_21b915178320f8::t_c1f948fcefe1ef 201,232-233,259,261-264,270,298-299
+src/main/java/com/biel/lobby/mapes/jocs/Arena4.java
+  s_21b915178320f8::t_ca58eed5871765 274,276-279
+src/main/java/com/biel/lobby/mapes/jocs/TNTRun.java
+  s_21b915178320f8::t_3d9a088d14bb2a 23-25,88,91,95,101,119-120,128,145-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "a7994946de1428de1907e7d3b89dbb4fbc349d06",
+  "prompts": {},
+  "sessions": {
+    "s_21b915178320f8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5cd2e735-8f4a-41cd-a38b-fc568e32b9db",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
