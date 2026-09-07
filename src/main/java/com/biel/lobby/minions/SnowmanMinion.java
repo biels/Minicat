@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
@@ -33,7 +35,11 @@ import com.biel.lobby.utilities.PaperMessages;
  * within eight blocks on the way (Biel, 2026-09-07: "they should follow the natural path").
  * It joins the lane on the leg nearest to where it lands and walks the rest ({@link Lane#ahead}).
  * Its {@link SnowmanKind} fixes the body and the block on its head; what a hit on a
- * player is worth is the game's rule, passed in.
+ * player is worth is the game's rule, passed in. The ice cage charges on the snowman
+ * itself (Biel, 2026-09-07 night: "every reasonable number of shots gets blocked into a
+ * cage; when the next shot will do that, the snowman should change his head to be the
+ * ice block"): the game counts the hits with {@link #chargeCage}, and once armed the head
+ * wears ice, whatever the kind, until {@link #dischargeCage} at the caging hit.
  */
 public final class SnowmanMinion extends Minion {
 	public static final double ACQUIRE_RADIUS = 12;
@@ -47,6 +53,8 @@ public final class SnowmanMinion extends Minion {
 	/** The head block: a cube this wide, riding at the golem's top and lowered onto the head, where the pumpkin sits. */
 	private static final float HEAD_SIZE = 0.64f;
 	private static final float HEAD_LIFT = -0.66f;
+	/** The head while the cage is armed: the next snowball shuts its victim in ice. */
+	private static final Material ARMED_HEAD = Material.ICE;
 
 	/** What a snowball from this snowman does to an enemy player. */
 	@FunctionalInterface
@@ -59,6 +67,9 @@ public final class SnowmanMinion extends Minion {
 	private final SnowballHit hitOnPlayer;
 	private final Lane lane;
 	private UUID headId;
+	/** Hits on enemy players since the last cage; the head turns to ice when the next one cages. */
+	private int cageCharge;
+	private boolean cageArmed;
 
 	/** {@code cooldownTicks}: the kind's, or faster when the thrower carried quartz. {@code lane}: this team's, base to enemy base. */
 	public SnowmanMinion(JocEquips game, Equip team, Player owner, SnowmanKind kind, int cooldownTicks, Lane lane, SnowballHit hitOnPlayer) {
@@ -77,6 +88,33 @@ public final class SnowmanMinion extends Minion {
 		return cooldownTicks;
 	}
 
+	/** Whether the next snowball to land on a player shuts them in ice. */
+	public boolean cageArmed() {
+		return cageArmed;
+	}
+
+	/**
+	 * One more hit toward the cage; after {@code hitsToArm} of them the head turns to ice
+	 * and the snowman is armed. Counts nothing while armed: the charge waits for the hit
+	 * that spends it.
+	 */
+	public void chargeCage(int hitsToArm) {
+		if (cageArmed) return;
+		cageCharge++;
+		if (cageCharge < hitsToArm) return;
+		cageArmed = true;
+		showHead(ARMED_HEAD);
+		Mob body = mob();
+		if (body != null) body.getWorld().playSound(body.getLocation(), Sound.BLOCK_GLASS_PLACE, 1F, 1.4F);
+	}
+
+	/** The cage was spent on a victim: back to the kind's head, charging from zero. */
+	public void dischargeCage() {
+		cageCharge = 0;
+		cageArmed = false;
+		showHead(kind.headBlock);
+	}
+
 	@Override
 	protected Mob spawnBody(Location at) {
 		Snowman golem = at.getWorld().spawn(at, Snowman.class);
@@ -86,18 +124,36 @@ public final class SnowmanMinion extends Minion {
 		golem.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, PotionEffect.INFINITE_DURATION, 0, true, false));
 		golem.customName(PaperMessages.legacy(team().getChatColor() + "Ninot de " + kind.label + " de " + ownerName()));
 		golem.setCustomNameVisible(true);
-		if (kind.headBlock != null) {
-			golem.setDerp(true);
-			BlockDisplay head = at.getWorld().spawn(at, BlockDisplay.class, display -> {
-				display.setBlock(kind.headBlock.createBlockData());
-				display.setTransformation(new Transformation(new Vector3f(-HEAD_SIZE / 2, HEAD_LIFT, -HEAD_SIZE / 2), new AxisAngle4f(), new Vector3f(HEAD_SIZE, HEAD_SIZE, HEAD_SIZE), new AxisAngle4f()));
-				display.setTeleportDuration(1);
-				display.setPersistent(false);
-			});
-			golem.addPassenger(head);
-			headId = head.getUniqueId();
-		}
+		showHead(golem, kind.headBlock);
 		return golem;
+	}
+
+	private void showHead(Material block) {
+		Mob body = mob();
+		if (body instanceof Snowman golem) showHead(golem, block);
+	}
+
+	/** Puts this block on the golem's head in place of the pumpkin; null gives the pumpkin back. */
+	private void showHead(Snowman golem, Material block) {
+		if (block == null) {
+			removeHead();
+			golem.setDerp(false);
+			return;
+		}
+		golem.setDerp(true);
+		Entity existing = headId == null ? null : Bukkit.getEntity(headId);
+		if (existing instanceof BlockDisplay head && head.isValid()) {
+			head.setBlock(block.createBlockData());
+			return;
+		}
+		BlockDisplay head = golem.getWorld().spawn(golem.getLocation(), BlockDisplay.class, display -> {
+			display.setBlock(block.createBlockData());
+			display.setTransformation(new Transformation(new Vector3f(-HEAD_SIZE / 2, HEAD_LIFT, -HEAD_SIZE / 2), new AxisAngle4f(), new Vector3f(HEAD_SIZE, HEAD_SIZE, HEAD_SIZE), new AxisAngle4f()));
+			display.setTeleportDuration(1);
+			display.setPersistent(false);
+		});
+		golem.addPassenger(head);
+		headId = head.getUniqueId();
 	}
 
 	@Override

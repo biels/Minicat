@@ -82,8 +82,6 @@ import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
 import com.biel.lobby.minions.Lane;
 import com.biel.lobby.minions.Minion;
 import com.biel.lobby.minions.SnowmanKind;
-import org.bukkit.NamespacedKey;
-import org.bukkit.persistence.PersistentDataType;
 import com.biel.lobby.minions.SnowmanMinion;
 import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
@@ -147,16 +145,17 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int MAX_SNOWMEN_PER_PLAYER = 3;
 	/** Quartz in the thrower's inventory makes the new snowman fire a third faster, as in 2013. */
 	private static final double SNOWMAN_QUARTZ_COOLDOWN_FACTOR = 2.0 / 3;
-	/** Snowballs (Biel, 2026-09-07: effects, not damage): neu slows this long per hit, gel cages after this many hits within the window, magma burns this long. */
+	/**
+	 * Snowballs (Biel, 2026-09-07: effects, not damage): a neu snowman slows this long per
+	 * hit, a magma one burns this long; every snowman arms its cage after this many hits on
+	 * players, and the next hit shuts its victim in ice for this long.
+	 */
 	private static final int SNOWBALL_SLOWNESS_TICKS = 80;
-	private static final int ICE_CAGE_HITS = 4;
-	private static final int ICE_CAGE_WINDOW_SECONDS = 6;
-	private static final int ICE_CAGE_TICKS = 60;
 	private static final int SNOWBALL_FIRE_TICKS = 60;
-	/** Marks an item stack with the {@link Objecte} it is, for the ones a material alone cannot tell apart (the three snowballs). */
-	private static final NamespacedKey OBJECTE_KEY = NamespacedKey.fromString("minicat:objecte");
-	/** Gel marks per victim: hits so far and the second of the last one. */
-	private final Map<UUID, int[]> iceMarks = new HashMap<>();
+	private static final int SNOWMAN_HITS_TO_ARM_CAGE = 3;
+	private static final int ICE_CAGE_TICKS = 60;
+	/** The team whose player last felled the Guardian throws magma snowmen until the other team fells it. */
+	private Equip guardianSlayerTeam;
 
 	boolean debug = false;
 	/** Team id → block positions of the TNT that is that team's base core. */
@@ -281,7 +280,7 @@ public class ObsidianDefenders extends JocEquips {
 	private enum Parada {
 		GERRY("weapons", "Gerry", "armes", Mercaderia.FLETXES, Mercaderia.ESTRELLES, Mercaderia.ESPASA_FERRO, Mercaderia.ARC, Mercaderia.PIC_FERRO, Mercaderia.ESPASA_DIAMANT),
 		SEON("armors", "Seon", "armadures", Mercaderia.PITRAL_FERRO, Mercaderia.CALCES_DIAMANT),
-		KAREN("potions", "Karen", "altres coses", Mercaderia.BLOC_OR, Mercaderia.BOLA_DE_NEU, Mercaderia.BOLA_DE_GEL, Mercaderia.BOLA_DE_MAGMA, Mercaderia.QUARS);
+		KAREN("potions", "Karen", "altres coses", Mercaderia.BLOC_OR, Mercaderia.BOLA_DE_NEU, Mercaderia.QUARS);
 
 		final String rètolOriginal;
 		final String nom;
@@ -305,8 +304,6 @@ public class ObsidianDefenders extends JocEquips {
 		PITRAL_FERRO(Material.IRON_CHESTPLATE, 1, 18, "Pitral de ferro", null),
 		BLOC_OR(Material.GOLD_BLOCK, 1, 25, "Bloc d'or", "+2 or cada " + (CICLE_COFRES_TICKS / 20) + " segons"),
 		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", null),
-		BOLA_DE_GEL(Material.SNOWBALL, 1, 12, "Bola de gel", null),
-		BOLA_DE_MAGMA(Material.SNOWBALL, 1, 12, "Bola de magma", null),
 		QUARS(Material.QUARTZ, 1, 15, "Quars", "Mentre el portis, els teus nous ninots disparen un 50 % més ràpid"),
 		CALCES_DIAMANT(Material.DIAMOND_LEGGINGS, 1, 30, "Calces de diamant", null),
 		ESPASA_DIAMANT(Material.DIAMOND_SWORD, 1, 40, "Espasa de diamant", null);
@@ -323,15 +320,6 @@ public class ObsidianDefenders extends JocEquips {
 			this.nom = nom;
 			this.descripció = descripció;
 		}
-
-		/** The named item this ware hands over; the snowballs share a material and differ by name. */
-		Objecte objecte() {
-			return switch (this) {
-				case BOLA_DE_GEL -> Objecte.BOLA_DE_GEL;
-				case BOLA_DE_MAGMA -> Objecte.BOLA_DE_MAGMA;
-				default -> Objecte.de(material);
-			};
-		}
 	}
 
 	/**
@@ -344,9 +332,7 @@ public class ObsidianDefenders extends JocEquips {
 		ESTRELLA_DE_FOC(Material.FIREWORK_STAR, "Estrella de foc", "Amb ella a l'inventari, una fletxa disparada", "des de dalt explota en caure."),
 		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma", "Clic dret: crema tot l'equip enemic 3 s."),
 		MARAGDA(Material.EMERALD, "Maragda", "Clic dret: +1 cor a tot el teu equip."),
-		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí cap a la base enemiga.", "Les seves boles alenteixen (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots)."),
-		BOLA_DE_GEL(Material.SNOWBALL, "Bola de gel", "Llança-la: apareix un ninot de gel.", "Quatre boles seguides tanquen l'enemic", "en una gàbia de gel " + ICE_CAGE_TICKS / 20 + " s."),
-		BOLA_DE_MAGMA(Material.SNOWBALL, "Bola de magma", "Llança-la: apareix un ninot de magma.", "Les seves boles cremen " + SNOWBALL_FIRE_TICKS / 20 + " s."),
+		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí cap a la base enemiga.", "Alenteix; amb el cap de gel, el proper cop", "tanca l'enemic en gel " + ICE_CAGE_TICKS / 20 + " s (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots).", "Si el teu equip ha matat el Guardià, crema."),
 		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender", "Llança-la per teletransportar-te on caigui."),
 		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or", "A l'inventari: fletxes explosives un 20 % més fortes."),
 		PIC_DE_DIAMANT(Material.DIAMOND_PICKAXE, "Pic de diamant", "Trenca l'obsidiana de la base enemiga.", "Encanta'l a una taula: Eficiència.", "Qui et mati es queda un pic d'or."),
@@ -366,25 +352,11 @@ public class ObsidianDefenders extends JocEquips {
 			return null;
 		}
 
-		/** The mark on the stack when it has one, else the material's first meaning. */
-		static Objecte de(ItemStack item) {
-			if (item == null) return null;
-			if (item.hasItemMeta()) {
-				String marca = item.getItemMeta().getPersistentDataContainer().get(OBJECTE_KEY, PersistentDataType.STRING);
-				if (marca != null) for (Objecte o : values()) if (o.name().equals(marca)) return o;
-			}
-			return de(item.getType());
-		}
-
 		/** Names and explains the item when the game has words for it; returns the same stack. */
 		static ItemStack descriure(ItemStack item) {
-			return descriure(item, de(item));
-		}
-
-		static ItemStack descriure(ItemStack item, Objecte objecte) {
+			Objecte objecte = de(item.getType());
 			if (objecte == null) return item;
 			ItemMeta meta = item.getItemMeta();
-			meta.getPersistentDataContainer().set(OBJECTE_KEY, PersistentDataType.STRING, objecte.name());
 			meta.displayName(Component.text(objecte.nom, NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
 			List<Component> lore = new ArrayList<>();
 			for (String línia : objecte.llegenda) lore.add(Component.text(línia, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
@@ -507,6 +479,7 @@ public class ObsidianDefenders extends JocEquips {
 		scheduleGameplayRepeatingTask(this::tickHints, 30, 20);
 		scheduleGameplayRepeatingTask(this::apareixerPicDiamant, PRIMER_PIC_TICKS, PERIODE_PIC_TICKS);
 		guardiàTornaAlSegon = (int) (GOLEM_INICIAL_TICKS / 20);
+		guardianSlayerTeam = null;
 		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
 		scheduleGameplayRepeatingTask(this::presènciaDelGuardià, 20, 20);
 	}
@@ -964,6 +937,11 @@ public class ObsidianDefenders extends JocEquips {
 			p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3 * 60 * 20, 1, false), true);
 			PaperMessages.sendActionBar(p, ChatColor.AQUA + "Benedicció del Guardià", 60);
 			sendGlobalMessage(p.getName() + " ha matat " + ChatColor.AQUA + NOM_GUARDIÀ + ChatColor.WHITE + ", el golem de ferro (" + ChatColor.GOLD + "+" + OR_PER_GOLEM + ChatColor.WHITE + ")");
+			Equip slayers = obtenirEquip(p);
+			if (slayers != null && slayers != guardianSlayerTeam) {
+				guardianSlayerTeam = slayers;
+				sendGlobalMessage(slayers.getChatColor() + "Els ninots de l'equip " + slayers.getAdjectiu() + ChatColor.WHITE + " ara són de magma i cremen, fins que l'altre equip mati el Guardià.");
+			}
 		}
 		int minuts = getPlayers().size() >= 5 ? 2 : 3;
 		guardiàTornaAlSegon = segonsTranscorreguts() + minuts * 60;
@@ -1259,7 +1237,7 @@ public class ObsidianDefenders extends JocEquips {
 		});
 		for (Mercaderia m : mercaderies) {
 			ArrayList<String> info = new ArrayList<>();
-			Objecte objecte = m.objecte();
+			Objecte objecte = Objecte.de(m.material);
 			if (objecte != null) for (String línia : objecte.llegenda) info.add(ChatColor.GRAY + línia);
 			else if (m.descripció != null) info.add(ChatColor.GRAY + m.descripció);
 			info.add(ChatColor.WHITE + "Preu: " + ChatColor.GOLD + m.preu + " or");
@@ -1273,7 +1251,7 @@ public class ObsidianDefenders extends JocEquips {
 			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
 			return;
 		}
-		Utils.giveItemStack(Objecte.descriure(new ItemStack(m.material, m.quantitat), m.objecte()), p);
+		Utils.giveItemStack(Objecte.descriure(new ItemStack(m.material, m.quantitat)), p);
 		p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1F, 1F);
 		updateScoreBoard(p);
 	}
@@ -2209,8 +2187,11 @@ public class ObsidianDefenders extends JocEquips {
 
 	/**
 	 * A thrown snowball becomes a snow golem owned by the thrower on the nearest spot with
-	 * a floor; a fourth one melts the thrower's oldest. Quartz in the thrower's inventory
-	 * at this moment makes the new snowman fire faster for the rest of its life.
+	 * a floor; a fourth one melts the thrower's oldest. Every snowball is the same item
+	 * (Biel, 2026-09-07 night: "make them all spawn from the same snowball"): the snowman
+	 * is of magma while the thrower's team holds the Guardian's last kill, of neu otherwise.
+	 * Quartz in the thrower's inventory at this moment makes the new snowman fire faster
+	 * for the rest of its life.
 	 */
 	private void throwSnowman(Player thrower, ProjectileHitEvent evt, Location impact) {
 		Equip team = obtenirEquip(thrower);
@@ -2232,20 +2213,12 @@ public class ObsidianDefenders extends JocEquips {
 				world.playSound(where, Sound.BLOCK_SNOW_BREAK, 1F, 0.8F);
 			}
 		}
-		SnowmanKind kind = evt.getEntity() instanceof Snowball ball ? snowmanKindOf(ball.getItem()) : SnowmanKind.NEU;
+		SnowmanKind kind = team == guardianSlayerTeam ? SnowmanKind.MAGMA : SnowmanKind.NEU;
 		int cooldown = thrower.getInventory().contains(Material.QUARTZ) ? (int) Math.round(kind.cooldownTicks * SNOWMAN_QUARTZ_COOLDOWN_FACTOR) : kind.cooldownTicks;
 		enlist(new SnowmanMinion(this, team, thrower, kind, cooldown, snowmanLane(team), this::snowballHit), spot);
 		world.playSound(spot, Sound.ENTITY_SNOW_GOLEM_AMBIENT, 1F, 1F);
-		world.playSound(spot, kind == SnowmanKind.MAGMA ? Sound.BLOCK_FIRE_AMBIENT : kind == SnowmanKind.GEL ? Sound.BLOCK_GLASS_PLACE : Sound.BLOCK_SNOW_PLACE, 1F, 1F);
+		world.playSound(spot, kind == SnowmanKind.MAGMA ? Sound.BLOCK_FIRE_AMBIENT : Sound.BLOCK_SNOW_PLACE, 1F, 1F);
 		PaperMessages.sendActionBar(thrower, ChatColor.WHITE + "Ninot de " + kind.label + " " + (mine.size() + 1) + "/" + MAX_SNOWMEN_PER_PLAYER, 60);
-	}
-
-	/** Which snowman a thrown snowball becomes: by the mark on the ball, a bare one is neu. */
-	private static SnowmanKind snowmanKindOf(ItemStack ball) {
-		Objecte objecte = Objecte.de(ball);
-		if (objecte == Objecte.BOLA_DE_GEL) return SnowmanKind.GEL;
-		if (objecte == Objecte.BOLA_DE_MAGMA) return SnowmanKind.MAGMA;
-		return SnowmanKind.NEU;
 	}
 
 	/**
@@ -2282,39 +2255,30 @@ public class ObsidianDefenders extends JocEquips {
 
 	/**
 	 * What a snowman's snowball does to an enemy (Biel, 2026-09-07: "rather than pure
-	 * damage, slow them, or an ice cage after a few hits"): half a heart from every kind,
-	 * then neu slows, gel marks and shuts the victim in ice on the fourth mark within the
-	 * window, magma sets on fire. The hit counts as the owner's for kill credit (JocEquips
-	 * records the last damager; the second is recorded here).
+	 * damage, slow them, or an ice cage after a few hits"): half a heart always. A snowman
+	 * with its cage armed (ice on its head, three hits landed) spends it: the victim is shut
+	 * in ice and the head goes back to the kind's. Otherwise the kind's effect, neu slows
+	 * and magma sets on fire, and one more hit toward the cage. The hit counts as the
+	 * owner's for kill credit (JocEquips records the last damager; the second is recorded
+	 * here).
 	 */
 	private void snowballHit(SnowmanMinion snowman, EntityDamageByEntityEvent evt, Player victim) {
 		evt.setDamage(1);
-		switch (snowman.kind()) {
-			case NEU -> victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, SNOWBALL_SLOWNESS_TICKS, 0, true, true));
-			case GEL -> iceMark(victim);
-			case MAGMA -> {
-				victim.setFireTicks(Math.max(victim.getFireTicks(), SNOWBALL_FIRE_TICKS));
-				world.playSound(victim.getLocation(), Sound.ENTITY_GENERIC_BURN, 0.6F, 1.2F);
-			}
-		}
-		segonsÚltimCopRebut.put(victim.getUniqueId(), segonsTranscorreguts());
-	}
-
-	/** A gel snowball's mark: the fourth within the window shuts the victim in ice; marks fade once the window passes. */
-	private void iceMark(Player victim) {
-		int now = segonsTranscorreguts();
-		int[] marks = iceMarks.computeIfAbsent(victim.getUniqueId(), id -> new int[2]);
-		if (now - marks[1] > ICE_CAGE_WINDOW_SECONDS) marks[0] = 0;
-		marks[0]++;
-		marks[1] = now;
-		if (marks[0] >= ICE_CAGE_HITS) {
-			marks[0] = 0;
+		if (snowman.cageArmed()) {
+			snowman.dischargeCage();
 			encaseInIce(victim, ICE_CAGE_TICKS);
 			PaperMessages.sendActionBar(victim, ChatColor.AQUA + "Congelat!", 40);
-			return;
+		} else {
+			switch (snowman.kind()) {
+				case NEU -> victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, SNOWBALL_SLOWNESS_TICKS, 0, true, true));
+				case MAGMA -> {
+					victim.setFireTicks(Math.max(victim.getFireTicks(), SNOWBALL_FIRE_TICKS));
+					world.playSound(victim.getLocation(), Sound.ENTITY_GENERIC_BURN, 0.6F, 1.2F);
+				}
+			}
+			snowman.chargeCage(SNOWMAN_HITS_TO_ARM_CAGE);
 		}
-		victim.playSound(victim.getLocation(), Sound.BLOCK_GLASS_HIT, 1F, 0.8F + 0.2F * marks[0]);
-		PaperMessages.sendActionBar(victim, ChatColor.AQUA + "Gel " + marks[0] + "/" + ICE_CAGE_HITS, 30);
+		segonsÚltimCopRebut.put(victim.getUniqueId(), segonsTranscorreguts());
 	}
 
 	/** The snowman whose snowball landed the killing hit, if one did. */
