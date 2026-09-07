@@ -1,0 +1,31 @@
+src/main/java/com/biel/lobby/guide/GameGuide.java
+  s_7b6c09563aa3f2::t_63d99006700a26 1-248
+src/main/resources/plugin.yml
+  s_7b6c09563aa3f2::t_3da1abe43596bf 16-18
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_7b6c09563aa3f2::t_d7c4bfdcf29229 94,267-303,479-488,494-495,498,502-506,540,738-739,1137-1138,1723,1852-1853,1856,1858-1859,1866,1877,1879
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_7b6c09563aa3f2::t_3da1abe43596bf 687
+src/main/resources/guides/obsidian-defenders.md
+  s_7b6c09563aa3f2::t_97ce12aa9915f8 1-138
+src/main/java/com/biel/lobby/guide/GuideSigns.java
+  s_7b6c09563aa3f2::t_63d99006700a26 1-33
+src/main/java/com/biel/lobby/lobby.java
+  s_7b6c09563aa3f2::t_3da1abe43596bf 51,89-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "bda489f95b2203871c3c2ce6eb5e3617356fe06d",
+  "prompts": {},
+  "sessions": {
+    "s_7b6c09563aa3f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "45ffe817-45cc-4ba0-b329-948f96d377bb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
