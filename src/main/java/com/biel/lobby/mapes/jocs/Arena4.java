@@ -36,6 +36,7 @@ import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import com.biel.BielAPI.Utils.IconMenu;
+import com.biel.lobby.Com;
 import com.biel.lobby.mapes.JocTeamScoreRace;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.HologramFacade;
@@ -76,12 +77,16 @@ public class Arena4 extends JocTeamScoreRace {
 	private static final int FONT_INTERVAL_SECONDS = 30;
 	/** One drop in this many is the map's cooked porkchop instead of dye. */
 	private static final int FONT_FOOD_EVERY = 4;
-	private static final double FONT_HOME_RADIUS = 10;
+	/** The 2013 cages woke up with a player within 16 blocks; the tips are 25 blocks from them. */
+	private static final double FONT_HOME_RADIUS = 16;
 	private static final int FONT_MAX_DYE_LYING_AROUND = 6;
 	private static final int HOLOGRAM_REFRESH_SECONDS = 5;
 	private static final int SHOPKEEPER_ADOPTION_DELAY_TICKS = 40;
-	private static final int CHUNK_LOAD_RADIUS = 2;
+	/** Chunks kept loaded beyond the box the bases span, so the shops and cages of every quarter are in it. */
+	private static final int CHUNK_MARGIN = 2;
+	/** A fallback shopkeeper stands this far from its base toward the middle, or further if that spot is not on the ground. */
 	private static final double FALLBACK_SHOP_DISTANCE = 3;
+	private static final double FALLBACK_SHOP_MAX_DISTANCE = 12;
 	private static final int KIT_ARROWS_WITH_BOW = 4;
 	private static final int ARROWS_PER_PURCHASE = 16;
 
@@ -343,6 +348,13 @@ public class Arena4 extends JocTeamScoreRace {
 	}
 
 	@Override
+	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
+		super.onPlayerDeath(evt, killed);
+		Arena4PlayerInfo info = infoCaçador(killed);
+		info.setDeaths(info.getDeaths() + 1);
+	}
+
+	@Override
 	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
 		super.onPlayerDeathByPlayer(evt, killed, killer);
 		if (killed == killer) return;
@@ -354,8 +366,9 @@ public class Arena4 extends JocTeamScoreRace {
 		int tints = r == Relació.PRESA ? DYE_PER_PREY_KILL : DYE_PER_OTHER_KILL;
 		killer.getInventory().addItem(tint(equipVíctima, tints));
 		killer.playSound(killer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 1.4F);
+		Arena4PlayerInfo info = infoCaçador(killer);
+		info.setKills(info.getKills() + 1);
 		if (r == Relació.PRESA) {
-			Arena4PlayerInfo info = infoCaçador(killer);
 			info.presesCaçades++;
 			if (info.presesCaçades == PREY_KILLS_FOR_EXTRA_SKILL) info.addAdditionalSkill();
 		}
@@ -495,17 +508,23 @@ public class Arena4 extends JocTeamScoreRace {
 
 	// ---- Taking over the map's machinery ---------------------------------------
 
+	/**
+	 * Keeps the whole arena loaded for the match: the box the bases span plus a margin.
+	 * Without a ticket a quarter nobody is standing in unloads with its shopkeepers and
+	 * cages, and the villagers would not even be there to adopt.
+	 */
 	private void carregarZonaDeJoc() {
-		List<Location> centres = new ArrayList<>();
-		for (Equip e : Equips) centres.add(e.getTeamSpawnLocation());
-		centres.add(getHalfwayMiddle());
-		for (Location centre : centres) {
-			int cx = centre.getBlockX() >> 4;
-			int cz = centre.getBlockZ() >> 4;
-			for (int dx = -CHUNK_LOAD_RADIUS; dx <= CHUNK_LOAD_RADIUS; dx++) {
-				for (int dz = -CHUNK_LOAD_RADIUS; dz <= CHUNK_LOAD_RADIUS; dz++) {
-					world.getChunkAt(cx + dx, cz + dz).load();
-				}
+		int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+		for (Equip e : Equips) {
+			Location base = e.getTeamSpawnLocation();
+			minX = Math.min(minX, base.getBlockX() >> 4);
+			maxX = Math.max(maxX, base.getBlockX() >> 4);
+			minZ = Math.min(minZ, base.getBlockZ() >> 4);
+			maxZ = Math.max(maxZ, base.getBlockZ() >> 4);
+		}
+		for (int cx = minX - CHUNK_MARGIN; cx <= maxX + CHUNK_MARGIN; cx++) {
+			for (int cz = minZ - CHUNK_MARGIN; cz <= maxZ + CHUNK_MARGIN; cz++) {
+				world.getChunkAt(cx, cz).addPluginChunkTicket(Com.getPlugin());
 			}
 		}
 	}
@@ -601,16 +620,27 @@ public class Arena4 extends JocTeamScoreRace {
 		rètols.put(vilatà.getUniqueId(), HologramFacade.create(vilatà.getLocation().clone().add(0, 2.9, 0)));
 	}
 
-	/** Beside the base, toward the middle of the map, on the ground; the two shopkeepers stand apart. */
+	/**
+	 * Beside the base, toward the middle of the map, on ground a player can walk to: the
+	 * first spot from FALLBACK_SHOP_DISTANCE outward whose surface is no higher than the
+	 * base. A base inside a tower (PixelRift's corners, roofed at y 101 around a floor at
+	 * y 96) would otherwise put its shopkeepers on the roof; this walks past the wall and
+	 * puts them on the plateau outside. The two shopkeepers stand apart.
+	 */
 	private Location ubicacióDeReserva(Equip e, Botiguer botiguer) {
 		Location base = e.getTeamSpawnLocation();
 		Vector capAlMig = getHalfwayMiddle().toVector().subtract(base.toVector()).setY(0);
 		if (capAlMig.lengthSquared() > 0) capAlMig.normalize();
 		Vector costat = new Vector(-capAlMig.getZ(), 0, capAlMig.getX()).multiply(botiguer == Botiguer.ARMA_MAN ? -1.5 : 1.5);
-		Location lloc = base.clone().add(capAlMig.multiply(FALLBACK_SHOP_DISTANCE)).add(costat);
-		int terra = world.getHighestBlockYAt(lloc);
-		if (terra > world.getMinHeight()) lloc.setY(terra + 1);
-		return new Location(world, lloc.getBlockX() + 0.5, lloc.getY(), lloc.getBlockZ() + 0.5);
+		Location últimCandidat = null;
+		for (double distància = FALLBACK_SHOP_DISTANCE; distància <= FALLBACK_SHOP_MAX_DISTANCE; distància += 1) {
+			Location lloc = base.clone().add(capAlMig.clone().multiply(distància)).add(costat);
+			int terra = world.getHighestBlockYAt(lloc);
+			if (terra <= world.getMinHeight()) continue;
+			últimCandidat = new Location(world, lloc.getBlockX() + 0.5, terra + 1, lloc.getBlockZ() + 0.5);
+			if (terra <= base.getBlockY()) return últimCandidat;
+		}
+		return últimCandidat != null ? últimCandidat : base.clone().add(costat);
 	}
 
 	private void refrescarRètols() {
@@ -672,6 +702,7 @@ public class Arena4 extends JocTeamScoreRace {
 		rètols.values().forEach(HologramFacade.Handle::delete);
 		rètols.clear();
 		fonts.clear();
+		if (world != null) world.removePluginChunkTickets(Com.getPlugin());
 		super.clearExternals();
 	}
 
@@ -703,6 +734,9 @@ public class Arena4 extends JocTeamScoreRace {
 		IconMenu menu = new IconMenu(ChatColor.GOLD + botiga.botiguer().nom, 9, event -> {
 			int posició = event.getPosition();
 			if (posició < mercaderies.size()) comprar(event.getPlayer(), mercaderies.get(posició));
+			// The shop stays open with fresh prices and counts; opening the new menu closes this one.
+			event.setWillClose(false);
+			if (JocEnMarxa() && event.getPlayer().getWorld() == world) obrirMenú(event.getPlayer(), botiga);
 		});
 		for (Mercaderia m : mercaderies) {
 			ArrayList<String> descripció = new ArrayList<>();
