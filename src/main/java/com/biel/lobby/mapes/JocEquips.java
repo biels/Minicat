@@ -122,6 +122,31 @@ public abstract class JocEquips extends Joc {
 			ScoreBoardUpdater.updateTeamScore(this);
 		}
 		updateScoreBoards();
+		resumeInterruptedRespawnWait(ply);
+	}
+	/**
+	 * A player who dropped during the death timer comes back in spectator mode, since
+	 * Paper keeps the game mode and the wait cancelled itself when they went offline.
+	 * A playing seat must not stay a ghost: the wait starts over, or ends at once for a
+	 * game without one.
+	 */
+	private void resumeInterruptedRespawnWait(Player ply) {
+		if (isSpectator(ply) || ply.getGameMode() != GameMode.SPECTATOR || !JocEnMarxa()) return;
+		int wait = respawnWaitSeconds(ply);
+		if (wait > 0) {
+			beginRespawnWait(ply, wait);
+			return;
+		}
+		Equip team = obtenirEquip(ply);
+		ply.setGameMode(GameMode.SURVIVAL);
+		if (team != null) ply.teleport(team.getTeamSpawnLocation());
+		getPlayerInfo(ply).setImmune(true);
+	}
+	/** The wait's own tick would notice the player gone; ending it here keeps the task map exact. */
+	@Override
+	protected void onSeatDropped(Player ply) {
+		super.onSeatDropped(ply);
+		cancelRespawnWait(ply, false);
 	}
 	@Override
 	protected Location getResumeLocation(Player ply) {
