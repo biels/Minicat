@@ -1,0 +1,26 @@
+src/main/java/com/biel/lobby/minions/SnowmanMinion.java
+  s_7b6c09563aa3f2::t_247d84068c8317 35,220,227-228,238
+src/main/java/com/biel/lobby/minions/Minion.java
+  s_7b6c09563aa3f2::t_247d84068c8317 8,84-96
+  s_7b6c09563aa3f2::t_bfe9872bb4017f 97
+src/main/java/com/biel/lobby/mapes/JocEquips.java
+  s_7b6c09563aa3f2::t_247d84068c8317 719
+src/main/java/com/biel/lobby/minions/LaneMinion.java
+  s_7b6c09563aa3f2::t_247d84068c8317 70-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b9279917df0db47a976a8c5fcd68123f27f9f047",
+  "prompts": {},
+  "sessions": {
+    "s_7b6c09563aa3f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "45ffe817-45cc-4ba0-b329-948f96d377bb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
