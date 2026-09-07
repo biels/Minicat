@@ -16,10 +16,10 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -27,16 +27,15 @@ import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.BlockIterator;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import com.biel.BielAPI.Utils.GUtils;
-import com.biel.BielAPI.Utils.IconMenu;
-import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
@@ -58,6 +57,14 @@ public class InkWars extends JocEquips {
 	static final BlockFace[] SIDES = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
 	/** Ticks of slower climbing after the grip turns a corner. */
 	static final int CORNER_TICKS = 10;
+	/** The squid: blocks per tick at full speed (a sprint is 0.28), gained per tick of steering, and the share of momentum kept each tick. */
+	static final double SQUID_TOP_SPEED = 0.55;
+	static final double SQUID_ACCELERATION = 0.06;
+	static final double SQUID_FRICTION = 0.92;
+	static final double CLIMB_SPEED = 0.28;
+	/** Ink charge gained per block swum; a full charge is one surge. */
+	static final double CHARGE_PER_BLOCK = 0.09;
+	static final double BRUSH_REACH = 4.5;
 	final Predicate<Block> solid = block -> !block.isPassable();
 	int wetInkTicks = 0;
 	@Override
@@ -83,9 +90,10 @@ public class InkWars extends JocEquips {
 		i.add("You win by having more than 80% of the map painted");
 		i.add("In this map you level up every " + getBlockCountToLevelUp() + " effectively painted blocks");
 		i.add("The ink won't dry instantly, use it to your advantage");
-		i.add("Press sneak once for swim form: on your own colour you dive in, invisible, fast, healing; press again to stand up");
-		i.add("Swimming, face a wall in your colour to climb it at full speed; the grip follows corners; sneak lets go and keeps your momentum");
-		i.add("You reload x4 faster on your own colour, x8 while submerged");
+		i.add("One kit: the Roller paints the floor while you walk with it, the Brush paints the wall you look at (hold right-click), ink balls splash at range");
+		i.add("Press sneak once for squid form: on your own colour you dive in, invisible, fast, healing, with momentum; press again to stand up");
+		i.add("Swimming, face a wall in your colour to climb it; the grip follows corners; swimming fast charges ink, surfacing or landing releases it as a splash");
+		i.add("Ink balls reload x5 faster on your own colour, x8 while submerged");
 		return i;
 	}
 	@Override
@@ -121,20 +129,19 @@ public class InkWars extends JocEquips {
 	protected void customJocIniciat() {
 		super.customJocIniciat();
 		setGiveStartingItemsRespawn(false);
-		armPlayers();
+		equipKits();
 	}
-	public void armPlayers() {
+	public void equipKits() {
 		for(Player p : getPlayers()){
-			getPlayerInfo(p).setWeaponLevel(1);
-			armWithRollerIfUnarmed(p);
+			getPlayerInfo(p).setInkLevel(1);
+			equipKit(p);
 		}
 	}
-	/** Nobody walks onto the field with empty hands: the Roller is the default until the selector at the base says otherwise. */
-	void armWithRollerIfUnarmed(Player p) {
+	/** Everybody carries the same kit from the first second; whoever arrives without one, a rejoin, gets it on the next heartbeat. */
+	void equipKit(Player p) {
 		InkWarsPlayerInfo info = getPlayerInfo(p);
-		if (info.getActiveWeapon() != null) return;
-		info.setActiveWeapon(new RollerInkWeapon(p));
-		sendPlayerMessage(p, ChatColor.YELLOW + "You start with the Roller. Change weapon at the selector in your base.");
+		if (info.getKit() != null) return;
+		info.setKit(new InkKit(p));
 	}
 
 	@Override
@@ -231,39 +238,29 @@ public class InkWars extends JocEquips {
 		super.ultraHeartbeat();
 		if (JocIniciat) {
 			tickWetInk();
-			tickPlayerWeapons();
+			tickKits();
 		}
 	}
 	@Override
 	public void heartbeat() { //Every second
 		super.heartbeat();
 		if (JocIniciat) {
-			controlWeaponSelector();
+			controlLevels();
 			updateScoreBoards();
 			checkForWinner();
 		}
 	}
-	public void controlWeaponSelector() {
-		for(Player p : getPlayers()){				
+	public void controlLevels() {
+		for(Player p : getPlayers()){
 			EquipInkWars e = obtenirEquip(p);
 			InkWarsPlayerInfo i = getPlayerInfo(p);
-			armWithRollerIfUnarmed(p);
-			boolean isInBaseRange = p.getLocation().distance(e.getTeamSpawnLocation()) < 10;
-			if (isInBaseRange){
-				if(!p.getInventory().contains(Material.CRAFTING_TABLE)){
-					giveWeaponSelectionButton(p);
-					sendPlayerMessage(p, ChatColor.YELLOW + "You can now select your ink weapon!");
-				}
-			}else if(p.getInventory().contains(Material.CRAFTING_TABLE)){
-				p.getInventory().remove(Material.CRAFTING_TABLE);
-			}
-			//Keep track of player's level based on his alive block count
-			if(i.getAlivePaintedBlocks() > i.getWeaponLevel() * getBlockCountToLevelUp()){
-				i.setWeaponLevel(i.getWeaponLevel() + 1);
+			equipKit(p);
+			if(i.getAlivePaintedBlocks() > i.getInkLevel() * getBlockCountToLevelUp()){
+				i.setInkLevel(i.getInkLevel() + 1);
 				p.playSound(p.getEyeLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 1.3F);
 				getWorld().spawnParticle(Particle.HAPPY_VILLAGER, p.getLocation().add(0, 1, 0), 20, 0.6, 0.8, 0.6, 0);
-				sendPlayerMessage(p, ChatColor.AQUA + "Level Up! You are now level " + i.getWeaponLevel());
-				sendTeamMessage(e, ChatColor.GRAY + "The player " + ChatColor.YELLOW + p.getName() + ChatColor.GRAY + " is now level " + ChatColor.YELLOW + i.getWeaponLevel() + ChatColor.WHITE + "!");
+				sendPlayerMessage(p, ChatColor.AQUA + "Level Up! You are now level " + i.getInkLevel());
+				sendTeamMessage(e, ChatColor.GRAY + "The player " + ChatColor.YELLOW + p.getName() + ChatColor.GRAY + " is now level " + ChatColor.YELLOW + i.getInkLevel() + ChatColor.WHITE + "!");
 			}
 		}
 	}
@@ -274,13 +271,10 @@ public class InkWars extends JocEquips {
 		}
 		return r;
 	}
-	public void tickPlayerWeapons(){
+	public void tickKits(){
 		for(Player p : getPlayers()){
-			InkWarsPlayerInfo i = getPlayerInfo(p);
-			InkWeapon activeWeapon = i.getActiveWeapon();
-			if (activeWeapon != null) {
-				activeWeapon.tick();
-			}
+			InkKit kit = getPlayerInfo(p).getKit();
+			if (kit != null) kit.tick();
 		}
 	}
 	/** Every tick the wet ink dries by one per second; every few ticks the ink above what its surface holds moves: along the floor, down the wall, off the edge. */
@@ -383,35 +377,6 @@ public class InkWars extends JocEquips {
 		}
 		return null;
 	}
-	public void giveWeaponSelectionButton(Player p){
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.CRAFTING_TABLE), ChatColor.GOLD + "" + ChatColor.BOLD + "Weapon selector",  ChatColor.WHITE + "Opens weapon selection menu."), p, event -> openWeaponSelectionMenu(event.getPlayer()));
-		p.getInventory().addItem(button.getItemStack());
-	}
-	public void openWeaponSelectionMenu(Player p){
-		IconMenu menu = new IconMenu(ChatColor.RED + "Weapon selector " + Utils.NombreEntre(0, 100), 9, event -> {
-            event.setWillClose(true);
-            Player ply = event.getPlayer();
-            int i = event.getPosition();
-			InkWeapon selectedWeapon = null;
-			if(i == 0)selectedWeapon = new RollerInkWeapon(ply);
-			if(i == 1)selectedWeapon = new BrushInkWeapon(ply);
-			if(i == 2)selectedWeapon = new MachinegunInkWeapon(ply);
-			if(i == 3)selectedWeapon = new EnderInkWeapon(ply);
-			if (selectedWeapon == null) return;
-			getPlayerInfo(ply).setActiveWeapon(selectedWeapon);
-			selectedWeapon.showInstructions();
-            sendTeamMessage(obtenirEquip(event.getPlayer()), event.getPlayer().getName() + " has selected " + event.getMenu().getOptionNames()[i]);
-        });
-		int weaponLevel = getPlayerInfo(p).getWeaponLevel();
-		String string = Integer.toString(weaponLevel);
-		String lvlString = ChatColor.GOLD + "" + ChatColor.BOLD + " [Level " + string + "]";
-		menu.setOption(0, new ItemStack(Material.STICK, 1), ChatColor.GREEN + "" + ChatColor.BOLD + "Roller" + lvlString, ChatColor.WHITE + "Paint a wide trail by moving.");
-		menu.setOption(1, new ItemStack(Material.TORCH, 1), ChatColor.YELLOW + "" + ChatColor.BOLD + "Brush" + lvlString, ChatColor.WHITE + "Paint a fast, narrow trail by moving.");
-		menu.setOption(2, new ItemStack(Material.SNOWBALL, 1), ChatColor.BLUE + "" + ChatColor.BOLD + "Machinegun" + lvlString, ChatColor.WHITE + "Throw ink balls to paint impact zones.");
-		menu.setOption(3, new ItemStack(Material.ENDER_PEARL, 1), ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Ender" + lvlString, ChatColor.WHITE + "Pearl control, shield, swap, and a melee baton.");
-
-		menu.open(p);
-	}
 	public boolean isPaintable(Block b){
 		return getPaintColor(b.getType()) != null;
 	}
@@ -435,87 +400,90 @@ public class InkWars extends JocEquips {
 		Material t = b.getType();
 		return (t.isBlock() && t.isOccluding() && t != Material.BARRIER) && !isPaintable(b);
 	}
-	abstract class InkWeapon extends PlayerWorldEventBus{
+	/**
+	 * The one kit everybody carries. The held item decides what paints: the Roller stick paints the floor under a walking player,
+	 * the Brush torch paints the wall in the crosshair while right-click is held, ink balls splash where they land and hurt around the impact.
+	 * Melee does nothing here; ink kills.
+	 */
+	class InkKit extends PlayerWorldEventBus{
+		static final int ROLLER_SLOT = 0;
+		static final int BRUSH_SLOT = 1;
 		private int reloadTicks = 0;
-		private boolean validWeapon = true;
-		private boolean enabled = true;
-		public InkWeapon(Player ply) {
-			super(ply);
+		private int brushCooldownTicks = 0;
+		private boolean valid = true;
+		private final ArrayList<Projectile> inkBalls = new ArrayList<>();
 
+		public InkKit(Player ply) {
+			super(ply);
 		}
-		public int getWeaponLevel() {
-			return getPlayerInfo(getPlayer()).getWeaponLevel();
+		int level() {
+			return getPlayerInfo(getPlayer()).getInkLevel();
 		}
 		@Override
 		public boolean isValid() {
-			return validWeapon;
-		}
-		public boolean isEnabled() {
-			return enabled;
-		}
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
+			return valid;
 		}
 		public void destroy() {
-			validWeapon = false;
+			valid = false;
 		}
-		public void tick(){
-			reloadTick();
-		}
-		/** Extra Speed potion levels the weapon grants wherever its owner stands. */
-		public int getSpeedLevelBonus(){
-			return 0;
-		}
-		public double getMaxHealth(){
-			return 20;
-		}
-		public int neededReloadTicks(){
-			return 50;
-		}
-		public int reloadTickIncrement(){ 
-			InkWarsPlayerInfo info = getPlayerInfo(getPlayer());
-			if(info.isSubmerged())return 8;
-			int i = 1;
-			EquipInkWars e = obtenirEquip(getPlayer());
-			boolean isOnItsColor = info.getTeamColorWherePlayerStands() == e;
-			boolean isInBaseRange = getPlayer().getLocation().distance(e.getTeamSpawnLocation()) < 10;
-			if(isOnItsColor || isInBaseRange)i += 4;
-			return i;
+		@Override
+		protected boolean getPlayerSpecificEventFiltering() {
+			return false; // a projectile hit carries its shooter too deep for the reflection filter; every hook checks the player itself
 		}
 		boolean isSubmerged(){
 			return getPlayerInfo(getPlayer()).isSubmerged();
 		}
-		/** A stroke needs the feet to move: turning the head in place lays no ink, so nobody pumps a puddle by wiggling the mouse. */
-		boolean movedFeet(PlayerMoveEvent evt){
-			return evt.getTo() != null && evt.getFrom().distanceSquared(evt.getTo()) > 1e-4;
+		ChatColor teamColour(){
+			return obtenirEquip(getPlayer()).getChatColor();
 		}
-		public int getMaxLoad(){
-			return 64;
+		ItemStack rollerItem(){
+			return Utils.setItemNameAndLore(new ItemStack(Material.STICK, 1), teamColour() + "Roller", ChatColor.WHITE + "Hold it and walk: paints the floor under you.");
 		}
-		//Functionality
-		public void giveTool(){
-			ItemStack toolMaterial = getToolMaterial();
-			if(toolMaterial == null)return;
-			Utils.giveItemStack(toolMaterial, getPlayer());
-			getPlayer().playSound(getPlayer().getEyeLocation(), Sound.BLOCK_CHEST_OPEN, 1F, 1F);
-			getPlayer().playSound(getPlayer().getEyeLocation(), Sound.BLOCK_PISTON_EXTEND, 1F, 1F);
+		ItemStack brushItem(){
+			return Utils.setItemNameAndLore(new ItemStack(Material.TORCH, 1), teamColour() + "Brush", ChatColor.WHITE + "Hold right-click: paints the wall you look at, four blocks away at most.");
 		}
-		public abstract ItemStack getToolMaterial();
-		public String[] getInstructions(){
-			return new String[0];
+		ItemStack inkBallItem(){
+			return Utils.setItemName(new ItemStack(Material.SNOWBALL, 1), teamColour() + "Ink ball");
 		}
-		public void showInstructions(){
-			for (String line : getInstructions()) {
-				sendPlayerMessage(getPlayer(), ChatColor.LIGHT_PURPLE + "[Weapon] " + ChatColor.WHITE + line);
-			}
+		/** The tools into fixed hotbar slots, the Roller in hand. */
+		public void give(){
+			Player p = getPlayer();
+			p.getInventory().setItem(ROLLER_SLOT, rollerItem());
+			p.getInventory().setItem(BRUSH_SLOT, brushItem());
+			p.getInventory().setHeldItemSlot(ROLLER_SLOT);
+			p.playSound(p.getEyeLocation(), Sound.BLOCK_CHEST_OPEN, 1F, 1F);
+			p.playSound(p.getEyeLocation(), Sound.BLOCK_PISTON_EXTEND, 1F, 1F);
+		}
+		public void tick(){
+			if(brushCooldownTicks > 0)brushCooldownTicks--;
+			reloadTick();
+			if(wetInkTicks % 20 == 0)restoreTools();
+		}
+		/** A dropped or lost tool comes back to its slot: the kit is the player, not loot. */
+		void restoreTools(){
+			Player p = getPlayer();
+			if(!p.getInventory().contains(Material.STICK))p.getInventory().setItem(ROLLER_SLOT, rollerItem());
+			if(!p.getInventory().contains(Material.TORCH))p.getInventory().setItem(BRUSH_SLOT, brushItem());
+		}
+		public int maxInkBalls(){
+			return 6 + Math.round(level() / 2f);
+		}
+		public int neededReloadTicks(){
+			return 50 - level() * 2;
+		}
+		/** Reloading runs five times faster on the team's colour or in the base, eight times under the ink. */
+		public int reloadTickIncrement(){
+			InkWarsPlayerInfo info = getPlayerInfo(getPlayer());
+			if(info.isSubmerged())return 8;
+			EquipInkWars e = obtenirEquip(getPlayer());
+			boolean onOwnColour = info.getTeamColorWherePlayerStands() == e;
+			boolean inBase = getPlayer().getLocation().distance(e.getTeamSpawnLocation()) < 10;
+			return onOwnColour || inBase ? 5 : 1;
 		}
 		public void reloadTick(){
-			if(getLoadMaterial() == null)return;
-			if(getPlayer().getInventory().contains(getLoadMaterial().getType(), getMaxLoad()))return;
-			if(reloadTicks >= neededReloadTicks()){				
-				ItemStack loadMaterial = getLoadMaterial();
-				if(loadMaterial == null)return;
-				Utils.giveItemStack(loadMaterial, getPlayer());
+			if(getPlayer().getInventory().contains(Material.SNOWBALL, maxInkBalls()))return;
+			if(reloadTicks >= neededReloadTicks()){
+				Utils.giveItemStack(inkBallItem(), getPlayer());
 				getPlayer().updateInventory();
 				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_ITEM_PICKUP, 0.4F, 1F);
 				reloadTicks = 0;
@@ -523,20 +491,84 @@ public class InkWars extends JocEquips {
 				reloadTicks += reloadTickIncrement();
 			}
 		}
-		public int getReloadTicks() {
-			return reloadTicks;
+		/** A stroke needs the feet to move: turning the head in place lays no ink, so nobody pumps a puddle by wiggling the mouse. */
+		boolean movedFeet(PlayerMoveEvent evt){
+			return evt.getTo() != null && evt.getFrom().distanceSquared(evt.getTo()) > 1e-4;
 		}
-		public void setReloadTicks(int reloadTicks) {
-			this.reloadTicks = reloadTicks;
+		@Override
+		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
+			super.onPlayerMove(evt, p);
+			if(p != getPlayer() || isSubmerged() || !movedFeet(evt))return;
+			if(p.getInventory().getItemInMainHand().getType() != Material.STICK)return;
+			rollerLinePaint(1 + Math.sqrt(level()), 0.4 + level() / 24.0, p);
 		}
-		public abstract ItemStack getLoadMaterial();
+		@Override
+		protected void onPlayerInteract(PlayerInteractEvent evt, Player p) {
+			super.onPlayerInteract(evt, p);
+			if(p != getPlayer() || evt.getHand() != EquipmentSlot.HAND)return;
+			if(evt.getAction() != Action.RIGHT_CLICK_BLOCK && evt.getAction() != Action.RIGHT_CLICK_AIR)return;
+			if(p.getInventory().getItemInMainHand().getType() != Material.TORCH)return;
+			evt.setCancelled(true); // the torch is a brush, it is never placed
+			if(brushCooldownTicks > 0 || isSubmerged())return;
+			RayTraceResult sight = p.rayTraceBlocks(BRUSH_REACH);
+			if(sight == null || sight.getHitBlock() == null)return;
+			Vector normal = sight.getHitBlockFace() == null ? new Vector(0, 1, 0) : sight.getHitBlockFace().getDirection();
+			Location impact = sight.getHitPosition().toLocation(getWorld()).add(normal.clone().multiply(0.3));
+			splash(impact, p.getEyeLocation().getDirection(), normal, 1.1 + level() * 0.1, 0.9);
+			getWorld().playSound(impact, Sound.ENTITY_SLIME_SQUISH, 0.5F, 1.5F);
+			brushCooldownTicks = 3;
+		}
+		@Override
+		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
+			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+			if(damager == getPlayer() && !ranged)evt.setCancelled(true);
+		}
+		@Override
+		protected void onProjectileLaunch(ProjectileLaunchEvent evt, Projectile proj) {
+			super.onProjectileLaunch(evt, proj);
+			ProjectileSource shooter = proj.getShooter();
+			if(!(shooter instanceof Player) || shooter != getPlayer())return;
+			if(isSubmerged()){ // Surface first: nothing is thrown from under the ink
+				evt.setCancelled(true);
+				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.6F, 0.8F);
+				return;
+			}
+			inkBalls.add(proj);
+		}
+		@Override
+		protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
+			super.onProjectileHit(evt, proj);
+			if(!inkBalls.remove(proj) || !(proj instanceof Snowball))return;
+			Block hitBlock = evt.getHitBlock();
+			Vector surfaceNormal = new Vector(0, 1, 0);
+			if (hitBlock != null && evt.getHitBlockFace() != null) {
+				surfaceNormal = evt.getHitBlockFace().getDirection();
+			} else if (evt.getHitEntity() != null) {
+				hitBlock = evt.getHitEntity().getLocation().getBlock();
+			} else {
+				hitBlock = proj.getLocation().getBlock();
+			}
+			Vector incoming = proj.getVelocity();
+			if (incoming.lengthSquared() < 1e-4) incoming = proj.getLocation().toVector().subtract(getPlayer().getEyeLocation().toVector());
+			Location impact = proj.getLocation().add(surfaceNormal.clone().multiply(0.3)); // a little off the surface, on the open side
+			getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_ATTACK, 1, 1.1F);
+			getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_JUMP, 1, 1.1F);
+			splash(impact, incoming, surfaceNormal, 1.9 + Math.sqrt(level() * 0.75), 1.3 + level() / 6.0);
+			for(Player p : Utils.getNearbyPlayers(impact, 1 + level())){
+				if(areEnemies(p, getPlayer())){
+					double targetDistance = Math.max(p.getLocation().distance(impact), 0.25);
+					double shotDistance = Math.max(impact.distance(getPlayer().getEyeLocation()), 0.25);
+					double splashDamage = 2 + (6.5 + (level() / 2.2)) / (targetDistance * (shotDistance / 3));
+					p.damage(splashDamage, getPlayer());
+				}
+			}
+		}
 		//Painting methods
-
 		public void rollerLinePaint(double width, double ink, Player p){
 			Vector normal = new Vector(0, 1, 0);
 			Vector forward = p.getLocation().getDirection();
 			Vector paintDir = normal.crossProduct(forward).normalize().multiply(width);
-			Vector startLoc = p.getLocation().toVector().subtract(paintDir);			
+			Vector startLoc = p.getLocation().toVector().subtract(paintDir);
 			BlockIterator i = new BlockIterator(getWorld(), startLoc, paintDir, -1, (int) Math.round(2 * width));
 			for (;i.hasNext();) {
 				Block b = i.next();
@@ -546,368 +578,19 @@ public class InkWars extends JocEquips {
 			}
 		}
 		public void paintBlock(Block b, double inkAmount){
-			if(!isEnabled())return;
 			paint(b, obtenirEquip(getPlayer()), getPlayer().getName(), inkAmount);
 		}
 		/** A splash cast as a fan of rays from the impact: ink lands on the surfaces the rays reach, never through a wall. */
 		protected void splash(Location impact, Vector incoming, Vector surfaceNormal, double radius, double ink){
-			if(!isEnabled())return;
 			for(InkSplash.Deposit deposit : InkSplash.cast(impact, incoming, surfaceNormal, InkSplash.Shape.of(radius, ink), solid)){
 				paintBlock(deposit.block(), deposit.amount());
 			}
 		}
-		/** Ink falling straight down around a point on the ground: a body, a surfacing swimmer, a melee hit. */
+		/** Ink falling straight down around a point on the ground: a body, a surfacing swimmer. */
 		protected void splashDown(Location feet, double radius, double ink){
 			splash(feet.clone().add(0, 0.4, 0), new Vector(0, -1, 0), new Vector(0, 1, 0), radius, ink);
 		}
 	}
-	abstract class ProjectileInkWeapon extends InkWeapon{
-		ArrayList<Projectile> onHoldProjectileList = new ArrayList<>();
-		public ProjectileInkWeapon(Player ply) {
-			super(ply);
-
-		}
-		@Override
-		protected boolean getPlayerSpecificEventFiltering() {
-			return false;
-		}
-		@Override
-		protected void onProjectileLaunch(ProjectileLaunchEvent evt,
-				Projectile proj) {
-			super.onProjectileLaunch(evt, proj);
-
-			ProjectileSource s = proj.getShooter();
-			if(s instanceof Player){
-				Player p = (Player) s;
-				if(p == getPlayer()){
-					if(isSubmerged()){ // Surface first: nothing is thrown from under the ink
-						evt.setCancelled(true);
-						p.playSound(p.getEyeLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.6F, 0.8F);
-						return;
-					}
-					registerProjectile(proj);
-				}
-			}
-		}
-		public void registerProjectile(Projectile proj) {
-			onHoldProjectileList.add(proj);
-		}
-		@Override
-		protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
-			super.onProjectileHit(evt, proj);
-
-			if(onHoldProjectileList.remove(proj)){
-				Block hitBlock = evt.getHitBlock();
-				Vector surfaceNormal = new Vector(0, 1, 0);
-				if (hitBlock != null && evt.getHitBlockFace() != null) {
-					surfaceNormal = evt.getHitBlockFace().getDirection();
-				} else if (evt.getHitEntity() != null) {
-					hitBlock = evt.getHitEntity().getLocation().getBlock();
-				} else {
-					hitBlock = proj.getLocation().getBlock();
-				}
-				Vector incoming = proj.getVelocity();
-				if (incoming.lengthSquared() < 1e-4) incoming = proj.getLocation().toVector().subtract(getPlayer().getEyeLocation().toVector());
-				Location impact = proj.getLocation().add(surfaceNormal.clone().multiply(0.3)); // a little off the surface, on the open side
-				onWeaponHit(evt, proj, hitBlock, impact, incoming, surfaceNormal);
-			}
-		}
-		public abstract void onWeaponHit(ProjectileHitEvent evt, Projectile proj, Block hitBlock, Location impact, Vector incoming, Vector surfaceNormal);
-	}
-	class MachinegunInkWeapon extends ProjectileInkWeapon{
-
-		public MachinegunInkWeapon(Player ply) {
-			super(ply);
-		}
-		@Override
-		public int getMaxLoad() {
-			return 4 + Math.round(getWeaponLevel() / 2);
-		}
-		@Override
-		public int neededReloadTicks() {
-			return 52 - Math.round(getWeaponLevel() * 2);
-		}
-		@Override
-		public void onWeaponHit(ProjectileHitEvent evt, Projectile proj, Block hitBlock, Location impact, Vector incoming, Vector surfaceNormal) {
-			if(proj instanceof Snowball){
-				getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_ATTACK, 1, 1.1F);
-				getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_JUMP, 1, 1.1F);
-				splash(impact, incoming, surfaceNormal, 1.9 + Math.sqrt(getWeaponLevel() * 0.75), 1.3 + getWeaponLevel() / 6.0);
-				for(Player p : Utils.getNearbyPlayers(impact, 1 + getWeaponLevel())){
-					if(areEnemies(p, getPlayer())){
-						double targetDistance = Math.max(p.getLocation().distance(impact), 0.25);
-						double shotDistance = Math.max(impact.distance(getPlayer().getEyeLocation()), 0.25);
-						double splashDamage = 2 + (6.5 + (getWeaponLevel() / 2.2))
-								/ (targetDistance * (shotDistance / 3));
-						p.damage(splashDamage, getPlayer());
-					}
-				}
-			}
-		}	
-		@Override
-		public ItemStack getLoadMaterial() {
-			return Utils.setItemName(new ItemStack(Material.SNOWBALL, 1), obtenirEquip(getPlayer()).getChatColor() + "Ink ball");
-		}
-		@Override
-		public String[] getInstructions() {
-			return new String[]{"Throw snowballs to paint and damage around their impact.", "Reload faster while standing in your base or on your team's color."};
-		}
-		@Override
-		public ItemStack getToolMaterial() {
-			return null; //No tool
-		}
-		@Override
-		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
-				Player damaged, Player damager, boolean ranged) {
-			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-			if(!ranged && damager == getPlayer()){
-				evt.setCancelled(true);
-			}
-		}
-	}
-	class EnderInkWeapon extends ProjectileInkWeapon{
-		String targetedName; // A name, not a Player: the target may disconnect and come back as a new Player object
-		int chargeTicks = 0;
-		int toolTicks = -1;
-		public EnderInkWeapon(Player ply) {
-			super(ply);
-		}
-		Player getTargeted(){ // Null while the target is offline
-			return targetedName == null ? null : Bukkit.getPlayer(targetedName);
-		}
-		boolean isTargeted(Player p){
-			return p.getName().equals(targetedName);
-		}
-		@Override
-		public double getMaxHealth() {
-			return 10;
-		}
-		@Override
-		public int getMaxLoad() {
-			return 2;
-		}
-		@Override
-		public int getSpeedLevelBonus() {
-			return 1;
-		}
-		@Override
-		public int neededReloadTicks() {
-			return 550;
-		}
-		@Override
-		public void onWeaponHit(ProjectileHitEvent evt, Projectile proj, Block hitBlock, Location impact, Vector incoming, Vector surfaceNormal) {
-			splash(impact, incoming, surfaceNormal, Math.sqrt(getWeaponLevel() / 2.0) + 2.5, 1.8 + getWeaponLevel() * 0.6);
-			getPlayerInfo(getPlayer()).setShieldTicks(20 * 6);
-		}
-
-		@Override
-		public ItemStack getToolMaterial() {
-			ItemStack i = new ItemStack(Material.BLAZE_ROD, 1);
-			i.addUnsafeEnchantment(Enchantment.KNOCKBACK, 1);
-			return Utils.setItemNameAndLore(i, ChatColor.GOLD + "Warp baton", ChatColor.WHITE + "Melee hit: 4 damage and knockback.", ChatColor.GRAY + "Consumed on hit; recharges after 5 seconds.");
-		}
-
-		@Override
-		public ItemStack getLoadMaterial() {
-			return Utils.setItemNameAndLore(new ItemStack(Material.ENDER_PEARL, 1), ChatColor.LIGHT_PURPLE + "Control pearl", ChatColor.WHITE + "Impact: paint a large zone and gain a 6s shield.", ChatColor.WHITE + "Hit enemy: their movement paints for your team for 6s.", ChatColor.WHITE + "Hit the marked enemy again: swap positions.", ChatColor.GRAY + "Reloads faster on your color or inside your base.");
-		}
-		@Override
-		public String[] getInstructions() {
-			return new String[]{"Throw a pearl at terrain to paint a large zone and gain a 6-second shield.", "Hit an enemy to make their movement paint for your team for 6 seconds; hit that marked enemy again to swap positions.", "Use the Warp baton for a knockback melee hit; it is consumed and returns after 5 seconds.", "Pearls reload faster in your base or while standing on your team's color."};
-		}
-		@Override
-		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
-				Player damaged, Player damager, boolean ranged) {
-			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-			if(damager == getPlayer() && !evt.isCancelled()){
-				if(ranged){
-					//LOGIC
-					if(isTargeted(damaged)){
-						//Add time to existing target
-						GUtils.swapPositions(damager, damaged);
-						//						int time = 4 * 20 + getWeaponLevel() * 10;
-						//						chargeTicks += time;
-						//						sendPlayerMessage(targeted, ChatColor.GRAY + getPlayer().getName() + " (+" + Double.toString(time/20.0) + "s)!");
-					}else{
-						//Change target
-						targetedName = damaged.getName();
-						chargeTicks = 6 * 20; //Starting charges
-						damager.playSound(damaged.getEyeLocation(), Sound.BLOCK_FURNACE_FIRE_CRACKLE, 1, (float) 1.2);
-						damaged.playSound(damaged.getEyeLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1, (float) 1.2);
-//						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
-//						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
-						sendPlayerMessage(damaged, ChatColor.GRAY + getPlayer().getName() + " has tricked you to paint for him (6s)!");
-						InkWeapon targetedActiveWeapon = getPlayerInfo(damaged).getActiveWeapon();
-
-						if (targetedActiveWeapon != null) {
-							if (targetedActiveWeapon instanceof RollerInkWeapon) {
-								targetedActiveWeapon.setEnabled(false); //Disable his roller
-							}
-						}			
-					}
-					getPlayerInfo(damaged).setShieldTicks(chargeTicks);
-					toolTicks = 4;
-				}else{
-					if(getPlayer().getItemInHand().getType() == Material.BLAZE_ROD){
-						getPlayer().getInventory().remove(getToolMaterial().getType());
-						evt.setDamage(4D);
-						toolTicks = 20 * 5;										
-					}else{evt.setCancelled(true);}
-				}
-			}
-		}
-		@Override
-		public void tick() {
-			super.tick();
-			if(toolTicks == 0){
-				getPlayer().getInventory().addItem(getToolMaterial());
-				toolTicks = -1;
-			}
-			if(toolTicks > 0)toolTicks--;
-			Player targeted = getTargeted();
-			if(chargeTicks > 0 && targeted != null){
-				rollerLinePaint(1.5 + (getWeaponLevel() / 3) + chargeTicks / (20 * 4), 0.4, targeted);
-
-				if(chargeTicks == 2) {
-					//Last
-					splashDown(targeted.getLocation(), Math.sqrt(4.5 + getWeaponLevel() * 0.25), 1.2);
-//					getWorld().playEffect(targeted.getEyeLocation(), Effect.INSTANT_SPELL, 4);
-//					getWorld().playEffect(targeted.getEyeLocation(), Effect.CLOUD, 4);
-//					getWorld().playSound(targeted.getEyeLocation(), Sound.ENTITY_FIREWORK_BLAST, 1, 1.2F);
-				}
-				if(chargeTicks <= 1){	//Because on chargeTicks=0 this object gets kicked from the memory		
-					InkWeapon targetedActiveWeapon = getPlayerInfo(targeted).getActiveWeapon();
-					if (targetedActiveWeapon != null) {
-						if (targetedActiveWeapon instanceof RollerInkWeapon) {
-							targetedActiveWeapon.setEnabled(true); //Re-enable his roller
-						}
-					}
-					chargeTicks = 0;
-					targetedName = null;
-				}
-				chargeTicks -= 1;
-//				getWorld().playEffect(targeted.getLocation().add(0.5, 0.12, 0.5), Effect.LAVA_POP, 4);
-
-			}
-		}
-		@Override
-		protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
-			super.onPlayerDeath(evt, killed);
-			if(isTargeted(killed)){
-				splashDown(killed.getLocation(), getWeaponLevel() + Math.round(chargeTicks / (20 * 1.5)), 1.5);
-			}
-		}
-
-	}
-	class RollerInkWeapon extends InkWeapon{
-		public RollerInkWeapon(Player ply) {
-			super(ply);
-		}
-		@Override
-		public double getMaxHealth() {
-			return 18;
-		}
-		@Override
-		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
-			super.onPlayerMove(evt, p);
-			if(p == getPlayer() && !isSubmerged() && movedFeet(evt)){
-				rollerLinePaint(getWidth(), 0.4 + getWeaponLevel() / 24.0, getPlayer());				
-			}
-		}
-		public double getWidth() {
-			return 1 + Math.sqrt(getWeaponLevel());
-		}
-
-
-		@Override
-		public ItemStack getLoadMaterial() {
-			return null; //No material
-		}
-		@Override
-		public ItemStack getToolMaterial() {
-			return Utils.setItemNameAndLore(new ItemStack(Material.STICK, 1), obtenirEquip(getPlayer()).getChatColor() + "Roller", ChatColor.WHITE + "Paints on a straight line perpendicular to your facing direction and the floor");
-		}
-		@Override
-		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
-				Player damaged, Player damager, boolean ranged) {
-			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-			if(!ranged && damager == getPlayer()){
-				evt.setCancelled(true);
-			}
-		}
-	}
-	class BrushInkWeapon extends InkWeapon{
-		String targetedName; // A name, not a Player: the target may disconnect and come back as a new Player object
-		int charges = 0;
-		public BrushInkWeapon(Player ply) {
-			super(ply);
-		}
-		Player getTargeted(){ // Null while the target is offline
-			return targetedName == null ? null : Bukkit.getPlayer(targetedName);
-		}
-		@Override
-		public double getMaxHealth() {
-			return 18;
-		}
-		@Override
-		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
-			super.onPlayerMove(evt, p);
-			if(p == getPlayer() && !isSubmerged() && movedFeet(evt)){
-				rollerLinePaint(getWidth(), 1.05 + getWeaponLevel() / 5.4, getPlayer());				
-			}
-		}
-		public double getWidth() {
-			return 0.1 + Math.sqrt(getWeaponLevel()) / 4;
-		}
-
-		@Override
-		public int getSpeedLevelBonus() {
-			return 1;
-		}
-		@Override
-		public ItemStack getLoadMaterial() {
-			return null; //No material
-		}
-		@Override
-		public ItemStack getToolMaterial() {
-			return Utils.setItemNameAndLore(new ItemStack(Material.TORCH, 1), obtenirEquip(getPlayer()).getChatColor() + "Brush", ChatColor.WHITE + "Paints on a straight line perpendicular to your facing direction and the floor");
-		}
-		@Override
-		public void tick() {
-			super.tick();
-			Player targeted = getTargeted();
-			if(targeted != null){
-				if(targeted.hasPotionEffect(PotionEffectType.WITHER)){
-					for(Player p : Utils.getNearbyPlayers(targeted, 1.5)){
-						if(areAllies(targeted, p))p.damage(0.1, getPlayer());
-					}
-				}
-			}
-		}
-		@Override
-		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
-				Player damaged, Player damager, boolean ranged) {
-			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-			if(damager != getPlayer())return;
-			if(!ranged && damager == getPlayer() && !damaged.hasPotionEffect(PotionEffectType.WITHER) && !evt.isCancelled()){
-				if(!damaged.getName().equals(targetedName)){
-					if(targetedName != null)charges = 0;
-					targetedName = damaged.getName();
-				}
-				evt.setDamage(0.25 + 0.1 * getWeaponLevel());
-				getWorld().playSound(damaged.getEyeLocation(), Sound.ENTITY_SLIME_ATTACK, 1, 1.1F + 0.4F * charges);
-				getWorld().playSound(damaged.getEyeLocation(), Sound.ENTITY_SLIME_JUMP, 1, 1.1F + 0.4F * charges);
-				splashDown(damaged.getLocation(), 0.5 + (0.25 + 0.1 * getWeaponLevel()) * charges, 0.7);
-				charges++;
-				if(charges > 3){
-					charges = 0;
-					damaged.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, (int) Math.round(20 * (5 + 0.6 * getWeaponLevel())), Math.round(getWeaponLevel() + 2 / 5)), true);
-					getWorld().playSound(damaged.getEyeLocation(), Sound.ENTITY_GENERIC_SWIM, 1, 1.25F);
-				}
-			}else if(!evt.isCancelled()){evt.setCancelled(true);}
-		}
-	}
-
 	@Override
 	public InkWarsPlayerInfo getPlayerInfo(Player p) {
 		return getPlayerInfo(p, InkWarsPlayerInfo.class);		
@@ -915,17 +598,26 @@ public class InkWars extends JocEquips {
 	public class InkWarsPlayerInfo extends PlayerInfo{
 		private int paintedBlockCount = 0;
 		private int alivePaintedBlocks = 0;
-		private InkWeapon activeWeapon = null;
-		private int weaponLevel = 1;
+		private InkKit kit = null;
+		private int inkLevel = 1;
 		private int dmgTicks = 0;
-		private int shieldTicks = 0;
+		// The squid
 		private boolean swimForm = false;
 		private boolean submerged = false;
 		private int submergedTicks = 0;
 		private BlockFace gripSide = null;
 		private BlockFace previousGripSide = null;
 		private int cornerTicks = 0;
-		//-----
+		/** Horizontal velocity the squid carries, blocks per tick; it is what was pushed last tick, so the client's own steering is read against it. */
+		private Vector momentum = new Vector();
+		private Location lastLocation = null;
+		/** Ink gathered by swimming, 0 to 1; released as a surge when the body comes out. */
+		private double charge = 0;
+		/** A surge waiting for the landing after the body left the ink in the air; negative when none. */
+		private double pendingSurge = -1;
+		private Vector flight = new Vector();
+		/** The barrier only this client sees in its head block, forcing the crawl pose while submerged on a floor. */
+		private Location fakeCeiling = null;
 
 		public InkWarsPlayerInfo() {
 			super();
@@ -936,82 +628,103 @@ public class InkWars extends JocEquips {
 		public int getAlivePaintedBlocks() {
 			return alivePaintedBlocks;
 		}
-		public boolean isShielded(){
-			return getShieldTicks() > 0;
-		}
-		public int getShieldTicks() {
-			return shieldTicks;
-		}
-		public void setShieldTicks(int shieldTicks) {
-			boolean shieldWasInactive = this.shieldTicks <= 0;
-			this.shieldTicks = Math.max(0, shieldTicks);
-			if(shieldWasInactive && this.shieldTicks > 0){
-				getWorld().spawnParticle(Particle.END_ROD, getPlayer().getLocation().add(0, 1, 0), 18, 0.5, 0.8, 0.5, 0.02);
-				getPlayer().playSound(getPlayer().getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.7F, 1.6F);
-			}
-		}
 		@Override
 		public void ultraTick() {
 			super.ultraTick();
 			Player p = getPlayer();
+			Location now = p.getLocation();
+			Vector moved = lastLocation == null || lastLocation.getWorld() != now.getWorld() ? new Vector() : now.toVector().subtract(lastLocation.toVector());
+			lastLocation = now;
 			EquipInkWars team = obtenirEquip(p);
 			EquipInkWars colourUnderfoot = getTeamColorWherePlayerStands();
 			boolean onOwnColour = colourUnderfoot == team;
-			boolean onEnemyColour = colourUnderfoot != null && !onOwnColour && !isShielded();
-			gripSide = swimForm && getActiveWeapon() != null ? ownWallBeside(team) : null;
+			boolean onEnemyColour = colourUnderfoot != null && !onOwnColour;
+			gripSide = swimForm && kit != null ? ownWallBeside(team) : null;
 
-			boolean wantsToSwim = swimForm && getActiveWeapon() != null && (onOwnColour || gripSide != null);
-			if(wantsToSwim && !submerged)dive();
-			if(!wantsToSwim && submerged)surface();
-			if(submerged)tickSubmerged(team);
+			boolean wantsToSwim = swimForm && kit != null && (onOwnColour || gripSide != null);
+			if(wantsToSwim && !submerged)dive(moved);
+			if(!wantsToSwim && submerged)surface(moved);
+			if(submerged)tickSubmerged(team, moved);
+			else tickPendingSurge();
 			previousGripSide = submerged ? gripSide : null;
 
 			applyInkSpeed(onOwnColour, onEnemyColour);
 			tickEnemyInkDamage(onEnemyColour);
-			tickShield();
+			p.setExp((float) Math.min(0.999, Math.max(0, pendingSurge >= 0 ? pendingSurge : charge)));
 		}
 		public boolean isSubmerged(){
 			return submerged;
 		}
-		/** One press of sneak switches form: in swim form the body dives wherever it touches its own colour, out of it the player stands whatever the ground. */
+		/** One press of sneak switches form: in squid form the body dives wherever it touches its own colour, out of it the player stands whatever the ground. */
 		public void toggleSwimForm(){
 			swimForm = !swimForm;
 			Player p = getPlayer();
 			if(swimForm){
 				p.playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.7F, 1.4F);
-				PaperMessages.sendActionBar(p, obtenirEquip(p).getChatColor() + "Swim form" + ChatColor.GRAY + ": you dive on your own colour", 40);
+				PaperMessages.sendActionBar(p, obtenirEquip(p).getChatColor() + "Squid form" + ChatColor.GRAY + ": you dive on your own colour", 40);
 			}else{
 				p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_SWIM, 0.6F, 1.2F);
 				PaperMessages.sendActionBar(p, ChatColor.GRAY + "On your feet", 30);
 			}
 		}
-		/** Diving: the body goes under the ink, the armour with it, only a ripple stays visible. */
-		private void dive(){
+		/** Diving: the body goes under the ink, the armour with it, only a ripple stays visible. The walking speed is carried into the swim. */
+		private void dive(Vector moved){
 			submerged = true;
 			submergedTicks = 0;
 			cornerTicks = 0;
+			momentum = new Vector(moved.getX(), 0, moved.getZ());
 			Player p = getPlayer();
 			p.getInventory().setArmorContents(null);
 			p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 0.7F);
 			getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 		}
-		/** Coming out of the ink: armour back, a splash of paint where the body surfaces. The velocity is left alone, so letting go of a wall keeps the momentum. */
-		private void surface(){
+		/**
+		 * Coming out of the ink: armour back, and the charge goes off as a surge. On the ground it splashes here and now; in the air it waits for the landing
+		 * and splashes along the flight. The velocity is left alone, so letting go of a wall or flying off an edge keeps the momentum.
+		 */
+		private void surface(Vector moved){
 			if(!submerged)return;
 			surfaceQuietly();
 			Player p = getPlayer();
 			p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 1.3F);
 			getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
-			InkWeapon weapon = getActiveWeapon();
-			if(weapon != null)weapon.splashDown(p.getLocation(), 1.5, 0.7);
+			if(p.isOnGround()){
+				releaseSurge(charge, p.getLocation(), new Vector(0, -1, 0));
+			}else{
+				pendingSurge = charge;
+				flight = moved.clone();
+			}
+			charge = 0;
 		}
-		/** The flag and the armour only, for a death or a weapon change that re-issues the kit anyway. */
+		private void tickPendingSurge(){
+			if(pendingSurge < 0)return;
+			Player p = getPlayer();
+			if(!p.isOnGround())return;
+			Vector incoming = flight.lengthSquared() < 1e-4 ? new Vector(0, -1, 0) : flight;
+			releaseSurge(pendingSurge, p.getLocation(), incoming);
+			pendingSurge = -1;
+		}
+		/** The surge: the ink gathered while swimming, thrown around the body as it comes out. A full charge is a grenade: a wide splash and a bite on enemies near it. */
+		private void releaseSurge(double amount, Location feet, Vector incoming){
+			if(kit == null)return;
+			Player p = getPlayer();
+			double radius = 1.5 + 2.5 * amount;
+			kit.splash(feet.clone().add(0, 0.4, 0), incoming, new Vector(0, 1, 0), radius, 0.7 + 1.5 * amount);
+			if(amount < 0.1)return;
+			getWorld().playSound(feet, Sound.ENTITY_SLIME_ATTACK, (float) (0.6 + amount), (float) (1.3 - 0.5 * amount));
+			getWorld().spawnParticle(Particle.SPLASH, feet.clone().add(0, 0.3, 0), (int) (30 + 80 * amount), radius * 0.4, 0.3, radius * 0.4, 0);
+			for(Player enemy : Utils.getNearbyPlayers(feet, radius)){
+				if(areEnemies(enemy, p))enemy.damage(2 + 4 * amount, p);
+			}
+		}
+		/** The flag, the pose and the armour only, for a death or a kit change that re-issues the kit anyway. */
 		private void surfaceQuietly(){
 			submerged = false;
 			gripSide = null;
 			previousGripSide = null;
 			Player p = getPlayer();
 			p.removePotionEffect(PotionEffectType.INVISIBILITY);
+			dropFakeCeiling();
 			Utils.donarItemsPlayer(p, getStartingItems(p));
 		}
 		/**
@@ -1039,44 +752,101 @@ public class InkWars extends JocEquips {
 			if(Math.abs(direction.getX()) > Math.abs(direction.getZ()))return direction.getX() > 0 ? BlockFace.EAST : BlockFace.WEST;
 			return direction.getZ() > 0 ? BlockFace.SOUTH : BlockFace.NORTH;
 		}
-		/**
-		 * Submerged: unseen, healing, a ripple in the team colour, and every block the body touches is wet again. Gripping a wall the body climbs it at full speed,
-		 * slower for half a second after the grip turns a corner; when the wall ends under the climb, the momentum carries the body over the edge onto the top.
-		 */
-		private void tickSubmerged(EquipInkWars team){
+		/** Submerged: unseen, healing, a ripple in the team colour that thickens with speed, every block the body touches wet again, ink charging with the distance swum. */
+		private void tickSubmerged(EquipInkWars team, Vector moved){
 			Player p = getPlayer();
 			submergedTicks++;
 			p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 40, 0, true, false));
 			p.setFallDistance(0);
 			if(submergedTicks % 20 == 0)Utils.healDamageable(p, 1.0);
+			double speed = Math.sqrt(moved.getX() * moved.getX() + moved.getZ() * moved.getZ());
+			charge = Math.min(1, charge + speed * CHARGE_PER_BLOCK);
 			if(submergedTicks % 2 == 0){
 				Particle.DustOptions ripple = new Particle.DustOptions(team.getStrongColor().getColor(), 1.4F);
-				getWorld().spawnParticle(Particle.DUST, p.getLocation().add(0, 0.15, 0), 4, 0.45, 0.05, 0.45, 0, ripple);
+				getWorld().spawnParticle(Particle.DUST, p.getLocation().add(0, 0.15, 0), (int) (3 + speed * 12), 0.45, 0.05, 0.45, 0, ripple);
 			}
 			Block floor = getBlockWherePlayerStands();
 			if(floor != null)rewet(floor, team, p.getName());
 			if(cornerTicks > 0)cornerTicks--;
 			if(gripSide != null){
-				if(previousGripSide != null && previousGripSide != gripSide)cornerTicks = CORNER_TICKS;
-				Block feet = p.getLocation().getBlock();
-				rewet(feet.getRelative(gripSide), team, p.getName());
-				rewet(feet.getRelative(gripSide).getRelative(BlockFace.UP), team, p.getName());
-				double climb = cornerTicks > 0 ? 0.16 : 0.28;
-				Vector into = gripSide.getDirection();
-				Vector current = p.getVelocity();
-				p.setVelocity(new Vector(current.getX() * 0.8 + into.getX() * 0.1, climb, current.getZ() * 0.8 + into.getZ() * 0.1));
+				tickWallGrip(team, moved);
+				dropFakeCeiling();
 			}else if(previousGripSide != null && !p.isOnGround()){
+				// the wall ended under the climb: the momentum carries the body over the edge onto the top
 				Vector over = previousGripSide.getDirection();
-				p.setVelocity(new Vector(over.getX() * 0.3, 0.2, over.getZ() * 0.3));
+				momentum = new Vector(over.getX() * 0.3, 0, over.getZ() * 0.3);
+				p.setVelocity(new Vector(momentum.getX(), 0.2, momentum.getZ()));
+				dropFakeCeiling();
+			}else{
+				tickFloorSwim(moved);
+				tickCrawlPose();
 			}
 		}
-		/** Own colour is fast, enemy colour is mud. Potion levels refreshed every tick so they vanish the moment the ground changes. */
+		/**
+		 * The squid on a floor runs on momentum: what the client moved beyond the momentum pushed last tick is its steering, and steering only sets a direction,
+		 * the acceleration is the squid's own. Momentum keeps most of itself each tick, so the body slides through turns and glides when the keys are released,
+		 * and it is capped at squid speed, twice a sprint.
+		 */
+		private void tickFloorSwim(Vector moved){
+			steer(moved);
+			Player p = getPlayer();
+			double fall = p.getVelocity().getY();
+			p.setVelocity(new Vector(momentum.getX(), fall, momentum.getZ()));
+		}
+		private void steer(Vector moved){
+			Vector observed = new Vector(moved.getX(), 0, moved.getZ());
+			Vector steering = observed.subtract(momentum);
+			momentum.multiply(SQUID_FRICTION);
+			if(steering.lengthSquared() > 0.0004)momentum.add(steering.normalize().multiply(SQUID_ACCELERATION));
+			if(momentum.lengthSquared() > SQUID_TOP_SPEED * SQUID_TOP_SPEED)momentum.normalize().multiply(SQUID_TOP_SPEED);
+		}
+		/**
+		 * Gripping a wall the body climbs at full speed while its momentum runs along the wall. When the grip turns a corner the momentum is directed onto the new wall,
+		 * the part that was heading into it is dropped and the rest loses a little, and the climb is slower for half a second.
+		 */
+		private void tickWallGrip(EquipInkWars team, Vector moved){
+			Player p = getPlayer();
+			Vector into = gripSide.getDirection();
+			if(previousGripSide != null && previousGripSide != gripSide){
+				cornerTicks = CORNER_TICKS;
+				momentum.subtract(into.clone().multiply(momentum.dot(into))).multiply(0.85);
+			}
+			Block feet = p.getLocation().getBlock();
+			rewet(feet.getRelative(gripSide), team, p.getName());
+			rewet(feet.getRelative(gripSide).getRelative(BlockFace.UP), team, p.getName());
+			steer(moved);
+			momentum.subtract(into.clone().multiply(momentum.dot(into))); // along the wall only
+			double climb = cornerTicks > 0 ? CLIMB_SPEED * 0.55 : CLIMB_SPEED;
+			p.setVelocity(new Vector(momentum.getX() + into.getX() * 0.1, climb, momentum.getZ() + into.getZ() * 0.1));
+		}
+		/**
+		 * The crawl pose is the squid: the client is shown a barrier in its head block, so it cannot stand and drops to the swimming pose, camera and hitbox at squid height.
+		 * Only this client sees it, and nobody else needs to since the body is invisible. Looking up more than thirty degrees clears it, so a jump out of the ink is always possible.
+		 */
+		private void tickCrawlPose(){
+			Player p = getPlayer();
+			Block head = p.getLocation().getBlock().getRelative(BlockFace.UP);
+			boolean wanted = p.getLocation().getPitch() > -30 && head.isPassable();
+			if(!wanted){
+				dropFakeCeiling();
+				return;
+			}
+			Location wantedAt = head.getLocation();
+			if(fakeCeiling != null && fakeCeiling.equals(wantedAt))return;
+			dropFakeCeiling();
+			p.sendBlockChange(wantedAt, Material.BARRIER.createBlockData());
+			fakeCeiling = wantedAt;
+		}
+		private void dropFakeCeiling(){
+			if(fakeCeiling == null)return;
+			Player p = getPlayer();
+			if(p != null && fakeCeiling.getWorld() == p.getWorld())p.sendBlockChange(fakeCeiling, fakeCeiling.getBlock().getBlockData());
+			fakeCeiling = null;
+		}
+		/** Own colour is fast, enemy colour is mud. Under the ink the squid carries itself, no potion. Refreshed every tick so they vanish the moment the ground changes. */
 		private void applyInkSpeed(boolean onOwnColour, boolean onEnemyColour){
 			Player p = getPlayer();
-			int speedLevels = 0;
-			if(onOwnColour)speedLevels += 1;
-			if(submerged)speedLevels += 1;
-			if(getActiveWeapon() != null)speedLevels += getActiveWeapon().getSpeedLevelBonus();
+			int speedLevels = onOwnColour && !submerged ? 1 : 0;
 			int slownessLevels = onEnemyColour && !submerged ? 2 : 0;
 			if(speedLevels > 0)p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 5, speedLevels - 1, true, false));
 			else p.removePotionEffect(PotionEffectType.SPEED);
@@ -1095,17 +865,6 @@ public class InkWars extends JocEquips {
 				dmgTicks = 0;
 			}
 		}
-		private void tickShield(){
-			if(shieldTicks <= 0)return;
-			if(shieldTicks % 5 == 0){
-				getWorld().spawnParticle(Particle.END_ROD, getPlayer().getLocation().add(0, 1, 0), 3, 0.45, 0.65, 0.45, 0);
-			}
-			shieldTicks--;
-			if(shieldTicks == 0){
-				getWorld().spawnParticle(Particle.SMOKE, getPlayer().getLocation().add(0, 1, 0), 10, 0.4, 0.6, 0.4, 0.02);
-				getPlayer().playSound(getPlayer().getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.6F, 1.8F);
-			}
-		}
 		public void registerBlockPaint(EquipInkWars oldOwner){
 			paintedBlockCount++;
 			alivePaintedBlocks++;
@@ -1117,51 +876,32 @@ public class InkWars extends JocEquips {
 		public void registerDeath(){
 			swimForm = false;
 			surfaceQuietly();
+			charge = 0;
+			pendingSurge = -1;
+			momentum = new Vector();
 			alivePaintedBlocks *= 0.8; //Reduce player points by 20%
 			getPlayer().setLevel(alivePaintedBlocks);
 			sendPlayerMessage(getPlayer(), ChatColor.RED + "You have lost 20% of your points");
 		}
-		public InkWeapon getActiveWeapon() {
-			return activeWeapon;
+		public InkKit getKit() {
+			return kit;
 		}
-		public void setActiveWeapon(InkWeapon newWeapon) {
-			InkWeapon pW = this.activeWeapon;
-			if (pW != null) {
-				pW.destroy();
-			}
-			submerged = false;
-			gripSide = null;
-			previousGripSide = null;
-			getPlayer().removePotionEffect(PotionEffectType.INVISIBILITY);
-			double healthBeforeSwitch = getPlayer().getHealth();
-			getPlayer().setMaxHealth(newWeapon.getMaxHealth());
+		public void setKit(InkKit newKit) {
+			if (kit != null) kit.destroy();
+			swimForm = false;
+			surfaceQuietly();
 			donarItemsInicials(getPlayer()); //Clears and gives starting (colored) armor
-			getPlayer().setHealth(Math.min(healthBeforeSwitch, getPlayer().getMaxHealth()));
-			this.activeWeapon = newWeapon;
-			this.activeWeapon.giveTool();
+			kit = newKit;
+			kit.give();
 		}
-		public int getWeaponLevel() {
-			return weaponLevel;
+		public int getInkLevel() {
+			return inkLevel;
 		}
-		public void setWeaponLevel(int weaponLevel) {
-			this.weaponLevel = weaponLevel;
-		}
-		public void weaponLevelUp(){
-			setWeaponLevel(getWeaponLevel() + 1);
+		public void setInkLevel(int inkLevel) {
+			this.inkLevel = inkLevel;
 		}
 		public EquipInkWars getTeamColorWherePlayerStands(){
 			return getTeamOwningBlock(getBlockWherePlayerStands());
-		}
-
-	}
-	@Override
-	protected void onPlayerInteract(PlayerInteractEvent evt, Player p) {
-		super.onPlayerInteract(evt, p);
-		Block b = evt.getClickedBlock();
-		if(b != null){
-			if(b.getType() == Material.OAK_WALL_SIGN){
-				openWeaponSelectionMenu(p); //For service stations
-			}
 		}
 	}
 	@Override
@@ -1179,10 +919,10 @@ public class InkWars extends JocEquips {
 	@Override
 	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
 		super.onPlayerDeathByPlayer(evt, killed, killer);
-		InkWeapon killerWeapon = getPlayerInfo(killer).getActiveWeapon();
-		if (killerWeapon == null) return;
-		// The splat: a kill is painted where the body fell, whatever the weapon
-		killerWeapon.splashDown(killed.getLocation(), 3 + Math.sqrt(killerWeapon.getWeaponLevel()), 2);
+		InkKit killerKit = getPlayerInfo(killer).getKit();
+		if (killerKit == null) return;
+		// The splat: a kill is painted where the body fell
+		killerKit.splashDown(killed.getLocation(), 3 + Math.sqrt(killerKit.level()), 2);
 		getWorld().playSound(killed.getLocation(), Sound.ENTITY_SLIME_DEATH, 1F, 0.8F);
 		getWorld().playSound(killed.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 1F, 0.9F);
 	}
