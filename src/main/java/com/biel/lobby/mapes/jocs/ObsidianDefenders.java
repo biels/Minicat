@@ -1449,7 +1449,7 @@ public class ObsidianDefenders extends JocEquips {
 		showControlPoint(point);
 		donarOr(captor, GOLD_PER_CAPTURE);
 		carregarPont(team, SQUARES_PER_CAPTURE);
-		sendGlobalMessage(ChatColor.GRAY + captor.getName() + " ha capturat el punt de control (" + team.getChatColor() + pointsHeldBy(team) + ChatColor.GRAY + "/" + controlPoints.size() + ")");
+		sendGlobalMessage(team.getChatColor() + captor.getName() + ChatColor.GRAY + " ha capturat el punt de control (" + pointsHeldBy(team) + "/" + controlPoints.size() + ") " + ChatColor.WHITE + "(" + ChatColor.GOLD + "+" + GOLD_PER_CAPTURE + ChatColor.WHITE + ")");
 		world.playSound(point.centre(), Sound.BLOCK_BEACON_POWER_SELECT, 1F, 1.2F);
 		for (Player p : team.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6F, 1.6F);
 	}
