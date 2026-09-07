@@ -95,6 +95,7 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int OR_PER_GOLEM = 22;
 	/** The iron golem is El Guardià: named, lit by an aura and documented in game (docs/games/obsidian-defenders/guardian-golem-design.md). */
 	private static final String NOM_GUARDIÀ = "El Guardià";
+	private static final String TÍTOL_GUARDIÀ = "El Guardià de l'obsidiana";
 	/** Glacial cyan, deliberately neither team's colour: the blue team is navy. */
 	private static final Color COLOR_AURA_GUARDIÀ = Color.fromRGB(90, 200, 255);
 	private static final Color COLOR_AURA_ENFURISMAT = Color.fromRGB(220, 245, 255);
@@ -549,6 +550,10 @@ public class ObsidianDefenders extends JocEquips {
 		return e instanceof IronGolem && golemActual != null && golemActual.equals(e.getUniqueId());
 	}
 
+	private boolean matatPelGuardià(Player mort) {
+		return mort.getLastDamageCause() instanceof EntityDamageByEntityEvent cop && ésElGolem(cop.getDamager());
+	}
+
 	private IronGolem guardiàViu() {
 		if (golemActual == null) return null;
 		Entity e = Bukkit.getEntity(golemActual);
@@ -814,7 +819,7 @@ public class ObsidianDefenders extends JocEquips {
 					rètolsPont.put(e.getId(), bloc);
 					Block botó = botóVeí(bloc);
 					if (botó != null) botonsPont.put(botó, e.getId());
-					escriureRètol(bloc, ChatColor.DARK_AQUA + "Pont enemic", barraPont(e), "", "");
+					escriureRètol(bloc, etiquetaPont(e, "Pont enemic"), barraPont(e), "", "");
 				} else if (text.contains("sewers")) {
 					escriureRètol(bloc, ChatColor.DARK_GRAY + "Clavegueres", ChatColor.GRAY + "obertes", "", "");
 				} else {
@@ -1056,14 +1061,24 @@ public class ObsidianDefenders extends JocEquips {
 		mostrarCàrregaPont(e);
 	}
 
+	private boolean pontCarregat(Equip e) {
+		return càrregaPont.getOrDefault(e.getId(), 0) >= PONT_CÀRREGA_MÀXIMA;
+	}
+
+	/** White squares fill quietly; the bar and its label turn aqua only when the bridge is ready. */
 	private String barraPont(Equip e) {
 		int càrrega = càrregaPont.getOrDefault(e.getId(), 0);
-		return ChatColor.AQUA + QUADRAT_PLE.repeat(càrrega) + ChatColor.DARK_GRAY + QUADRAT_BUIT.repeat(PONT_CÀRREGA_MÀXIMA - càrrega);
+		ChatColor plens = pontCarregat(e) ? ChatColor.AQUA : ChatColor.WHITE;
+		return plens + QUADRAT_PLE.repeat(càrrega) + ChatColor.DARK_GRAY + QUADRAT_BUIT.repeat(PONT_CÀRREGA_MÀXIMA - càrrega);
+	}
+
+	private String etiquetaPont(Equip e, String text) {
+		return (pontCarregat(e) ? ChatColor.AQUA : ChatColor.GRAY) + text;
 	}
 
 	private void mostrarCàrregaPont(Equip e) {
 		Block rètol = rètolsPont.get(e.getId());
-		if (rètol != null) escriureRètol(rètol, ChatColor.DARK_AQUA + "Pont enemic", barraPont(e), "", "");
+		if (rètol != null) escriureRètol(rètol, etiquetaPont(e, "Pont enemic"), barraPont(e), "", "");
 		for (Player p : e.getPlayers()) updateScoreBoard(p);
 	}
 
@@ -1074,7 +1089,7 @@ public class ObsidianDefenders extends JocEquips {
 			return;
 		}
 		Equip enemic = obtenirEquipEnemic(e);
-		if (càrregaPont.getOrDefault(e.getId(), 0) < PONT_CÀRREGA_MÀXIMA || pontsDesplegats.contains(enemic.getId())) {
+		if (!pontCarregat(e) || pontsDesplegats.contains(enemic.getId())) {
 			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
 			return;
 		}
@@ -1202,7 +1217,9 @@ public class ObsidianDefenders extends JocEquips {
 			}
 		}
 		if (killer == null || killer == player) {
-			evt.setDeathMessage(player.getName() + " s'ha mort tot sol");
+			evt.setDeathMessage(matatPelGuardià(player)
+					? ChatColor.AQUA + TÍTOL_GUARDIÀ + ChatColor.WHITE + " ha matat a " + player.getName()
+					: player.getName() + " s'ha mort tot sol");
 			pTemp().EstablirPropietat(player.getName() + "Morts", "0");
 			pPlayer(player).IncrementarPropietat("Morts");
 			updateScoreBoards();
@@ -1499,7 +1516,7 @@ public class ObsidianDefenders extends JocEquips {
 			list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
 			if (pMapaActual().ExisteixPropietat("Golem")) list.add(ChatColor.AQUA + "Guardià: " + estatGuardià());
 			Equip equip = obtenirEquip(ply);
-			if (equip != null) list.add(ChatColor.AQUA + "Pont: " + barraPont(equip));
+			if (equip != null) list.add(etiquetaPont(equip, "Pont: ") + barraPont(equip));
 			if (Ability.hasAbility(plugin, this, ply, AbilityType.ESPADATXI)) {
 				list.add(ChatColor.BLUE + "Espadatxí: " + pPlayer(ply).ObtenirPropietatInt("StrongHitCount"));
 			}
