@@ -1427,7 +1427,8 @@ public class ObsidianDefenders extends JocEquips {
 			if (point.progress >= CAPTURE_SECONDS) {
 				capture(point, obtenirEquip(team), challenger.getValue());
 			} else {
-				world.playSound(point.centre(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8F, 0.8F + 0.2F * point.progress);
+				// A soft note climbing with each lamp, heard in the room only.
+				world.playSound(point.centre(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5F, 1.0F + 0.25F * point.progress);
 			}
 			return;
 		}
@@ -1435,6 +1436,8 @@ public class ObsidianDefenders extends JocEquips {
 		boolean challenging = point.chargingTeam != null && (point.owner == null || !point.owner.equals(point.chargingTeam));
 		if (!challenging) return;
 		point.progress--;
+		// The same note stepping back down as the challenge fades.
+		world.playSound(point.centre(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.35F, 0.9F + 0.25F * Math.max(0, point.progress));
 		if (point.progress <= 0) {
 			point.chargingTeam = point.owner;
 			point.progress = point.owner == null ? 0 : CAPTURE_SECONDS;
@@ -1443,6 +1446,7 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	private void capture(ControlPoint point, Equip team, Player captor) {
+		Equip previousOwner = point.owner == null ? null : obtenirEquip(point.owner);
 		point.owner = team.getId();
 		point.chargingTeam = team.getId();
 		point.progress = CAPTURE_SECONDS;
@@ -1450,8 +1454,12 @@ public class ObsidianDefenders extends JocEquips {
 		donarOr(captor, GOLD_PER_CAPTURE);
 		carregarPont(team, SQUARES_PER_CAPTURE);
 		sendGlobalMessage(team.getChatColor() + captor.getName() + ChatColor.GRAY + " ha capturat el punt de control (" + pointsHeldBy(team) + "/" + controlPoints.size() + ") " + ChatColor.WHITE + "(" + ChatColor.GOLD + "+" + GOLD_PER_CAPTURE + ChatColor.WHITE + ")");
-		world.playSound(point.centre(), Sound.BLOCK_BEACON_POWER_SELECT, 1F, 1.2F);
-		for (Player p : team.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6F, 1.6F);
+		// In the room a level-up chime; the capturing team hears a bell wherever they are, the team that lost it a low bass.
+		world.playSound(point.centre(), Sound.ENTITY_PLAYER_LEVELUP, 0.6F, 1.5F);
+		for (Player p : team.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.5F, 1.2F);
+		if (previousOwner != null && previousOwner != team) {
+			for (Player p : previousOwner.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5F, 0.6F);
+		}
 	}
 
 	/**
