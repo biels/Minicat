@@ -2,6 +2,7 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -168,6 +169,8 @@ public class ObsidianDefenders extends JocEquips {
 	private final List<ControlPoint> controlPoints = new ArrayList<>();
 	/** Team id → that base's redstone lamps, nearest the spawn first: the bridge bar in light. */
 	private final Map<Integer, List<Block>> lampsByTeam = new HashMap<>();
+	/** Team id → the lamps on that team's half of every middle-room tower, bottom row first: the same bar, seen from the whole map. */
+	private final Map<Integer, List<Block>> towerLampsByTeam = new HashMap<>();
 	/** Team id → seconds of captured-point time not yet turned into a square. */
 	private final Map<Integer, Integer> pointSecondsByTeam = new HashMap<>();
 	/** Player → the plate shown pressed for them; the real block never changes. */
@@ -177,13 +180,14 @@ public class ObsidianDefenders extends JocEquips {
 
 	/**
 	 * A middle room: one plate per team, its lamps, and who holds it. The room's lamps are
-	 * split by the side of the room they sit on: the lamps on a team's plate side (the wall
-	 * lamp beside the plate and that half of the tower on top) light when that team holds
-	 * the point, the lamps on the centre line light while anyone does.
+	 * split by the side of the room they sit on: the wall lamp beside a team's plate lights
+	 * when that team holds the point, the lamps on the centre line light while anyone does.
+	 * The tower on top of the room is not the point's: each half is its team's bridge bar
+	 * ({@link #towerLampsByTeam}).
 	 */
 	private static final class ControlPoint {
 		final Map<Integer, Block> plateByTeam = new HashMap<>();
-		/** The side lamps and the tower: lit on the owner's side. */
+		/** The side lamps at room level: lit on the owner's side. */
 		final List<Block> lamps = new ArrayList<>();
 		/** The lamps on the centre line at room level, west to east: the capture progress, lit from the charging team's side. */
 		final List<Block> wallLamps = new ArrayList<>();
@@ -239,8 +243,12 @@ public class ObsidianDefenders extends JocEquips {
 	/** A control point's lamps: within this many blocks horizontally of the room's centre, from the floor up to the tower on top of it. */
 	private static final int CONTROL_POINT_LAMP_REACH = 6;
 	private static final int CONTROL_POINT_TOWER_HEIGHT = 20;
+	/** Lamps higher than this above the plates are the tower, not the room. */
+	private static final int CONTROL_POINT_ROOM_HEIGHT = 3;
 	/** A base's bridge lamps are the ones around its bridge sign. */
 	private static final int BRIDGE_LAMP_REACH = 6;
+	/** Lamp banks light as a bar in this order: bottom row first, west to east. */
+	private static final Comparator<Block> BOTTOM_ROW_FIRST = (l1, l2) -> l1.getY() != l2.getY() ? Integer.compare(l1.getY(), l2.getY()) : Integer.compare(l1.getX(), l2.getX());
 	/** Who is shown a plate pressed: everyone this close to it. */
 	private static final double PLATE_VIEW_DISTANCE = 16;
 	private static final long PONT_TICKS_PER_COLUMNA = 10;
@@ -1270,6 +1278,7 @@ public class ObsidianDefenders extends JocEquips {
 	private void registerControlPointsAndLamps() {
 		controlPoints.clear();
 		lampsByTeam.clear();
+		towerLampsByTeam.clear();
 		pointSecondsByTeam.clear();
 		if (Equips.size() < 2) return;
 		Location a = Equips.get(0).getTeamSpawnLocation(), b = Equips.get(1).getTeamSpawnLocation();
@@ -1293,19 +1302,27 @@ public class ObsidianDefenders extends JocEquips {
 			int cy = centre.getBlockY();
 			for (Block lamp : blocksBetween(centre.getBlockX() - CONTROL_POINT_LAMP_REACH, centre.getBlockZ() - CONTROL_POINT_LAMP_REACH, centre.getBlockX() + CONTROL_POINT_LAMP_REACH, centre.getBlockZ() + CONTROL_POINT_LAMP_REACH, m -> m == Material.REDSTONE_LAMP)) {
 				if (lamp.getY() < cy - 2 || lamp.getY() > cy + CONTROL_POINT_TOWER_HEIGHT) continue;
-				if (point.sideOf(lamp) == 0 || (lamp.getY() <= cy + 3 && Math.abs(lamp.getX() - centre.getBlockX()) <= 1)) point.wallLamps.add(lamp); else point.lamps.add(lamp);
+				int side = point.sideOf(lamp);
+				if (lamp.getY() > cy + CONTROL_POINT_ROOM_HEIGHT && side != 0) {
+					for (Equip e : Equips) if (point.sideOfTeam(e.getId()) == side) towerLampsByTeam.computeIfAbsent(e.getId(), id -> new ArrayList<>()).add(lamp);
+				} else if (side == 0 || Math.abs(lamp.getX() - centre.getBlockX()) <= 1) {
+					point.wallLamps.add(lamp);
+				} else {
+					point.lamps.add(lamp);
+				}
 			}
 			point.wallLamps.sort((l1, l2) -> Integer.compare(l1.getX(), l2.getX()));
 			showControlPoint(point);
 			plugin.getLogger().info(getGameName() + " " + getMapName() + ": control point at " + centre.toVector() + " with plates " + point.plateByTeam.keySet() + ", " + point.wallLamps.size() + " wall lamps and " + point.lamps.size() + " side lamps");
 		}
+		for (List<Block> tower : towerLampsByTeam.values()) tower.sort(BOTTOM_ROW_FIRST);
 		for (Equip e : Equips) {
 			Block sign = rètolsPont.get(e.getId());
 			List<Block> lamps = new ArrayList<>();
 			if (sign != null) {
 				lamps = blocksBetween(sign.getX() - BRIDGE_LAMP_REACH, sign.getZ() - BRIDGE_LAMP_REACH, sign.getX() + BRIDGE_LAMP_REACH, sign.getZ() + BRIDGE_LAMP_REACH, m -> m == Material.REDSTONE_LAMP);
 				lamps.removeIf(l -> l.getLocation().distance(sign.getLocation()) > BRIDGE_LAMP_REACH);
-				lamps.sort((l1, l2) -> l1.getY() != l2.getY() ? Integer.compare(l1.getY(), l2.getY()) : Integer.compare(l1.getX(), l2.getX()));
+				lamps.sort(BOTTOM_ROW_FIRST);
 			}
 			lampsByTeam.put(e.getId(), lamps);
 			lightLamps(e);
@@ -1500,11 +1517,16 @@ public class ObsidianDefenders extends JocEquips {
 		world.playSound(plate.getLocation(), Sound.BLOCK_STONE_PRESSURE_PLATE_CLICK_OFF, 0.3F, 0.5F);
 	}
 
-	/** The base lamps mirror the bar: with six lamps one per square, otherwise proportionally. */
+	/** The base lamps and the team's tower halves mirror the bar: with six lamps one per square, otherwise proportionally. */
 	private void lightLamps(Equip e) {
-		List<Block> lamps = lampsByTeam.getOrDefault(e.getId(), List.of());
+		int charge = càrregaPont.getOrDefault(e.getId(), 0);
+		lightBar(lampsByTeam.getOrDefault(e.getId(), List.of()), charge);
+		lightBar(towerLampsByTeam.getOrDefault(e.getId(), List.of()), charge);
+	}
+
+	private static void lightBar(List<Block> lamps, int charge) {
 		if (lamps.isEmpty()) return;
-		int lit = càrregaPont.getOrDefault(e.getId(), 0) * lamps.size() / PONT_CÀRREGA_MÀXIMA;
+		int lit = charge * lamps.size() / PONT_CÀRREGA_MÀXIMA;
 		for (int i = 0; i < lamps.size(); i++) setLit(lamps.get(i), i < lit);
 	}
 
