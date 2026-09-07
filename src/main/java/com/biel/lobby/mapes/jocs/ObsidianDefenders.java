@@ -662,6 +662,12 @@ public class ObsidianDefenders extends JocEquips {
 		if (ply.getHealth() > maxHealth) ply.setHealth(maxHealth);
 	}
 
+	/** The recall button in the last hotbar slot (Biel, 2026-09-08: "a way to go back home"): a six-second channel to the base, cancelled by moving. */
+	@Override
+	protected boolean isRecallEnabled() {
+		return true;
+	}
+
 	/** Gold, pickaxes and consumables survive death: the economy is the game. */
 	@Override
 	public boolean getResetPlayerOnRespawn() {
