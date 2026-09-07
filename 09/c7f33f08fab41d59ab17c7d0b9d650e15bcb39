@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_1a56790d648c0e::t_24f750073ffb3c 857-867,870,872,954
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "09c7f33f08fab41d59ab17c7d0b9d650e15bcb39",
+  "prompts": {},
+  "sessions": {
+    "s_1a56790d648c0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23b1a42b-b6f2-4833-bd7d-bec2f5b71b61",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
