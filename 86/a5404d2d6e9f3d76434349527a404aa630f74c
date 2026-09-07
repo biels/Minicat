@@ -1,0 +1,30 @@
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_7718ffec83f776::t_27034cb439d941 57-59,193-219
+  s_7718ffec83f776::t_a988e163826c49 220
+src/main/java/com/biel/lobby/utilities/events/statuseffects/FrozenStatusEffect.java
+  s_7718ffec83f776::t_1584ce9ba0830f 1-38
+src/main/java/com/biel/lobby/utilities/events/skills/types/specificskills/FrostArcherSkill.java
+  s_7718ffec83f776::t_27034cb439d941 94,96
+src/main/java/com/biel/lobby/minions/SnowmanKind.java
+  s_7718ffec83f776::t_871c6cc6a76fc1 1-31
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_7718ffec83f776::t_27034cb439d941 84-86,149-159,284,308-309,326-334,347-349,369-378,381-384,387,1262,1276,2018-2020,2235-2237,2239-2248,2284-2288,2291-2299,2303-2324
+src/main/java/com/biel/lobby/minions/SnowmanMinion.java
+  s_7718ffec83f776::t_2f7c48135e21a1 3-4,8-9,15,18-20,35-36,47-49,57,61,63-64,66,72-75,83-84,87,89-99,118-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "86a5404d2d6e9f3d76434349527a404aa630f74c",
+  "prompts": {},
+  "sessions": {
+    "s_7718ffec83f776": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "723703cd-9dc0-4c85-bb25-623ba35e4ee2",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
