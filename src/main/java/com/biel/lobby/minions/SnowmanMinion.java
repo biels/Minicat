@@ -14,14 +14,17 @@ import org.bukkit.potion.PotionEffectType;
 import com.biel.BielAPI.ai.NearestTargetGoal;
 import com.biel.BielAPI.ai.RangedAttackGoal;
 import com.biel.BielAPI.ai.Volley;
+import com.biel.BielAPI.ai.WaypointWalkGoal;
+import java.util.List;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.utilities.PaperMessages;
 
 /**
  * The Obsidian Defenders snowman (2013): a snow golem owned by the player who threw the
- * snowball, holding its post, shooting enemies within eight blocks. Its numbers are fixed
- * at birth; what a hit on a player is worth is the game's rule, passed in.
+ * snowball, marching toward the enemy base and shooting enemies within eight blocks on
+ * the way (Biel, 2026-09-07: "it should start moving towards the enemy base"). Its
+ * numbers are fixed at birth; what a hit on a player is worth is the game's rule, passed in.
  */
 public final class SnowmanMinion extends Minion {
 	public static final double MAX_HEALTH = 5;
@@ -30,6 +33,10 @@ public final class SnowmanMinion extends Minion {
 	public static final int DEFAULT_COOLDOWN_TICKS = 20;
 	private static final int RESCAN_TICKS = 10;
 	private static final double SNOWBALL_DAMAGE_TO_MINIONS = 2;
+	/** How far the pathfinder plans ahead; the enemy base is about a hundred blocks away. */
+	private static final double FOLLOW_RANGE = 48;
+	private static final double MARCH_SPEED = 1.0;
+	private static final double ARRIVE_DISTANCE = 3;
 
 	/** What a snowball from this snowman does to an enemy player. */
 	@FunctionalInterface
@@ -39,10 +46,12 @@ public final class SnowmanMinion extends Minion {
 
 	private final int cooldownTicks;
 	private final SnowballHit hitOnPlayer;
+	private final Location marchTo;
 
-	public SnowmanMinion(JocEquips game, Equip team, Player owner, int cooldownTicks, SnowballHit hitOnPlayer) {
+	public SnowmanMinion(JocEquips game, Equip team, Player owner, int cooldownTicks, Location marchTo, SnowballHit hitOnPlayer) {
 		super(game, team, owner);
 		this.cooldownTicks = cooldownTicks;
+		this.marchTo = marchTo;
 		this.hitOnPlayer = hitOnPlayer;
 	}
 
@@ -55,6 +64,7 @@ public final class SnowmanMinion extends Minion {
 		Snowman golem = at.getWorld().spawn(at, Snowman.class);
 		golem.getAttribute(Attribute.MAX_HEALTH).setBaseValue(MAX_HEALTH);
 		golem.setHealth(MAX_HEALTH);
+		golem.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(FOLLOW_RANGE);
 		golem.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, PotionEffect.INFINITE_DURATION, 0, true, false));
 		golem.customName(PaperMessages.legacy(team().getChatColor() + "Ninot de " + ownerName()));
 		golem.setCustomNameVisible(true);
@@ -64,7 +74,8 @@ public final class SnowmanMinion extends Minion {
 	@Override
 	protected void installGoals(Mob mob) {
 		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, ACQUIRE_RADIUS, true, RESCAN_TICKS, this::isEnemy));
-		Bukkit.getMobGoals().addGoal(mob, 2, new RangedAttackGoal(mob, 0, RANGE, cooldownTicks, true, 1.0, Volley.innate()));
+		Bukkit.getMobGoals().addGoal(mob, 2, new RangedAttackGoal(mob, 0, RANGE, cooldownTicks, false, MARCH_SPEED, Volley.innate()));
+		Bukkit.getMobGoals().addGoal(mob, 3, new WaypointWalkGoal(mob, List.of(marchTo), MARCH_SPEED, ARRIVE_DISTANCE));
 	}
 
 	@Override

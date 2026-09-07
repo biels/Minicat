@@ -266,7 +266,7 @@ public class ObsidianDefenders extends JocEquips {
 		PIC_FERRO(Material.IRON_PICKAXE, 1, 12, "Pic de ferro", "+30 dany al golem"),
 		PITRAL_FERRO(Material.IRON_CHESTPLATE, 1, 18, "Pitral de ferro", null),
 		BLOC_OR(Material.GOLD_BLOCK, 1, 25, "Bloc d'or", "+2 or cada " + (CICLE_COFRES_TICKS / 20) + " segons"),
-		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu que dispara als enemics (màx. " + MAX_SNOWMEN_PER_PLAYER + ")"),
+		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu que marxa cap a la base enemiga disparant (màx. " + MAX_SNOWMEN_PER_PLAYER + ")"),
 		QUARS(Material.QUARTZ, 1, 15, "Quars", "Mentre el portis, els teus nous ninots disparen un 50 % més ràpid"),
 		CALCES_DIAMANT(Material.DIAMOND_LEGGINGS, 1, 30, "Calces de diamant", null),
 		ESPASA_DIAMANT(Material.DIAMOND_SWORD, 1, 40, "Espasa de diamant", null);
@@ -365,7 +365,7 @@ public class ObsidianDefenders extends JocEquips {
 		info.add("Els cofres de la jungla canvien de lloc cada 32 s; el pic de diamant cau al mig als 3 min.");
 		info.add("L'or paga tot: matar, obrir cofres, matar el Guardià.");
 		info.add("El Guardià viu sota el mig: matar-lo dona " + OR_PER_GOLEM + " d'or i 3 min de Resistència i Velocitat.");
-		info.add("Una bola de neu llançada fa aparèixer un ninot de neu que dispara als enemics (màxim " + MAX_SNOWMEN_PER_PLAYER + " per jugador).");
+		info.add("Una bola de neu llançada fa aparèixer un ninot de neu que marxa cap a la base enemiga disparant (màxim " + MAX_SNOWMEN_PER_PLAYER + " per jugador).");
 		info.add("Trepitja la teva placa als punts de control del mig: cada punt capturat carrega el pont del teu equip.");
 		return info;
 	}
@@ -1809,7 +1809,7 @@ public class ObsidianDefenders extends JocEquips {
 			}
 		}
 		int cooldown = thrower.getInventory().contains(Material.QUARTZ) ? SNOWMAN_QUARTZ_COOLDOWN_TICKS : SnowmanMinion.DEFAULT_COOLDOWN_TICKS;
-		enlist(new SnowmanMinion(this, team, thrower, cooldown, this::snowballHit), spot);
+		enlist(new SnowmanMinion(this, team, thrower, cooldown, obtenirEquipEnemic(team).getTeamSpawnLocation(), this::snowballHit), spot);
 		world.playSound(spot, Sound.ENTITY_SNOW_GOLEM_AMBIENT, 1F, 1F);
 		world.playSound(spot, Sound.BLOCK_SNOW_PLACE, 1F, 1F);
 		PaperMessages.sendActionBar(thrower, ChatColor.WHITE + "Ninot de neu " + (mine.size() + 1) + "/" + MAX_SNOWMEN_PER_PLAYER, 60);
