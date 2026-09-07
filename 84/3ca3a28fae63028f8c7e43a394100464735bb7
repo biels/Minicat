@@ -1,0 +1,21 @@
+src/main/java/com/biel/lobby/mapes/MapaResetejable.java
+  s_9f54f79b43c50d::t_d2f226e7398ef9 139-161,164-165
+  s_9f54f79b43c50d::t_b14e26fc1122fa 246,252
+  s_9f54f79b43c50d::t_25d0b4ae55b8de 58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "843ca3a28fae63028f8c7e43a394100464735bb7",
+  "prompts": {},
+  "sessions": {
+    "s_9f54f79b43c50d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "93a49d3e-f400-48cf-9e8d-60a529c7ee0d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
