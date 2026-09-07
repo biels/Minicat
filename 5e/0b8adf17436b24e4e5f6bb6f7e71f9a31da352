@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/JocEquips.java
+  s_7b6c09563aa3f2::t_7840ab472713f7 944
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "5e0b8adf17436b24e4e5f6bb6f7e71f9a31da352",
+  "prompts": {},
+  "sessions": {
+    "s_7b6c09563aa3f2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "45ffe817-45cc-4ba0-b329-948f96d377bb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
