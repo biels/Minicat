@@ -1890,10 +1890,22 @@ public class ObsidianDefenders extends JocEquips {
 			}
 		}
 		int cooldown = thrower.getInventory().contains(Material.QUARTZ) ? SNOWMAN_QUARTZ_COOLDOWN_TICKS : SnowmanMinion.DEFAULT_COOLDOWN_TICKS;
-		enlist(new SnowmanMinion(this, team, thrower, cooldown, obtenirEquipEnemic(team).getTeamSpawnLocation(), this::snowballHit), spot);
+		enlist(new SnowmanMinion(this, team, thrower, cooldown, snowmanLane(team), this::snowballHit), spot);
 		world.playSound(spot, Sound.ENTITY_SNOW_GOLEM_AMBIENT, 1F, 1F);
 		world.playSound(spot, Sound.BLOCK_SNOW_PLACE, 1F, 1F);
 		PaperMessages.sendActionBar(thrower, ChatColor.WHITE + "Ninot de neu " + (mine.size() + 1) + "/" + MAX_SNOWMEN_PER_PLAYER, 60);
+	}
+
+	/**
+	 * The team's lane, {@code lane<team>_N} in the map file (laid in game with
+	 * {@code /p lane0_1} and so on, read at every throw so a lane laid mid-match counts),
+	 * else straight at the enemy spawn.
+	 */
+	private List<Location> snowmanLane(Equip team) {
+		List<Location> lane = new ArrayList<>();
+		for (Location waypoint : pMapaActual().ObtenirLocations("lane" + team.getId(), world)) lane.add(waypoint.add(0.5, 1, 0.5));
+		if (lane.isEmpty()) lane.add(obtenirEquipEnemic(team).getTeamSpawnLocation());
+		return lane;
 	}
 
 	/** The block the snowball stopped against, the impact block and its neighbours above and below, first one a golem can stand in. */
