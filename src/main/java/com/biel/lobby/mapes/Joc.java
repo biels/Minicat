@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.OptionalDouble;
 import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.*;
@@ -69,7 +70,8 @@ import net.kyori.adventure.text.event.ClickEvent;
 public abstract class Joc extends MapaResetejable {
 	protected Boolean JocIniciat = false;
 	protected Boolean JocFinalitzat = false;
-	ArrayList<Player> Espectadors = new ArrayList<>();
+	/** The roster: one seat per person who has been in this match; see {@link Seat}. */
+	private final ArrayList<Seat> seats = new ArrayList<>();
 	ArrayList<PlayerInfo> InfoStorage = new ArrayList<>();
 	protected SkillPool s = new SkillPool();
 	protected MatchData matchData;
@@ -117,6 +119,215 @@ public abstract class Joc extends MapaResetejable {
 		setCustomGameRules();
 	}
 	protected abstract void setCustomGameRules();
+
+	//---------- Seats: the roster that outlives a connection ----------
+
+	/**
+	 * A place in this match held by a person. Membership used to be presence in the
+	 * world, so a lost connection was a leave: penalized at once, and the instance torn
+	 * down the next tick if nobody was left. The seat is what a reconnecting player
+	 * takes back. It is keyed by name like every other per-player store here, and it
+	 * keeps the UUID only for the login lookup, which is by UUID.
+	 */
+	public class Seat {
+		public enum Role { PLAYER, SPECTATOR }
+		public enum State { OCCUPIED, DROPPED, VACANT }
+		final String name;
+		final UUID uuid;
+		Role role = Role.PLAYER;
+		State state = State.OCCUPIED;
+		long droppedAtMillis = 0;
+		int abandonTaskId = -1;
+		Seat(Player holder) {
+			name = holder.getName();
+			uuid = holder.getUniqueId();
+		}
+		public String getName() { return name; }
+		public UUID getUuid() { return uuid; }
+		public Role getRole() { return role; }
+		public State getState() { return state; }
+		public boolean isOccupied() { return state == State.OCCUPIED; }
+		public boolean isDropped() { return state == State.DROPPED; }
+		/** The holder if they are online, whatever world they are in. */
+		public Player getPlayer() { return Bukkit.getPlayer(uuid); }
+		private void cancelAbandonment() {
+			if (abandonTaskId != -1) Bukkit.getScheduler().cancelTask(abandonTaskId);
+			abandonTaskId = -1;
+		}
+	}
+	public Seat seatOf(String name) {
+		for (Seat seat : seats) if (seat.name.equals(name)) return seat;
+		return null;
+	}
+	public Seat seatOf(Player ply) {
+		return seatOf(ply.getName());
+	}
+	public Seat seatOf(UUID uuid) {
+		for (Seat seat : seats) if (seat.uuid.equals(uuid)) return seat;
+		return null;
+	}
+	public List<Seat> getSeats() {
+		return Collections.unmodifiableList(seats);
+	}
+	/** Everyone playing (not spectating) who has not abandoned the match: online or dropped. The rated set. */
+	public List<String> getParticipantNames() {
+		List<String> names = new ArrayList<>();
+		for (Seat seat : seats) if (seat.role == Seat.Role.PLAYER && seat.state != Seat.State.VACANT) names.add(seat.name);
+		return names;
+	}
+	/** Whether an empty world must be kept: a match in progress with someone expected back. */
+	public boolean isWaitingForDroppedPlayers() {
+		if (!JocEnMarxa()) return false;
+		for (Seat seat : seats) if (seat.isDropped()) return true;
+		return false;
+	}
+	/** The seat a reconnecting player can take back: dropped, in a match that has not ended. */
+	public Seat resumableSeatOf(Player ply) {
+		Seat seat = seatOf(ply.getUniqueId());
+		return seat != null && seat.isDropped() && !JocFinalitzat && world != null ? seat : null;
+	}
+	/** Occupies the player's seat, making one the first time; the role is the caller's to set. */
+	private Seat occupySeat(Player ply) {
+		Seat seat = seatOf(ply);
+		if (seat == null) {
+			seat = new Seat(ply);
+			seats.add(seat);
+		}
+		seat.cancelAbandonment();
+		seat.state = Seat.State.OCCUPIED;
+		return seat;
+	}
+	/** How long a dropped player has to come back before the seat is abandoned. A map may set RejoinGrace. */
+	public int getRejoinGraceSeconds() {
+		if (pMapaActual().ExisteixPropietat("RejoinGrace")) return pMapaActual().ObtenirPropietatInt("RejoinGrace");
+		return 120;
+	}
+	/**
+	 * The connection went: the seat is kept for the grace and the match goes on without
+	 * the player, since presence is world-derived. No penalty and no elimination until
+	 * the grace is over; both were what the ping check in the old leave path was
+	 * guessing at, and coming back is a better test than the ping at the moment of
+	 * quitting. Before the start the host passes on at once, because the others are
+	 * waiting on the start button.
+	 */
+	private void dropSeat(Player ply) {
+		Seat seat = seatOf(ply);
+		if (seat == null || !seat.isOccupied()) return;
+		seat.state = Seat.State.DROPPED;
+		seat.droppedAtMillis = System.currentTimeMillis();
+		onSeatDropped(ply);
+		if (!JocIniciat && hasHostPrivilleges(seat.name)) passHostToAnotherThan(seat.name);
+		int graceSeconds = getRejoinGraceSeconds();
+		sendGlobalMessage(getGameDisplayName() + seat.name + " s'ha desconnectat. Té " + formatSeconds(graceSeconds) + " per tornar.");
+		seat.abandonTaskId = Bukkit.getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> abandonSeat(seat), 20L * graceSeconds);
+		handleLifecycleTask(seat.abandonTaskId);
+	}
+	private static String formatSeconds(int seconds) {
+		if (seconds % 60 == 0) return (seconds / 60) + " min";
+		return seconds + " s";
+	}
+	/**
+	 * The player is back. They are left exactly where Paper put them, with the inventory
+	 * Paper restored: routing them through Join would wipe what the match gave them.
+	 * Only what Paper does not carry is rebuilt here, and the game adds its own in
+	 * {@link #onSeatResumed}.
+	 */
+	public void resumeSeat(Player ply) {
+		Seat seat = resumableSeatOf(ply);
+		if (seat == null) return;
+		occupySeat(ply);
+		if (ply.getWorld() != world) {
+			// Not where they left: the seat outlived a world it should not have. Put them back the plain way.
+			ply.teleport(getResumeLocation(ply), TeleportCause.PLUGIN);
+			if (seat.role == Seat.Role.PLAYER) donarItemsInicials(ply);
+		}
+		if (seat.role == Seat.Role.SPECTATOR) ply.setGameMode(GameMode.SPECTATOR);
+		PlayerInfo info = getPlayerInfo(ply);
+		info.lastMoveEvent = ZonedDateTime.now();
+		info.lastRespawnEvent = ZonedDateTime.now();
+		info.setImmune(true);
+		Com.setHeadColor(ply, ChatColor.GRAY);
+		if (getDisplayHealthBar() && getShowPlayerHealthBar()) updateHealthSuffix(ply); else Com.setSuffix(ply, "");
+		onSeatResumed(ply);
+		updateScoreBoard(ply);
+		sendGlobalMessage(getGameDisplayName() + ply.getName() + " ha tornat a la partida.");
+		sendPlayerMessage(ply, ChatColor.GREEN + "Has tornat a " + getGameName() + " (" + getMapName() + ").");
+		sendGameInfo(ply);
+	}
+	/** Where a returning player goes when they are not in the world any more. */
+	protected Location getResumeLocation(Player ply) {
+		return getRandomSpawnLoc(ply);
+	}
+	/**
+	 * The grace ran out: the seat is vacated and the leave takes effect with the name,
+	 * since there is no Player to pass. Then the instance may be released.
+	 */
+	private void abandonSeat(Seat seat) {
+		if (!seat.isDropped()) return;
+		vacate(seat, null);
+		GestorMapes.ContenidorJoc container = Com.getGest().getGameContainer(getClass());
+		if (container != null) container.checkNecessary(this);
+	}
+	/**
+	 * The seat is given up, by the player present ({@code present}, a deliberate leave)
+	 * or by the grace running out ({@code present} null). Host transfer, the leaver
+	 * penalty and the announcement are the same either way.
+	 */
+	private void vacate(Seat seat, Player present) {
+		seat.cancelAbandonment();
+		List<String> attatchments = new ArrayList<>();
+		// The leave is judged with the seat still counted: a 1v1 whose other player
+		// drops must not read as "alone, nothing to penalize".
+		if (present != null) customLeave(present, attatchments); else onSeatAbandoned(seat, attatchments);
+		seat.state = Seat.State.VACANT;
+		Bukkit.broadcastMessage(getGameDisplayName() + seat.name + ChatColor.GRAY + " ha abandonat la partida" + (attatchments.isEmpty() ? "" : " " + String.join(" ", attatchments)));
+	}
+	/** The connection was just lost; the player is still online for this call. Cancel what holds them. */
+	protected void onSeatDropped(Player ply) {
+	}
+	/** The player is back in the world. Re-show what the game draws per player and the world does not keep. */
+	protected void onSeatResumed(Player ply) {
+	}
+	/**
+	 * The grace ran out with the player away. What their absence means to the rules
+	 * goes here; the default is the shared leave logic. {@link #customLeave} is the
+	 * same moment with the player present.
+	 */
+	protected void onSeatAbandoned(Seat seat, List<String> attatchments) {
+		registerLeave(seat, attatchments);
+	}
+	/** The leave itself, by name: the host passes on before the start, and a leaver who mattered pays. */
+	private void registerLeave(Seat seat, List<String> attatchments) {
+		if (hasHostPrivilleges(seat.name) && !JocIniciat) passHostToAnotherThan(seat.name);
+		double punishForLeaving = getPunishForLeaving();
+		if (punishForLeaving != 0 && seat.role == Seat.Role.PLAYER) {
+			attatchments.add(ChatColor.RED + "[Penalitzat]");
+			punishPlayerElo(seat.name, punishForLeaving);
+		}
+	}
+	private void passHostToAnotherThan(String leavingName) {
+		List<Player> others = getPlayers().stream().filter(p -> !p.getName().equals(leavingName)).collect(Collectors.toList());
+		if (!others.isEmpty()) setHost(GUtils.getRandomListItem(others));
+	}
+	@Override
+	protected void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent evt, Player p) {
+		// Not a leave any more: the seat is kept for the grace. Mapa's version called Leave here.
+		if (p.getWorld() == getWorld()) dropSeat(p);
+	}
+	/**
+	 * A deliberate leave: /l, a teleport out, a world change. A player without an
+	 * occupied seat here has nothing to leave, which is what used to fire twice on a
+	 * reconnect (once on the quit, once when the login sent them to the lobby).
+	 */
+	@Override
+	public void Leave(Player ply) {
+		Seat seat = seatOf(ply);
+		if (seat == null || !seat.isOccupied()) return;
+		vacate(seat, ply);
+	}
+
+	//---------- End of seats ----------
+
 	public void JocIniciat(){
 		if (JocIniciat){Bukkit.broadcastMessage("S'ha intentat iniciar una partida que ja estava iniciada. Operació anul·lada!"); return;}
 		if (!canStartGame()) return;
@@ -252,6 +463,8 @@ public abstract class Joc extends MapaResetejable {
 		// Fence gameplay first. Cleanup and persistence failures must not leave a
 		// logically completed match running forever.
 		JocFinalitzat = true;
+		// Whoever is away when it ends is neither abandoned nor penalized; there is nothing left to come back to.
+		for (Seat seat : seats) seat.cancelAbandonment();
 		try {
 			if (world != null) world.setPVP(false);
 			customJocFinalitzat();
@@ -286,9 +499,7 @@ public abstract class Joc extends MapaResetejable {
 		Bukkit.broadcastMessage(getGameDisplayName() + p.getName() + " ha guanyat a " + ChatColor.UNDERLINE + getGameName());
 		matchData.registerEnd(p);
 		JocFinalitzat();
-		ArrayList<Player> wList = new ArrayList<>();
-		wList.add(p);
-		updateElo(wList);
+		updateElo(List.of(p.getName()));
 	}
 	public void winGame(ArrayList<Player> wList){ //TODO
 		if(wList == null)return;
@@ -304,7 +515,7 @@ public abstract class Joc extends MapaResetejable {
 		Bukkit.broadcastMessage(getGameDisplayName() + p.getName() + " ha guanyat a " + ChatColor.UNDERLINE + getGameName());
 		matchData.registerEnd(p);
 		JocFinalitzat();
-		updateEloOrdered(wList);
+		updateEloOrdered(wList.stream().map(Player::getName).collect(Collectors.toList()));
 	}
 	protected boolean onlyPlayersFromSameIP(){
 		String firstAddress = null;
@@ -326,13 +537,18 @@ public abstract class Joc extends MapaResetejable {
 	protected boolean canBeRanked(){
 		return(segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 20) && getEloK() != 0 && Com.getPlugin().isInRankedMode() && !unfairFlag);
 	}
-	protected void updateElo(ArrayList<Player> winners){
+	/**
+	 * Rates the match by seat, not by presence: a player away for a moment at the end
+	 * is still on their side of the result, and one who abandoned was already charged.
+	 */
+	protected void updateElo(List<String> winnerNames){
 		if(!canBeRanked()){
 			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al rànquing");
 			return;
 		}
-		ArrayList<Player> loosers = new ArrayList<>();
-		getPlayers().forEach(p -> {if(!winners.contains(p))loosers.add(p);});
+		List<String> participants = getParticipantNames();
+		List<String> winners = winnerNames.stream().filter(participants::contains).collect(Collectors.toList());
+		List<String> loosers = participants.stream().filter(name -> !winners.contains(name)).collect(Collectors.toList());
 		ArrayList<Double> elo_winners = readRatings(winners);
 		ArrayList<Double> elo_loosers = readRatings(loosers);
 		if(elo_winners == null || elo_loosers == null){
@@ -349,11 +565,13 @@ public abstract class Joc extends MapaResetejable {
 		for (int i = 0; i < winners.size(); i++) registerEloChange(winners.get(i), winnerChanges.get(i));
 		for (int i = 0; i < loosers.size(); i++) registerEloChange(loosers.get(i), looserChanges.get(i));
 	}
-	protected void updateEloOrdered(ArrayList<Player> orderedWinners){
+	protected void updateEloOrdered(List<String> orderedWinnerNames){
 		if(!canBeRanked()){
 			sendGlobalMessage(ChatColor.BLUE + "Partida irrellevant al rànquing");
 			return;
 		}
+		List<String> participants = getParticipantNames();
+		List<String> orderedWinners = orderedWinnerNames.stream().filter(participants::contains).collect(Collectors.toList());
 		ArrayList<Double> elo_winners = readRatings(orderedWinners);
 		if(elo_winners == null){
 			announceRatingsUnavailable();
@@ -367,10 +585,10 @@ public abstract class Joc extends MapaResetejable {
 	 * cannot be read. A match is rated with real ratings or not at all: a stand-in
 	 * value for one player would move everyone else's rating by the wrong amount.
 	 */
-	private ArrayList<Double> readRatings(List<Player> players){
-		ArrayList<Double> ratings = new ArrayList<>(players.size());
-		for(Player p : players){
-			OptionalDouble rating = new PlayerData(p.getName()).readElo();
+	private ArrayList<Double> readRatings(List<String> names){
+		ArrayList<Double> ratings = new ArrayList<>(names.size());
+		for(String name : names){
+			OptionalDouble rating = new PlayerData(name).readElo();
 			if(rating.isEmpty()) return null;
 			ratings.add(rating.getAsDouble());
 		}
@@ -380,15 +598,17 @@ public abstract class Joc extends MapaResetejable {
 		Com.getPlugin().getLogger().warning("Ratings unavailable at the end of " + getGameName() + " / " + getMapName() + "; the match was not rated");
 		sendGlobalMessage(ChatColor.RED + "No s'ha pogut llegir l'elo d'algun jugador; aquesta partida no puntua.");
 	}
-	protected void registerEloChange(Player p, double change){
-		PlayerData playerData = new PlayerData(p.getName());
+	/** By name, so it works for a player who is away; they are told only if online. */
+	protected void registerEloChange(String name, double change){
+		PlayerData playerData = new PlayerData(name);
+		Player p = Bukkit.getPlayer(name);
 		if(!playerData.addElo(change)){
-			Com.getPlugin().getLogger().warning("Could not update the rating of " + p.getName() + " after " + getGameName() + ": the database did not answer");
-			p.sendMessage(ChatColor.RED + "No s'ha pogut actualitzar el teu elo.");
+			Com.getPlugin().getLogger().warning("Could not update the rating of " + name + " after " + getGameName() + ": the database did not answer");
+			if(p != null) p.sendMessage(ChatColor.RED + "No s'ha pogut actualitzar el teu elo.");
 			return;
 		}
 		String cStr = (change > 0 ? ChatColor.DARK_GREEN + "+" : ChatColor.DARK_RED + "") + String.format(Locale.ROOT, "%.1f", change);
-		p.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + " (" + cStr  + ChatColor.WHITE + ")");
+		if(p != null) p.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + " (" + cStr  + ChatColor.WHITE + ")");
 	}
 	/**
 	 * The rating weight this map plays for before team balance is applied: the map's
@@ -481,7 +701,10 @@ public abstract class Joc extends MapaResetejable {
 		host = name;
 	}
 	public boolean hasHostPrivilleges(Player p){
-		return host.equalsIgnoreCase(p.getName());
+		return hasHostPrivilleges(p.getName());
+	}
+	public boolean hasHostPrivilleges(String name){
+		return host != null && host.equalsIgnoreCase(name);
 	}
 	@Override
 	public void Join(Player ply) {
@@ -490,6 +713,7 @@ public abstract class Joc extends MapaResetejable {
 			return;
 		}
 		if(getPlayers().size() == 0)setHost(ply);
+		occupySeat(ply).role = Seat.Role.PLAYER;
 		super.Join(ply);
 	}
 
@@ -576,7 +800,7 @@ public abstract class Joc extends MapaResetejable {
 	}
 	public ArrayList<Player> getPlayers(){
 		ArrayList<Player> viewers = getViewers();
-		viewers.removeAll(Espectadors);
+		viewers.removeIf(this::isSpectator);
 		return viewers; //Futurs espectadors
 	}
 	public ArrayList<Player> getEnemies(Player p){
@@ -584,14 +808,18 @@ public abstract class Joc extends MapaResetejable {
 		enemies.remove(p);
 		return enemies; //Futurs espectadors
 	}
+	/** The spectators who are online and in the world. */
 	public List<Player> getSpectators(){
-		return Espectadors; //Futurs espectadors
+		List<Player> spectators = new ArrayList<>();
+		for (Player viewer : getViewers()) if (isSpectator(viewer)) spectators.add(viewer);
+		return spectators;
 	}
 	public boolean getAllowSpectators(){
 		return true;
 	}
 	public Boolean isSpectator(Player ply){
-		return Espectadors.contains(ply);
+		Seat seat = seatOf(ply);
+		return seat != null && seat.role == Seat.Role.SPECTATOR;
 	}
 	void donarItemsEspectador(Player ply){
 		giveRandomCameraItem(ply);
@@ -623,9 +851,7 @@ public abstract class Joc extends MapaResetejable {
 			
 			p.sendMessage(getGameDisplayName() + ply.getName() + " ha entrar com a espectador");
 		}
-		if (!getSpectators().contains(ply)){
-			Espectadors.add(ply);
-		}
+		occupySeat(ply).role = Seat.Role.SPECTATOR;
 		Utils.clearPlayer(ply);
 		donarItemsEspectador(ply);
 		updateScoreBoard(ply);
@@ -638,13 +864,12 @@ public abstract class Joc extends MapaResetejable {
 		//ScoreBoardUpdater.updateSpectatorScore(Espectadors);
 	}
 	public void removeSpectator(Player ply){
-		if (getSpectators().contains(ply)){
+		if (isSpectator(ply)){
 			Utils.clearPlayer(ply);
 			ply.setAllowFlight(false);
 			ply.setCanPickupItems(true);
 			ply.setFlying(false);
-			Espectadors.remove(ply);
-			//ScoreBoardUpdater.updateSpectatorScore(Espectadors);
+			occupySeat(ply).role = Seat.Role.PLAYER;
 		}
 	}
 	private static String getHealthProgressBar(Player ply){
@@ -816,33 +1041,20 @@ public abstract class Joc extends MapaResetejable {
 		updateScoreBoard(ply);
 		anunciarWiki(ply, false);
 	}
+	/** The player leaves on purpose, still here to be told; a lost connection goes through the seat instead. */
 	@Override
 	protected void customLeave(Player ply, List<String> attatchments) {
-		// TODO Auto-generated method stub
-		if(hasHostPrivilleges(ply) && getPlayers().size() > 1 && !JocIniciat){
-			setHost(GUtils.getRandomListItem(getPlayers().stream().filter(p -> p!=ply).collect(Collectors.toList())));
-		}
-		double punishForLeaving = getPunishForLeaving(ply);
-		if(CBUtils.getPing(ply) > 400){
-			attatchments.add(ChatColor.GOLD + "[Error de xarxa]");
-			if(punishForLeaving > 0){
-				attatchments.add(ChatColor.GREEN + "[No penalitzat]");
-			}
-		}else{
-			if(punishForLeaving != 0 && !isSpectator(ply)){
-				attatchments.add(ChatColor.RED + "[Penalitzat]");
-				punishPlayerElo(ply, punishForLeaving);
-			}			
-		}
+		Seat seat = seatOf(ply);
+		if (seat != null) registerLeave(seat, attatchments);
 	}
-	public void punishPlayerElo(Player ply, double amount){
+	public void punishPlayerElo(String name, double amount){
 		unfairFlag = true;
-		registerEloChange(ply, amount * -1);
+		registerEloChange(name, amount * -1);
 	}
-	public double getPunishForLeaving(Player ply){
+	public double getPunishForLeaving(){
 		// A leaver is punished only where the match could have counted: the same
 		// conditions a result needs, plus enough of the match played to have mattered.
-		if(!JocEnMarxa() || getEloK() == 0 || getPlayers().size() <= 1 || !Com.getPlugin().isInRankedMode()) return 0;
+		if(!JocEnMarxa() || getEloK() == 0 || getParticipantNames().size() <= 1 || !Com.getPlugin().isInRankedMode()) return 0;
 		double progress = getGameProgressETA();
 		if(progress < 0.25) return 0;
 		// Hours as a fraction: toHours() truncates, which made this term zero for every game shorter than an hour.
@@ -1244,6 +1456,16 @@ public abstract class Joc extends MapaResetejable {
 	public PlayerInfo getPlayerInfo(Player p){
 		return getPlayerInfo(p, PlayerInfo.class);
 	}
+	/**
+	 * By name, for a player who may be away. Null when none exists: the record is made
+	 * by the Player form, which knows the game's own PlayerInfo class to instantiate.
+	 */
+	public PlayerInfo getPlayerInfo(String name){
+		for (PlayerInfo i : InfoStorage){
+			if (name.equals(i.getName())) return i;
+		}
+		return null;
+	}
 	public class PlayerInfo{
 		String name;
 		int value;
@@ -1251,7 +1473,9 @@ public abstract class Joc extends MapaResetejable {
 		int additionalSkills = 0;
 		double speedModifier = 0;
 		boolean immune = true;
-		Player lastDamager = null;
+		// By name: a Player held here went stale when its holder reconnected, and the
+		// kill credit with it.
+		String lastDamagerName = null;
 		ZonedDateTime lastMoveEvent = ZonedDateTime.now();
 		ZonedDateTime lastRespawnEvent = ZonedDateTime.now();
 		int kills = 0;
@@ -1320,11 +1544,12 @@ public abstract class Joc extends MapaResetejable {
 		public void setDamageDealt(double damageDealt) {
 			this.damageDealt = damageDealt;
 		}
+		/** The last player to hurt this one, if they are online. */
 		public Player getLastDamager() {
-			return lastDamager;
+			return lastDamagerName == null ? null : Bukkit.getPlayer(lastDamagerName);
 		}
 		public void setLastDamager(Player lastDamager) {
-			this.lastDamager = lastDamager;
+			this.lastDamagerName = lastDamager == null ? null : lastDamager.getName();
 		}
 		public int getBlocksBroken() {
 			return blocksBroken;

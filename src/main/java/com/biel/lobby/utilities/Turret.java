@@ -3,6 +3,7 @@ package com.biel.lobby.utilities;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.bukkit.*;
@@ -46,7 +47,11 @@ public class Turret extends EventBus {
 	Boolean headless = false;
 	final Location location;
 	final World world;
-	final Player creador;
+	// A player who rejoins after a disconnect is a new Player object, so ownership is keyed by
+	// UUID and the Player is resolved at the moment of use; null for the map's preset turrets.
+	private final UUID creatorId;
+	/** Kept for the sign text and the panel title, which must still name the owner while offline. */
+	private final String creatorName;
 	Equip equip = null;
 	final ArrayList<Location> TurretBlocks = new ArrayList<>();
 	final ArrayList<Location> ArmorBlocks = new ArrayList<>();
@@ -121,7 +126,8 @@ public class Turret extends EventBus {
 		this.plugin = plugin;
 		this.location = location;
 		this.world = location.getWorld();
-		this.creador = creador;
+		this.creatorId = creador == null ? null : creador.getUniqueId();
+		this.creatorName = creador == null ? null : creador.getName();
 		this.joc = joc;
 		this.id = id;
 		this.equip = equip;
@@ -135,6 +141,17 @@ public class Turret extends EventBus {
 	}
 	public Location getLocation(){
 		return location.clone();
+	}
+	/** The owner's current Player object, or null for a preset turret or while the owner is offline. */
+	public Player creator(){
+		return creatorId == null ? null : Bukkit.getPlayer(creatorId);
+	}
+	public boolean isCreatedBy(Player p){
+		return p != null && creatorId != null && creatorId.equals(p.getUniqueId());
+	}
+	/** Same owner as another turret; two preset turrets (no owner) count as the same, as the old reference check did. */
+	private boolean sameCreatorAs(Turret other){
+		return Objects.equals(creatorId, other.creatorId);
 	}
 	public int getUpgradeHpBonus(){
 		return SHIELD_UPGRADE_HP_BONUS * getByTipus(TipusMillora.RESISTÈNCIA).lvl;
@@ -164,7 +181,7 @@ public class Turret extends EventBus {
 	}
 	public static Turret getAdmin(Torres joc, Player plyr){
 		for (Turret t : getTurrets(joc)){
-			if (t.creador == plyr && t.isAdmin == true){
+			if (t.isCreatedBy(plyr) && t.isAdmin == true){
 				return t;
 			}
 		}
@@ -173,7 +190,7 @@ public class Turret extends EventBus {
 	public Turret getAdmin(){
 		if (linkCreador == true){
 			for (Turret t : joc.Turrets){
-				if (t.creador == creador && t.isAdmin == true){
+				if (t.sameCreatorAs(this) && t.isAdmin == true){
 					return t;
 				}
 			}
@@ -184,7 +201,7 @@ public class Turret extends EventBus {
 		ArrayList<Turret> turrets = joc.Turrets;
 		if (turrets == null)return;
 		for (Turret t : turrets){
-			if (t.creador == creador && t.isAdmin == false){
+			if (t.sameCreatorAs(this) && t.isAdmin == false){
 				//Stats
 				t.Atac = Atac;
 				boolean fireRateChanged = t.VelAtac != VelAtac;
@@ -289,8 +306,8 @@ public class Turret extends EventBus {
 			turr.xp = turr.xp + xpadd;
 		}else{
 			double balancingMultiplier = 1D;
-			if (creador != null) {
-				balancingMultiplier = joc.getBalancingMultiplier(creador);
+			if (creatorId != null) { // The owner's team is this turret's team, so it answers while the owner is offline too
+				balancingMultiplier = joc.getBalancingMultiplier(equip);
 			}
 			xp = (int) (xp + xpadd * balancingMultiplier);
 		}
@@ -346,8 +363,8 @@ public class Turret extends EventBus {
 				signData.setFacing(face);
 				block.setBlockData(signData, false);
 				Sign sign = (Sign)block.getState();
-				if (creador != null){
-					sign.setLine(1,creador.getName());
+				if (creatorName != null){
+					sign.setLine(1,creatorName);
 				}else{
 					//sign.setLine(1,"---------------");
 					//sign.setLine(2,"---------------");
@@ -462,7 +479,7 @@ public class Turret extends EventBus {
 		potion.setVelocity(dir);
 		ItemStack stack1 = Utils.createPotion(type, 1, true);
 		potion.setItem(stack1);
-		potion.setShooter(creador);
+		potion.setShooter(creator()); // Null while the owner is offline: the same as a preset turret's potion
 	}
 	public void tirarPoció(final Location loc, final PotionType type, int delay){
 		joc.scheduleGameplayTask(() -> tirarPoció(loc, type), delay);
@@ -502,7 +519,7 @@ public class Turret extends EventBus {
 					dir.add(addUp);
 					Arrow arrow = (Arrow)world.spawnEntity(spawnpoint, EntityType.ARROW);
 					//TNTPrimed arrow = (TNTPrimed)world.spawnEntity(spawnpoint, EntityType.TNT);
-					arrow.setShooter(creador);
+					arrow.setShooter(creator()); // Null while the owner is offline: the same as a preset turret's arrow
 					if (foc == true){arrow.setFireTicks(20); world.playEffect(spawnpoint, Effect.MOBSPAWNER_FLAMES, 0);}
 					arrow.setMetadata("Tower", new FixedMetadataValue(plugin, id));
 					arrow.setMetadata("Special", new FixedMetadataValue(plugin, false));
@@ -575,7 +592,7 @@ public class Turret extends EventBus {
                             Vector dir2 = spawnpoint.toVector().subtract(centerLoc.toVector()).normalize().multiply(0.5);
                             Arrow arrow = (Arrow)world.spawnEntity(spawnpoint, EntityType.ARROW);
                             //Bukkit.broadcastMessage(Float.toString(plyr.getLocation().getYaw()));
-                            arrow.setShooter(creador); // Team checks and kill credit follow the creator
+                            arrow.setShooter(creator()); // Team checks and kill credit follow the creator; null while offline
                             arrow.setMetadata("Tower", new FixedMetadataValue(plugin, id));
                             arrow.setMetadata("Special", new FixedMetadataValue(plugin, true));
                             arrow.setFireTicks(200);
@@ -598,7 +615,7 @@ public class Turret extends EventBus {
 			}
 			if (en instanceof Player){
 				Player plyr = (Player)en;
-				if (en == creador){
+				if (isCreatedBy(plyr)){
 					return false;
 				}
 				if (equip != null){
@@ -668,7 +685,7 @@ public class Turret extends EventBus {
 	/** Enemies only: a team's own turrets, or a lone turret's creator, take no damage from them. */
 	boolean canBeAttackedBy(Player player){
 		if (equip != null) return !equip.getPlayers().contains(player);
-		return player != creador;
+		return !isCreatedBy(player);
 	}
 	Boolean anyUpgradePossible(){
 		for (Millora mill : Millores){
@@ -716,7 +733,7 @@ public class Turret extends EventBus {
 	String generateInvString(){
 		String dreta = "Torre";
 		if (linkCreador == true){
-			dreta = dreta + "(" + creador.getName() + ")";
+			dreta = dreta + "(" + creatorName + ")";
 		}
 		String strsp = "";
 		String strhp = ChatColor.RED + Integer.toString(hp) + " hp";
@@ -1043,7 +1060,7 @@ public class Turret extends EventBus {
 				hp = hp + SHIELD_UPGRADE_HP_BONUS;
 				if (isAdmin){ // Placed turrets get the bonus too; the template's hp is never shot at
 					for (Turret t : joc.Turrets){
-						if (t.creador == creador && !t.isAdmin) t.hp = t.hp + SHIELD_UPGRADE_HP_BONUS;
+						if (t.sameCreatorAs(Turret.this) && !t.isAdmin) t.hp = t.hp + SHIELD_UPGRADE_HP_BONUS;
 					}
 				}
 				tempsEscut = tempsEscut - 4;

@@ -106,7 +106,22 @@ public abstract class JocEquips extends Joc {
 		anunciarEquips(e);
 		matchData.registerEnd(e);
 		JocFinalitzat();
-		updateElo(e.getPlayers());
+		updateElo(e.getPlayerNames());
+	}
+	/** A returning player gets their team colour and the teams board back; Paper keeps the rest. */
+	@Override
+	protected void onSeatResumed(Player ply) {
+		super.onSeatResumed(ply);
+		if (JocIniciat) {
+			updateHeadColor(ply);
+			ScoreBoardUpdater.updateTeamScore(this);
+		}
+		updateScoreBoards();
+	}
+	@Override
+	protected Location getResumeLocation(Player ply) {
+		Equip team = obtenirEquip(ply);
+		return team != null ? team.getTeamSpawnLocation() : super.getResumeLocation(ply);
 	}
 	/** From this share of the largest team missing on the smallest, the match plays for nothing. */
 	private static final double MAX_RANKED_TEAM_IMBALANCE = 1 / 3D;
@@ -267,6 +282,13 @@ public abstract class JocEquips extends Joc {
 	}
 	public Equip obtenirEquip(Player ply){
 		return obtenirEquip(ply, Equip.class);
+	}
+	/** The team a name belongs to, online or not; null when in none. */
+	public Equip teamOfName(String name){
+		for (Equip e : Equips){
+			if (e.hasPlayerNamed(name)) return e;
+		}
+		return null;
 	}
 	public Equip obtenirEquip(int id){
 		return Equips.get(id);
@@ -784,6 +806,13 @@ public abstract class JocEquips extends Joc {
 
 			}
 			return returnPlayers;
+		}
+		/** Every member by name, online or not. */
+		public List<String> getPlayerNames(){
+			return Collections.unmodifiableList(Players);
+		}
+		public boolean hasPlayerNamed(String name){
+			return Players.contains(name);
 		}
 		void addPlayer(Player ply){
 			Players.add(ply.getName());

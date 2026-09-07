@@ -38,8 +38,7 @@ public class SkillPool {
 	public ArrayList<Skill> getSkillsForPlayer(Player ply){
 		ArrayList<Skill> r = new ArrayList<>();
 		for(Skill s : skills){
-			String name = s.getPlayer().getName();
-			if(name.equals(ply.getName())){r.add(s);}
+			if(ply.getName().equals(s.getPlayerName())){r.add(s);}
 		}
 		return r;
 	}

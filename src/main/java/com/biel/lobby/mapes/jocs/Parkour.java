@@ -42,7 +42,8 @@ import com.biel.lobby.utilities.HologramFacade;
 public class Parkour extends JocScoreCombo{
 
 	ArrayList<ParkourStream> streams = new ArrayList<>();
-	ArrayList<Player> nativeFinishers = new ArrayList<>();
+	// Names, not Players: a player who rejoins after a disconnect is a new Player object, and a stored reference would never match again
+	ArrayList<String> nativeFinishers = new ArrayList<>();
 	ParkourProvider provider = new ParkourProvider();
 	int playerCount = 0;
 	int mapLength = 40;
@@ -172,7 +173,7 @@ public class Parkour extends JocScoreCombo{
 			for(Player player : getPlayers()){
 				ParkourPlayerInfo playerInfo = getPlayerInfo(player);
 				if(playerInfo.isInGame() && player.getScoreboardTags().contains("finished")){
-					nativeFinishers.add(player);
+					nativeFinishers.add(player.getName());
 					playerInfo.setInGame(false);
 					player.setGameMode(GameMode.SPECTATOR);
 					sendGlobalMessage(player.getName() + " ha arribat a la meta!");
@@ -202,15 +203,19 @@ public class Parkour extends JocScoreCombo{
 		// TODO Auto-generated method stub
 		super.ultraHeartbeat();
 		if(!nativeDatapackMap){
-			streams.removeIf(s -> !s.isValid());
+			streams.removeIf(ParkourStream::isAbandoned);
 			streams.forEach(ParkourStream::ultraTick);
 		}
 	}
 	@Override
 	public ArrayList<Player> getOrderedWinnerList(){
 		if(!nativeDatapackMap)return super.getOrderedWinnerList();
-		ArrayList<Player> orderedPlayers = new ArrayList<>(nativeFinishers);
-		for(Player player : getPlayers()){
+		ArrayList<Player> players = getPlayers();
+		ArrayList<Player> orderedPlayers = new ArrayList<>();
+		for(String finisherName : nativeFinishers){
+			players.stream().filter(p -> p.getName().equals(finisherName)).findFirst().ifPresent(orderedPlayers::add);
+		}
+		for(Player player : players){
 			if(!orderedPlayers.contains(player))orderedPlayers.add(player);
 		}
 		return orderedPlayers;
@@ -243,20 +248,31 @@ public class Parkour extends JocScoreCombo{
 	}
 	public class ParkourStream extends PlayerWorldEventBus { //One for each player
 		private Location startLocation;
+		private final String playerName;
 		ArrayList<BubbleHandler> handlers = new ArrayList<>();
 		int targetBubbleIndex = 0;
 		int playerPosition = 0;
 		public ParkourStream(Player ply, Location startLocation) {
 			super(ply);
+			this.playerName = ply.getName();
 			this.startLocation = startLocation;
 			checkBufferBuildStreaming();
 		}
-		public Player getPlayer(){
+		public Player getPlayer(){ // Resolved by name: null while the player is offline
 			return super.getPlayer();
+		}
+		public String getPlayerName(){
+			return playerName;
 		}
 		public boolean isValid(){
 			//The player is still playing
 			return getPlayer() != null && getPlayers().contains(getPlayer());
+		}
+		public boolean isAbandoned(){
+			// An offline player keeps their run so a rejoin lands back on it; only a player who is online and gone, or a finished game, drops it
+			if(JocFinalitzat)return true;
+			Player player = getPlayer();
+			return player != null && !getPlayers().contains(player);
 		}
 		public int getTargetBubbleIndex() {
 			return targetBubbleIndex;
@@ -275,6 +291,7 @@ public class Parkour extends JocScoreCombo{
 		}
 		
 		protected void ultraTick(){
+			if(getPlayer() == null)return; // Offline: nothing to measure this tick
 			getTargetBubbleHandler().handleTick();
 		}
 		@Override
@@ -839,8 +856,8 @@ public class Parkour extends JocScoreCombo{
 		return getPlayerInfo(p, ParkourPlayerInfo.class);		
 	}
 	public class ParkourPlayerInfo extends JocScoreComboPlayerInfo{
-		public ParkourStream getStream(){
-			return streams.stream().filter(s -> s.getPlayer().equals(getPlayer())).findFirst().get();
+		public ParkourStream getStream(){ // Null when this player has no stream; callers null-check
+			return streams.stream().filter(s -> s.getPlayerName().equals(getName())).findFirst().orElse(null);
 		}
 	}
 }

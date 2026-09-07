@@ -1,75 +1,98 @@
 package com.biel.lobby.mapes;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 public abstract class JocLastStanding extends Joc{
-	
-	public ArrayList<Player> AlivePlayers;
+	/**
+	 * Who is still in the round, by name. A Player object in this list went stale the
+	 * moment its holder reconnected (a new entity, never equal again), which left a
+	 * ghost that could neither be eliminated nor win, so the round never ended.
+	 */
+	private ArrayList<String> aliveNames = new ArrayList<>();
 	public void initAlivePlayers() {
-		AlivePlayers = this.getPlayers();
+		setAlivePlayers(getPlayers());
 	}
+	/** The alive players who are online right now. */
 	public ArrayList<Player> getAlivePlayers() {
-		return AlivePlayers;
+		ArrayList<Player> alive = new ArrayList<>();
+		for (String name : aliveNames) {
+			Player player = Bukkit.getPlayer(name);
+			if (player != null) alive.add(player);
+		}
+		return alive;
+	}
+	public List<String> getAliveNames() {
+		return aliveNames;
 	}
 
-	public void setAlivePlayers(ArrayList<Player> alivePlayers) {
-		AlivePlayers = alivePlayers;
+	public void setAlivePlayers(List<Player> alivePlayers) {
+		aliveNames = new ArrayList<>();
+		for (Player player : alivePlayers) aliveNames.add(player.getName());
 	}
 	
 	public boolean isAlive(Player ply){
-		return AlivePlayers.contains(ply);
-		
+		return isAlive(ply.getName());
+	}
+	public boolean isAlive(String name){
+		return aliveNames.contains(name);
 	}
 	void removeAlive(Player ply){
-		AlivePlayers.remove(ply);
-		anunciarPerdedor(ply);
+		removeAlive(ply.getName());
+	}
+	void removeAlive(String name){
+		aliveNames.remove(name);
+		anunciarPerdedor(name);
 		//addSpectator(ply);
-		updateScoreBoard(ply);
-		getPlayerInfo(ply).setAlive(false);
+		Player player = Bukkit.getPlayer(name);
+		if (player != null) updateScoreBoard(player);
+		PlayerInfo info = getPlayerInfo(name);
+		if (info != null) info.setAlive(false);
 		comprovarGuanyador();
 	}
 	public void removeIfAlive(Player ply){
-		if (isAlive(ply)){
-			removeAlive(ply);
-		}   
+		removeIfAlive(ply.getName());
+	}
+	public void removeIfAlive(String name){
+		if (isAlive(name)){
+			removeAlive(name);
+		}
 	}
 
 	public Player getRandomAlivePlayer() {
-
+		ArrayList<Player> alive = getAlivePlayers();
+		if (alive.isEmpty()) return null;
 		Random rand = new Random();
-		return AlivePlayers.get(rand.nextInt(AlivePlayers.size()));
+		return alive.get(rand.nextInt(alive.size()));
 
 	}
 
 	public Boolean anyoneAlive(){
-		return(AlivePlayers.size() != 0);
+		return(aliveNames.size() != 0);
 	}
-	public void anunciarPerdedor(Player ply){
-		sendGlobalMessage(ChatColor.RED + ply.getName() + " ha perdut!");
+	public void anunciarPerdedor(String name){
+		sendGlobalMessage(ChatColor.RED + name + " ha perdut!");
 	}
 	public void comprovarGuanyador(){
-		Player winner = null;
-		if (getAlivePlayers().size() == 1){
-			winner = getWinner();
-			sendGlobalMessage(ChatColor.GREEN + "" + ChatColor.BOLD + winner.getName() + " ha guanyat!");
-			winGame(winner);
+		if (aliveNames.size() == 1){
+			String winnerName = aliveNames.get(0);
+			sendGlobalMessage(ChatColor.GREEN + "" + ChatColor.BOLD + winnerName + " ha guanyat!");
+			winGame(Bukkit.getPlayer(winnerName));
 		}
-		if (getAlivePlayers().size() == 0){
+		if (aliveNames.size() == 0){
 			sendGlobalMessage(ChatColor.YELLOW + "No hi ha guanyadors!");
-			winGame(winner);
+			winGame((Player) null);
 		}
-	}
-	private Player getWinner() {
-		return getAlivePlayers().get(0);
 	}
 	@Override
 	public String getWinnerDisplayName() {
-		if (getAlivePlayers().size() == 1){
-			return getWinner().getName();
+		if (aliveNames.size() == 1){
+			return aliveNames.get(0);
 		}
 		return super.getWinnerDisplayName();
 	}

@@ -198,7 +198,7 @@ public abstract class JocObjectius extends JocEquips {
 		public  ArrayList<Objectiu> getCompletedObjectives(Player ply){
 			ArrayList<Objectiu> objs = new ArrayList<>();
 			for (Objectiu obj : getCompletedObjectives()){
-				if (obj.getCompleter() == ply){
+				if (ply.getName().equals(obj.completerName)){
 					objs.add(obj);
 				}
 			}
@@ -229,7 +229,8 @@ public abstract class JocObjectius extends JocEquips {
 		Boolean completed = false;
 		String verb = "completat";
 		Location location;
-		Player completer;
+		// By name, so the credit survives the completer reconnecting as a new Player object.
+		String completerName;
 		Object info;
 		public Objectiu(String nom, Location l, Object info) {
 			super();
@@ -255,14 +256,18 @@ public abstract class JocObjectius extends JocEquips {
 		public void setLocation(Location location) {
 			this.location = location;
 		}
+		/** Who completed it, if they are online; null before completion or while they are away. */
 		public Player getCompleter() {
-			return completer;
+			return completerName == null ? null : Bukkit.getPlayer(completerName);
+		}
+		public String getCompleterName() {
+			return completerName;
 		}
 		public boolean canBeCompleted(Player p){
 			return obtenirEquip(p).getId() != obtenirEquipObjectiu(this).getId();
 		}
 		public void setCompleter(Player completer) {
-			this.completer = completer;
+			this.completerName = completer == null ? null : completer.getName();
 		}
 		public Object getInfo() {
 			return info;
@@ -290,8 +295,8 @@ public abstract class JocObjectius extends JocEquips {
 			}
 		}
 		public void playCompletionEffect(){
-			completer.getWorld().playEffect(location, Effect.MOBSPAWNER_FLAMES, 0);
-			completer.getWorld().playSound(location, Sound.ENTITY_WITHER_DEATH, 750F, 1.5F);
+			location.getWorld().playEffect(location, Effect.MOBSPAWNER_FLAMES, 0);
+			location.getWorld().playSound(location, Sound.ENTITY_WITHER_DEATH, 750F, 1.5F);
 		}
 		public String getScoreboardStatusLine(){
 			if (isCompleted()){

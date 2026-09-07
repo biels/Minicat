@@ -30,7 +30,7 @@ import com.biel.lobby.mapes.jocs.*;
 
 
 public class GestorMapes implements Listener{
-	public enum InstanceRemovalResult { REMOVED, NOT_FOUND, HAS_PLAYERS, EDIT_MODE, UNLOAD_FAILED }
+	public enum InstanceRemovalResult { REMOVED, NOT_FOUND, HAS_PLAYERS, HAS_DROPPED_SEATS, EDIT_MODE, UNLOAD_FAILED }
 	public enum InstanceJoinResult { JOINED, NOT_FOUND, UNAVAILABLE }
 	public lobby plugin;
 	ArrayList<Pair<String, Double>> auto_ratings;
@@ -161,6 +161,20 @@ public class GestorMapes implements Listener{
 			return InstanceJoinResult.JOINED;
 		}
 		return InstanceJoinResult.NOT_FOUND;
+	}
+	/** The instance keeping a seat for this player to come back to, or null. */
+	public Joc gameWithResumableSeatFor(Player p){
+		for (Joc game : getAllGameInstances()){
+			if (game.resumableSeatOf(p) != null) return game;
+		}
+		return null;
+	}
+	/** The instance that still has any seat of this player's, whatever its state, or null. */
+	public Joc gameWithSeatFor(Player p){
+		for (Joc game : getAllGameInstances()){
+			if (game.seatOf(p.getUniqueId()) != null) return game;
+		}
+		return null;
 	}
 	public Mapa getMapWherePlayerIs(Player p){
 		if (lobby.isOnLobby(p)){return null;}
@@ -454,10 +468,12 @@ public class GestorMapes implements Listener{
 			Bukkit.getScheduler().runTask(plugin, () -> checkNecessary(map));
 		}
 
-		void checkNecessary(Joc map){
+		/** Releases an empty instance, unless it is a match in progress with someone expected back within the grace. */
+		public void checkNecessary(Joc map){
 			if (!Instàncies.contains(map) || map.getWorld() == null) return;
 
 			if(map.getEditMode())return;
+			if(map.isWaitingForDroppedPlayers())return;
 
 			if (map.getWorld().getPlayers().size() == 0){
 				if (map.JocEnMarxa()) map.JocFinalitzat();
@@ -468,6 +484,7 @@ public class GestorMapes implements Listener{
 			if (!Instàncies.contains(map)) return InstanceRemovalResult.NOT_FOUND;
 			if (map.getWorld() == null) return InstanceRemovalResult.UNLOAD_FAILED;
 			if (!map.getWorld().getPlayers().isEmpty()) return InstanceRemovalResult.HAS_PLAYERS;
+			if (map.isWaitingForDroppedPlayers()) return InstanceRemovalResult.HAS_DROPPED_SEATS;
 			if (map.getEditMode()) return InstanceRemovalResult.EDIT_MODE;
 			if (!map.deleteVirtualWorld()) return InstanceRemovalResult.UNLOAD_FAILED;
 			map.clearAllExternals();

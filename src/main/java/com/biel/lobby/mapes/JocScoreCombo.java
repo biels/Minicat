@@ -265,6 +265,11 @@ public abstract class JocScoreCombo extends Joc {
 		}
 	}
 	@Override
+	protected void onSeatResumed(Player ply) {
+		super.onSeatResumed(ply);
+		if (!getPlayerInfo(ply).getScoreHistory().isEmpty()) Com.setSuffix(ply, Rank.getRank(getPlayerInfo(ply).getAccuracy()).getFormattedString());
+	}
+	@Override
 	public boolean getDisplayHealthBar() {
 		// TODO Auto-generated method stub
 		return false;

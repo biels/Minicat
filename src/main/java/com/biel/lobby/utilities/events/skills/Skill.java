@@ -2,6 +2,7 @@ package com.biel.lobby.utilities.events.skills;
 
 import java.util.ArrayList;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -15,14 +16,17 @@ import com.biel.lobby.mapes.Joc.PlayerInfo;
 import com.biel.lobby.utilities.Utils;
 
 public abstract class Skill extends PlayerWorldEventBus {
-	private Player player;
+	// The holder by name, as the bus underneath keeps it: a Player object held here
+	// went stale the moment its holder reconnected (a new entity, never equal again),
+	// so the skill kept acting on a ghost while the pool still found it by name.
+	private String playerName;
 	public int id = Utils.NombreEntre(0, 100);
 	public Skill(){
 		super(null);
 	}
 	public Skill(Player ply) {
 		super(ply);
-		this.player = ply;
+		this.playerName = ply == null ? null : ply.getName();
 	}
 	/**
 	 * @return The name of the skill
@@ -33,11 +37,17 @@ public abstract class Skill extends PlayerWorldEventBus {
 	 */
 	public abstract String getDescription();
 	
+	/** The holder as they are right now: null while they are offline. */
 	public Player getPlayer() {
-		return player;
+		return playerName == null ? null : Bukkit.getPlayer(playerName);
+	}
+	public String getPlayerName() {
+		return playerName;
 	}
 	public void setPlayer(Player player) {
-		this.player = player;
+		if (player == null) return; // The pool's templates are built without a player; there is nothing to unset.
+		super.setPlayer(player);
+		this.playerName = player.getName();
 	}
 	public void tick() {
 		//TICK!!
@@ -46,7 +56,8 @@ public abstract class Skill extends PlayerWorldEventBus {
 	@Override
 	public boolean isValid() {
 		// TODO Auto-generated method stub
-		return super.isValid() && getPlayer().getWorld().equals(getWorld()) && getGame() != null;
+		Player player = getPlayer();
+		return super.isValid() && player != null && player.getWorld().equals(getWorld()) && getGame() != null;
 	}
 	protected int getTickSpacing(){
 		return 20;
@@ -56,7 +67,9 @@ public abstract class Skill extends PlayerWorldEventBus {
 	}
 	//GAME-WRAPPING
 	protected Joc getGame(){
-		Mapa mapWherePlayerIs = Com.getPlugin().gest.getMapWherePlayerIs(getPlayer());
+		Player player = getPlayer();
+		if(player == null)return null;
+		Mapa mapWherePlayerIs = Com.getPlugin().gest.getMapWherePlayerIs(player);
 		if(mapWherePlayerIs == null)return null;
 		if(mapWherePlayerIs instanceof Joc){
 			return (Joc) mapWherePlayerIs;			
@@ -79,8 +92,9 @@ public abstract class Skill extends PlayerWorldEventBus {
 		sendPlayerMessage(p, ChatColor.DARK_AQUA + "[" + getName() + " ] > " + ChatColor.GRAY + message);
 	}
 	public PlayerInfo getPlayerInfo(Player p) {
-		if (player == null)return null;
-		return getGame().getPlayerInfo(p);
+		Joc game = getGame();
+		if (p == null || game == null)return null;
+		return game.getPlayerInfo(p);
 	}
 	public PlayerInfo getPlayerInfo() {
 		return getPlayerInfo(getPlayer());

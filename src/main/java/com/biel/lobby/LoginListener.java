@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
+import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.PlayerTagState;
 
@@ -36,9 +37,24 @@ public class LoginListener implements Listener {
 		String name = player.getName();
 		
 		Com.getDataAPI().registerNewPlayer(player);
-		Com.teleportPlayerToLobby(player);
-
 		player.setCanPickupItems(true);
+		// A dropped seat is taken back before anything else: the lobby teleport would
+		// find the player where Paper put them, in the game world, and leave them again.
+		Joc resumable = Com.getGest().gameWithResumableSeatFor(player);
+		if (resumable != null) {
+			resumable.resumeSeat(player);
+			return;
+		}
+		Joc previous = Com.getGest().gameWithSeatFor(player);
+		Com.teleportPlayerToLobby(player);
+		if (previous != null) {
+			Joc.Seat seat = previous.seatOf(player.getUniqueId());
+			if (previous.getGameState() == Joc.GameState.Complete) {
+				player.sendMessage(ChatColor.GRAY + "La partida de " + previous.getGameName() + " ha acabat mentre eres fora.");
+			} else if (seat.getState() == Joc.Seat.State.VACANT) {
+				player.sendMessage(ChatColor.GRAY + "Vas abandonar la partida de " + previous.getGameName() + ".");
+			}
+		}
 		
 	}
 	@EventHandler

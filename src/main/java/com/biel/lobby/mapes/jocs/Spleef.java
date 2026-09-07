@@ -260,7 +260,7 @@ public class Spleef extends JocLastStanding {
 					if(anyoneAlive()) {
 
 						Player randAlivePlayer = getRandomAlivePlayer();
-						p.teleport(randAlivePlayer.getLocation().add(0.0, 2.0, 0.0));
+						if (randAlivePlayer != null) p.teleport(randAlivePlayer.getLocation().add(0.0, 2.0, 0.0));
 
 					}
 

@@ -271,8 +271,12 @@ public class Arena4 extends JocTeamScoreRace {
 		return ids;
 	}
 
+	/** By seat, not presence: a team whose only member dropped keeps its place in the ring until the grace runs out. */
 	private boolean téJugadorsALArena(Equip e) {
-		return e.getPlayers().stream().anyMatch(p -> p.getWorld() == world && !isSpectator(p));
+		return e.getPlayerNames().stream().anyMatch(name -> {
+			Seat seat = seatOf(name);
+			return seat != null && seat.getRole() == Seat.Role.PLAYER && seat.getState() != Seat.State.VACANT;
+		});
 	}
 
 	public Equip presa(Equip e) {

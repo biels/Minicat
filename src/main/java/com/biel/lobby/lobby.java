@@ -114,6 +114,9 @@ public final class lobby extends JavaPlugin {
 					case HAS_PLAYERS:
 						sender.sendMessage(ChatColor.RED + "No es pot eliminar una instància amb jugadors.");
 						break;
+					case HAS_DROPPED_SEATS:
+						sender.sendMessage(ChatColor.RED + "No es pot eliminar: algun jugador desconnectat encara pot tornar-hi.");
+						break;
 					case EDIT_MODE:
 						sender.sendMessage(ChatColor.RED + "No es pot eliminar una instància en mode d'edició.");
 						break;

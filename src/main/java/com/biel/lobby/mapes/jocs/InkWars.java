@@ -614,11 +614,17 @@ public class InkWars extends JocEquips {
 		}
 	}
 	class EnderInkWeapon extends ProjectileInkWeapon{
-		Player targeted;
+		String targetedName; // A name, not a Player: the target may disconnect and come back as a new Player object
 		int chargeTicks = 0;
 		int toolTicks = -1;
 		public EnderInkWeapon(Player ply) {
 			super(ply);
+		}
+		Player getTargeted(){ // Null while the target is offline
+			return targetedName == null ? null : Bukkit.getPlayer(targetedName);
+		}
+		boolean isTargeted(Player p){
+			return p.getName().equals(targetedName);
 		}
 		@Override
 		public double getMaxHealth() {
@@ -668,7 +674,7 @@ public class InkWars extends JocEquips {
 			if(damager == getPlayer() && !evt.isCancelled()){
 				if(ranged){
 					//LOGIC
-					if(damaged == targeted){
+					if(isTargeted(damaged)){
 						//Add time to existing target
 						GUtils.swapPositions(damager, damaged);
 						//						int time = 4 * 20 + getWeaponLevel() * 10;
@@ -676,14 +682,14 @@ public class InkWars extends JocEquips {
 						//						sendPlayerMessage(targeted, ChatColor.GRAY + getPlayer().getName() + " (+" + Double.toString(time/20.0) + "s)!");
 					}else{
 						//Change target
-						targeted = damaged;
+						targetedName = damaged.getName();
 						chargeTicks = 6 * 20; //Starting charges
 						damager.playSound(damaged.getEyeLocation(), Sound.BLOCK_FURNACE_FIRE_CRACKLE, 1, (float) 1.2);
 						damaged.playSound(damaged.getEyeLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1, (float) 1.2);
 //						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
 //						getWorld().playEffect(targeted.getEyeLocation(), Effect.VILLAGER_THUNDERCLOUD, 4);
-						sendPlayerMessage(targeted, ChatColor.GRAY + getPlayer().getName() + " has tricked you to paint for him (6s)!");
-						InkWeapon targetedActiveWeapon = getPlayerInfo(targeted).getActiveWeapon();
+						sendPlayerMessage(damaged, ChatColor.GRAY + getPlayer().getName() + " has tricked you to paint for him (6s)!");
+						InkWeapon targetedActiveWeapon = getPlayerInfo(damaged).getActiveWeapon();
 
 						if (targetedActiveWeapon != null) {
 							if (targetedActiveWeapon instanceof RollerInkWeapon) {
@@ -710,6 +716,7 @@ public class InkWars extends JocEquips {
 				toolTicks = -1;
 			}
 			if(toolTicks > 0)toolTicks--;
+			Player targeted = getTargeted();
 			if(chargeTicks > 0 && targeted != null){
 				rollerLinePaint(1.5 + (getWeaponLevel() / 3) + chargeTicks / (20 * 4), 1.2, targeted);
 
@@ -728,7 +735,7 @@ public class InkWars extends JocEquips {
 						}
 					}
 					chargeTicks = 0;
-					targeted = null;
+					targetedName = null;
 				}
 				chargeTicks -= 1;
 //				getWorld().playEffect(targeted.getLocation().add(0.5, 0.12, 0.5), Effect.LAVA_POP, 4);
@@ -738,8 +745,8 @@ public class InkWars extends JocEquips {
 		@Override
 		protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
 			super.onPlayerDeath(evt, killed);
-			if(killed == targeted){
-				paintRadius(targeted.getEyeLocation(), getWeaponLevel() + Math.round(chargeTicks / (20 * 1.5)), 4.5 + getWeaponLevel() * 0.25);
+			if(isTargeted(killed)){
+				paintRadius(killed.getEyeLocation(), getWeaponLevel() + Math.round(chargeTicks / (20 * 1.5)), 4.5 + getWeaponLevel() * 0.25);
 			}
 		}
 		@Override
@@ -790,10 +797,13 @@ public class InkWars extends JocEquips {
 		}
 	}
 	class BrushInkWeapon extends InkWeapon{
-		Player targeted;
+		String targetedName; // A name, not a Player: the target may disconnect and come back as a new Player object
 		int charges = 0;
 		public BrushInkWeapon(Player ply) {
 			super(ply);
+		}
+		Player getTargeted(){ // Null while the target is offline
+			return targetedName == null ? null : Bukkit.getPlayer(targetedName);
 		}
 		@Override
 		public double getMaxHealth() {
@@ -826,6 +836,7 @@ public class InkWars extends JocEquips {
 		@Override
 		public void tick() {
 			super.tick();
+			Player targeted = getTargeted();
 			if(targeted != null){
 				if(targeted.hasPotionEffect(PotionEffectType.WITHER)){
 					for(Player p : Utils.getNearbyPlayers(targeted, 1.5)){
@@ -840,10 +851,9 @@ public class InkWars extends JocEquips {
 			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
 			if(damager != getPlayer())return;
 			if(!ranged && damager == getPlayer() && !damaged.hasPotionEffect(PotionEffectType.WITHER) && !evt.isCancelled()){
-				if(targeted == null)targeted = damaged;
-				if(targeted != damaged){
-					targeted = damaged;
-					charges = 0;
+				if(!damaged.getName().equals(targetedName)){
+					if(targetedName != null)charges = 0;
+					targetedName = damaged.getName();
 				}
 				evt.setDamage(0.25 + 0.1 * getWeaponLevel());
 				getWorld().playSound(damaged.getEyeLocation(), Sound.ENTITY_SLIME_ATTACK, 1, 1.1F + 0.4F * charges);

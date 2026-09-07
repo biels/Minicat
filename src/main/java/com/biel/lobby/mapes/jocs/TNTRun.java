@@ -20,8 +20,9 @@ import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
 public class TNTRun extends JocLastStanding {
-	ArrayList<Player> tntPlayers = new ArrayList<>();
-	ArrayList<Player> immunePlayers = new ArrayList<>();
+	// Keyed by name, not Player: a player who rejoins after a disconnect is a new Player object, and a stored reference would never match again
+	ArrayList<String> tntPlayers = new ArrayList<>();
+	ArrayList<String> immunePlayers = new ArrayList<>();
 	int temps = 60;
 	int round = 0;
 	@Override
@@ -84,20 +85,20 @@ public class TNTRun extends JocLastStanding {
 		}
 	}
 	Boolean hasTNT(Player ply){
-		return tntPlayers.contains(ply);
+		return tntPlayers.contains(ply.getName());
 	}
 	Boolean isImmune(Player ply){
-		return immunePlayers.contains(ply);
+		return immunePlayers.contains(ply.getName());
 	}
 	void giveImmunity(final Player ply, int secs){
 		if (!isImmune(ply)){
-			immunePlayers.add(ply);
+			immunePlayers.add(ply.getName());
 			ply.getInventory().setHelmet(new ItemStack(Material.QUARTZ_BLOCK));
 			ply.getInventory().setItem(8, new ItemStack(Material.QUARTZ_BLOCK));
 			scheduleGameplayTask(() -> {
                 ply.getInventory().setHelmet(null);
                    ply.getInventory().clear(8);
-                immunePlayers.remove(ply);
+                immunePlayers.remove(ply.getName());
             }, 20L * secs);
 		}
 	}
@@ -115,8 +116,8 @@ public class TNTRun extends JocLastStanding {
 		ply.getInventory().setHelmet(new ItemStack(Material.TNT));
 		ply.getInventory().setItem(8, new ItemStack(Material.TNT));
 		ply.updateInventory();
-		if(!tntPlayers.contains(ply)){
-			tntPlayers.add(ply);
+		if(!hasTNT(ply)){
+			tntPlayers.add(ply.getName());
 			ply.sendMessage("Tens un "+ ChatColor.DARK_RED + "TNT"+ ChatColor.WHITE +"!");
 		}
 	}
@@ -124,9 +125,7 @@ public class TNTRun extends JocLastStanding {
 		ply.getInventory().setHelmet(null);
 		ply.getInventory().clear(8);
 		ply.updateInventory();
-		if(tntPlayers.contains(ply)){
-			tntPlayers.remove(ply);
-		}
+		tntPlayers.remove(ply.getName());
 	}
 	int getTNTAmount(){
 		return (int) Math.ceil(getAlivePlayers().size() / ((double) 3));
@@ -143,7 +142,8 @@ public class TNTRun extends JocLastStanding {
 		}
 	}
 	void explotarJugadors(){
-		for (Player p : tntPlayers){
+		for (Player p : getPlayers()){
+			if (!hasTNT(p)) continue;
 			//getWorld().createExplosion(p.getLocation(), 4F, false);
 			removeIfAlive(p);
 			Com.teleportPlayerToLobby(p);

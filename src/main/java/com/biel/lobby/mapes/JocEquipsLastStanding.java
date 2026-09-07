@@ -1,6 +1,9 @@
 package com.biel.lobby.mapes;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.Bukkit;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -11,7 +14,8 @@ import com.biel.lobby.utilities.ScoreBoardUpdater;
 
 public abstract class JocEquipsLastStanding extends JocEquips {
 	ArrayList<Integer> AliveTeamIDs; 
-	ArrayList<Player> AlivePlayers;
+	/** Who is still in the round, by name; see JocLastStanding for why not by Player. */
+	private ArrayList<String> aliveNames = new ArrayList<>();
 	@Override
 	protected void customJocIniciat() {
 		// TODO Auto-generated method stub
@@ -81,37 +85,65 @@ public abstract class JocEquipsLastStanding extends JocEquips {
 	}
 	//Players
 	public void initAlivePlayers() { //initMethod
-		AlivePlayers = this.getPlayers();
+		setAlivePlayers(this.getPlayers());
 	}
+	/** The alive players who are online right now. */
 	public ArrayList<Player> getAlivePlayers() {
-		return AlivePlayers;
+		ArrayList<Player> alive = new ArrayList<>();
+		for (String name : aliveNames) {
+			Player player = Bukkit.getPlayer(name);
+			if (player != null) alive.add(player);
+		}
+		return alive;
 	}
-	public void setAlivePlayers(ArrayList<Player> alivePlayers) {
-		AlivePlayers = alivePlayers;
+	public List<String> getAliveNames() {
+		return aliveNames;
+	}
+	public void setAlivePlayers(List<Player> alivePlayers) {
+		aliveNames = new ArrayList<>();
+		for (Player player : alivePlayers) aliveNames.add(player.getName());
 	}	
 	public boolean isAlive(Player ply){
-		return AlivePlayers.contains(ply);		
+		return isAlive(ply.getName());
+	}
+	public boolean isAlive(String name){
+		return aliveNames.contains(name);
 	}
 	public void removeAlive(Player ply){
-		AlivePlayers.remove(ply);
+		removeAlive(ply.getName());
+	}
+	public void removeAlive(String name){
+		aliveNames.remove(name);
 		//Comprova la integritat de l'equip.
-		Equip e = obtenirEquip(ply);
-		int size = getAlivePlayersTeam(e).size();
+		Equip e = teamOfName(name);
+		if (e == null) return;
+		int size = getAliveNamesTeam(e).size();
 		if(size == 0){
 			removeAlive(e);
 		}else{
-			sendGlobalMessage("El jugador" + e.getChatColor() + ply.getName() + ChatColor.GRAY + " ha estat eliminat");
+			sendGlobalMessage("El jugador" + e.getChatColor() + name + ChatColor.GRAY + " ha estat eliminat");
 			sendGlobalMessage("Queden " + Integer.toString(size) + "jugadors a l'equip " + e.getAdjectiuColored());
 		}
 	}
 	public void removeIfAlive(Player ply){
-		if(isAlive(ply))removeAlive(ply);
+		removeIfAlive(ply.getName());
+	}
+	public void removeIfAlive(String name){
+		if(isAlive(name))removeAlive(name);
 	}
 	//Mix
 	public ArrayList<Player> getAlivePlayersTeam(Equip e){
 		ArrayList<Player> r = new ArrayList<>();
 		for(Player p : e.getPlayers()){
 			if(isAlive(p))r.add(p);
+		}
+		return r;
+	}
+	/** The team's alive members whether online or not; a drop must not read as an elimination. */
+	public ArrayList<String> getAliveNamesTeam(Equip e){
+		ArrayList<String> r = new ArrayList<>();
+		for(String name : e.getPlayerNames()){
+			if(isAlive(name))r.add(name);
 		}
 		return r;
 	}

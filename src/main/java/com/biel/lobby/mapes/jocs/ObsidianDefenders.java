@@ -1176,7 +1176,7 @@ public class ObsidianDefenders extends JocEquips {
 		if (++segonsPresènciaGuardià % SEGONS_ENTRE_BRUNZITS_GUARDIÀ == 0) world.playSound(golem.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.7F, 1F);
 	}
 
-	/** A player who leaves the match (/l, a teleport out, a quit) must not carry the Guardian's bar to the lobby. */
+	/** A player who leaves the match (/l, a teleport out) must not carry the Guardian's bar to the lobby. */
 	@Override
 	protected void customLeave(Player ply, List<String> attatchments) {
 		super.customLeave(ply, attatchments);
@@ -1185,6 +1185,18 @@ public class ObsidianDefenders extends JocEquips {
 		setMaxHealth(ply, FULL_MAX_HEALTH);
 		Block shown = shownPressedPlate.remove(ply.getUniqueId());
 		if (shown != null) ply.sendBlockChange(shown.getLocation(), shown.getBlockData());
+	}
+	/** A lost connection mid-charge: the charge task must not fire on a player who is gone; the star drops at their feet as a death would. */
+	@Override
+	protected void onSeatDropped(Player ply) {
+		super.onSeatDropped(ply);
+		cancelStarCharge(ply);
+	}
+	/** Away past the grace: only what is keyed by them here needs forgetting; the bar re-shows itself each second to whoever is present. */
+	@Override
+	protected void onSeatAbandoned(Seat seat, List<String> attatchments) {
+		super.onSeatAbandoned(seat, attatchments);
+		shownPressedPlate.remove(seat.getUuid());
 	}
 
 	private void apagarAuraDelGuardià() {
