@@ -1,0 +1,34 @@
+src/main/java/com/biel/lobby/minions/Lane.java
+  s_7718ffec83f776::t_21489cafa2158d 1-64
+src/main/java/com/biel/lobby/minions/SnowmanMinion.java
+  s_7718ffec83f776::t_51936cb31f4701 27-28
+  s_7718ffec83f776::t_3a804ed2b406c0 50,52-53,56
+  s_7718ffec83f776::t_26ca99ba97114d 80
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_7718ffec83f776::t_2f3f5640d88403 82,2205-2207,2209-2213
+  s_51e80a77c20ced::t_8e50a1a4489fce 91-94,291,297,316-372,439-444,470,524-527,657,744,1225-1227,1239,1279,1293,1299-1348,1395-1396,1999,2030,2032,2076,2084,2092,2099,2106,2113,2120,2131,2138,2145,2161,2283
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "211b543ace8360a575a1774f663be0774f81fa14",
+  "prompts": {},
+  "sessions": {
+    "s_51e80a77c20ced": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2b4c1d7-9857-4822-a925-b97da8fdaa46",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_7718ffec83f776": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "723703cd-9dc0-4c85-bb25-623ba35e4ee2",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
