@@ -1,0 +1,20 @@
+src/main/java/com/biel/lobby/mapes/jocs/Arena4.java
+  s_9f54f79b43c50d::t_452d93d98e306e 671-673,675-677
+  s_9f54f79b43c50d::t_9adf3dcfbd00ad 93-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "fe295f1ac905383d1bb309c5afc86695fd2c63aa",
+  "prompts": {},
+  "sessions": {
+    "s_9f54f79b43c50d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "93a49d3e-f400-48cf-9e8d-60a529c7ee0d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
