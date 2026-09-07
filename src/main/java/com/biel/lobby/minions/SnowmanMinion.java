@@ -32,6 +32,7 @@ import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.PaperMessages;
+import com.destroystokyo.paper.entity.ai.GoalType;
 
 /**
  * The Obsidian Defenders snowman (2013): a snow golem owned by the player who threw the
@@ -216,14 +217,15 @@ public final class SnowmanMinion extends Minion {
 	@Override
 	protected void installGoals(Mob mob) {
 		installAttackGoals(mob);
-		Bukkit.getMobGoals().addGoal(mob, 3, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), MARCH_SPEED, ARRIVE_DISTANCE));
+		Bukkit.getMobGoals().addGoal(mob, 4, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), MARCH_SPEED, ARRIVE_DISTANCE));
 	}
 
 	/** The target and shooting goals with the numbers of this moment: a hero's change once its surge ends. */
 	private void installAttackGoals(Mob mob) {
 		double range = range();
 		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, range + ACQUIRE_MARGIN, true, RESCAN_TICKS, this::isEnemy));
-		Bukkit.getMobGoals().addGoal(mob, 2, new RangedAttackGoal(mob, 0, range, currentCooldownTicks(), false, MARCH_SPEED, Volley.innate()));
+		Bukkit.getMobGoals().addGoal(mob, 2, new NearestTargetGoal(mob, range + ACQUIRE_MARGIN, true, RESCAN_TICKS, this::isStrayHostile));
+		Bukkit.getMobGoals().addGoal(mob, 3, new RangedAttackGoal(mob, 0, range, currentCooldownTicks(), false, MARCH_SPEED, Volley.innate()));
 	}
 
 	@Override
@@ -233,7 +235,7 @@ public final class SnowmanMinion extends Minion {
 		if (!wasSurging || surging()) return;
 		Mob body = mob();
 		if (body == null) return;
-		Bukkit.getMobGoals().removeGoal(body, NearestTargetGoal.KEY);
+		Bukkit.getMobGoals().removeAllGoals(body, GoalType.TARGET);
 		Bukkit.getMobGoals().removeGoal(body, RangedAttackGoal.KEY);
 		installAttackGoals(body);
 		body.getWorld().playSound(body.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.6F, 1.6F);

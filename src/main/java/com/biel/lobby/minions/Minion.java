@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -78,6 +79,20 @@ public abstract class Minion {
 			return !player.isDead() && player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR && !game.isSpectator(player);
 		}
 		return game.minionOf(candidate) != null;
+	}
+
+	/**
+	 * A hostile mob that belongs to no side, a zombie someone spawned for fun: fair game
+	 * as a second priority behind the enemies (Biel, 2026-09-07 night). Only hostile
+	 * kinds, so the shopkeepers, the Guardian and any pet are left alone.
+	 */
+	public boolean isStrayHostile(LivingEntity candidate) {
+		return candidate instanceof Enemy && !(candidate instanceof Player) && game.teamOf(candidate) == null && game.minionOf(candidate) == null;
+	}
+
+	/** Anything this minion may go for: an enemy first, a stray hostile mob second. */
+	public boolean mayTarget(LivingEntity candidate) {
+		return isEnemy(candidate) || isStrayHostile(candidate);
 	}
 
 	public Mob mob() {

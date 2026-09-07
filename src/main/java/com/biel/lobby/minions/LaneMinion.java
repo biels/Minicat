@@ -67,8 +67,9 @@ public final class LaneMinion extends Minion {
 	@Override
 	protected void installGoals(Mob mob) {
 		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, kind.acquireRadius(), true, RESCAN_TICKS, this::isEnemy));
-		Bukkit.getMobGoals().addGoal(mob, 2, new MeleeAttackGoal(mob, kind.reach(), kind.acquireRadius(), kind.meleeCooldownTicks(), kind.speed()));
-		Bukkit.getMobGoals().addGoal(mob, 3, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), kind.speed(), ARRIVE_DISTANCE));
+		Bukkit.getMobGoals().addGoal(mob, 2, new NearestTargetGoal(mob, kind.acquireRadius(), true, RESCAN_TICKS, this::isStrayHostile));
+		Bukkit.getMobGoals().addGoal(mob, 3, new MeleeAttackGoal(mob, kind.reach(), kind.acquireRadius(), kind.meleeCooldownTicks(), kind.speed()));
+		Bukkit.getMobGoals().addGoal(mob, 4, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), kind.speed(), ARRIVE_DISTANCE));
 	}
 
 	@Override

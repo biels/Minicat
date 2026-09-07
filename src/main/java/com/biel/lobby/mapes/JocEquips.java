@@ -716,7 +716,7 @@ public abstract class JocEquips extends Joc {
 	protected void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent evt, Entity e) {
 		super.onEntityTargetLivingEntity(evt, e);
 		Minion minion = minionOf(e);
-		if (minion != null && evt.getTarget() != null && !minion.isEnemy(evt.getTarget())) evt.setCancelled(true);
+		if (minion != null && evt.getTarget() != null && !minion.mayTarget(evt.getTarget())) evt.setCancelled(true);
 	}
 
 	@Override
