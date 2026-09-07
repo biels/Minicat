@@ -1,0 +1,21 @@
+src/main/java/com/biel/lobby/utilities/GestorPropietats.java
+  s_1a56790d648c0e::t_9e28e65693f83e 16,19-20,22,25-26
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_1a56790d648c0e::t_c96cea72d3f658 81-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e6dc0cefb1863732b0dc577ed6284177171437a7",
+  "prompts": {},
+  "sessions": {
+    "s_1a56790d648c0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23b1a42b-b6f2-4833-bd7d-bec2f5b71b61",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
