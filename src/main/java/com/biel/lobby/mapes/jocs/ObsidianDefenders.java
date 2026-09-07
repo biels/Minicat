@@ -39,6 +39,8 @@ import org.bukkit.block.data.type.Leaves;
 import org.bukkit.block.data.Lightable;
 import org.bukkit.block.data.Powerable;
 import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import java.util.function.Predicate;
 import org.bukkit.enchantments.Enchantment;
@@ -155,8 +157,6 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int RESPAWN_WAIT_BASE_SECONDS = 3;
 	private static final int RESPAWN_WAIT_MINUTES_PER_EXTRA_SECOND = 2;
 	private static final int RESPAWN_WAIT_MAX_SECONDS = 12;
-	/** A snowman within this distance of a control point its team does not hold leaves the lane for that point's plate. */
-	private static final double SNOWMAN_POST_RADIUS = 14;
 	/** The one-shot hint about the breach shows within this distance of an enemy core. */
 	private static final double VAULT_HINT_DISTANCE = 7;
 	/** The map scans are checked again this long after the start, since a fast recreate once returned base0 without its bridge sign or lamps. */
@@ -439,7 +439,7 @@ public class ObsidianDefenders extends JocEquips {
 		ESTRELLA_DE_FOC(Material.FIREWORK_STAR, "Estrella de foc", "Amb ella a l'inventari, una fletxa disparada", "des de dalt explota en caure."),
 		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma", "Clic dret: crema tot l'equip enemic 3 s."),
 		MARAGDA(Material.EMERALD, "Maragda", "Clic dret: +1 cor a tot el teu equip."),
-		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí i pren els punts de control.", "Empeny; amb el cap de gel, el proper cop", "tanca l'enemic en gel " + ICE_CAGE_TICKS / 20 + " s (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots).", "Si el teu equip ha matat el Guardià, crema."),
+		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí cap a la base enemiga.", "Empeny; amb el cap de gel, el proper cop", "tanca l'enemic en gel " + ICE_CAGE_TICKS / 20 + " s (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots).", "Si el teu equip ha matat el Guardià, crema."),
 		BOLA_DE_NEU_ENCANTADA(Material.SNOWBALL, true, "Bola de neu encantada", "Llança-la: apareix un superninot, que fa", "tot el que fa un ninot amb molt més abast", "i dispara x3 el primer minut, x2 després."),
 		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender", "Llança-la per teletransportar-te on caigui."),
 		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or", "A l'inventari: fletxes explosives un 20 % més fortes."),
@@ -608,7 +608,7 @@ public class ObsidianDefenders extends JocEquips {
 		registrarPonts();
 		registerControlPointsAndLamps();
 		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
-		Bukkit.getPluginManager().registerEvents(plateGuard, plugin);
+		Bukkit.getPluginManager().registerEvents(worldListener, plugin);
 		emptyDispensers();
 		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
 		scheduleGameplayRepeatingTask(this::tickControlPoints, 20, 20);
@@ -882,6 +882,8 @@ public class ObsidianDefenders extends JocEquips {
 		Player ply = evt.getPlayer();
 		if (blk.getType() != Material.OBSIDIAN || ply.getGameMode() == GameMode.CREATIVE || !JocEnMarxa()) return;
 		evt.setCancelled(false);
+		// The broken block is the breach, never a block to carry (JoniMega, 2026-09-08: "la obsidiana que he minat ha caigut").
+		evt.setDropItems(false);
 		world.playSound(blk.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1F, 1F);
 		Equip vaultOf = vaultOfRingBlock(blk);
 		if (vaultOf != null) breach(ply, blk, vaultOf);
@@ -1085,6 +1087,7 @@ public class ObsidianDefenders extends JocEquips {
 	protected void onPlayerPickupItem(PlayerPickupItemEvent evt, Player p) {
 		super.onPlayerPickupItem(evt, p);
 		Item item = evt.getItem();
+		if (item.getItemStack().getType() == Material.GOLD_NUGGET || item.getItemStack().getType() == Material.GOLD_INGOT) refreshGoldSoon(p);
 		Objecte objecte = Objecte.de(item.getItemStack());
 		if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) hint(p, "superninot", "Bola de neu encantada: llança-la i en surt un superninot, més abast i més ràpid");
 		if (objecte == Objecte.ESTRELLA_DEL_NETHER) hint(p, "estrella", "Estrella infernal: clic dret, " + NETHER_STAR_CHARGE_TICKS / 20 + " s de càrrega, i els enemics a " + (int) NETHER_STAR_RADIUS + " blocs queden a 1 cor");
@@ -1460,14 +1463,34 @@ public class ObsidianDefenders extends JocEquips {
 		}
 	}
 
-	/** A snowman posted on a plate would depress it for real: the 2013 wiring stays dormant for minions as it does for players. */
-	private final Listener plateGuard = new Listener() {
+	/**
+	 * Events the game's bus does not route: a minion on a plate must not depress it for
+	 * real (the 2013 wiring stays dormant for minions as for players), and the sidebar's
+	 * gold follows the inventory the moment a chest is clicked or closed (Biel, 2026-09-08:
+	 * "picking up gold from a chest should increase the gold immediately").
+	 */
+	private final Listener worldListener = new Listener() {
 		@EventHandler
 		public void onEntityInteract(EntityInteractEvent evt) {
 			if (world == null || evt.getBlock().getWorld() != world || minionOf(evt.getEntity()) == null) return;
 			if (Tag.PRESSURE_PLATES.isTagged(evt.getBlock().getType())) evt.setCancelled(true);
 		}
+
+		@EventHandler
+		public void onInventoryClick(InventoryClickEvent evt) {
+			if (evt.getWhoClicked() instanceof Player p) refreshGoldSoon(p);
+		}
+
+		@EventHandler
+		public void onInventoryClose(InventoryCloseEvent evt) {
+			if (evt.getPlayer() instanceof Player p) refreshGoldSoon(p);
+		}
 	};
+
+	private void refreshGoldSoon(Player p) {
+		if (world == null || p.getWorld() != world || !JocEnMarxa()) return;
+		scheduleGameplayTask(() -> { if (p.isOnline()) updateScoreBoard(p); }, 1);
+	}
 
 	/**
 	 * Three seconds after the start, what the scans should have found is checked once
@@ -1606,7 +1629,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	public void clearExternals() {
-		HandlerList.unregisterAll(plateGuard);
+		HandlerList.unregisterAll(worldListener);
 		apagarAuraDelGuardià();
 		for (UUID id : botiguers.keySet()) {
 			Entity botiguer = Bukkit.getEntity(id);
@@ -2149,17 +2172,6 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			standing.computeIfAbsent(point, k -> new HashMap<>()).putIfAbsent(team.getId(), p);
 		}
-		// A snowman standing on its team's plate captures and holds like a player; the credit is its owner's.
-		for (Equip e : Equips) {
-			for (Minion minion : minionsOf(e)) {
-				if (!(minion instanceof SnowmanMinion snowman) || snowman.mob() == null) continue;
-				Block feet = snowman.mob().getLocation().getBlock();
-				ControlPoint point = controlPointOf(feet);
-				if (point == null || !Integer.valueOf(e.getId()).equals(point.teamOfPlate(feet))) continue;
-				Player owner = snowman.owner();
-				if (owner != null) standing.computeIfAbsent(point, k -> new HashMap<>()).putIfAbsent(e.getId(), owner);
-			}
-		}
 		for (ControlPoint point : controlPoints) channel(point, standing.getOrDefault(point, Map.of()));
 		for (Equip e : Equips) {
 			int held = pointsHeldBy(e);
@@ -2688,7 +2700,7 @@ public class ObsidianDefenders extends JocEquips {
 		SnowmanKind kind = team == guardianSlayerTeam ? SnowmanKind.MAGMA : SnowmanKind.NEU;
 		boolean hero = evt.getEntity() instanceof Snowball ball && Objecte.de(ball.getItem()) == Objecte.BOLA_DE_NEU_ENCANTADA;
 		int cooldown = thrower.getInventory().contains(Material.QUARTZ) ? (int) Math.round(kind.cooldownTicks * SNOWMAN_QUARTZ_COOLDOWN_FACTOR) : kind.cooldownTicks;
-		SnowmanMinion snowman = new SnowmanMinion(this, team, thrower, kind, cooldown, hero, snowmanLane(team), this::snowballHit, this::snowmanPost);
+		SnowmanMinion snowman = new SnowmanMinion(this, team, thrower, kind, cooldown, hero, snowmanLane(team), this::snowballHit);
 		enlist(snowman, spot);
 		world.playSound(spot, Sound.ENTITY_SNOW_GOLEM_AMBIENT, 1F, 1F);
 		world.playSound(spot, kind == SnowmanKind.MAGMA ? Sound.BLOCK_FIRE_AMBIENT : Sound.BLOCK_SNOW_PLACE, 1F, 1F);
@@ -2697,24 +2709,6 @@ public class ObsidianDefenders extends JocEquips {
 			world.spawnParticle(Particle.END_ROD, spot.clone().add(0, 1, 0), 40, 0.4, 0.8, 0.4, 0.08);
 		}
 		PaperMessages.sendActionBar(thrower, ChatColor.WHITE + (hero ? "Superninot de " : "Ninot de ") + kind.label + " " + (mine.size() + 1) + "/" + MAX_SNOWMEN_PER_PLAYER, 60);
-	}
-
-	/**
-	 * A snowman passing a control point its team does not hold leaves the lane for the
-	 * team's plate there, captures it like a player and stands guard (Biel, 2026-09-07
-	 * night: "snowmen felt useless"; minions matter when they push objectives).
-	 */
-	private Location snowmanPost(SnowmanMinion snowman) {
-		Mob body = snowman.mob();
-		if (body == null) return null;
-		int team = snowman.team().getId();
-		for (ControlPoint point : controlPoints) {
-			if (point.owner != null && point.owner == team) continue;
-			if (point.centre().distance(body.getLocation()) > SNOWMAN_POST_RADIUS) continue;
-			Block plate = point.plateByTeam.get(team);
-			if (plate != null) return plate.getLocation().add(0.5, 0, 0.5);
-		}
-		return null;
 	}
 
 	/**
@@ -2914,16 +2908,21 @@ public class ObsidianDefenders extends JocEquips {
 		if (deaths > 0) PaperMessages.sendActionBar(p, ChatColor.DARK_RED + "Un esquelet wither t'ha pres vida màxima: " + (int) (maxHealth / 2) + " cors", 80);
 	}
 
-	/** A wither skeleton rises where the victim fell, owned by the killer, and walks the killer's team's lane. */
+	/**
+	 * A wither skeleton rises at the killer's base, at the start of the team's lane (Biel,
+	 * 2026-09-08: "només un per cada mort i a la meva base"), owned by the killer, and
+	 * walks the whole lane to the enemy base.
+	 */
 	private void raiseWitherSkeleton(Player killer, Location whereTheVictimFell) {
 		Equip team = obtenirEquip(killer);
 		if (team == null) return;
-		Location spot = standingSpotNear(whereTheVictimFell);
+		Lane lane = snowmanLane(team);
+		Location spot = standingSpotNear(lane.waypoints().get(0));
 		if (spot == null) spot = team.getTeamSpawnLocation();
-		enlist(new LaneMinion(this, team, killer, WITHER_SKELETON, snowmanLane(team), this::witherSkeletonHit), spot);
+		enlist(new LaneMinion(this, team, killer, WITHER_SKELETON, lane, this::witherSkeletonHit), spot);
 		world.playSound(spot, Sound.ENTITY_WITHER_SKELETON_AMBIENT, 1F, 0.8F);
 		world.spawnParticle(Particle.SOUL, spot.clone().add(0, 1, 0), 30, 0.3, 0.6, 0.3, 0.03);
-		PaperMessages.sendActionBar(killer, ChatColor.DARK_GRAY + "Un esquelet wither s'aixeca per tu", 60);
+		PaperMessages.sendActionBar(killer, ChatColor.DARK_GRAY + "Un esquelet wither s'aixeca a la teva base", 60);
 	}
 
 	/** A wither skeleton's blow: its attack damage through armour as vanilla does it, plus Wither I, so the victim cannot heal it away. */

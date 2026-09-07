@@ -1,6 +1,5 @@
 package com.biel.lobby.minions;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -76,8 +75,6 @@ public final class SnowmanMinion extends Minion {
 	private static final long HERO_AURA_PERIOD_TICKS = 5;
 	/** Snowballs are aimed, not the golem's own spread throw (Biel, 2026-09-07 night: "snowmen felt useless"; half the balls missed at eight blocks). */
 	private static final double SNOWBALL_SPEED = 1.6;
-	/** Posted on a control point plate, it must stand inside the plate's block for the capture to count. */
-	private static final double POST_ARRIVE_DISTANCE = 0.5;
 	/** The target is picked this far beyond the shooting range, so the snowman turns before the enemy is in reach but does not roam after far ones. */
 	private static final double ACQUIRE_MARGIN = ACQUIRE_RADIUS - RANGE;
 	/** The head while the cage is armed: the next snowball shuts its victim in ice. */
@@ -89,16 +86,6 @@ public final class SnowmanMinion extends Minion {
 		void apply(SnowmanMinion snowman, EntityDamageByEntityEvent evt, Player victim);
 	}
 
-	/**
-	 * Where this snowman should leave the lane and stand, asked once a second until it
-	 * answers: the game's control-point plate it can capture and hold (Biel: minions
-	 * matter when they push objectives). Null keeps it marching.
-	 */
-	@FunctionalInterface
-	public interface Post {
-		Location postFor(SnowmanMinion snowman);
-	}
-
 	private final SnowmanKind kind;
 	private final int cooldownTicks;
 	private final boolean hero;
@@ -106,10 +93,7 @@ public final class SnowmanMinion extends Minion {
 	private int auraTaskId = -1;
 	private int auraFrames;
 	private final SnowballHit hitOnPlayer;
-	private final Post postFor;
 	private final Lane lane;
-	/** The plate it has left the lane for, once it has one; from then on it holds position and shoots. */
-	private Location post;
 	private UUID headId;
 	/** Hits on enemy players since the last cage; the head turns to ice when the next one cages. */
 	private int cageCharge;
@@ -120,18 +104,13 @@ public final class SnowmanMinion extends Minion {
 	 * the hero rate. {@code hero}: thrown as an enchanted snowball. {@code lane}: this
 	 * team's, base to enemy base.
 	 */
-	public SnowmanMinion(JocEquips game, Equip team, Player owner, SnowmanKind kind, int cooldownTicks, boolean hero, Lane lane, SnowballHit hitOnPlayer, Post postFor) {
+	public SnowmanMinion(JocEquips game, Equip team, Player owner, SnowmanKind kind, int cooldownTicks, boolean hero, Lane lane, SnowballHit hitOnPlayer) {
 		super(game, team, owner);
 		this.kind = kind;
 		this.cooldownTicks = cooldownTicks;
 		this.hero = hero;
 		this.lane = lane;
 		this.hitOnPlayer = hitOnPlayer;
-		this.postFor = postFor;
-	}
-
-	public boolean isPosted() {
-		return post != null;
 	}
 
 	public boolean isHero() {
@@ -244,7 +223,7 @@ public final class SnowmanMinion extends Minion {
 		Bukkit.getMobGoals().addGoal(mob, 4, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), MARCH_SPEED, ARRIVE_DISTANCE));
 	}
 
-	/** The target and shooting goals with the numbers of this moment: a hero's change once its surge ends, a posted one's when it takes its post. */
+	/** The target and shooting goals with the numbers of this moment: a hero's change once its surge ends. */
 	private void installAttackGoals(Mob mob) {
 		double range = range();
 		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, range + ACQUIRE_MARGIN, true, RESCAN_TICKS, this::isEnemy));
@@ -252,42 +231,29 @@ public final class SnowmanMinion extends Minion {
 		Bukkit.getMobGoals().addGoal(mob, 3, rangedGoal(mob));
 	}
 
-	/** Aimed snowballs; a posted snowman shoots from where it stands instead of walking after its target. */
+	/** Aimed snowballs, with the golem's own shooting sound. */
 	private RangedAttackGoal rangedGoal(Mob mob) {
 		Volley thrown = Volley.thrown(Snowball.class, SNOWBALL_SPEED);
 		Volley aimed = (shooter, target) -> {
 			thrown.fire(shooter, target);
 			shooter.getWorld().playSound(shooter.getLocation(), Sound.ENTITY_SNOW_GOLEM_SHOOT, 1F, 1F);
 		};
-		return new RangedAttackGoal(mob, 0, range(), currentCooldownTicks(), post != null, MARCH_SPEED, aimed);
+		return new RangedAttackGoal(mob, 0, range(), currentCooldownTicks(), false, MARCH_SPEED, aimed);
 	}
 
 	@Override
 	public void tick() {
 		boolean wasSurging = surging();
 		ageSeconds++;
+		if (!wasSurging || surging()) return;
 		Mob body = mob();
 		if (body == null) return;
-		if (post == null) {
-			Location found = postFor.postFor(this);
-			if (found != null) takePost(body, found);
-		}
-		if (!wasSurging || surging()) return;
 		Bukkit.getMobGoals().removeAllGoals(body, GoalType.TARGET);
 		Bukkit.getMobGoals().removeGoal(body, RangedAttackGoal.KEY);
 		installAttackGoals(body);
 		body.getWorld().playSound(body.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.6F, 1.6F);
 	}
 
-	/** Leaves the lane for the plate: walks there, then holds position and shoots whatever comes. */
-	private void takePost(Mob body, Location where) {
-		post = where;
-		Bukkit.getMobGoals().removeGoal(body, WaypointWalkGoal.KEY);
-		Bukkit.getMobGoals().removeGoal(body, RangedAttackGoal.KEY);
-		Bukkit.getMobGoals().addGoal(body, 3, rangedGoal(body));
-		Bukkit.getMobGoals().addGoal(body, 4, new WaypointWalkGoal(body, List.of(where), MARCH_SPEED, POST_ARRIVE_DISTANCE));
-		body.getWorld().playSound(body.getLocation(), Sound.ENTITY_SNOW_GOLEM_AMBIENT, 1F, 0.8F);
-	}
 
 	@Override
 	public void onHit(EntityDamageByEntityEvent evt, LivingEntity victim) {
