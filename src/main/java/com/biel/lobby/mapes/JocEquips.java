@@ -20,10 +20,15 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
@@ -34,6 +39,7 @@ import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.BielAPI.Utils.RecallUtils;
 import com.biel.lobby.Com;
+import com.biel.lobby.minions.Minion;
 import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
@@ -45,6 +51,8 @@ public abstract class JocEquips extends Joc {
 	public ArrayList<Equip> Equips = new ArrayList<>();
 	public enum TeamGenerationMode{DEFAULT, RANDOM, BALANCED, CUSTOM}
 	public TeamGenerationMode generationMode = TeamGenerationMode.DEFAULT;
+	/** The mobs enlisted by the teams this match; see com.biel.lobby.minions.Minion. */
+	private final List<Minion> minions = new ArrayList<>();
 	public JocEquips() {
 		super();
 	}
@@ -604,6 +612,114 @@ public abstract class JocEquips extends Joc {
 	}
 	public Boolean getFriendlyFireEnabled(){
 		return false;
+	}
+
+	//---------- Minions: mobs enlisted by a team ----------
+
+	/** Spawns the minion's body at the spot and registers it. */
+	public void enlist(Minion minion, Location at) {
+		minion.spawn(at);
+		minions.add(minion);
+	}
+
+	/** Removes the body and forgets the minion. */
+	public void discharge(Minion minion) {
+		minion.remove();
+		minions.remove(minion);
+	}
+
+	public List<Minion> minions() {
+		return Collections.unmodifiableList(minions);
+	}
+
+	public Minion minionOf(Entity entity) {
+		if (entity == null) return null;
+		for (Minion minion : minions) {
+			if (entity.getUniqueId().equals(minion.entityId())) return minion;
+		}
+		return null;
+	}
+
+	public List<Minion> minionsOf(Player owner) {
+		List<Minion> owned = new ArrayList<>();
+		for (Minion minion : minions) if (minion.isOwnedBy(owner)) owned.add(minion);
+		return owned;
+	}
+
+	public List<Minion> minionsOf(Equip team) {
+		List<Minion> enlisted = new ArrayList<>();
+		for (Minion minion : minions) if (minion.team() == team) enlisted.add(minion);
+		return enlisted;
+	}
+
+	/** The side of any entity: a player's team, a minion's team, a projectile's shooter's side, else null. */
+	public Equip teamOf(Entity entity) {
+		if (entity instanceof Player player) return obtenirEquip(player);
+		Minion minion = minionOf(entity);
+		if (minion != null) return minion.team();
+		if (entity instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) return teamOf(shooter);
+		return null;
+	}
+
+	/** The minion behind a damager: the mob itself or the shooter of its projectile. */
+	private Minion attackingMinion(Entity damager) {
+		Minion minion = minionOf(damager);
+		if (minion == null && damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) minion = minionOf(shooter);
+		return minion;
+	}
+
+	/**
+	 * Team rules for minions: no friendly fire in either direction, the attacking
+	 * minion sets what its hit is worth, and an owned minion's hit on a player counts
+	 * as the owner's for kill credit, exactly like a hit with the owner's own sword.
+	 */
+	@Override
+	protected void onEntityDamageByEntity(EntityDamageByEntityEvent evt, Entity damaged, Entity damager) {
+		super.onEntityDamageByEntity(evt, damaged, damager);
+		Minion attacker = attackingMinion(damager);
+		Minion victimMinion = minionOf(damaged);
+		if (attacker == null && victimMinion == null) return;
+		Equip attackingSide = teamOf(damager);
+		if (attackingSide != null && attackingSide == teamOf(damaged) && !getFriendlyFireEnabled()) {
+			evt.setCancelled(true);
+			return;
+		}
+		if (attacker == null || !(damaged instanceof LivingEntity victim)) return;
+		attacker.onHit(evt, victim);
+		Player owner = attacker.owner();
+		if (owner != null && victim instanceof Player player && !evt.isCancelled()) getPlayerInfo(player).setLastDamager(owner);
+	}
+
+	@Override
+	protected void onEntityTargetLivingEntity(EntityTargetLivingEntityEvent evt, Entity e) {
+		super.onEntityTargetLivingEntity(evt, e);
+		Minion minion = minionOf(e);
+		if (minion != null && evt.getTarget() != null && !minion.isEnemy(evt.getTarget())) evt.setCancelled(true);
+	}
+
+	@Override
+	protected void onEntityDeath(EntityDeathEvent evt, Entity e) {
+		super.onEntityDeath(evt, e);
+		Minion minion = minionOf(e);
+		if (minion == null) return;
+		evt.getDrops().clear();
+		evt.setDroppedExp(0);
+		minions.remove(minion);
+		minion.onMinionDeath(evt, evt.getEntity().getKiller());
+	}
+
+	@Override
+	public void heartbeat() {
+		super.heartbeat();
+		minions.removeIf(minion -> !minion.isAlive());
+		for (Minion minion : new ArrayList<>(minions)) minion.tick();
+	}
+
+	@Override
+	public void clearExternals() {
+		for (Minion minion : minions) minion.remove();
+		minions.clear();
+		super.clearExternals();
 	}
 	@Override
 	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,

@@ -39,6 +39,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Snowball;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.block.Action;
@@ -68,6 +69,8 @@ import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
+import com.biel.lobby.minions.Minion;
+import com.biel.lobby.minions.SnowmanMinion;
 import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
@@ -120,6 +123,13 @@ public class ObsidianDefenders extends JocEquips {
 	private static final double TOLERÀNCIA_NUCLI = 3;
 	/** A death with no killer is credited to the last player who hit the victim within this window. */
 	private static final int SEGONS_CREDIT_ÚLTIM_COP = 95;
+	/** Snowmen (2013): a thrown snowball becomes a snow golem owned by the thrower; at most this many alive per player. */
+	private static final int MAX_SNOWMEN_PER_PLAYER = 3;
+	/** Quartz in the thrower's inventory makes the new snowman fire a third faster, as in 2013. */
+	private static final int SNOWMAN_QUARTZ_COOLDOWN_TICKS = SnowmanMinion.DEFAULT_COOLDOWN_TICKS * 2 / 3;
+	private static final int SNOWBALL_DAMAGE_EARLY = 4;
+	private static final int SNOWBALL_DAMAGE_LATE = 1;
+	private static final int SNOWBALL_LATE_FROM_MINUTE = 5;
 
 	boolean debug = false;
 	/** Team id → block positions of the TNT that is that team's base core. */
@@ -162,7 +172,7 @@ public class ObsidianDefenders extends JocEquips {
 	private enum Parada {
 		GERRY("weapons", "Gerry", "armes", Mercaderia.FLETXES, Mercaderia.ESTRELLES, Mercaderia.ESPASA_FERRO, Mercaderia.ARC, Mercaderia.PIC_FERRO, Mercaderia.ESPASA_DIAMANT),
 		SEON("armors", "Seon", "armadures", Mercaderia.PITRAL_FERRO, Mercaderia.CALCES_DIAMANT),
-		KAREN("potions", "Karen", "altres coses", Mercaderia.BLOC_OR);
+		KAREN("potions", "Karen", "altres coses", Mercaderia.BLOC_OR, Mercaderia.BOLA_DE_NEU, Mercaderia.QUARS);
 
 		final String rètolOriginal;
 		final String nom;
@@ -185,6 +195,8 @@ public class ObsidianDefenders extends JocEquips {
 		PIC_FERRO(Material.IRON_PICKAXE, 1, 12, "Pic de ferro", "+30 dany al golem"),
 		PITRAL_FERRO(Material.IRON_CHESTPLATE, 1, 18, "Pitral de ferro", null),
 		BLOC_OR(Material.GOLD_BLOCK, 1, 25, "Bloc d'or", "+2 or cada " + (CICLE_COFRES_TICKS / 20) + " segons"),
+		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu que dispara als enemics (màx. " + MAX_SNOWMEN_PER_PLAYER + ")"),
+		QUARS(Material.QUARTZ, 1, 15, "Quars", "Mentre el portis, els teus nous ninots disparen un 50 % més ràpid"),
 		CALCES_DIAMANT(Material.DIAMOND_LEGGINGS, 1, 30, "Calces de diamant", null),
 		ESPASA_DIAMANT(Material.DIAMOND_SWORD, 1, 40, "Espasa de diamant", null);
 
@@ -266,6 +278,10 @@ public class ObsidianDefenders extends JocEquips {
 	protected void setCustomGameRules() {
 		world.setTime(12600);
 		world.setGameRule(GameRule.MOB_GRIEFING, false);
+		// Snow golems melt in rain; the sky stays clear for the whole match.
+		world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+		world.setStorm(false);
+		world.setThundering(false);
 	}
 
 	@Override
@@ -275,6 +291,7 @@ public class ObsidianDefenders extends JocEquips {
 		info.add("Els cofres de la jungla canvien de lloc cada 32 s; el pic de diamant cau al mig als 3 min.");
 		info.add("L'or paga tot: matar, obrir cofres, matar el Guardià.");
 		info.add("El Guardià viu sota el mig: matar-lo dona " + OR_PER_GOLEM + " d'or i 3 min de Resistència i Velocitat.");
+		info.add("Una bola de neu llançada fa aparèixer un ninot de neu que dispara als enemics (màxim " + MAX_SNOWMEN_PER_PLAYER + " per jugador).");
 		return info;
 	}
 
@@ -1275,6 +1292,9 @@ public class ObsidianDefenders extends JocEquips {
 		if (picDOr) {
 			evt.setDeathMessage(killer.getName() + " ha matat amb el pic d'or a " + player.getName() + "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")(" + ChatColor.GOLD + "x3" + ChatColor.WHITE + ")");
 		}
+		if (!explotat && !picDOr && killedBySnowman(player)) {
+			evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + " amb un ninot de neu (" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
+		}
 		if (Ability.hasAbility(plugin, this, player, AbilityType.CREEPER)) {
 			float explopower = 0.8F + (mortsMort / 2);
 			world.createExplosion(location.getX(), location.getY(), location.getZ(), explopower, false, false);
@@ -1443,6 +1463,85 @@ public class ObsidianDefenders extends JocEquips {
 		}
 	}
 
+	//---------- Snowmen (onHit snowball, 2013) ----------
+
+	/**
+	 * A thrown snowball becomes a snow golem owned by the thrower on the nearest spot with
+	 * a floor; a fourth one melts the thrower's oldest. Quartz in the thrower's inventory
+	 * at this moment makes the new snowman fire faster for the rest of its life.
+	 */
+	private void throwSnowman(Player thrower, ProjectileHitEvent evt, Location impact) {
+		Equip team = obtenirEquip(thrower);
+		if (!JocEnMarxa() || team == null) return;
+		Location spot = snowmanSpotNear(evt, impact);
+		if (spot == null) {
+			thrower.sendMessage(ChatColor.GRAY + "La bola de neu s'ha fos.");
+			return;
+		}
+		List<Minion> mine = new ArrayList<>();
+		for (Minion minion : minionsOf(thrower)) if (minion instanceof SnowmanMinion) mine.add(minion);
+		mine.sort((a, b) -> Integer.compare(a.bornAtSecond(), b.bornAtSecond()));
+		while (mine.size() >= MAX_SNOWMEN_PER_PLAYER) {
+			Minion oldest = mine.remove(0);
+			Location where = oldest.mob() != null ? oldest.mob().getLocation().add(0, 1, 0) : null;
+			discharge(oldest);
+			if (where != null) {
+				world.spawnParticle(Particle.ITEM_SNOWBALL, where, 30, 0.4, 0.6, 0.4, 0.05);
+				world.playSound(where, Sound.BLOCK_SNOW_BREAK, 1F, 0.8F);
+			}
+		}
+		int cooldown = thrower.getInventory().contains(Material.QUARTZ) ? SNOWMAN_QUARTZ_COOLDOWN_TICKS : SnowmanMinion.DEFAULT_COOLDOWN_TICKS;
+		enlist(new SnowmanMinion(this, team, thrower, cooldown, this::snowballHit), spot);
+		world.playSound(spot, Sound.ENTITY_SNOW_GOLEM_AMBIENT, 1F, 1F);
+		world.playSound(spot, Sound.BLOCK_SNOW_PLACE, 1F, 1F);
+		PaperMessages.sendActionBar(thrower, ChatColor.WHITE + "Ninot de neu " + (mine.size() + 1) + "/" + MAX_SNOWMEN_PER_PLAYER, 60);
+	}
+
+	/** The block the snowball stopped against, the impact block and its neighbours above and below, first one a golem can stand in. */
+	private static Location snowmanSpotNear(ProjectileHitEvent evt, Location impact) {
+		List<Block> candidates = new ArrayList<>();
+		if (evt.getHitBlock() != null && evt.getHitBlockFace() != null) candidates.add(evt.getHitBlock().getRelative(evt.getHitBlockFace()));
+		Block impactBlock = impact.getBlock();
+		candidates.add(impactBlock);
+		candidates.add(impactBlock.getRelative(BlockFace.UP));
+		candidates.add(impactBlock.getRelative(BlockFace.DOWN));
+		candidates.add(impactBlock.getRelative(0, 2, 0));
+		for (Block candidate : candidates) {
+			if (canStandIn(candidate)) return candidate.getLocation().add(0.5, 0, 0.5);
+		}
+		return null;
+	}
+
+	private static boolean canStandIn(Block feet) {
+		Block head = feet.getRelative(BlockFace.UP);
+		return feet.isPassable() && !feet.isLiquid() && head.isPassable() && !head.isLiquid() && !feet.getRelative(BlockFace.DOWN).isPassable();
+	}
+
+	/**
+	 * The 2013 snowball: 4 damage until minute five, then 1, plus half the owner's kill
+	 * streak, with a chance of Slowness or Weakness that grows with the streak. The hit
+	 * counts as the owner's for kill credit (JocEquips records the last damager; the
+	 * second is recorded here).
+	 */
+	private void snowballHit(SnowmanMinion snowman, EntityDamageByEntityEvent evt, Player victim) {
+		int streak = snowman.ownerName() == null ? 0 : pTemp().ObtenirPropietatInt(snowman.ownerName() + "Morts");
+		int bonus = streak / 2;
+		int damage = (segonsTranscorreguts() / 60 >= SNOWBALL_LATE_FROM_MINUTE ? SNOWBALL_DAMAGE_LATE : SNOWBALL_DAMAGE_EARLY) + bonus;
+		evt.setDamage(damage);
+		int level = 0;
+		if (bonus >= 4 && Utils.Possibilitat(50)) level = 1;
+		if (bonus >= 7 && Utils.Possibilitat(70)) level = 2;
+		if (Utils.Possibilitat(20)) victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, (2 + bonus) * 20, level, true), true);
+		if (Utils.Possibilitat(10)) victim.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (Utils.NombreEntre(1, 3) + bonus) * 20, level, true), true);
+		segonsÚltimCopRebut.put(victim.getUniqueId(), segonsTranscorreguts());
+	}
+
+	private boolean killedBySnowman(Player victim) {
+		if (!(victim.getLastDamageCause() instanceof EntityDamageByEntityEvent cause)) return false;
+		if (!(cause.getDamager() instanceof Snowball ball) || !(ball.getShooter() instanceof Entity shooter)) return false;
+		return minionOf(shooter) instanceof SnowmanMinion;
+	}
+
 	//---------- Explosive arrows ----------
 
 	@Override
@@ -1452,7 +1551,8 @@ public class ObsidianDefenders extends JocEquips {
 		Entity entity = evt.getEntity();
 		Location loc = entity.getLocation();
 		if (evt.getEntityType() == EntityType.SNOWBALL) {
-			Bukkit.broadcastMessage("Un inutil (" + player.getName() + ") ha tirat una bola de neu!");
+			throwSnowman(player, evt, loc);
+			return;
 		}
 		if (evt.getEntityType() != EntityType.ARROW) return;
 		boolean spawnProt = false;
