@@ -90,6 +90,8 @@ public class Arena4 extends JocTeamScoreRace {
 	/** A fallback shopkeeper stands this far from its base toward the middle, or further if that spot is not on the ground. */
 	private static final double FALLBACK_SHOP_DISTANCE = 3;
 	private static final double FALLBACK_SHOP_MAX_DISTANCE = 12;
+	/** Ground more than this far below the base is a pit or a canyon, not a place to trade. */
+	private static final int FALLBACK_SHOP_MAX_DROP = 3;
 	private static final int KIT_ARROWS_WITH_BOW = 4;
 	private static final int ARROWS_PER_PURCHASE = 16;
 
@@ -663,15 +665,16 @@ public class Arena4 extends JocTeamScoreRace {
 		Vector capAlMig = getHalfwayMiddle().toVector().subtract(base.toVector()).setY(0);
 		if (capAlMig.lengthSquared() > 0) capAlMig.normalize();
 		Vector costat = new Vector(-capAlMig.getZ(), 0, capAlMig.getX()).multiply(botiguer == Botiguer.ARMA_MAN ? -1.5 : 1.5);
-		Location últimCandidat = null;
 		for (double distància = FALLBACK_SHOP_DISTANCE; distància <= FALLBACK_SHOP_MAX_DISTANCE; distància += 1) {
 			Location lloc = base.clone().add(capAlMig.clone().multiply(distància)).add(costat);
 			int terra = world.getHighestBlockYAt(lloc);
-			if (terra <= world.getMinHeight()) continue;
-			últimCandidat = new Location(world, lloc.getBlockX() + 0.5, terra + 1, lloc.getBlockZ() + 0.5);
-			if (terra <= base.getBlockY()) return últimCandidat;
+			// Neither on a roof above the base nor down a canyon beside it.
+			if (terra > base.getBlockY() || terra < base.getBlockY() - FALLBACK_SHOP_MAX_DROP) continue;
+			return new Location(world, lloc.getBlockX() + 0.5, terra + 1, lloc.getBlockZ() + 0.5);
 		}
-		return últimCandidat != null ? últimCandidat : base.clone().add(costat);
+		// No walkable ground toward the middle: right beside the base, which is standing ground by definition.
+		Location alCostat = base.clone().add(costat);
+		return new Location(world, alCostat.getBlockX() + 0.5, base.getY(), alCostat.getBlockZ() + 0.5);
 	}
 
 	private void refrescarRètols() {
