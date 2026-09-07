@@ -52,6 +52,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Villager;
+import org.bukkit.entity.WitherSkeleton;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -80,6 +81,8 @@ import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
 import com.biel.lobby.minions.Lane;
+import com.biel.lobby.minions.LaneMinion;
+import com.biel.lobby.minions.LaneMinionKind;
 import com.biel.lobby.minions.Minion;
 import com.biel.lobby.minions.SnowmanKind;
 import com.biel.lobby.minions.SnowmanMinion;
@@ -110,7 +113,30 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int MAX_COFRES_OBERTS = 8;
 	private static final long PRIMER_PIC_TICKS = 3 * 60 * 20;
 	private static final long PERIODE_PIC_TICKS = 2 * 60 * 20;
-	private static final long GOLEM_INICIAL_TICKS = 5 * 20;
+	/** The Guardian wakes a minute in (Biel, 2026-09-07 night: "give the players a chance to get situated, buy things"); it was 5 s. */
+	private static final long GOLEM_INICIAL_TICKS = 60 * 20;
+	/** Every player starts with this much gold, so the first purchase happens in the first minute. */
+	private static final int INITIAL_GOLD = 12;
+	/** The nether star reaches enemies this far from its user; it used to reach the whole map. */
+	private static final double NETHER_STAR_RADIUS = 30;
+	/** Chance, per chest opened, of a nether star; was 6. */
+	private static final int NETHER_STAR_CHEST_CHANCE = 4;
+	/**
+	 * Closure (Biel, 2026-09-07 night: "after a certain minute, kills to the enemy team start
+	 * spawning wither skeletons, as minions, one per kill"): from this second on, every
+	 * kill raises a wither skeleton beside the victim, owned by the killer, marching the
+	 * killer's lane to the enemy base; its kills are the owner's, so each raises another.
+	 */
+	private static final int SUDDEN_DEATH_SECOND = 15 * 60;
+	private static final int WITHER_SKELETON_HEALTH = 40;
+	private static final double WITHER_SKELETON_DAMAGE = 8;
+	private static final int WITHER_SKELETON_WITHER_TICKS = 10 * 20;
+	private static final LaneMinionKind WITHER_SKELETON = new LaneMinionKind("Esquelet wither", WITHER_SKELETON_HEALTH, WITHER_SKELETON_DAMAGE, 2.5, 20, 10, 1.0, at -> {
+		WitherSkeleton skeleton = at.getWorld().spawn(at, WitherSkeleton.class);
+		skeleton.getEquipment().setItemInMainHand(new ItemStack(Material.STONE_SWORD));
+		skeleton.getEquipment().setItemInMainHandDropChance(0);
+		return skeleton;
+	});
 	private static final int OR_PER_GOLEM = 22;
 	/** The iron golem is El Guardià: named, lit by an aura and documented in game (docs/games/obsidian-defenders/guardian-golem-design.md). */
 	private static final String NOM_GUARDIÀ = "El Guardià";
@@ -181,6 +207,7 @@ public class ObsidianDefenders extends JocEquips {
 	private Equip guardianSlayerTeam;
 	/** Victim → game second until which snowballs neither charge nor spend a cage on them. */
 	private final Map<UUID, Integer> iceCageGraceUntil = new HashMap<>();
+	private boolean suddenDeath;
 
 	boolean debug = false;
 	/** Team id → block positions of the TNT that is that team's base core. */
@@ -357,7 +384,7 @@ public class ObsidianDefenders extends JocEquips {
 	 * is the quietest channel there is: read only when hovered, never repeated.
 	 */
 	private enum Objecte {
-		ESTRELLA_DEL_NETHER(Material.NETHER_STAR, "Estrella del Nether", "Clic dret: enemics a 1 cor i lents 20 s,", "aliats ràpids 20 s.", "Es converteix en estrella de foc."),
+		ESTRELLA_DEL_NETHER(Material.NETHER_STAR, "Estrella del Nether", "Clic dret: els enemics a menys de " + (int) NETHER_STAR_RADIUS + " blocs", "a 1 cor i lents 20 s; aliats ràpids 20 s.", "Es converteix en estrella de foc."),
 		ESTRELLA_DE_FOC(Material.FIREWORK_STAR, "Estrella de foc", "Amb ella a l'inventari, una fletxa disparada", "des de dalt explota en caure."),
 		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma", "Clic dret: crema tot l'equip enemic 3 s."),
 		MARAGDA(Material.EMERALD, "Maragda", "Clic dret: +1 cor a tot el teu equip."),
@@ -538,6 +565,8 @@ public class ObsidianDefenders extends JocEquips {
 		guardiàTornaAlSegon = (int) (GOLEM_INICIAL_TICKS / 20);
 		guardianSlayerTeam = null;
 		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
+		suddenDeath = false;
+		scheduleGameplayTask(this::startSuddenDeath, SUDDEN_DEATH_SECOND * 20L);
 		scheduleGameplayRepeatingTask(this::presènciaDelGuardià, 20, 20);
 	}
 
@@ -567,6 +596,7 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected void donarEfectesInicials(Player ply) {
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 25 * 20, 2, false), true);
+		donarOr(ply, INITIAL_GOLD);
 	}
 
 	/** Gold, pickaxes and consumables survive death: the economy is the game. */
@@ -850,7 +880,7 @@ public class ObsidianDefenders extends JocEquips {
 		if (Utils.Possibilitat(HERO_SNOWBALL_CHEST_CHANCE)) loot.add(Objecte.BOLA_DE_NEU_ENCANTADA.nou());
 		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.EXPERIENCE_BOTTLE, Utils.NombreEntre(1, 3)));
 		if (Utils.Possibilitat(5)) loot.add(new ItemStack(Material.ENDER_PEARL));
-		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.NETHER_STAR));
+		if (Utils.Possibilitat(NETHER_STAR_CHEST_CHANCE)) loot.add(new ItemStack(Material.NETHER_STAR));
 		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.BOOK));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.GOLDEN_SWORD));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.IRON_SWORD));
@@ -2190,6 +2220,7 @@ public class ObsidianDefenders extends JocEquips {
 		pTemp().EstablirPropietat(player.getName() + "Morts", "0");
 		if (Or != 0) {
 			pPlayer(killer).IncrementarPropietat("Assassinats");
+			if (suddenDeath) raiseWitherSkeleton(killer, location);
 		}
 		pPlayer(player).IncrementarPropietat("Morts");
 		if (player.getInventory().contains(Material.DIAMOND_PICKAXE)) {
@@ -2270,14 +2301,18 @@ public class ObsidianDefenders extends JocEquips {
 		}
 		if (!JocEnMarxa() || obtenirEquip(plyr) == null) return;
 		if (stack.getType() == Material.NETHER_STAR) {
+			// Within its radius only (Biel, 2026-09-07 night): a star must not decide fights it was not part of.
+			int struck = 0;
 			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+				if (p.getWorld() != plyr.getWorld() || p.getLocation().distance(plyr.getLocation()) > NETHER_STAR_RADIUS) continue;
 				p.setHealth(1);
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 20, 4, false), true);
+				struck++;
 			}
 			for (Player p : obtenirEquip(plyr).getPlayers()) {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 3, false), true);
 			}
-			sendGlobalMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha utilitzat una" + ChatColor.BOLD + " nether star" + ChatColor.RESET + "!");
+			sendGlobalMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha utilitzat una" + ChatColor.BOLD + " nether star" + ChatColor.RESET + " (" + struck + " enemics a prop)!");
 			// The star turns into the charge that makes arrows explosive.
 			stack.setType(Material.FIREWORK_STAR);
 			Objecte.descriure(stack);
@@ -2430,16 +2465,19 @@ public class ObsidianDefenders extends JocEquips {
 		return Lane.of(waypoints);
 	}
 
-	/** The block the snowball stopped against, the impact block and its neighbours above and below, first one a golem can stand in. */
+	/** The block the snowball stopped against, then the impact block and its neighbours: the first one a golem can stand in. */
 	private static Location snowmanSpotNear(ProjectileHitEvent evt, Location impact) {
-		List<Block> candidates = new ArrayList<>();
-		if (evt.getHitBlock() != null && evt.getHitBlockFace() != null) candidates.add(evt.getHitBlock().getRelative(evt.getHitBlockFace()));
-		Block impactBlock = impact.getBlock();
-		candidates.add(impactBlock);
-		candidates.add(impactBlock.getRelative(BlockFace.UP));
-		candidates.add(impactBlock.getRelative(BlockFace.DOWN));
-		candidates.add(impactBlock.getRelative(0, 2, 0));
-		for (Block candidate : candidates) {
+		if (evt.getHitBlock() != null && evt.getHitBlockFace() != null) {
+			Block beside = evt.getHitBlock().getRelative(evt.getHitBlockFace());
+			if (canStandIn(beside)) return beside.getLocation().add(0.5, 0, 0.5);
+		}
+		return standingSpotNear(impact);
+	}
+
+	/** The block at the location and its neighbours above and below, the first one a mob can stand in; null when none. */
+	private static Location standingSpotNear(Location around) {
+		Block block = around.getBlock();
+		for (Block candidate : List.of(block, block.getRelative(BlockFace.UP), block.getRelative(BlockFace.DOWN), block.getRelative(0, 2, 0))) {
 			if (canStandIn(candidate)) return candidate.getLocation().add(0.5, 0, 0.5);
 		}
 		return null;
@@ -2488,6 +2526,38 @@ public class ObsidianDefenders extends JocEquips {
 		if (!(victim.getLastDamageCause() instanceof EntityDamageByEntityEvent cause)) return null;
 		if (!(cause.getDamager() instanceof Snowball ball) || !(ball.getShooter() instanceof Entity shooter)) return null;
 		return minionOf(shooter) instanceof SnowmanMinion snowman ? snowman : null;
+	}
+
+	//---------- Sudden death: wither skeletons from kills ----------
+
+	/** The match has run long: from now on every kill raises a wither skeleton. Announced once. */
+	private void startSuddenDeath() {
+		if (!JocEnMarxa()) return;
+		suddenDeath = true;
+		for (Player p : getPlayers()) {
+			PaperMessages.showTitle(p, 10, 70, 20, ChatColor.DARK_RED + "Mort sobtada", ChatColor.GRAY + "Cada kill aixeca un esquelet wither");
+			p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, 0.5F, 1.2F);
+		}
+		sendGlobalMessage(ChatColor.DARK_RED + "Mort sobtada: " + ChatColor.WHITE + "a partir d'ara cada kill aixeca un esquelet wither al costat del mort, que marxa cap a la base enemiga i lluita per qui l'ha aixecat.");
+		updateScoreBoards();
+	}
+
+	/** A wither skeleton rises where the victim fell, owned by the killer, and walks the killer's team's lane. */
+	private void raiseWitherSkeleton(Player killer, Location whereTheVictimFell) {
+		Equip team = obtenirEquip(killer);
+		if (team == null) return;
+		Location spot = standingSpotNear(whereTheVictimFell);
+		if (spot == null) spot = team.getTeamSpawnLocation();
+		enlist(new LaneMinion(this, team, killer, WITHER_SKELETON, snowmanLane(team), this::witherSkeletonHit), spot);
+		world.playSound(spot, Sound.ENTITY_WITHER_SKELETON_AMBIENT, 1F, 0.8F);
+		world.spawnParticle(Particle.SOUL, spot.clone().add(0, 1, 0), 30, 0.3, 0.6, 0.3, 0.03);
+		PaperMessages.sendActionBar(killer, ChatColor.DARK_GRAY + "Un esquelet wither s'aixeca per tu", 60);
+	}
+
+	/** A wither skeleton's blow: its attack damage through armour as vanilla does it, plus Wither I, so the victim cannot heal it away. */
+	private void witherSkeletonHit(LaneMinion skeleton, EntityDamageByEntityEvent evt, Player victim) {
+		victim.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, WITHER_SKELETON_WITHER_TICKS, 0, true, true));
+		segonsÚltimCopRebut.put(victim.getUniqueId(), segonsTranscorreguts());
 	}
 
 	//---------- Explosive arrows ----------
@@ -2570,6 +2640,7 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			Equip equip = obtenirEquip(ply);
 			if (equip != null) list.add(etiquetaPont(equip, "Pont: ") + barraPont(equip));
+			if (suddenDeath) list.add(ChatColor.DARK_RED + "Mort sobtada");
 			// The 2015 ability counters are not shown: that layer is dead code until it is rebuilt on the skill pool.
 			ScoreBoardUpdater.setScoreBoard(ply, "Estadístiques", list, null);
 		}
