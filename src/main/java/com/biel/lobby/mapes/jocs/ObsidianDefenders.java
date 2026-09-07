@@ -139,6 +139,25 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int ALÇADA_NUCLI = 8;
 	/** A primed TNT counts as a base core while it is this close to one of the TNT blocks found at start. */
 	private static final double TOLERÀNCIA_NUCLI = 3;
+	/**
+	 * The detonator (Biel, 2026-09-07 night: "a pressure plate inside; once someone steps
+	 * on it it triggers the explosion"): a gold plate an enemy foot on which blows the base
+	 * up. The plugin lays it in every breach of the vault's ring, and at match start where a
+	 * {@code Detonador<team>} map property names the block under it. Detected like the
+	 * control points: the cancelled physical press and a tick over the players' feet.
+	 */
+	private static final Material DETONATOR_PLATE = Material.LIGHT_WEIGHTED_PRESSURE_PLATE;
+	/** A ring block is obsidian at the TNT's level within this many blocks of a TNT; the back wall is three out. */
+	private static final int RING_REACH = 3;
+	private static final long DETONATOR_TICK_PERIOD = 5;
+	/** The vault's TNT goes off block by block within this many ticks, then the base is ruined blast by blast. */
+	private static final int CORE_FUSE_SPREAD_TICKS = 50;
+	private static final int RUIN_BLASTS = 16;
+	private static final long RUIN_TICKS_BETWEEN_BLASTS = 8;
+	private static final int RUIN_RADIUS = 26;
+	private static final float RUIN_BLAST_POWER = 5F;
+	/** The spectators watch the base go up from this high over its spawn. */
+	private static final int RUIN_VIEW_HEIGHT = 14;
 	/** A death with no killer is credited to the last player who hit the victim within this window. */
 	private static final int SEGONS_CREDIT_ÚLTIM_COP = 95;
 	/** Snowmen (2013): a thrown snowball becomes a snow golem owned by the thrower; at most this many alive per player. */
@@ -160,6 +179,10 @@ public class ObsidianDefenders extends JocEquips {
 	boolean debug = false;
 	/** Team id → block positions of the TNT that is that team's base core. */
 	private final Map<Integer, Set<Vector>> nuclisPerEquip = new HashMap<>();
+	/** Detonator plate → the team whose vault it blows: the map's own, or one laid in a breach. */
+	private final Map<Block, Integer> teamByDetonator = new HashMap<>();
+	/** The team whose base has gone up; set once, so nothing blows twice. */
+	private Equip explodedBase;
 	private final Map<UUID, Integer> segonsÚltimCopRebut = new HashMap<>();
 	private UUID golemActual;
 	private BossBar barraGuardià;
@@ -335,7 +358,7 @@ public class ObsidianDefenders extends JocEquips {
 		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí cap a la base enemiga.", "Alenteix; amb el cap de gel, el proper cop", "tanca l'enemic en gel " + ICE_CAGE_TICKS / 20 + " s (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots).", "Si el teu equip ha matat el Guardià, crema."),
 		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender", "Llança-la per teletransportar-te on caigui."),
 		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or", "A l'inventari: fletxes explosives un 20 % més fortes."),
-		PIC_DE_DIAMANT(Material.DIAMOND_PICKAXE, "Pic de diamant", "Trenca l'obsidiana de la base enemiga.", "Encanta'l a una taula: Eficiència.", "Qui et mati es queda un pic d'or."),
+		PIC_DE_DIAMANT(Material.DIAMOND_PICKAXE, "Pic de diamant", "Obre una bretxa a l'obsidiana de la base enemiga:", "a la bretxa hi apareix el detonador.", "Encanta'l a una taula: Eficiència.", "Qui et mati es queda un pic d'or."),
 		PIC_D_OR(Material.GOLDEN_PICKAXE, "Pic d'or", "A la mà en matar: or x3.", "A l'inventari: +3 or cada cicle.");
 
 		final Material material;
@@ -476,6 +499,7 @@ public class ObsidianDefenders extends JocEquips {
 		emptyDispensers();
 		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
 		scheduleGameplayRepeatingTask(this::tickControlPoints, 20, 20);
+		scheduleGameplayRepeatingTask(this::tickDetonators, 20, DETONATOR_TICK_PERIOD);
 		scheduleGameplayRepeatingTask(this::tickHints, 30, 20);
 		scheduleGameplayRepeatingTask(this::apareixerPicDiamant, PRIMER_PIC_TICKS, PERIODE_PIC_TICKS);
 		guardiàTornaAlSegon = (int) (GOLEM_INICIAL_TICKS / 20);
@@ -532,7 +556,7 @@ public class ObsidianDefenders extends JocEquips {
 	protected ArrayList<String> getGameInfo(Player p) {
 		ArrayList<String> info = new ArrayList<>();
 		// Three lines; the rest is taught where it happens: item tooltips, signs, the one-shot hints and the sounds.
-		info.add("Fes explotar la TNT de la base enemiga. L'obsidiana es pot trencar; el pic de diamant cau al mig als 3 min.");
+		info.add("Obre una bretxa a l'obsidiana de la base enemiga i trepitja el detonador que hi apareix. El pic de diamant cau al mig als 3 min.");
 		info.add("L'or paga tot: cofres de la jungla, kills, captures, el Guardià. Es gasta a les botigues i a les taules d'encantar.");
 		info.add("Els punts de control del mig carreguen el pont del teu equip; les torres de llums mostren les dues barres.");
 		return info;
@@ -564,6 +588,7 @@ public class ObsidianDefenders extends JocEquips {
 			} else {
 				plugin.getLogger().info(getGameName() + " " + getMapName() + ": base" + e.getId() + " has " + nuclis.size() + " TNT blocks, the nearest " + Math.round(distànciaMínima) + " blocks from the spawn");
 			}
+			layMapDetonator(e);
 		}
 	}
 
@@ -577,26 +602,158 @@ public class ObsidianDefenders extends JocEquips {
 		return null;
 	}
 
+	/** The middle of a team's TNT, at the height of the blocks' centres; null for a base without TNT. */
+	private Location coreCentre(Equip e) {
+		Set<Vector> core = nuclisPerEquip.getOrDefault(e.getId(), Set.of());
+		if (core.isEmpty()) return null;
+		Vector sum = new Vector();
+		for (Vector tnt : core) sum.add(tnt);
+		return sum.multiply(1.0 / core.size()).add(new Vector(0.5, 0.5, 0.5)).toLocation(world);
+	}
+
+	/**
+	 * The vault whose ring the obsidian belongs to: a block at the TNT's level within
+	 * {@link #RING_REACH} of one of the team's TNT, else null. On the 2013 map the vault
+	 * is a one-block-high cavity under the spawn room, so nobody can stand inside it; the
+	 * ring's exposed back wall, walkable on top from the terrain, is the only obsidian an
+	 * attacker can reach.
+	 */
+	private Equip vaultOfRingBlock(Block obsidian) {
+		for (Equip e : Equips) {
+			for (Vector tnt : nuclisPerEquip.getOrDefault(e.getId(), Set.of())) {
+				if (tnt.getBlockY() == obsidian.getY() && Math.abs(tnt.getBlockX() - obsidian.getX()) <= RING_REACH && Math.abs(tnt.getBlockZ() - obsidian.getZ()) <= RING_REACH) return e;
+			}
+		}
+		return null;
+	}
+
+	/** A plate laid at match start where the map says ({@code Detonador<team>}, the block under it); without the property the breaches are the detonators. */
+	private void layMapDetonator(Equip e) {
+		if (!pMapaActual().ExisteixPropietat("Detonador" + e.getId())) return;
+		layDetonator(e, pMapaActual().ObtenirLocation("Detonador" + e.getId(), world).getBlock().getRelative(BlockFace.UP));
+	}
+
+	/** The gold plate on the cell, over a block of obsidian when the cell hangs over nothing, as the ring's back wall does. */
+	private void layDetonator(Equip vaultOf, Block cell) {
+		Block support = cell.getRelative(BlockFace.DOWN);
+		if (support.isPassable()) support.setType(Material.OBSIDIAN, false);
+		cell.setType(DETONATOR_PLATE, false);
+		teamByDetonator.put(cell, vaultOf.getId());
+		plugin.getLogger().info(getGameName() + " " + getMapName() + ": detonator of base" + vaultOf.getId() + " at " + cell.getLocation().toVector());
+	}
+
+	/** A block of the ring goes: a tick later, once it is air, the breach is floored and the detonator laid in it, for the breacher to step down onto. */
+	private void breach(Player ply, Block block, Equip vaultOf) {
+		Equip team = obtenirEquip(ply);
+		sendGlobalMessage((team == null ? "" : team.getChatColor().toString()) + ply.getName() + ChatColor.WHITE + " ha obert una bretxa a la base " + vaultOf.getAdjectiuColored() + ChatColor.WHITE + "!");
+		scheduleGameplayTask(() -> {
+			if (!JocEnMarxa() || !block.getType().isAir()) return;
+			layDetonator(vaultOf, block);
+			world.playSound(block.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.6F, 1.6F);
+			PaperMessages.sendActionBar(ply, ChatColor.GOLD + "Trepitja el detonador de la bretxa", HINT_TICKS);
+		}, 1);
+	}
+
+	/** The team whose vault the detonator plate opens, or null for any other block. */
+	private Equip teamOfDetonator(Block block) {
+		Integer team = teamByDetonator.get(block);
+		return team == null ? null : obtenirEquip(team);
+	}
+
+	/** Four times a second, the control points' check at a faster pace: an enemy foot on a detonator. */
+	private void tickDetonators() {
+		if (!JocEnMarxa()) return;
+		for (Player p : getPlayers()) stepOnDetonator(p, p.getLocation().getBlock());
+	}
+
+	/** A defender on their own detonator is nothing; an enemy on it is the end of the match. */
+	private void stepOnDetonator(Player p, Block feet) {
+		Equip vaultOf = teamOfDetonator(feet);
+		if (vaultOf == null || !JocEnMarxa()) return;
+		Equip team = obtenirEquip(p);
+		if (team == null || team == vaultOf) return;
+		blowUpBase(vaultOf, p);
+	}
+
+	/** A primed TNT going off inside a vault (a Flame arrow through a broken block) blows the base the same way. */
 	@Override
 	protected void onExplosionPrime(ExplosionPrimeEvent evt) {
 		super.onExplosionPrime(evt);
 		if (!JocEnMarxa() || !(evt.getEntity() instanceof TNTPrimed)) return;
 		Equip explotat = equipDelNucli(evt.getEntity().getLocation());
 		if (explotat == null) return;
-		sendGlobalMessage(ChatColor.RED + "La base de l'equip " + explotat.getAdjectiuColored() + ChatColor.RED + " ha explotat!");
-		sendGlobalSound(Sound.ENTITY_GENERIC_EXPLODE, 2F, 0.6F);
-		winGame(obtenirEquipEnemic(explotat));
+		blowUpBase(explotat, null);
 	}
 
-	/** Obsidian is the one block anyone may break: it is what shields the TNT. */
+	/**
+	 * The base goes up: the announcement and the win at once, then the vault's TNT block by
+	 * block, then blasts at random over the whole base that break its blocks, for the
+	 * spectators. The win cancels every gameplay task, so the show runs on lifecycle tasks.
+	 */
+	private void blowUpBase(Equip vaultOf, Player detonator) {
+		if (explodedBase != null || !JocEnMarxa()) return;
+		explodedBase = vaultOf;
+		if (detonator != null) sendGlobalMessage(obtenirEquip(detonator).getChatColor() + detonator.getName() + ChatColor.WHITE + " ha trepitjat el detonador de la base " + vaultOf.getAdjectiuColored() + ChatColor.WHITE + "!");
+		sendGlobalMessage(ChatColor.RED + "La base de l'equip " + vaultOf.getAdjectiuColored() + ChatColor.RED + " ha explotat!");
+		sendGlobalSound(Sound.ENTITY_GENERIC_EXPLODE, 2F, 0.6F);
+		winGame(obtenirEquipEnemic(vaultOf));
+		igniteCore(vaultOf);
+		Location base = vaultOf.getTeamSpawnLocation();
+		for (int i = 0; i < RUIN_BLASTS; i++) {
+			long delay = CORE_FUSE_SPREAD_TICKS + RUIN_TICKS_BETWEEN_BLASTS * i;
+			handleLifecycleTask(Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> ruinBlast(base), delay));
+		}
+	}
+
+	/** Every TNT block of the vault still standing becomes a primed one with its own short fuse. */
+	private void igniteCore(Equip vaultOf) {
+		for (Vector position : nuclisPerEquip.getOrDefault(vaultOf.getId(), Set.of())) {
+			Block block = position.toLocation(world).getBlock();
+			if (block.getType() != Material.TNT) continue;
+			block.setType(Material.AIR, false);
+			TNTPrimed tnt = world.spawn(block.getLocation().add(0.5, 0, 0.5), TNTPrimed.class);
+			tnt.setFuseTicks(10 + Utils.NombreEntre(0, CORE_FUSE_SPREAD_TICKS));
+		}
+	}
+
+	/** One blast on the surface of the losing base, somewhere within the ruin radius of its spawn; the void around the map is skipped. */
+	private void ruinBlast(Location base) {
+		if (world == null) return;
+		double angle = Math.random() * 2 * Math.PI, radius = Math.sqrt(Math.random()) * RUIN_RADIUS;
+		int x = base.getBlockX() + (int) Math.round(radius * Math.cos(angle));
+		int z = base.getBlockZ() + (int) Math.round(radius * Math.sin(angle));
+		int top = world.getHighestBlockYAt(x, z);
+		if (top < SCAN_MIN_Y || top > SCAN_MAX_Y) return;
+		world.createExplosion(x + 0.5, top + 0.5, z + 0.5, RUIN_BLAST_POWER, false, true);
+	}
+
+	/** Everyone watches the base go up from over its spawn, facing the vault; a match ended any other way ends in the middle as usual. */
+	@Override
+	protected void raisePlayersToSpectatorZone() {
+		Location vault = explodedBase == null ? null : coreCentre(explodedBase);
+		if (vault == null) {
+			super.raisePlayersToSpectatorZone();
+			return;
+		}
+		Location view = explodedBase.getTeamSpawnLocation().clone().add(0, RUIN_VIEW_HEIGHT, 0);
+		view.setDirection(vault.toVector().subtract(view.toVector()));
+		for (Player p : getPlayers()) {
+			p.setGameMode(GameMode.SPECTATOR);
+			p.teleport(view);
+		}
+	}
+
+	/** Obsidian is the one block anyone may break: it is what shields the TNT. A ring block broken is a breach, and the breach is the detonator. */
 	@Override
 	protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
 		super.onBlockBreak(evt, blk);
 		Player ply = evt.getPlayer();
 		if (blk.getType() != Material.OBSIDIAN || ply.getGameMode() == GameMode.CREATIVE || !JocEnMarxa()) return;
 		evt.setCancelled(false);
-		sendGlobalMessage(ply.getName() + ChatColor.DARK_PURPLE + " ha trencat un bloc d'obsidiana!");
 		world.playSound(blk.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1F, 1F);
+		Equip vaultOf = vaultOfRingBlock(blk);
+		if (vaultOf != null) breach(ply, blk, vaultOf);
+		else sendGlobalMessage(ply.getName() + ChatColor.DARK_PURPLE + " ha trencat un bloc d'obsidiana!");
 	}
 
 	//---------- Jungle chests (ExampleTask, 2013) ----------
@@ -1349,6 +1506,7 @@ public class ObsidianDefenders extends JocEquips {
 				for (Block plate : point.plateByTeam.values()) if (aProp(at, plate)) hint(p, "placa", "Punt de control: 3 s sobre la placa del teu color per capturar-lo.");
 			}
 			for (Block botó : botonsPont.keySet()) if (aProp(at, botó)) hint(p, "botó", "Botó del pont: amb la barra plena, prem-lo per desplegar el pont sobre el fossat enemic.");
+			for (Block detonator : teamByDetonator.keySet()) if (aProp(at, detonator)) hint(p, "detonador", "Detonador: si un enemic el trepitja, la TNT de la base explota.");
 		}
 	}
 
@@ -2034,6 +2192,12 @@ public class ObsidianDefenders extends JocEquips {
 			// The plate never depresses, so the 2013 wiring behind it never runs; the press is shown and heard anyway.
 			evt.setCancelled(true);
 			if (JocEnMarxa() && !evt.getClickedBlock().equals(shownPressedPlate.get(plyr.getUniqueId()))) showPlatePressed(plyr, evt.getClickedBlock());
+			return;
+		}
+		if (evt.getAction() == Action.PHYSICAL && evt.getClickedBlock() != null && teamOfDetonator(evt.getClickedBlock()) != null) {
+			// The press itself is the trigger, the instant the foot lands; the tick is the fallback.
+			evt.setCancelled(true);
+			stepOnDetonator(plyr, evt.getClickedBlock());
 			return;
 		}
 		if (evt.getAction() == Action.RIGHT_CLICK_BLOCK && evt.getClickedBlock() != null) {
