@@ -43,7 +43,6 @@ public abstract class MapaResetejable extends Mapa {
 		if (metadataDirectories == null) return;
 
 		File worldContainer = Bukkit.getWorldContainer();
-		File dimensionsRoot = new File(new File(new File(worldContainer, "world"), "dimensions"), "minecraft");
 		for (File metadataDirectory : metadataDirectories) {
 			String worldName = metadataDirectory.getName();
 			if (!worldName.matches("[A-Za-z][A-Za-z0-9 _-]*\\d+")) {
@@ -56,7 +55,7 @@ public abstract class MapaResetejable extends Mapa {
 			}
 
 			File legacyWorldDirectory = new File(worldContainer, worldName);
-			File paperWorldDirectory = new File(dimensionsRoot, worldName.toLowerCase(Locale.ROOT));
+			File paperWorldDirectory = paperDimensionDirectory(worldName);
 			try {
 				FileUtils.deleteDirectory(legacyWorldDirectory);
 				FileUtils.deleteDirectory(paperWorldDirectory);
@@ -137,8 +136,33 @@ public abstract class MapaResetejable extends Mapa {
 		deleteFolder(getLiveWorldFile());
 		deleteFolder(getLiveMetadataFile());
 	}
+	/**
+	 * Where Paper 26.2 keeps a world's region files once it has migrated the legacy
+	 * folder: {@code world/dimensions/minecraft/<key>}, the key being the world name
+	 * lowercased with every character a resource location cannot hold turned into an
+	 * underscore ("Arena 42" becomes "arena_42"). Paper refuses to migrate over a
+	 * directory that is already there, so a leftover from an earlier instance with the
+	 * same name makes the next creation fail.
+	 */
+	static File paperDimensionDirectory(String worldName) {
+		String key = worldName.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9/._-]", "_");
+		File dimensionsRoot = new File(new File(new File(Bukkit.getWorldContainer(), "world"), "dimensions"), "minecraft");
+		return new File(dimensionsRoot, key);
+	}
+	private static void deletePaperDimensionDirectory(String worldName) {
+		File directory = paperDimensionDirectory(worldName);
+		if (!directory.isDirectory()) return;
+		try {
+			FileUtils.deleteDirectory(directory);
+		} catch (IOException exception) {
+			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING,
+					"Could not remove the migrated world directory " + directory, exception);
+		}
+	}
 	private void loadVirtualWorld(){
 		if (isWorldLoaded()) return;
+		// A fresh copy of the template is about to be migrated into this directory.
+		deletePaperDimensionDirectory(getLiveWorldFolder());
 		world = Bukkit.createWorld(new WorldCreator(getLiveWorldFolder()));
 		if (world == null) {
 			throw new IllegalStateException("Paper no ha pogut carregar el mon " + getLiveWorldFolder());
@@ -219,11 +243,13 @@ public abstract class MapaResetejable extends Mapa {
 		if (world == null) return false;
 		File worldLive = world.getWorldFolder();
 		File metadataDirectory = getLiveMetadataFile();
+		String worldName = NomWorld;
 		if (!Bukkit.unloadWorld(world, false)) return false;
 		world = null;
 		Com.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
             deleteFolder(worldLive);
 			deleteFolder(metadataDirectory);
+			deletePaperDimensionDirectory(worldName);
             Bukkit.broadcastMessage("Mapa esborrat! - " + NomWorld);
         }, 200L);
 		return true;
