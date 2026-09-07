@@ -57,10 +57,17 @@ public class InkWars extends JocEquips {
 	static final BlockFace[] SIDES = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
 	/** Ticks of slower climbing after the grip turns a corner. */
 	static final int CORNER_TICKS = 10;
-	/** The squid: blocks per tick at full speed (a sprint is 0.28), gained per tick of steering, and the share of momentum kept each tick. */
+	/**
+	 * The squid is a cart: a heading and a speed. Blocks per tick at full speed (a sprint is 0.28); speed gained per tick with the keys along the heading;
+	 * speed lost per tick with the keys against it (the brake); the share of speed kept per tick when coasting; how far the heading turns per tick;
+	 * and below this speed the heading simply snaps to the keys, so a standing squid sets off in any direction.
+	 */
 	static final double SQUID_TOP_SPEED = 0.55;
-	static final double SQUID_ACCELERATION = 0.06;
-	static final double SQUID_FRICTION = 0.92;
+	static final double SQUID_ACCELERATION = 0.02;
+	static final double SQUID_BRAKE = 0.035;
+	static final double SQUID_COAST = 0.985;
+	static final double SQUID_TURN_RATE = Math.toRadians(4.5);
+	static final double SQUID_CRAWL_SPEED = 0.06;
 	static final double CLIMB_SPEED = 0.28;
 	/** Ink charge gained per block swum; a full charge is one surge. */
 	static final double CHARGE_PER_BLOCK = 0.09;
@@ -610,6 +617,9 @@ public class InkWars extends JocEquips {
 		private int cornerTicks = 0;
 		/** Horizontal velocity the squid carries, blocks per tick; it is what was pushed last tick, so the client's own steering is read against it. */
 		private Vector momentum = new Vector();
+		/** The cart's state behind the momentum: where it points and how fast it goes. */
+		private Vector heading = new Vector(1, 0, 0);
+		private double speed = 0;
 		private Location lastLocation = null;
 		/** Ink gathered by swimming, 0 to 1; released as a surge when the body comes out. */
 		private double charge = 0;
@@ -672,7 +682,7 @@ public class InkWars extends JocEquips {
 			submerged = true;
 			submergedTicks = 0;
 			cornerTicks = 0;
-			momentum = new Vector(moved.getX(), 0, moved.getZ());
+			setMomentum(new Vector(moved.getX(), 0, moved.getZ()));
 			Player p = getPlayer();
 			p.getInventory().setArmorContents(null);
 			p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 0.7F);
@@ -774,7 +784,7 @@ public class InkWars extends JocEquips {
 			}else if(previousGripSide != null && !p.isOnGround()){
 				// the wall ended under the climb: the momentum carries the body over the edge onto the top
 				Vector over = previousGripSide.getDirection();
-				momentum = new Vector(over.getX() * 0.3, 0, over.getZ() * 0.3);
+				setMomentum(new Vector(over.getX() * 0.3, 0, over.getZ() * 0.3));
 				p.setVelocity(new Vector(momentum.getX(), 0.2, momentum.getZ()));
 				dropFakeCeiling();
 			}else{
@@ -782,23 +792,54 @@ public class InkWars extends JocEquips {
 				tickCrawlPose();
 			}
 		}
-		/**
-		 * The squid on a floor runs on momentum: what the client moved beyond the momentum pushed last tick is its steering, and steering only sets a direction,
-		 * the acceleration is the squid's own. Momentum keeps most of itself each tick, so the body slides through turns and glides when the keys are released,
-		 * and it is capped at squid speed, twice a sprint.
-		 */
+		/** The squid on a floor runs on the cart model; the vertical velocity is left to gravity. */
 		private void tickFloorSwim(Vector moved){
 			steer(moved);
 			Player p = getPlayer();
 			double fall = p.getVelocity().getY();
 			p.setVelocity(new Vector(momentum.getX(), fall, momentum.getZ()));
 		}
+		/**
+		 * The cart. What the client moved beyond the momentum pushed last tick is the keys; only their direction counts.
+		 * The part of the keys along the heading is throttle or brake: speed grows slowly with them, drops faster against them, and coasts down when they rest.
+		 * The part across the heading is steering: the heading turns toward the keys by a fixed angle per tick, so a turn takes room and a U-turn takes two seconds.
+		 * Below crawling speed the heading snaps to the keys. A wall that stops the body takes most of its speed.
+		 */
 		private void steer(Vector moved){
 			Vector observed = new Vector(moved.getX(), 0, moved.getZ());
-			Vector steering = observed.subtract(momentum);
-			momentum.multiply(SQUID_FRICTION);
-			if(steering.lengthSquared() > 0.0004)momentum.add(steering.normalize().multiply(SQUID_ACCELERATION));
-			if(momentum.lengthSquared() > SQUID_TOP_SPEED * SQUID_TOP_SPEED)momentum.normalize().multiply(SQUID_TOP_SPEED);
+			double observedSpeed = observed.length();
+			Vector keys = observed.clone().subtract(momentum);
+			boolean pressing = keys.lengthSquared() > 0.0004;
+			if(pressing)keys.normalize();
+
+			if(speed > 0.1 && observedSpeed < speed * 0.3)speed *= 0.6; // stopped by something
+			if(!pressing){
+				speed *= SQUID_COAST;
+			}else if(speed < SQUID_CRAWL_SPEED){
+				heading = keys.clone();
+				speed += SQUID_ACCELERATION;
+			}else{
+				double along = keys.dot(heading);
+				if(along >= 0)speed += SQUID_ACCELERATION * along;
+				else speed -= SQUID_BRAKE * -along;
+				turnHeadingToward(keys);
+			}
+			speed = Math.max(0, Math.min(SQUID_TOP_SPEED, speed));
+			momentum = heading.clone().multiply(speed);
+		}
+		private void turnHeadingToward(Vector keys){
+			double cross = heading.getX() * keys.getZ() - heading.getZ() * keys.getX();
+			double dot = heading.dot(keys);
+			double wanted = Math.atan2(cross, dot);
+			double turn = Math.max(-SQUID_TURN_RATE, Math.min(SQUID_TURN_RATE, wanted));
+			double cos = Math.cos(turn), sin = Math.sin(turn);
+			heading = new Vector(heading.getX() * cos - heading.getZ() * sin, 0, heading.getX() * sin + heading.getZ() * cos).normalize();
+		}
+		/** Sets the momentum and the cart state behind it in one go. */
+		private void setMomentum(Vector newMomentum){
+			momentum = newMomentum.clone();
+			speed = Math.min(SQUID_TOP_SPEED, momentum.length());
+			if(speed > 1e-4)heading = momentum.clone().normalize();
 		}
 		/**
 		 * Gripping a wall the body climbs at full speed while its momentum runs along the wall. When the grip turns a corner the momentum is directed onto the new wall,
@@ -809,13 +850,13 @@ public class InkWars extends JocEquips {
 			Vector into = gripSide.getDirection();
 			if(previousGripSide != null && previousGripSide != gripSide){
 				cornerTicks = CORNER_TICKS;
-				momentum.subtract(into.clone().multiply(momentum.dot(into))).multiply(0.85);
+				setMomentum(momentum.clone().subtract(into.clone().multiply(momentum.dot(into))).multiply(0.85));
 			}
 			Block feet = p.getLocation().getBlock();
 			rewet(feet.getRelative(gripSide), team, p.getName());
 			rewet(feet.getRelative(gripSide).getRelative(BlockFace.UP), team, p.getName());
 			steer(moved);
-			momentum.subtract(into.clone().multiply(momentum.dot(into))); // along the wall only
+			setMomentum(momentum.clone().subtract(into.clone().multiply(momentum.dot(into)))); // along the wall only
 			double climb = cornerTicks > 0 ? CLIMB_SPEED * 0.55 : CLIMB_SPEED;
 			p.setVelocity(new Vector(momentum.getX() + into.getX() * 0.1, climb, momentum.getZ() + into.getZ() * 0.1));
 		}
@@ -878,7 +919,7 @@ public class InkWars extends JocEquips {
 			surfaceQuietly();
 			charge = 0;
 			pendingSurge = -1;
-			momentum = new Vector();
+			setMomentum(new Vector());
 			alivePaintedBlocks *= 0.8; //Reduce player points by 20%
 			getPlayer().setLevel(alivePaintedBlocks);
 			sendPlayerMessage(getPlayer(), ChatColor.RED + "You have lost 20% of your points");
