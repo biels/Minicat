@@ -64,6 +64,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.Tag;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
@@ -117,10 +118,23 @@ public class ObsidianDefenders extends JocEquips {
 	private static final long GOLEM_INICIAL_TICKS = 60 * 20;
 	/** Every player starts with this much gold, so the first purchase happens in the first minute. */
 	private static final int INITIAL_GOLD = 12;
-	/** The nether star reaches enemies this far from its user; it used to reach the whole map. */
+	/**
+	 * The nether star (Biel, 2026-09-07 night: epic for newbies, counterable for tryhards):
+	 * its arrival in a chest is announced with a beam so both teams run for it; a right
+	 * click charges it for two seconds, glowing and audible to the whole map, and then it
+	 * strikes the enemies within its radius. It used to reach the whole map at once.
+	 */
 	private static final double NETHER_STAR_RADIUS = 30;
-	/** Chance, per chest opened, of a nether star; was 6. */
-	private static final int NETHER_STAR_CHEST_CHANCE = 4;
+	private static final int NETHER_STAR_CHEST_CHANCE = 6;
+	private static final long NETHER_STAR_CHARGE_TICKS = 40;
+	/** A beam over a chest that holds a star or a hero snowball: this tall, redrawn this often, until the item is taken. */
+	private static final int LOOT_BEAM_HEIGHT = 14;
+	private static final long LOOT_BEAM_PERIOD_TICKS = 5;
+	/** Catch-up: the team behind by this many kills gets this much more passive gold per player per cycle. */
+	private static final int CATCH_UP_KILL_GAP = 3;
+	private static final int CATCH_UP_GOLD = 1;
+	/** The gold block's passive income per cycle; at its price it pays for itself in about three and a half minutes. */
+	private static final int GOLD_BLOCK_PASSIVE_GOLD = 3;
 	/**
 	 * Closure (Biel, 2026-09-07 night: "after a certain minute, kills to the enemy team start
 	 * spawning wither skeletons, as minions, one per kill"): from this second on, every
@@ -128,6 +142,11 @@ public class ObsidianDefenders extends JocEquips {
 	 * killer's lane to the enemy base; its kills are the owner's, so each raises another.
 	 */
 	private static final int SUDDEN_DEATH_SECOND = 15 * 60;
+	private static final int SUDDEN_DEATH_WARNING_SECONDS = 60;
+	/** Each death to a wither skeleton costs this much max health on respawn, down to the floor. */
+	private static final double WITHER_DEATH_MAX_HEALTH_LOSS = 2;
+	private static final double MIN_MAX_HEALTH = 4;
+	private static final double FULL_MAX_HEALTH = 20;
 	private static final int WITHER_SKELETON_HEALTH = 40;
 	private static final double WITHER_SKELETON_DAMAGE = 8;
 	private static final int WITHER_SKELETON_WITHER_TICKS = 10 * 20;
@@ -208,6 +227,14 @@ public class ObsidianDefenders extends JocEquips {
 	/** Victim → game second until which snowballs neither charge nor spend a cage on them. */
 	private final Map<UUID, Integer> iceCageGraceUntil = new HashMap<>();
 	private boolean suddenDeath;
+	/** Team id → kills by that team this match; the shop sign shows them and the catch-up rule reads them. */
+	private final Map<Integer, Integer> killsByTeam = new HashMap<>();
+	/** Team id → the sign by that team's shop that shows both teams' kills. */
+	private final Map<Integer, Block> killsSigns = new HashMap<>();
+	/** Player → the task that will discharge the star they are charging. */
+	private final Map<UUID, Integer> starChargeTasks = new HashMap<>();
+	/** Player → deaths to a wither skeleton this match. */
+	private final Map<UUID, Integer> witherDeaths = new HashMap<>();
 
 	boolean debug = false;
 	/** Team id → block positions of the TNT that is that team's base core. */
@@ -358,7 +385,7 @@ public class ObsidianDefenders extends JocEquips {
 		ARC(Material.BOW, 1, 12, "Arc", null),
 		PIC_FERRO(Material.IRON_PICKAXE, 1, 12, "Pic de ferro", "+30 dany al golem"),
 		PITRAL_FERRO(Material.IRON_CHESTPLATE, 1, 18, "Pitral de ferro", null),
-		BLOC_OR(Material.GOLD_BLOCK, 1, 25, "Bloc d'or", "+2 or cada " + (CICLE_COFRES_TICKS / 20) + " segons"),
+		BLOC_OR(Material.GOLD_BLOCK, 1, 20, "Bloc d'or", "+" + GOLD_BLOCK_PASSIVE_GOLD + " or cada " + (CICLE_COFRES_TICKS / 20) + " s: es paga sol en 3,5 min"),
 		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", null),
 		QUARS(Material.QUARTZ, 1, 15, "Quars", "Mentre el portis, els teus nous ninots disparen un 50 % més ràpid"),
 		CALCES_DIAMANT(Material.DIAMOND_LEGGINGS, 1, 30, "Calces de diamant", null),
@@ -384,7 +411,7 @@ public class ObsidianDefenders extends JocEquips {
 	 * is the quietest channel there is: read only when hovered, never repeated.
 	 */
 	private enum Objecte {
-		ESTRELLA_DEL_NETHER(Material.NETHER_STAR, "Estrella del Nether", "Clic dret: els enemics a menys de " + (int) NETHER_STAR_RADIUS + " blocs", "a 1 cor i lents 20 s; aliats ràpids 20 s.", "Es converteix en estrella de foc."),
+		ESTRELLA_DEL_NETHER(Material.NETHER_STAR, "Estrella infernal", "Clic dret: es carrega " + NETHER_STAR_CHARGE_TICKS / 20 + " s i els enemics", "a menys de " + (int) NETHER_STAR_RADIUS + " blocs queden a 1 cor i lents 20 s;", "aliats ràpids 20 s. Es converteix en estrella de foc."),
 		ESTRELLA_DE_FOC(Material.FIREWORK_STAR, "Estrella de foc", "Amb ella a l'inventari, una fletxa disparada", "des de dalt explota en caure."),
 		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma", "Clic dret: crema tot l'equip enemic 3 s."),
 		MARAGDA(Material.EMERALD, "Maragda", "Clic dret: +1 cor a tot el teu equip."),
@@ -566,6 +593,9 @@ public class ObsidianDefenders extends JocEquips {
 		guardianSlayerTeam = null;
 		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
 		suddenDeath = false;
+		killsByTeam.clear();
+		witherDeaths.clear();
+		scheduleGameplayTask(this::warnSuddenDeath, (SUDDEN_DEATH_SECOND - SUDDEN_DEATH_WARNING_SECONDS) * 20L);
 		scheduleGameplayTask(this::startSuddenDeath, SUDDEN_DEATH_SECOND * 20L);
 		scheduleGameplayRepeatingTask(this::presènciaDelGuardià, 20, 20);
 	}
@@ -596,7 +626,13 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected void donarEfectesInicials(Player ply) {
 		ply.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 25 * 20, 2, false), true);
+		setMaxHealth(ply, FULL_MAX_HEALTH);
 		donarOr(ply, INITIAL_GOLD);
+	}
+
+	private static void setMaxHealth(Player ply, double maxHealth) {
+		ply.getAttribute(Attribute.MAX_HEALTH).setBaseValue(maxHealth);
+		if (ply.getHealth() > maxHealth) ply.setHealth(maxHealth);
 	}
 
 	/** Gold, pickaxes and consumables survive death: the economy is the game. */
@@ -861,7 +897,34 @@ public class ObsidianDefenders extends JocEquips {
 		for (ItemStack loot : lootCofre()) {
 			int slot = Utils.NombreEntre(0, inv.getSize() - 1);
 			if (inv.getItem(slot) == null) inv.setItem(slot, loot); else inv.addItem(loot);
+			Objecte objecte = Objecte.de(loot);
+			if (objecte == Objecte.ESTRELLA_DEL_NETHER) announceLoot(b, objecte, Particle.FLAME, ChatColor.RED + "Una estrella infernal" + ChatColor.WHITE + " ha aparegut a la jungla!");
+			if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) announceLoot(b, objecte, Particle.END_ROD, ChatColor.AQUA + "Una bola de neu encantada" + ChatColor.WHITE + " ha aparegut a la jungla!");
 		}
+	}
+
+	/**
+	 * Randomise where and when, never the outcome (Biel, 2026-09-07 night): a prize in a
+	 * chest is announced to everyone and a beam stands over the chest until the prize is
+	 * taken or the chest closes, so both teams can run for it.
+	 */
+	private void announceLoot(Block chest, Objecte prize, Particle beam, String announcement) {
+		sendGlobalMessage(announcement);
+		for (Player p : getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_BELL_RESONATE, 0.6F, 1.4F);
+		Location base = chest.getLocation().add(0.5, 1, 0.5);
+		int[] taskId = new int[1];
+		taskId[0] = scheduleGameplayRepeatingTask(() -> {
+			if (!JocEnMarxa() || !(chest.getState() instanceof Chest open) || !holdsPrize(open.getInventory(), prize)) {
+				Bukkit.getScheduler().cancelTask(taskId[0]);
+				return;
+			}
+			for (int i = 0; i < 4; i++) world.spawnParticle(beam, base.clone().add(0, Math.random() * LOOT_BEAM_HEIGHT, 0), 1, 0, 0, 0, 0);
+		}, 0, LOOT_BEAM_PERIOD_TICKS);
+	}
+
+	private static boolean holdsPrize(Inventory inv, Objecte prize) {
+		for (ItemStack item : inv.getContents()) if (item != null && Objecte.de(item) == prize) return true;
+		return false;
 	}
 
 	/** The 2013 loot table, one roll per line. */
@@ -909,8 +972,13 @@ public class ObsidianDefenders extends JocEquips {
 		int or = 1;
 		Inventory inv = p.getInventory();
 		if (inv.contains(Material.GOLD_BLOCK)) {
-			sendPlayerMessage(p, ChatColor.GRAY + "Bloc d'or --> +2 Or passiu");
-			or += 2;
+			sendPlayerMessage(p, ChatColor.GRAY + "Bloc d'or --> +" + GOLD_BLOCK_PASSIVE_GOLD + " Or passiu");
+			or += GOLD_BLOCK_PASSIVE_GOLD;
+		}
+		Equip team = obtenirEquip(p);
+		if (team != null && killsBehind(team) >= CATCH_UP_KILL_GAP) {
+			sendPlayerMessage(p, ChatColor.GRAY + "Remuntada --> +" + CATCH_UP_GOLD + " Or passiu");
+			or += CATCH_UP_GOLD;
 		}
 		if (inv.contains(Material.GOLDEN_PICKAXE)) {
 			sendPlayerMessage(p, ChatColor.GRAY + "Pic d'or --> +3 Or passiu");
@@ -983,6 +1051,9 @@ public class ObsidianDefenders extends JocEquips {
 	protected void onPlayerPickupItem(PlayerPickupItemEvent evt, Player p) {
 		super.onPlayerPickupItem(evt, p);
 		Item item = evt.getItem();
+		Objecte objecte = Objecte.de(item.getItemStack());
+		if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) hint(p, "superninot", "Bola de neu encantada: llança-la i en surt un superninot, més abast i més ràpid");
+		if (objecte == Objecte.ESTRELLA_DEL_NETHER) hint(p, "estrella", "Estrella infernal: clic dret, " + NETHER_STAR_CHARGE_TICKS / 20 + " s de càrrega, i els enemics a " + (int) NETHER_STAR_RADIUS + " blocs queden a 1 cor");
 		if (item.getItemStack().getType() != Material.DIAMOND_PICKAXE) return;
 		if (item.getLocation().distance(puntPicDiamant()) < 1.5) {
 			int or = 3;
@@ -1110,6 +1181,8 @@ public class ObsidianDefenders extends JocEquips {
 	protected void customLeave(Player ply, List<String> attatchments) {
 		super.customLeave(ply, attatchments);
 		if (barraGuardià != null) ply.hideBossBar(barraGuardià);
+		cancelStarCharge(ply);
+		setMaxHealth(ply, FULL_MAX_HEALTH);
 		Block shown = shownPressedPlate.remove(ply.getUniqueId());
 		if (shown != null) ply.sendBlockChange(shown.getLocation(), shown.getBlockData());
 	}
@@ -1146,7 +1219,7 @@ public class ObsidianDefenders extends JocEquips {
 		Player p = ((IronGolem) e).getKiller();
 		if (p != null) {
 			donarOr(p, OR_PER_GOLEM);
-			p.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 3 * 60 * 20, 1, false), true);
+			p.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 3 * 60 * 20, 0, false), true);
 			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 1, false), true);
 			p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3 * 60 * 20, 1, false), true);
 			PaperMessages.sendActionBar(p, ChatColor.AQUA + "Benedicció del Guardià", 60);
@@ -1320,18 +1393,73 @@ public class ObsidianDefenders extends JocEquips {
 				} else if (text.contains("sewers")) {
 					escriureRètol(bloc, ChatColor.DARK_GRAY + "Clavegueres", ChatColor.GRAY + "obertes", "", "");
 				} else {
+					boolean booth = false;
 					for (Parada parada : Parada.values()) {
 						if (!text.contains(parada.rètolOriginal)) continue;
+						booth = true;
+						boothSigns.add(bloc);
 						escriureRètol(bloc, ChatColor.GOLD + parada.nom, ChatColor.GRAY + parada.ofici, "", "");
 						Villager botiguer = villagerDeLaParada(bloc.getLocation());
 						adoptarBotiguer(botiguer, new ParadaDeLEquip(parada, e));
 					}
+					if (!booth) unusedSigns.add(rètol);
 				}
 			}
 			if (!rètolsPont.containsKey(e.getId())) {
 				plugin.getLogger().warning(getGameName() + " " + getMapName() + ": no bridge sign within " + RADI_RÈTOLS + " blocks of base" + e.getId());
 			}
+			registerKillsSign(e, boothSigns, unusedSigns);
+			boothSigns.clear();
+			unusedSigns.clear();
 		}
+	}
+
+	private final List<Block> boothSigns = new ArrayList<>();
+	private final List<Sign> unusedSigns = new ArrayList<>();
+
+	/**
+	 * The kills sign (Biel, 2026-09-07 night: "on one of the currently unused signs in the
+	 * shop area, so we don't overcrowd the scoreboard"): the block a {@code RètolKills<team>}
+	 * map property names, else the unmatched sign nearest the booths. Every unmatched sign
+	 * is logged with its text so the property can be set once the right one is known.
+	 */
+	private void registerKillsSign(Equip e, List<Block> booths, List<Sign> unused) {
+		String property = "RètolKills" + e.getId();
+		Block chosen = pMapaActual().ExisteixPropietat(property) ? pMapaActual().ObtenirLocation(property, world).getBlock() : null;
+		if (chosen == null && !booths.isEmpty() && !unused.isEmpty()) {
+			Vector centre = new Vector();
+			for (Block b : booths) centre.add(b.getLocation().toVector());
+			centre.multiply(1.0 / booths.size());
+			Sign nearest = null;
+			double best = Double.MAX_VALUE;
+			for (Sign sign : unused) {
+				double d = sign.getLocation().toVector().distanceSquared(centre);
+				if (d < best) { best = d; nearest = sign; }
+			}
+			chosen = nearest.getBlock();
+		}
+		for (Sign sign : unused) {
+			plugin.getLogger().info(getGameName() + " base" + e.getId() + " unused sign at " + sign.getX() + "," + sign.getY() + "," + sign.getZ() + ": \"" + String.join(" / ", sign.getSide(Side.FRONT).getLines()) + "\"" + (chosen != null && sign.getBlock().equals(chosen) ? " (kills sign)" : ""));
+		}
+		if (chosen == null) return;
+		killsSigns.put(e.getId(), chosen);
+		writeKillsSigns();
+	}
+
+	private void writeKillsSigns() {
+		String[] lines = new String[4];
+		lines[0] = ChatColor.GOLD + "Kills";
+		int i = 1;
+		for (Equip e : Equips) if (i < 4) lines[i++] = e.getChatColor() + e.getAdjectiu() + ": " + killsByTeam.getOrDefault(e.getId(), 0);
+		while (i < 4) lines[i++] = "";
+		for (Block sign : killsSigns.values()) if (sign.getState() instanceof Sign) escriureRètol(sign, lines);
+	}
+
+	/** How many kills this team trails the best other team by; zero when level or ahead. */
+	private int killsBehind(Equip team) {
+		int best = 0;
+		for (Equip other : Equips) if (other != team) best = Math.max(best, killsByTeam.getOrDefault(other.getId(), 0));
+		return Math.max(0, best - killsByTeam.getOrDefault(team.getId(), 0));
 	}
 
 	private List<Sign> rètolsAlVoltant(Location centre, int radi) {
@@ -2126,6 +2254,7 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
 		super.onPlayerDeath(evt, killed);
+		cancelStarCharge(killed);
 		boolean explotat = false;
 		Player player = killed;
 		Location location = player.getLocation();
@@ -2173,6 +2302,13 @@ public class ObsidianDefenders extends JocEquips {
 		if (explotat) {
 			Or = Or + 1;
 		}
+		// The carried-item bounties count before the caps, so the ceiling is the 25 and 30 they name.
+		if (player.getInventory().contains(Material.DIAMOND_PICKAXE)) {
+			Or = Or + 1;
+		}
+		if (player.getInventory().contains(Material.GOLD_BLOCK)) {
+			Or = Or + 1;
+		}
 		if (Or >= 25) {
 			Or = 25;
 		}
@@ -2182,12 +2318,6 @@ public class ObsidianDefenders extends JocEquips {
 			if (Or >= 30) {
 				Or = 30;
 			}
-		}
-		if (player.getInventory().contains(Material.DIAMOND_PICKAXE)) {
-			Or = Or + 1;
-		}
-		if (player.getInventory().contains(Material.GOLD_BLOCK)) {
-			Or = Or + 1;
 		}
 		if (areAllies(player, killer)) {
 			Or = 0;
@@ -2208,9 +2338,12 @@ public class ObsidianDefenders extends JocEquips {
 		if (picDOr) {
 			evt.setDeathMessage(killer.getName() + " ha matat amb el pic d'or a " + player.getName() + "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")(" + ChatColor.GOLD + "x3" + ChatColor.WHITE + ")");
 		}
-		SnowmanMinion ninot = explotat || picDOr ? null : snowmanThatKilled(player);
-		if (ninot != null) {
+		Minion minionKiller = explotat || picDOr ? null : minionThatKilled(player);
+		if (minionKiller instanceof SnowmanMinion ninot) {
 			evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + " amb un " + ninot.noun() + " de " + ninot.kind().label + " (" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
+		} else if (minionKiller instanceof LaneMinion skeleton) {
+			int deaths = witherDeaths.merge(player.getUniqueId(), 1, Integer::sum);
+			evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + " amb un " + skeleton.kind().label().toLowerCase() + " (" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")" + ChatColor.DARK_RED + " -1 cor màxim (" + deaths + ")");
 		}
 		if (Ability.hasAbility(plugin, this, player, AbilityType.CREEPER)) {
 			float explopower = 0.8F + (mortsMort / 2);
@@ -2220,6 +2353,11 @@ public class ObsidianDefenders extends JocEquips {
 		pTemp().EstablirPropietat(player.getName() + "Morts", "0");
 		if (Or != 0) {
 			pPlayer(killer).IncrementarPropietat("Assassinats");
+			Equip killerTeam = obtenirEquip(killer);
+			if (killerTeam != null) {
+				killsByTeam.merge(killerTeam.getId(), 1, Integer::sum);
+				writeKillsSigns();
+			}
 			if (suddenDeath) raiseWitherSkeleton(killer, location);
 		}
 		pPlayer(player).IncrementarPropietat("Morts");
@@ -2301,21 +2439,7 @@ public class ObsidianDefenders extends JocEquips {
 		}
 		if (!JocEnMarxa() || obtenirEquip(plyr) == null) return;
 		if (stack.getType() == Material.NETHER_STAR) {
-			// Within its radius only (Biel, 2026-09-07 night): a star must not decide fights it was not part of.
-			int struck = 0;
-			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
-				if (p.getWorld() != plyr.getWorld() || p.getLocation().distance(plyr.getLocation()) > NETHER_STAR_RADIUS) continue;
-				p.setHealth(1);
-				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 20, 4, false), true);
-				struck++;
-			}
-			for (Player p : obtenirEquip(plyr).getPlayers()) {
-				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 3, false), true);
-			}
-			sendGlobalMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha utilitzat una" + ChatColor.BOLD + " nether star" + ChatColor.RESET + " (" + struck + " enemics a prop)!");
-			// The star turns into the charge that makes arrows explosive.
-			stack.setType(Material.FIREWORK_STAR);
-			Objecte.descriure(stack);
+			chargeStar(plyr);
 		}
 		if (stack.getType() == Material.ARROW) {
 			if (stack.getEnchantments().size() >= 1) {
@@ -2521,25 +2645,100 @@ public class ObsidianDefenders extends JocEquips {
 		segonsÚltimCopRebut.put(victim.getUniqueId(), now);
 	}
 
-	/** The snowman whose snowball landed the killing hit, if one did. */
-	private SnowmanMinion snowmanThatKilled(Player victim) {
+	/** The minion that landed the killing hit, by its body or by its projectile, if one did. */
+	private Minion minionThatKilled(Player victim) {
 		if (!(victim.getLastDamageCause() instanceof EntityDamageByEntityEvent cause)) return null;
-		if (!(cause.getDamager() instanceof Snowball ball) || !(ball.getShooter() instanceof Entity shooter)) return null;
-		return minionOf(shooter) instanceof SnowmanMinion snowman ? snowman : null;
+		Entity damager = cause.getDamager();
+		Minion minion = minionOf(damager);
+		if (minion == null && damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) minion = minionOf(shooter);
+		return minion;
+	}
+
+	//---------- The infernal star: a charge everyone hears, then a blast within its radius ----------
+
+	/** The wind-up: the user glows and the whole map hears it; two seconds later the star goes off if the user still lives and holds it. */
+	private void chargeStar(Player plyr) {
+		if (starChargeTasks.containsKey(plyr.getUniqueId())) return;
+		plyr.setGlowing(true);
+		for (Player p : getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1F, 1.6F);
+		sendGlobalMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " carrega una " + ChatColor.RED + "estrella infernal" + ChatColor.WHITE + "!");
+		starChargeTasks.put(plyr.getUniqueId(), scheduleGameplayTask(() -> dischargeStar(plyr), NETHER_STAR_CHARGE_TICKS));
+	}
+
+	private void dischargeStar(Player plyr) {
+		starChargeTasks.remove(plyr.getUniqueId());
+		plyr.setGlowing(false);
+		if (!JocEnMarxa() || !plyr.isOnline() || plyr.isDead() || obtenirEquip(plyr) == null) return;
+		ItemStack star = null;
+		for (ItemStack item : plyr.getInventory().getContents()) if (item != null && item.getType() == Material.NETHER_STAR) { star = item; break; }
+		if (star == null) return;
+		// Within its radius only: a star must not decide fights it was not part of.
+		int struck = 0;
+		for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+			if (p.getWorld() != plyr.getWorld() || p.getLocation().distance(plyr.getLocation()) > NETHER_STAR_RADIUS) continue;
+			p.setHealth(1);
+			p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 20, 4, false), true);
+			struck++;
+		}
+		for (Player p : obtenirEquip(plyr).getPlayers()) {
+			p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 3, false), true);
+		}
+		world.playSound(plyr.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, 1.5F, 0.8F);
+		world.spawnParticle(Particle.FLAME, plyr.getLocation().add(0, 1, 0), 120, 2, 1, 2, 0.05);
+		sendGlobalMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha fet esclatar l'" + ChatColor.RED + "estrella infernal" + ChatColor.WHITE + " (" + struck + " enemics a prop)!");
+		// The star turns into the charge that makes arrows explosive.
+		star.setType(Material.FIREWORK_STAR);
+		Objecte.descriure(star);
+	}
+
+	/** Dying, or leaving, while charging: the charge is lost and the star falls where the player stood. */
+	private void cancelStarCharge(Player plyr) {
+		Integer task = starChargeTasks.remove(plyr.getUniqueId());
+		if (task == null) return;
+		Bukkit.getScheduler().cancelTask(task);
+		plyr.setGlowing(false);
+		for (ItemStack item : plyr.getInventory().getContents()) {
+			if (item == null || item.getType() != Material.NETHER_STAR) continue;
+			consumirUn(item);
+			world.dropItemNaturally(plyr.getLocation(), Objecte.ESTRELLA_DEL_NETHER.nou());
+			break;
+		}
 	}
 
 	//---------- Sudden death: wither skeletons from kills ----------
 
-	/** The match has run long: from now on every kill raises a wither skeleton. Announced once. */
+	private void warnSuddenDeath() {
+		if (!JocEnMarxa()) return;
+		sendGlobalMessage(ChatColor.DARK_RED + "Mort sobtada d'aquí a " + SUDDEN_DEATH_WARNING_SECONDS / 60 + " min: " + ChatColor.WHITE + "tothom quedarà a 1 cor, i cada kill aixecarà un esquelet wither.");
+		for (Player p : getPlayers()) p.playSound(p.getLocation(), Sound.ENTITY_WITHER_AMBIENT, 0.4F, 0.6F);
+	}
+
+	/**
+	 * The match has run long (Biel, 2026-09-07 night: "leave everyone at 1 hp, as if a global
+	 * nether star had been used, and who wins that battle is who spawns wither skeletons"):
+	 * everyone drops to 1 hp, and from now on every kill raises a wither skeleton. Announced once.
+	 */
 	private void startSuddenDeath() {
 		if (!JocEnMarxa()) return;
 		suddenDeath = true;
 		for (Player p : getPlayers()) {
-			PaperMessages.showTitle(p, 10, 70, 20, ChatColor.DARK_RED + "Mort sobtada", ChatColor.GRAY + "Cada kill aixeca un esquelet wither");
+			if (!p.isDead() && !isSpectator(p)) p.setHealth(1);
+			PaperMessages.showTitle(p, 10, 70, 20, ChatColor.DARK_RED + "Mort sobtada", ChatColor.GRAY + "Tothom a 1 cor. Cada kill aixeca un esquelet wither");
 			p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, 0.5F, 1.2F);
 		}
-		sendGlobalMessage(ChatColor.DARK_RED + "Mort sobtada: " + ChatColor.WHITE + "a partir d'ara cada kill aixeca un esquelet wither al costat del mort, que marxa cap a la base enemiga i lluita per qui l'ha aixecat.");
+		sendGlobalMessage(ChatColor.DARK_RED + "Mort sobtada: " + ChatColor.WHITE + "tothom a 1 cor. A partir d'ara cada kill aixeca un esquelet wither al costat del mort, que marxa cap a la base enemiga i lluita per qui l'ha aixecat; morir per un esquelet costa 1 cor de vida màxima.");
 		updateScoreBoards();
+	}
+
+	/** A player who died to a wither skeleton comes back with less: one heart of max health per such death, never below two. */
+	@Override
+	protected void onPlayerRespawnAfterTick(PlayerRespawnEvent evt, Player p) {
+		super.onPlayerRespawnAfterTick(evt, p);
+		int deaths = witherDeaths.getOrDefault(p.getUniqueId(), 0);
+		double maxHealth = Math.max(MIN_MAX_HEALTH, FULL_MAX_HEALTH - WITHER_DEATH_MAX_HEALTH_LOSS * deaths);
+		setMaxHealth(p, maxHealth);
+		p.setHealth(maxHealth);
+		if (deaths > 0) PaperMessages.sendActionBar(p, ChatColor.DARK_RED + "Un esquelet wither t'ha pres vida màxima: " + (int) (maxHealth / 2) + " cors", 80);
 	}
 
 	/** A wither skeleton rises where the victim fell, owned by the killer, and walks the killer's team's lane. */
