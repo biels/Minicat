@@ -89,7 +89,7 @@ public class ObsidianDefenders extends JocEquips {
 	private static final Vector PIC_DIAMANT_2013 = new Vector(661, 42, -1398);
 	private static final long CICLE_COFRES_TICKS = 32 * 20;
 	private static final int MAX_COFRES_OBERTS = 8;
-	private static final long PRIMER_PIC_TICKS = 4 * 60 * 20;
+	private static final long PRIMER_PIC_TICKS = 3 * 60 * 20;
 	private static final long PERIODE_PIC_TICKS = 2 * 60 * 20;
 	private static final long GOLEM_INICIAL_TICKS = 5 * 20;
 	private static final int OR_PER_GOLEM = 22;
@@ -272,7 +272,7 @@ public class ObsidianDefenders extends JocEquips {
 	protected ArrayList<String> getGameInfo(Player p) {
 		ArrayList<String> info = new ArrayList<>();
 		info.add("Fes explotar la TNT de la base enemiga. L'obsidiana es pot trencar.");
-		info.add("Els cofres de la jungla canvien de lloc cada 32 s; el pic de diamant cau al mig als 4 min.");
+		info.add("Els cofres de la jungla canvien de lloc cada 32 s; el pic de diamant cau al mig als 3 min.");
 		info.add("L'or paga tot: matar, obrir cofres, matar el Guardià.");
 		info.add("El Guardià viu sota el mig: matar-lo dona " + OR_PER_GOLEM + " d'or i 3 min de Resistència i Velocitat.");
 		return info;
