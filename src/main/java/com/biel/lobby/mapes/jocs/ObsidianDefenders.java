@@ -1,6 +1,7 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -310,6 +311,73 @@ public class ObsidianDefenders extends JocEquips {
 	private record ParadaDeLEquip(Parada parada, Equip equip) {}
 	private final Map<UUID, ParadaDeLEquip> botiguers = new HashMap<>();
 
+	//---------- The enchanting tables ----------
+
+	/** Where an enchanting table stands: in a base, or on the canopy altars at the top of the jungle. */
+	private enum Forja {
+		BASE(ChatColor.GOLD + "Taula d'encantar"),
+		CAPÇADA(ChatColor.LIGHT_PURPLE + "Altar de la capçada");
+
+		final String títol;
+		Forja(String títol) {
+			this.títol = títol;
+		}
+	}
+
+	/**
+	 * What the tables sell, paid in gold, no lapis and no experience. A base table offers
+	 * the simple line up to its base level; the canopy altars, a long climb away from the
+	 * fight, offer every line up to its canopy level. Each purchase is the next level of
+	 * what the item already has, at the line's price times that level.
+	 */
+	private enum Encantament {
+		RETROCÉS("Retrocés", Enchantment.KNOCKBACK, "L'espasa empeny l'enemic en colpejar-lo", 1, 2, 10),
+		EMPENTA("Empenta", Enchantment.PUNCH, "Les fletxes empenyen l'enemic", 1, 2, 10),
+		FLAMA("Flama", Enchantment.FLAME, "Les fletxes encenen l'enemic", 1, 1, 15),
+		EFICIÈNCIA("Eficiència", Enchantment.EFFICIENCY, "Trenca l'obsidiana més de pressa", 1, 3, 15),
+		ESMOLAT("Esmolat", Enchantment.SHARPNESS, "Més dany amb l'espasa", 0, 3, 20),
+		POTÈNCIA("Potència", Enchantment.POWER, "Més dany amb l'arc", 0, 3, 20),
+		ASPECTE_DE_FOC("Aspecte de foc", Enchantment.FIRE_ASPECT, "L'espasa encén l'enemic", 0, 1, 25),
+		PROTECCIÓ("Protecció", Enchantment.PROTECTION, "Menys dany rebut", 0, 2, 20);
+
+		final String nom;
+		final Enchantment encantament;
+		final String descripció;
+		final int nivellMàximBase;
+		final int nivellMàximCapçada;
+		final int preuPerNivell;
+		Encantament(String nom, Enchantment encantament, String descripció, int nivellMàximBase, int nivellMàximCapçada, int preuPerNivell) {
+			this.nom = nom;
+			this.encantament = encantament;
+			this.descripció = descripció;
+			this.nivellMàximBase = nivellMàximBase;
+			this.nivellMàximCapçada = nivellMàximCapçada;
+			this.preuPerNivell = preuPerNivell;
+		}
+
+		int nivellMàxim(Forja forja) {
+			return forja == Forja.BASE ? nivellMàximBase : nivellMàximCapçada;
+		}
+
+		/** The level this table would put on the item, or 0 when the item cannot take it or has all this table gives. */
+		int nivellSegüent(Forja forja, ItemStack item) {
+			if (item == null || item.getType() == Material.AIR || !encantament.canEnchantItem(item)) return 0;
+			int següent = item.getEnchantmentLevel(encantament) + 1;
+			return següent <= nivellMàxim(forja) ? següent : 0;
+		}
+
+		int preu(int nivell) {
+			return preuPerNivell * nivell;
+		}
+	}
+
+	/** An enchanting table of the map and, for the ones in a base, the team whose base it is. */
+	private record TaulaDEncantar(Forja forja, Integer equip) {}
+	private final Map<Block, TaulaDEncantar> taulesDEncantar = new HashMap<>();
+	/** A base's tables stand at the base's level within the sign radius; anything higher is the canopy. */
+	private static final int ALÇADA_TAULES_DE_BASE = 3;
+	private static final String[] NIVELLS_ROMANS = { "", "I", "II", "III", "IV", "V" };
+
 	public ObsidianDefenders() {
 	}
 
@@ -325,6 +393,7 @@ public class ObsidianDefenders extends JocEquips {
 		setGiveStartingItemsRespawn(false);
 		registrarNuclis();
 		registrarControlsIParades();
+		registrarTaulesDEncantar();
 		registrarPonts();
 		registerControlPointsAndLamps();
 		emptyDispensers();
@@ -389,6 +458,7 @@ public class ObsidianDefenders extends JocEquips {
 		info.add("El Guardià viu sota el mig: matar-lo dona " + OR_PER_GOLEM + " d'or i 3 min de Resistència i Velocitat.");
 		info.add("Una bola de neu llançada fa aparèixer un ninot de neu que marxa cap a la base enemiga disparant (màxim " + MAX_SNOWMEN_PER_PLAYER + " per jugador).");
 		info.add("Trepitja la teva placa als punts de control del mig: cada punt capturat carrega el pont del teu equip.");
+		info.add("Les taules d'encantar de la base fan encantaments senzills amb or; els altars de dalt de la capçada, els bons.");
 		return info;
 	}
 
@@ -1130,6 +1200,81 @@ public class ObsidianDefenders extends JocEquips {
 		return true;
 	}
 
+	/**
+	 * Finds the map's enchanting tables between the bases and a little beyond them. A table
+	 * at a base's level within the sign radius belongs to that base; the rest are the
+	 * canopy altars, which anyone may use.
+	 */
+	private void registrarTaulesDEncantar() {
+		taulesDEncantar.clear();
+		if (Equips.size() < 2) return;
+		Location a = Equips.get(0).getTeamSpawnLocation(), b = Equips.get(1).getTeamSpawnLocation();
+		int minX = Math.min(a.getBlockX(), b.getBlockX()) - RADI_RÈTOLS, maxX = Math.max(a.getBlockX(), b.getBlockX()) + RADI_RÈTOLS;
+		int midZ = (a.getBlockZ() + b.getBlockZ()) / 2;
+		for (Block taula : blocksBetween(minX, midZ - RADI_RÈTOLS, maxX, midZ + RADI_RÈTOLS, m -> m == Material.ENCHANTING_TABLE)) {
+			TaulaDEncantar registre = new TaulaDEncantar(Forja.CAPÇADA, null);
+			for (Equip e : Equips) {
+				Location base = e.getTeamSpawnLocation();
+				boolean alNivellDeLaBase = Math.abs(taula.getY() - base.getBlockY()) <= ALÇADA_TAULES_DE_BASE;
+				boolean aLaBase = Math.abs(taula.getX() - base.getBlockX()) <= RADI_RÈTOLS && Math.abs(taula.getZ() - base.getBlockZ()) <= RADI_RÈTOLS;
+				if (alNivellDeLaBase && aLaBase) registre = new TaulaDEncantar(Forja.BASE, e.getId());
+			}
+			taulesDEncantar.put(taula, registre);
+		}
+		long alsAltars = taulesDEncantar.values().stream().filter(t -> t.forja() == Forja.CAPÇADA).count();
+		plugin.getLogger().info(getGameName() + " " + getMapName() + ": " + (taulesDEncantar.size() - alsAltars) + " base enchanting tables and " + alsAltars + " canopy altars");
+	}
+
+	/** A click on a table: never the vanilla screen; the team's tables refuse the enemy. */
+	private void obrirTaulaDEncantar(Player p, TaulaDEncantar taula) {
+		if (!JocEnMarxa()) return;
+		Equip equip = obtenirEquip(p);
+		if (equip == null) return;
+		if (taula.equip() != null && taula.equip() != equip.getId()) {
+			rebutjarElementEnemic(p);
+			return;
+		}
+		Forja forja = taula.forja();
+		ItemStack item = p.getInventory().getItemInMainHand();
+		List<Encantament> ofertes = new ArrayList<>();
+		for (Encantament encantament : Encantament.values()) if (encantament.nivellSegüent(forja, item) > 0) ofertes.add(encantament);
+		if (ofertes.isEmpty()) {
+			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			boolean resEncantable = item == null || item.getType() == Material.AIR || Arrays.stream(Encantament.values()).noneMatch(e -> e.encantament.canEnchantItem(item));
+			p.sendMessage(ChatColor.GRAY + (resEncantable
+					? "Agafa a la mà el que vols encantar: espasa, arc, pic o armadura."
+					: forja == Forja.BASE ? "La taula de la base no pot encantar més això: puja als altars de la capçada." : "L'altar ja ha donat tot el que pot a això."));
+			return;
+		}
+		IconMenu menu = new IconMenu(forja.títol, 9, event -> {
+			int posició = event.getPosition();
+			if (posició < ofertes.size()) encantar(event.getPlayer(), forja, ofertes.get(posició));
+			event.setWillClose(true);
+		});
+		for (Encantament encantament : ofertes) {
+			int nivell = encantament.nivellSegüent(forja, item);
+			ArrayList<String> info = new ArrayList<>();
+			info.add(ChatColor.GRAY + encantament.descripció);
+			info.add(ChatColor.WHITE + "Preu: " + ChatColor.GOLD + encantament.preu(nivell) + " or");
+			menu.setOption(ofertes.indexOf(encantament), new ItemStack(Material.ENCHANTED_BOOK), ChatColor.YELLOW + encantament.nom + " " + NIVELLS_ROMANS[nivell], info);
+		}
+		menu.open(p);
+	}
+
+	/** The item is read again at the click: the hand may have changed while the menu was open. */
+	private void encantar(Player p, Forja forja, Encantament encantament) {
+		ItemStack item = p.getInventory().getItemInMainHand();
+		int nivell = encantament.nivellSegüent(forja, item);
+		if (!JocEnMarxa() || nivell == 0 || !gastarOr(p, encantament.preu(nivell))) {
+			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			return;
+		}
+		item.addUnsafeEnchantment(encantament.encantament, nivell);
+		p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1F, 1F);
+		p.sendMessage(ChatColor.LIGHT_PURPLE + encantament.nom + " " + NIVELLS_ROMANS[nivell] + ChatColor.WHITE + " (" + ChatColor.GOLD + "-" + encantament.preu(nivell) + " or" + ChatColor.WHITE + ")");
+		updateScoreBoard(p);
+	}
+
 	//---------- The bridge ----------
 
 	/**
@@ -1757,6 +1902,12 @@ public class ObsidianDefenders extends JocEquips {
 			if (clicat.getType() == Material.DISPENSER || clicat.getType() == Material.DROPPER) {
 				// The 2013 currency dispensers: never fired, never opened.
 				evt.setCancelled(true);
+				return;
+			}
+			if (clicat.getType() == Material.ENCHANTING_TABLE) {
+				evt.setCancelled(true);
+				TaulaDEncantar taula = taulesDEncantar.get(clicat);
+				if (taula != null && evt.getHand() == EquipmentSlot.HAND) obrirTaulaDEncantar(plyr, taula);
 				return;
 			}
 			if (Tag.BUTTONS.isTagged(clicat.getType()) || clicat.getType() == Material.LEVER) {
