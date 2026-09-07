@@ -128,7 +128,8 @@ public class ObsidianDefenders extends JocEquips {
 	private static final Vector[] PONT_MOAT_2013 = { new Vector(644, 37, -1426), new Vector(682, 37, -1374) };
 	private static final String QUADRAT_PLE = "\u25A0";
 	private static final String QUADRAT_BUIT = "\u25A1";
-	private static final int RADI_RÈTOLS = 45;
+	/** The control room is 50 blocks from the spawn on the 2013 map, the farthest booth 46. */
+	private static final int RADI_RÈTOLS = 60;
 
 	/** The three booths of each base, from the spawn doors outward, and what each sells. */
 	private enum Parada {
