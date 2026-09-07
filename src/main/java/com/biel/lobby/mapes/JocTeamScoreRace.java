@@ -17,6 +17,8 @@ public abstract class JocTeamScoreRace extends JocEquips {
 	protected abstract int getFinishScore();
 	
 	public void comprovarGuanyador(){
+		// Every score change asks; once the match is over the answer was already given.
+		if (!JocEnMarxa()) return;
 		EquipScoreRace winner = getOrderedWinnerList().get(0);
 		if (winner.getScore() >= getFinishScore()){
 			sendGlobalMessage(ChatColor.GREEN + "" + ChatColor.BOLD + winner.getDisplayName() + " ha guanyat la partida!");
