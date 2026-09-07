@@ -26,6 +26,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -42,6 +43,7 @@ import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.jocs.inkwars.InkSplash;
 import com.biel.lobby.mapes.jocs.inkwars.InkSurfaceFlow;
 import com.biel.lobby.mapes.jocs.inkwars.WetInk;
+import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
@@ -53,6 +55,9 @@ public class InkWars extends JocEquips {
 	static final double FLOW_STEP = 0.6;
 	static final int TICKS_BETWEEN_FLOW_STEPS = 3;
 	final HashMap<Block, WetInk> wetInk = new HashMap<>();
+	static final BlockFace[] SIDES = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+	/** Ticks of slower climbing after the grip turns a corner. */
+	static final int CORNER_TICKS = 10;
 	final Predicate<Block> solid = block -> !block.isPassable();
 	int wetInkTicks = 0;
 	@Override
@@ -78,7 +83,8 @@ public class InkWars extends JocEquips {
 		i.add("You win by having more than 80% of the map painted");
 		i.add("In this map you level up every " + getBlockCountToLevelUp() + " effectively painted blocks");
 		i.add("The ink won't dry instantly, use it to your advantage");
-		i.add("Sneak on your own colour to dive into the ink: invisible, fast, healing, and you swim up your own walls");
+		i.add("Press sneak once for swim form: on your own colour you dive in, invisible, fast, healing; press again to stand up");
+		i.add("Swimming, face a wall in your colour to climb it at full speed; the grip follows corners; sneak lets go and keeps your momentum");
 		i.add("You reload x4 faster on your own colour, x8 while submerged");
 		return i;
 	}
@@ -913,8 +919,12 @@ public class InkWars extends JocEquips {
 		private int weaponLevel = 1;
 		private int dmgTicks = 0;
 		private int shieldTicks = 0;
+		private boolean swimForm = false;
 		private boolean submerged = false;
 		private int submergedTicks = 0;
+		private BlockFace gripSide = null;
+		private BlockFace previousGripSide = null;
+		private int cornerTicks = 0;
 		//-----
 
 		public InkWarsPlayerInfo() {
@@ -948,12 +958,13 @@ public class InkWars extends JocEquips {
 			EquipInkWars colourUnderfoot = getTeamColorWherePlayerStands();
 			boolean onOwnColour = colourUnderfoot == team;
 			boolean onEnemyColour = colourUnderfoot != null && !onOwnColour && !isShielded();
-			Block ownWallAhead = ownWallAhead(team);
+			gripSide = swimForm && getActiveWeapon() != null ? ownWallBeside(team) : null;
 
-			boolean wantsToSwim = p.isSneaking() && getActiveWeapon() != null && (onOwnColour || ownWallAhead != null);
+			boolean wantsToSwim = swimForm && getActiveWeapon() != null && (onOwnColour || gripSide != null);
 			if(wantsToSwim && !submerged)dive();
 			if(!wantsToSwim && submerged)surface();
-			if(submerged)tickSubmerged(team, ownWallAhead);
+			if(submerged)tickSubmerged(team);
+			previousGripSide = submerged ? gripSide : null;
 
 			applyInkSpeed(onOwnColour, onEnemyColour);
 			tickEnemyInkDamage(onEnemyColour);
@@ -962,16 +973,29 @@ public class InkWars extends JocEquips {
 		public boolean isSubmerged(){
 			return submerged;
 		}
-		/** Sneaking on the team's own colour with a weapon in hand: the body goes under the ink, the armour with it, only a ripple stays visible. */
+		/** One press of sneak switches form: in swim form the body dives wherever it touches its own colour, out of it the player stands whatever the ground. */
+		public void toggleSwimForm(){
+			swimForm = !swimForm;
+			Player p = getPlayer();
+			if(swimForm){
+				p.playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.7F, 1.4F);
+				PaperMessages.sendActionBar(p, obtenirEquip(p).getChatColor() + "Swim form" + ChatColor.GRAY + ": you dive on your own colour", 40);
+			}else{
+				p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_SWIM, 0.6F, 1.2F);
+				PaperMessages.sendActionBar(p, ChatColor.GRAY + "On your feet", 30);
+			}
+		}
+		/** Diving: the body goes under the ink, the armour with it, only a ripple stays visible. */
 		private void dive(){
 			submerged = true;
 			submergedTicks = 0;
+			cornerTicks = 0;
 			Player p = getPlayer();
 			p.getInventory().setArmorContents(null);
 			p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 0.7F);
 			getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 		}
-		/** Coming out of the ink: armour back, a splash of paint where the body surfaces. */
+		/** Coming out of the ink: armour back, a splash of paint where the body surfaces. The velocity is left alone, so letting go of a wall keeps the momentum. */
 		private void surface(){
 			if(!submerged)return;
 			surfaceQuietly();
@@ -984,27 +1008,42 @@ public class InkWars extends JocEquips {
 		/** The flag and the armour only, for a death or a weapon change that re-issues the kit anyway. */
 		private void surfaceQuietly(){
 			submerged = false;
+			gripSide = null;
+			previousGripSide = null;
 			Player p = getPlayer();
 			p.removePotionEffect(PotionEffectType.INVISIBILITY);
 			Utils.donarItemsPlayer(p, getStartingItems(p));
 		}
-		/** The own-colour wall the player faces, at feet or head height, or null. That wall is swimmable. */
-		private Block ownWallAhead(EquipInkWars team){
+		/**
+		 * The side with an own-colour wall against the body, at feet or head height. A climb starts only on the side the player faces;
+		 * once gripped, the grip follows the wall around corners: the facing side first, then the side held last, then any side.
+		 * On the ground, looking away from the wall lets go.
+		 */
+		private BlockFace ownWallBeside(EquipInkWars team){
 			Player p = getPlayer();
-			Vector facing = p.getLocation().getDirection().setY(0);
-			if(facing.lengthSquared() < 0.01)return null;
-			facing.normalize();
 			Block feet = p.getLocation().getBlock();
-			int dx = (int) Math.round(facing.getX());
-			int dz = (int) Math.round(facing.getZ());
-			for(int dy = 0; dy <= 1; dy++){
-				Block wall = feet.getRelative(dx, dy, dz);
-				if(getTeamOwningBlock(wall) == team)return wall;
-			}
+			BlockFace facing = facingSide();
+			if(facing != null && isOwnWall(feet, facing, team))return facing;
+			if(gripSide == null || p.isOnGround())return null;
+			if(isOwnWall(feet, gripSide, team))return gripSide;
+			for(BlockFace side : SIDES)if(isOwnWall(feet, side, team))return side;
 			return null;
 		}
-		/** Submerged: unseen, healing, a ripple in the team colour, up the own-colour wall ahead at full speed; every block the body touches is wet again. */
-		private void tickSubmerged(EquipInkWars team, Block ownWallAhead){
+		private boolean isOwnWall(Block feet, BlockFace side, EquipInkWars team){
+			Block beside = feet.getRelative(side);
+			return getTeamOwningBlock(beside) == team || getTeamOwningBlock(beside.getRelative(BlockFace.UP)) == team;
+		}
+		private BlockFace facingSide(){
+			Vector direction = getPlayer().getLocation().getDirection();
+			if(Math.abs(direction.getX()) < 0.05 && Math.abs(direction.getZ()) < 0.05)return null;
+			if(Math.abs(direction.getX()) > Math.abs(direction.getZ()))return direction.getX() > 0 ? BlockFace.EAST : BlockFace.WEST;
+			return direction.getZ() > 0 ? BlockFace.SOUTH : BlockFace.NORTH;
+		}
+		/**
+		 * Submerged: unseen, healing, a ripple in the team colour, and every block the body touches is wet again. Gripping a wall the body climbs it at full speed,
+		 * slower for half a second after the grip turns a corner; when the wall ends under the climb, the momentum carries the body over the edge onto the top.
+		 */
+		private void tickSubmerged(EquipInkWars team){
 			Player p = getPlayer();
 			submergedTicks++;
 			p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 40, 0, true, false));
@@ -1016,10 +1055,19 @@ public class InkWars extends JocEquips {
 			}
 			Block floor = getBlockWherePlayerStands();
 			if(floor != null)rewet(floor, team, p.getName());
-			if(ownWallAhead != null){
-				rewet(ownWallAhead, team, p.getName());
-				Vector facing = p.getLocation().getDirection().setY(0).normalize();
-				p.setVelocity(new Vector(facing.getX() * 0.12, 0.28, facing.getZ() * 0.12));
+			if(cornerTicks > 0)cornerTicks--;
+			if(gripSide != null){
+				if(previousGripSide != null && previousGripSide != gripSide)cornerTicks = CORNER_TICKS;
+				Block feet = p.getLocation().getBlock();
+				rewet(feet.getRelative(gripSide), team, p.getName());
+				rewet(feet.getRelative(gripSide).getRelative(BlockFace.UP), team, p.getName());
+				double climb = cornerTicks > 0 ? 0.16 : 0.28;
+				Vector into = gripSide.getDirection();
+				Vector current = p.getVelocity();
+				p.setVelocity(new Vector(current.getX() * 0.8 + into.getX() * 0.1, climb, current.getZ() * 0.8 + into.getZ() * 0.1));
+			}else if(previousGripSide != null && !p.isOnGround()){
+				Vector over = previousGripSide.getDirection();
+				p.setVelocity(new Vector(over.getX() * 0.3, 0.2, over.getZ() * 0.3));
 			}
 		}
 		/** Own colour is fast, enemy colour is mud. Potion levels refreshed every tick so they vanish the moment the ground changes. */
@@ -1067,6 +1115,7 @@ public class InkWars extends JocEquips {
 			e.incrementOwnedBlocks(1);
 		}
 		public void registerDeath(){
+			swimForm = false;
 			surfaceQuietly();
 			alivePaintedBlocks *= 0.8; //Reduce player points by 20%
 			getPlayer().setLevel(alivePaintedBlocks);
@@ -1081,6 +1130,8 @@ public class InkWars extends JocEquips {
 				pW.destroy();
 			}
 			submerged = false;
+			gripSide = null;
+			previousGripSide = null;
 			getPlayer().removePotionEffect(PotionEffectType.INVISIBILITY);
 			double healthBeforeSwitch = getPlayer().getHealth();
 			getPlayer().setMaxHealth(newWeapon.getMaxHealth());
@@ -1112,6 +1163,13 @@ public class InkWars extends JocEquips {
 				openWeaponSelectionMenu(p); //For service stations
 			}
 		}
+	}
+	@Override
+	protected void onPlayerToggleSneak(PlayerToggleSneakEvent evt, Player p) {
+		super.onPlayerToggleSneak(evt, p);
+		if(!evt.isSneaking() || !JocIniciat || JocFinalitzat)return;
+		if(!getPlayers().contains(p))return;
+		getPlayerInfo(p).toggleSwimForm();
 	}
 	@Override
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
