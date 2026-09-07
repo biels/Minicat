@@ -173,6 +173,7 @@ public class ObsidianDefenders extends JocEquips {
 	/** Player → the plate shown pressed for them; the real block never changes. */
 	private final Map<UUID, Block> shownPressedPlate = new HashMap<>();
 	private final Set<UUID> refusedOnPlate = new HashSet<>();
+	private int chestCycles = 0;
 
 	/**
 	 * A middle room: one plate per team, its lamps, and who holds it. The room's lamps are
@@ -220,7 +221,12 @@ public class ObsidianDefenders extends JocEquips {
 	 * its team a bridge square every SECONDS_PER_POINT_SQUARE seconds; the capture itself
 	 * pays the capturer.
 	 */
-	private static final int SECONDS_PER_POINT_SQUARE = 5;
+	private static final int SECONDS_PER_POINT_SQUARE = 20;
+	/** A capture is felt on the bar at once. */
+	private static final int SQUARES_PER_CAPTURE = 1;
+	/** The slow default: a square every this many chest cycles, and one per enemy kill. Biel, 2026-09-07: "the bridge loads too fast, four times slower". */
+	private static final int CYCLES_PER_DEFAULT_SQUARE = 2;
+	private static final int SQUARES_PER_KILL = 1;
 	/** Seconds on your plate to take a point; the wall lamps light one per second from your side. */
 	private static final int CAPTURE_SECONDS = 3;
 	private static final int GOLD_PER_CAPTURE = 5;
@@ -463,6 +469,7 @@ public class ObsidianDefenders extends JocEquips {
 			donarOrPassiu(p);
 			desgastarEquipament(p);
 		}
+		if (++chestCycles % CYCLES_PER_DEFAULT_SQUARE == 0) for (Equip e : Equips) carregarPont(e, 1);
 	}
 
 	private void tancarCofre(Block b) {
@@ -1182,14 +1189,21 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	/** White squares fill quietly; the bar and its label turn aqua only when the bridge is ready. */
+	/** True from the button press until the last plank of this team's bridge over the enemy moat is back. */
+	private boolean bridgeDeployedBy(Equip e) {
+		Equip enemy = obtenirEquipEnemic(e);
+		return enemy != null && pontsDesplegats.contains(enemy.getId());
+	}
+
 	private String barraPont(Equip e) {
+		if (bridgeDeployedBy(e)) return ChatColor.AQUA + "desplegat";
 		int càrrega = càrregaPont.getOrDefault(e.getId(), 0);
 		ChatColor plens = pontCarregat(e) ? ChatColor.AQUA : ChatColor.WHITE;
 		return plens + QUADRAT_PLE.repeat(càrrega) + ChatColor.DARK_GRAY + QUADRAT_BUIT.repeat(PONT_CÀRREGA_MÀXIMA - càrrega);
 	}
 
 	private String etiquetaPont(Equip e, String text) {
-		return (pontCarregat(e) ? ChatColor.AQUA : ChatColor.GRAY) + text;
+		return (pontCarregat(e) || bridgeDeployedBy(e) ? ChatColor.AQUA : ChatColor.GRAY) + text;
 	}
 
 	private void mostrarCàrregaPont(Equip e) {
@@ -1220,6 +1234,7 @@ public class ObsidianDefenders extends JocEquips {
 		List<List<Block>> columnes = pontsPerMoat.getOrDefault(moatDe.getId(), List.of());
 		if (columnes.isEmpty()) return;
 		pontsDesplegats.add(moatDe.getId());
+		mostrarCàrregaPont(atacant);
 		sendGlobalMessage(atacant.getChatColor() + "L'equip " + atacant.getAdjectiu() + ChatColor.WHITE + " desplega el pont sobre el fossat " + moatDe.getAdjectiuColored() + ChatColor.WHITE + ".");
 		sendGlobalSound(Sound.BLOCK_PISTON_EXTEND, 1F, 0.6F);
 		for (int i = 0; i < columnes.size(); i++) {
@@ -1231,7 +1246,10 @@ public class ObsidianDefenders extends JocEquips {
 			List<Block> columna = columnes.get(columnes.size() - 1 - i);
 			scheduleGameplayTask(() -> posarColumnaDePont(columna, false), totalDesplegament + PONT_TICKS_DESPLEGAT + PONT_TICKS_PER_COLUMNA * (i + 1));
 		}
-		scheduleGameplayTask(() -> pontsDesplegats.remove(moatDe.getId()), totalDesplegament + PONT_TICKS_DESPLEGAT + PONT_TICKS_PER_COLUMNA * (columnes.size() + 1));
+		scheduleGameplayTask(() -> {
+			pontsDesplegats.remove(moatDe.getId());
+			mostrarCàrregaPont(atacant);
+		}, totalDesplegament + PONT_TICKS_DESPLEGAT + PONT_TICKS_PER_COLUMNA * (columnes.size() + 1));
 	}
 
 	private void posarColumnaDePont(List<Block> columna, boolean posar) {
@@ -1430,6 +1448,7 @@ public class ObsidianDefenders extends JocEquips {
 		point.progress = CAPTURE_SECONDS;
 		showControlPoint(point);
 		donarOr(captor, GOLD_PER_CAPTURE);
+		carregarPont(team, SQUARES_PER_CAPTURE);
 		sendGlobalMessage(ChatColor.GRAY + captor.getName() + " ha capturat el punt de control (" + team.getChatColor() + pointsHeldBy(team) + ChatColor.GRAY + "/" + controlPoints.size() + ")");
 		world.playSound(point.centre(), Sound.BLOCK_BEACON_POWER_SELECT, 1F, 1.2F);
 		for (Player p : team.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6F, 1.6F);
@@ -1646,6 +1665,7 @@ public class ObsidianDefenders extends JocEquips {
 			Or = 0;
 		} else {
 			if (!explotat) killer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 40, 3));
+			carregarPont(obtenirEquip(killer), SQUARES_PER_KILL);
 		}
 		Inventory inventory = killer.getInventory();
 		inventory.addItem(new ItemStack(Material.GOLD_NUGGET, Or));
