@@ -479,6 +479,10 @@ public class InkWars extends JocEquips {
 		boolean isSubmerged(){
 			return getPlayerInfo(getPlayer()).isSubmerged();
 		}
+		/** A stroke needs the feet to move: turning the head in place lays no ink, so nobody pumps a puddle by wiggling the mouse. */
+		boolean movedFeet(PlayerMoveEvent evt){
+			return evt.getTo() != null && evt.getFrom().distanceSquared(evt.getTo()) > 1e-4;
+		}
 		public int getMaxLoad(){
 			return 64;
 		}
@@ -800,7 +804,7 @@ public class InkWars extends JocEquips {
 		@Override
 		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
 			super.onPlayerMove(evt, p);
-			if(p == getPlayer() && !isSubmerged()){
+			if(p == getPlayer() && !isSubmerged() && movedFeet(evt)){
 				rollerLinePaint(getWidth(), 0.4 + getWeaponLevel() / 24.0, getPlayer());				
 			}
 		}
@@ -842,7 +846,7 @@ public class InkWars extends JocEquips {
 		@Override
 		protected void onPlayerMove(PlayerMoveEvent evt, Player p) {
 			super.onPlayerMove(evt, p);
-			if(p == getPlayer() && !isSubmerged()){
+			if(p == getPlayer() && !isSubmerged() && movedFeet(evt)){
 				rollerLinePaint(getWidth(), 1.05 + getWeaponLevel() / 5.4, getPlayer());				
 			}
 		}
