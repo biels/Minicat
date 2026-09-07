@@ -40,7 +40,7 @@ public class GestorMapes implements Listener{
 		this.plugin = lobby.getPlugin();
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 
-		//Mapes.add(new ContenidorJoc(ObsidianDefenders.class, "Obsidian defenders", Material.OBSIDIAN, DevelopmentState.NotWorking));
+		Mapes.add(new ContenidorJoc(ObsidianDefenders.class, "Obsidian Defenders", Material.OBSIDIAN, DevelopmentState.InDevelopment));
 		Mapes.add(new ContenidorJoc(Spleef.class, "Spleef", Material.SNOW, DevelopmentState.Release));
 		Mapes.add(new ContenidorJoc(RainbowClay.class, "Rainbow Clay", Material.RED_TERRACOTTA, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(Torres.class, "Torres de defensa", Material.ARROW, DevelopmentState.Beta));

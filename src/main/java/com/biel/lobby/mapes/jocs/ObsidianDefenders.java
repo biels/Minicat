@@ -2,16 +2,29 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
+import org.bukkit.GameMode;
+import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Chest;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Leaves;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -20,7 +33,10 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -28,6 +44,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -40,30 +58,58 @@ import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
+
+/**
+ * The first game the server ever had (March 2013). Two teams, an obsidian-clad TNT base
+ * each; the match ends when a base's TNT goes off. Gold nuggets are the economy: kills,
+ * the cycling jungle chests, the diamond pickaxe that lands in the middle and the iron
+ * golem all pay in gold. The scheduled mechanics are ported from the 2013 plugin
+ * (minicat-repo/docs/games/obsidian-defenders/original-2013): ExampleTask is the chest
+ * cycle, PicDiamantTask the pickaxe, ApareixerGolem the golem.
+ */
 public class ObsidianDefenders extends JocEquips {
+	/** Where the pickaxe lands when the map has no PicDiamant property: the middle of the jungle, as in 2013. */
+	private static final Vector PIC_DIAMANT_2013 = new Vector(661, 42, -1398);
+	private static final long CICLE_COFRES_TICKS = 32 * 20;
+	private static final int MAX_COFRES_OBERTS = 8;
+	private static final long PRIMER_PIC_TICKS = 4 * 60 * 20;
+	private static final long PERIODE_PIC_TICKS = 2 * 60 * 20;
+	private static final long GOLEM_INICIAL_TICKS = 5 * 20;
+	private static final int OR_PER_GOLEM = 22;
+	/** How far from a team's spawn the base's TNT is looked for when the match starts. */
+	private static final int RADI_NUCLI = 12;
+	private static final int ALÇADA_NUCLI = 8;
+	/** A primed TNT counts as a base core while it is this close to one of the TNT blocks found at start. */
+	private static final double TOLERÀNCIA_NUCLI = 3;
+	/** A death with no killer is credited to the last player who hit the victim within this window. */
+	private static final int SEGONS_CREDIT_ÚLTIM_COP = 95;
+
 	boolean debug = false;
+	/** Team id → block positions of the TNT that is that team's base core. */
+	private final Map<Integer, Set<Vector>> nuclisPerEquip = new HashMap<>();
+	private final Map<UUID, Integer> segonsÚltimCopRebut = new HashMap<>();
+	private UUID golemActual;
+	private boolean primerPicAnunciat = false;
+
 	public ObsidianDefenders() {
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public String getGameName() {
-		// TODO Auto-generated method stub
 		return "Obsidian Defenders";
 	}
 
 	@Override
 	protected void customJocIniciat() {
-		// TODO Auto-generated method stub
+		super.customJocIniciat();
 		setBlockBreakPlace(false);
 		setGiveStartingItemsRespawn(false);
-		donarItemsInicials();
-	}
-
-	@Override
-	protected void customJocFinalitzat() {
-		// TODO Auto-generated method stub
-
+		registrarNuclis();
+		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
+		scheduleGameplayRepeatingTask(this::apareixerPicDiamant, PRIMER_PIC_TICKS, PERIODE_PIC_TICKS);
+		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
 	}
 
 	@Override
@@ -74,610 +120,843 @@ public class ObsidianDefenders extends JocEquips {
 		return equips;
 	}
 
+	/** The 2013 kit: stone sword, team helmet over chainmail, one arrow and food for the whole match. */
 	@Override
 	protected ArrayList<ItemStack> getStartingItems(Player ply) {
 		ArrayList<ItemStack> items = new ArrayList<>();
 		Equip e = obtenirEquip(ply);
-		items.add(new ItemStack(Material.WOODEN_SWORD, 1));
-		//		items.add(new ItemStack(Material.DIAMOND_PICKAXE, 1));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_CHESTPLATE, e));
+		items.add(new ItemStack(Material.STONE_SWORD, 1));
 		items.add(Utils.createColoredTeamArmor(Material.LEATHER_HELMET, e));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_BOOTS, e));
-		items.add(Utils.createColoredTeamArmor(Material.LEATHER_LEGGINGS, e));
-		//		ItemStack arc = new ItemStack(Material.BOW, 1); // A stack of diamonds
-		//		arc.addUnsafeEnchantment(Enchantment.UNBREAKING, 10);
-		//		items.add(arc);
+		items.add(new ItemStack(Material.CHAINMAIL_CHESTPLATE, 1));
+		items.add(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
+		items.add(new ItemStack(Material.CHAINMAIL_BOOTS, 1));
 		items.add(new ItemStack(Material.ARROW, 1));
-		//items.add(new Potion(PotionType.INSTANT_DAMAGE, 1).toItemStack(2));
-
+		items.add(new ItemStack(Material.COOKED_BEEF, 40));
 		return items;
 	}
 
 	@Override
-	protected void setCustomGameRules() {
-		//	world.setGameRuleValue("keepInventory", "true");
-
+	protected void donarEfectesInicials(Player ply) {
+		ply.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 25 * 20, 2, false), true);
 	}
+
+	/** Gold, pickaxes and consumables survive death: the economy is the game. */
+	@Override
+	public boolean getResetPlayerOnRespawn() {
+		return false;
+	}
+
+	@Override
+	protected void setCustomGameRules() {
+		world.setTime(12600);
+		world.setGameRule(GameRule.MOB_GRIEFING, false);
+	}
+
+	@Override
+	protected ArrayList<String> getGameInfo(Player p) {
+		ArrayList<String> info = new ArrayList<>();
+		info.add("Fes explotar la TNT de la base enemiga. L'obsidiana es pot trencar.");
+		info.add("Els cofres de la jungla canvien de lloc cada 32 s; el pic de diamant cau al mig als 4 min.");
+		info.add("L'or paga tot: matar, obrir cofres, matar el golem de ferro.");
+		return info;
+	}
+
+	//---------- Base cores and the win ----------
+
+	/** Finds each team's TNT around its spawn. A base without TNT cannot be lost, and says so. */
+	private void registrarNuclis() {
+		nuclisPerEquip.clear();
+		for (Equip e : Equips) {
+			Location base = e.getTeamSpawnLocation();
+			Set<Vector> nuclis = new HashSet<>();
+			double distànciaMínima = Double.MAX_VALUE;
+			for (int x = -RADI_NUCLI; x <= RADI_NUCLI; x++) {
+				for (int y = -ALÇADA_NUCLI; y <= ALÇADA_NUCLI; y++) {
+					for (int z = -RADI_NUCLI; z <= RADI_NUCLI; z++) {
+						Block b = base.getBlock().getRelative(x, y, z);
+						if (b.getType() != Material.TNT) continue;
+						nuclis.add(b.getLocation().toVector());
+						distànciaMínima = Math.min(distànciaMínima, b.getLocation().distance(base));
+					}
+				}
+			}
+			nuclisPerEquip.put(e.getId(), nuclis);
+			if (nuclis.isEmpty()) {
+				plugin.getLogger().warning(getGameName() + " " + getMapName() + ": no TNT within " + RADI_NUCLI + " blocks of base" + e.getId() + "; that base cannot be blown up");
+				sendGlobalMessage(ChatColor.RED + "No s'ha trobat TNT a la base " + e.getAdjectiuColored() + ChatColor.RED + ": aquesta base no pot explotar.");
+			} else {
+				plugin.getLogger().info(getGameName() + " " + getMapName() + ": base" + e.getId() + " has " + nuclis.size() + " TNT blocks, the nearest " + Math.round(distànciaMínima) + " blocks from the spawn");
+			}
+		}
+	}
+
+	private Equip equipDelNucli(Location explosió) {
+		Vector punt = explosió.toVector();
+		for (Equip e : Equips) {
+			for (Vector nucli : nuclisPerEquip.getOrDefault(e.getId(), Set.of())) {
+				if (nucli.clone().add(new Vector(0.5, 0.5, 0.5)).distance(punt) <= TOLERÀNCIA_NUCLI) return e;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	protected void onExplosionPrime(ExplosionPrimeEvent evt) {
-		// TODO Auto-generated method stub
 		super.onExplosionPrime(evt);
-		Bukkit.broadcastMessage(ChatColor.RED + " La base ha explotat!");
+		if (!JocEnMarxa() || !(evt.getEntity() instanceof TNTPrimed)) return;
+		Equip explotat = equipDelNucli(evt.getEntity().getLocation());
+		if (explotat == null) return;
+		sendGlobalMessage(ChatColor.RED + "La base de l'equip " + explotat.getAdjectiuColored() + ChatColor.RED + " ha explotat!");
+		sendGlobalSound(Sound.ENTITY_GENERIC_EXPLODE, 2F, 0.6F);
+		winGame(obtenirEquipEnemic(explotat));
 	}
+
+	/** Obsidian is the one block anyone may break: it is what shields the TNT. */
 	@Override
-	protected void onEntityDamageByEntity(EntityDamageByEntityEvent evt,
-			Entity pdmged, Entity pdmger) {
-		// TODO Auto-generated method stub
-		super.onEntityDamageByEntity(evt, pdmged, pdmger);
-		Double dmg = evt.getDamage();
-		//Bukkit.broadcastMessage(evt.getDamager().getClass().getName());
-		if (evt.getEntity() instanceof Player && (evt.getDamager() instanceof Player || evt.getDamager() instanceof Arrow)) {    		
-			Player damaged = (Player)pdmged;
-			Player damager = null;
-			boolean ranged = false;
-			if (evt.getDamager() instanceof Player){
-				damager = (Player)evt.getDamager();
-			}
-			if (evt.getDamager() instanceof Arrow){
-				damager = (Player)((Arrow)evt.getDamager()).getShooter();
-				ranged = true;
-			}
-			if (JocIniciat == false){
-				evt.setCancelled(true);
-			}
-			if (damaged.getLocation().distance(pMapaActual().ObtenirLocation("base" + Integer.toString(obtenirEquip(damaged).getId()), world)) <= 7){
-				evt.setCancelled(true);
-				if (damager != null) {
-					damager.damage(evt.getDamage(), damaged);			
-					Bukkit.broadcastMessage(damager.getName() + ", no es pot atacar a l'spawn!");
-				}
-			}
-			if (damager != null) {
-				if (damager.getLocation().getBlockY() >= 50 && ranged == false){
-					evt.setDamage(evt.getDamage() * 1.6 + Utils.NombreEntre(1, 11));
-				}
-				if (damager.getLocation().getBlockY() >= 45){
-					evt.setDamage(evt.getDamage() +  Utils.NombreEntre(1, 5));
-				}
-			}
-			evt.setDamage(evt.getDamage() * 0.8);
-			//evt.setDamage((double) (evt.getDamage() +  (plyr.getLevel() / 4)));
-			//			if (damager.getName().equalsIgnoreCase("biel") == true){
-			//				//evt.setDamage((double) (evt.getDamage() * 2));
-			//			}
-			if (damager != null) {
-				if(Ability.hasAbility(plugin, this, damager, AbilityType.ARQUER_PERFECTE) && evt.isCancelled() == false && ranged == true){
-					int crg = pPlayer(damager).ObtenirPropietatInt("PerfectBowHitCount");
-					if(crg >= 3){
-						Vector vec = Utils.CrearVector(damager.getLocation(), damaged.getLocation());
-						int sep = 40;
-						//jj
-						if (sep < 10){sep = 10;}
-						ArrayList <Location> locs = Utils.getLocationsCircle(damaged.getLocation(), 1.0, 40);
-						for(Location loc : locs){
-							if(loc.distance(damager.getLocation()) > damaged.getLocation().distance(damager.getLocation())){
-								Vector vec2 = Utils.CrearVector(damaged.getLocation(), loc).normalize();
-								Arrow arrow = (Arrow)world.spawnEntity(loc, EntityType.ARROW);
-								//Bukkit.broadcastMessage(Float.toString(plyr.getLocation().getYaw()));
-								arrow.setShooter(damager);
-								//arrow.setItem(item)
-								arrow.setFireTicks(200);
-								arrow.setVelocity(vec2.multiply(8));
-							}
-						}
-						pPlayer(damager).EstablirPropietat("PerfectBowHitCount", 1);
-
-						damager.playSound(damager.getLocation(), Sound.ENTITY_GENERIC_SWIM, 1, 0.5F);
-					}else{
-						pPlayer(damager).IncrementarPropietat("PerfectBowHitCount");
-						if(crg == 5){
-							damager.playSound(damager.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-						}
-
-					}
-					updateScoreBoard(damager);
-				}
-
-				if(Ability.hasAbility(plugin, this, damager, AbilityType.ARQUER_DE_GEL) && evt.isCancelled() == false && ranged == true){
-					int crg = pPlayer(damager).ObtenirPropietatInt("StrongBowHitCount");
-					if(crg >= 6){
-						ArrayList <BlockFace> faces = new ArrayList<>();
-						faces.add(BlockFace.NORTH);
-						faces.add(BlockFace.SOUTH);
-						faces.add(BlockFace.WEST);
-						faces.add(BlockFace.EAST);
-						for (BlockFace face : faces){
-
-							Block block = damaged.getLocation().getBlock().getRelative(face);
-							if (block.getType() != Material.AIR){
-								continue;
-							}
-							block.setType(Material.ICE);
-								scheduleTrackedBlockRemoval(block, 20 * 4, false);
-
-						}
-						damaged.teleport(damaged.getLocation().getBlock().getLocation().add(new Vector(0.5,0,0.5)));
-						Block gblock = damaged.getLocation().add(0, 2, 0).getBlock();
-						if (gblock.getType() == Material.AIR){
-							gblock.setType(Material.GOLD_BLOCK);
-							scheduleTrackedBlockRemoval(gblock, 20 * 4, false);
-						}
-						pPlayer(damager).EstablirPropietat("StrongBowHitCount", 1);
-
-						damaged.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_BURP, 1, 0.5F);
-					}else{
-						pPlayer(damager).IncrementarPropietat("StrongBowHitCount");
-						if(crg == 5){
-							damager.playSound(damager.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-						}
-
-					}
-					updateScoreBoard(damager);
-
-				}
-				if(Ability.hasAbility(plugin, this, damager, AbilityType.ESPADATXI) && evt.isCancelled() == false){
-					int crg = pPlayer(damager).ObtenirPropietatInt("StrongHitCount");
-					if(crg >= 5){
-						evt.setDamage(evt.getDamage() * 1.5);
-						Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
-						Vector dir = rawDir.normalize().multiply(2).add(new Vector(0,0.3,0));
-						damaged.setVelocity(dir);
-						pPlayer(damager).EstablirPropietat("StrongHitCount", 1);
-						damaged.playSound(damager.getLocation(), Sound.ENTITY_GENERIC_EAT, 1, 0.3F);
-					}else{
-						pPlayer(damager).IncrementarPropietat("StrongHitCount");
-						if(crg == 5){
-							damaged.playSound(damager.getLocation(), Sound.ENTITY_HORSE_LAND, 1, 0.3F);
-						}
-					}
-					updateScoreBoard(damager);
-				}
-				if(Ability.hasAbility(plugin, this, damaged, AbilityType.RESISTENCIA)){
-					double dmgm = 0.9;
-					dmgm = dmgm - (Utils.getNearbyPlayers(damaged, 10).size() * 0.08);
-					if (dmgm <= 0.1){dmgm = 0.1;}
-					double finaldmg = evt.getDamage() * 0.85;
-					evt.setDamage(finaldmg);
-					if(debug){
-						Bukkit.broadcastMessage("Mal reduït: " + Double.toString(evt.getDamage() - finaldmg) + " - " + dmgm * 100 +"%");
-					}
-				}
-				if (obtenirEquip(damaged).getId() == obtenirEquip(damager).getId()){
-					evt.setCancelled(true);
-				}
-				//Armor
-				ItemStack[] armor = ((Player) evt.getEntity()).getInventory().getArmorContents();
-				for(ItemStack i:armor) {
-					Material mat = i.getType();
-					if (mat == Material.LEATHER_HELMET || mat == Material.CHAINMAIL_CHESTPLATE || mat == Material.CHAINMAIL_LEGGINGS || mat == Material.CHAINMAIL_BOOTS){
-						i.setDurability((short) 0);
-					}else{
-						if(Ability.hasAbility(plugin, this, damager, AbilityType.DESTRUCTOR)){
-							int morts = Integer.parseInt(pTemp().ObtenirPropietat(damager.getName() + "Morts"));
-							i.setDurability((short) (i.getDurability() + 5 + morts));
-
-						}
-					}
-				}
-				((Player) evt.getEntity()).getInventory().setArmorContents(armor);
-			} 
-			if (evt.getEntity() instanceof IronGolem && evt.getDamager() instanceof Player) {
-				IronGolem golem = (IronGolem)evt.getEntity();				
-				@SuppressWarnings("null")
-				ItemStack item = damager.getItemInHand();
-				if (item.getType() == Material.IRON_PICKAXE){
-					evt.setDamage(30);
-					//dur
-					item.setDurability((short) (item.getDurability() + (item.getType().getMaxDurability() / 4)));
-
-				}
-
-			}
-		}
-		if (evt.getEntity() instanceof Player && evt.getDamager() instanceof IronGolem) {
-			IronGolem golem = (IronGolem)evt.getDamager();
-			Player player = (Player)evt.getEntity();
-			if(Ability.hasAbility(plugin, this, player, AbilityType.PROTECCIÓ_IMPACTE)){
-				evt.setDamage(evt.getDamage() / 2);
-			}
-		}
-		//Bukkit.broadcastMessage(evt.getDamager().getType().getName());
-
-		evt.setDamage(dmg);
-
+	protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
+		super.onBlockBreak(evt, blk);
+		Player ply = evt.getPlayer();
+		if (blk.getType() != Material.OBSIDIAN || ply.getGameMode() == GameMode.CREATIVE || !JocEnMarxa()) return;
+		evt.setCancelled(false);
+		sendGlobalMessage(ply.getName() + ChatColor.DARK_PURPLE + " ha trencat un bloc d'obsidiana!");
+		world.playSound(blk.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1F, 1F);
 	}
 
+	//---------- Jungle chests (ExampleTask, 2013) ----------
 
+	/** Every 32 s all chest spots close, up to eight reopen with fresh loot, and everyone collects passive gold and wear. */
+	private void cicleCofres() {
+		if (!JocEnMarxa()) return;
+		ArrayList<Location> punts = pMapaActual().ObtenirLocations("cofres", world);
+		for (Location punt : punts) tancarCofre(punt.getBlock());
+		if (!punts.isEmpty()) {
+			Set<Block> oberts = new HashSet<>();
+			int passades = 0;
+			while (oberts.size() < MAX_COFRES_OBERTS && passades++ < 200) {
+				for (Location punt : punts) {
+					if (oberts.size() >= MAX_COFRES_OBERTS) break;
+					Block b = punt.getBlock();
+					if (oberts.contains(b) || !Utils.Possibilitat(10)) continue;
+					obrirCofre(b);
+					oberts.add(b);
+				}
+			}
+		}
+		for (Player p : getPlayers()) {
+			donarOrPassiu(p);
+			desgastarEquipament(p);
+		}
+	}
+
+	private void tancarCofre(Block b) {
+		if (b.getState() instanceof Chest cofre) cofre.getInventory().clear();
+		BlockData fulles = Material.JUNGLE_LEAVES.createBlockData();
+		if (fulles instanceof Leaves leaves) leaves.setPersistent(true);
+		b.setBlockData(fulles);
+	}
+
+	private void obrirCofre(Block b) {
+		b.setType(Material.CHEST);
+		if (!(b.getState() instanceof Chest cofre)) return;
+		Inventory inv = cofre.getInventory();
+		inv.clear();
+		for (ItemStack loot : lootCofre()) {
+			int slot = Utils.NombreEntre(0, inv.getSize() - 1);
+			if (inv.getItem(slot) == null) inv.setItem(slot, loot); else inv.addItem(loot);
+		}
+	}
+
+	/** The 2013 loot table, one roll per line. */
+	private ArrayList<ItemStack> lootCofre() {
+		ArrayList<ItemStack> loot = new ArrayList<>();
+		if (Utils.Possibilitat(90)) {
+			int piles = Utils.NombreEntre(1, 6);
+			for (int i = 0; i < piles; i++) {
+				loot.add(new ItemStack(Material.GOLD_NUGGET, Utils.Possibilitat(8) ? Utils.NombreEntre(2, 4) : 1));
+			}
+		}
+		if (Utils.Possibilitat(5)) loot.add(new ItemStack(Material.GOLD_INGOT, Utils.NombreEntre(1, 2)));
+		if (Utils.Possibilitat(20)) loot.add(new ItemStack(Material.EMERALD));
+		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.MAGMA_CREAM));
+		if (Utils.Possibilitat(14)) loot.add(new ItemStack(Material.SNOWBALL));
+		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.EXPERIENCE_BOTTLE, Utils.NombreEntre(1, 3)));
+		if (Utils.Possibilitat(5)) loot.add(new ItemStack(Material.ENDER_PEARL));
+		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.NETHER_STAR));
+		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.BOOK));
+		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.GOLDEN_SWORD));
+		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.IRON_SWORD));
+		if (Utils.Possibilitat(15)) loot.add(llibreEncantatAleatori());
+		return loot;
+	}
+
+	private ItemStack llibreEncantatAleatori() {
+		Registry<Enchantment> registre = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
+		List<Enchantment> encantaments = registre.stream().toList();
+		Enchantment ench = encantaments.get(Utils.NombreEntre(0, encantaments.size() - 1));
+		if (Utils.Possibilitat(5)) ench = Enchantment.PROTECTION;
+		if (Utils.Possibilitat(5)) ench = Enchantment.SHARPNESS;
+		if (Utils.Possibilitat(5)) ench = Enchantment.POWER;
+		ItemStack llibre = new ItemStack(Material.ENCHANTED_BOOK);
+		if (llibre.getItemMeta() instanceof EnchantmentStorageMeta meta) {
+			meta.addStoredEnchant(ench, Utils.NombreEntre(3, 4), true);
+			llibre.setItemMeta(meta);
+		}
+		return llibre;
+	}
+
+	/** One nugget per cycle, more for holding a gold block or the gold pickaxe, and a bonus for both. */
+	private void donarOrPassiu(Player p) {
+		int or = 1;
+		Inventory inv = p.getInventory();
+		if (inv.contains(Material.GOLD_BLOCK)) {
+			sendPlayerMessage(p, ChatColor.GRAY + "Bloc d'or --> +2 Or passiu");
+			or += 2;
+		}
+		if (inv.contains(Material.GOLDEN_PICKAXE)) {
+			sendPlayerMessage(p, ChatColor.GRAY + "Pic d'or --> +3 Or passiu");
+			or += 3;
+		}
+		if (or >= 5) {
+			int extra = Utils.NombreEntre(1, 4);
+			or += extra;
+			sendPlayerMessage(p, ChatColor.GRAY + "Combinació --> +" + extra + " Or passiu");
+		}
+		donarOr(p, or);
+	}
+
+	private void desgastarEquipament(Player p) {
+		for (ItemStack item : p.getInventory().getContents()) desgastar(item);
+		for (ItemStack item : p.getInventory().getArmorContents()) desgastar(item);
+	}
+
+	private void desgastar(ItemStack item) {
+		if (item == null) return;
+		int desgast = desgastPerCicle(item);
+		if (desgast == 0) return;
+		if (item.getItemMeta() instanceof Damageable meta) {
+			meta.setDamage(meta.getDamage() + desgast);
+			item.setItemMeta(meta);
+		}
+	}
+
+	/** Wear per chest cycle. An untouched or enchanted item does not wear, as in 2013. */
+	private int desgastPerCicle(ItemStack item) {
+		if (!(item.getItemMeta() instanceof Damageable meta) || meta.getDamage() == 0) return 0;
+		if (!item.getEnchantments().isEmpty()) return 0;
+		return switch (item.getType()) {
+			case CHAINMAIL_HELMET, GOLDEN_HELMET, STONE_SWORD -> 1;
+			case CHAINMAIL_CHESTPLATE, CHAINMAIL_LEGGINGS, CHAINMAIL_BOOTS -> 4;
+			case BOW -> 18;
+			case IRON_SWORD -> 2;
+			case DIAMOND_SWORD -> 46;
+			case IRON_CHESTPLATE -> 11;
+			case DIAMOND_BOOTS, DIAMOND_LEGGINGS -> 38;
+			default -> 0;
+		};
+	}
+
+	//---------- Diamond pickaxe (PicDiamantTask, 2013) ----------
+
+	private Location puntPicDiamant() {
+		if (pMapaActual().ExisteixPropietat("PicDiamant")) {
+			return pMapaActual().ObtenirLocation("PicDiamant", world).add(0.5, 1, 0.5);
+		}
+		return PIC_DIAMANT_2013.toLocation(world).add(0.5, 0, 0.5);
+	}
+
+	/** A pickaxe good for exactly one block of obsidian, dropped in the middle of the map. */
+	private void apareixerPicDiamant() {
+		if (!JocEnMarxa()) return;
+		ItemStack pic = new ItemStack(Material.DIAMOND_PICKAXE);
+		if (pic.getItemMeta() instanceof Damageable meta) {
+			meta.setDamage(Material.DIAMOND_PICKAXE.getMaxDurability() - 1);
+			pic.setItemMeta(meta);
+		}
+		world.dropItem(puntPicDiamant(), pic).setVelocity(new Vector(0, 0, 0));
+		if (!primerPicAnunciat) {
+			sendGlobalMessage(ChatColor.AQUA + "Ha aparegut el primer pic de diamant!");
+			primerPicAnunciat = true;
+		}
+	}
 
 	@Override
 	protected void onPlayerPickupItem(PlayerPickupItemEvent evt, Player p) {
-		// TODO Auto-generated method stub
 		super.onPlayerPickupItem(evt, p);
-		Player ply = evt.getPlayer();
 		Item item = evt.getItem();
-		ItemStack itemStack = item.getItemStack();
-		if (itemStack.getType() == Material.DIAMOND_PICKAXE){
-			Location loc = new Location(world, 661, 42, -1398);
-			if (item.getLocation().distance(loc) < 1){
-				int Or = 3;
-				donarOr(ply, Or);
-				ply.sendMessage("Has agafat el pic de diamant"+ "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
+		if (item.getItemStack().getType() != Material.DIAMOND_PICKAXE) return;
+		if (item.getLocation().distance(puntPicDiamant()) < 1.5) {
+			int or = 3;
+			donarOr(p, or);
+			sendPlayerMessage(p, "Has agafat el pic de diamant" + "(" + ChatColor.GOLD + "+" + or + ChatColor.WHITE + ")");
+		}
+	}
+
+	//---------- Iron golem (ApareixerGolem, 2013) ----------
+
+	private void apareixerGolem() {
+		if (!JocEnMarxa() || !pMapaActual().ExisteixPropietat("Golem")) return;
+		Location punt = pMapaActual().ObtenirLocation("Golem", world).add(0.5, 1, 0.5);
+		Block b = punt.getBlock();
+		if (b.getState() instanceof Chest cofre) cofre.getInventory().clear();
+		b.setType(Material.AIR);
+		IronGolem golem = world.spawn(punt, IronGolem.class);
+		golem.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 400 * 20, 1, true), true);
+		golem.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 400 * 20, 1, true), true);
+		golem.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 400 * 20, 1, true), true);
+		golem.setRemoveWhenFarAway(false);
+		golem.setPersistent(true);
+		golemActual = golem.getUniqueId();
+	}
+
+	private boolean ésElGolem(Entity e) {
+		return e instanceof IronGolem && golemActual != null && golemActual.equals(e.getUniqueId());
+	}
+
+	@Override
+	protected void onEntityDeath(EntityDeathEvent evt, Entity e) {
+		super.onEntityDeath(evt, e);
+		if (!ésElGolem(e)) return;
+		golemActual = null;
+		Player p = ((IronGolem) e).getKiller();
+		if (p != null) {
+			donarOr(p, OR_PER_GOLEM);
+			p.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 3 * 60 * 20, 1, false), true);
+			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 1, false), true);
+			p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3 * 60 * 20, 1, false), true);
+			sendGlobalMessage(p.getName() + " ha matat el golem de ferro " + "(" + ChatColor.GOLD + "+" + OR_PER_GOLEM + ChatColor.WHITE + ")");
+		}
+		int minuts = getPlayers().size() >= 5 ? 2 : 3;
+		scheduleGameplayTask(this::apareixerGolem, minuts * 60L * 20L);
+	}
+
+	//---------- Combat ----------
+
+	@Override
+	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
+		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
+		if (!JocIniciat) {
+			evt.setCancelled(true);
+			return;
+		}
+		segonsÚltimCopRebut.put(damaged.getUniqueId(), segonsTranscorreguts());
+		if (damager.getLocation().getBlockY() >= 50 && !ranged) {
+			evt.setDamage(evt.getDamage() * 1.6 + Utils.NombreEntre(1, 11));
+		}
+		if (damager.getLocation().getBlockY() >= 45) {
+			evt.setDamage(evt.getDamage() + Utils.NombreEntre(1, 5));
+		}
+		evt.setDamage(evt.getDamage() * 0.8);
+		if (Ability.hasAbility(plugin, this, damager, AbilityType.ARQUER_PERFECTE) && !evt.isCancelled() && ranged) {
+			int crg = pPlayer(damager).ObtenirPropietatInt("PerfectBowHitCount");
+			if (crg >= 3) {
+				ArrayList<Location> locs = Utils.getLocationsCircle(damaged.getLocation(), 1.0, 40);
+				for (Location loc : locs) {
+					if (loc.distance(damager.getLocation()) > damaged.getLocation().distance(damager.getLocation())) {
+						Vector vec2 = Utils.CrearVector(damaged.getLocation(), loc).normalize();
+						Arrow arrow = (Arrow) world.spawnEntity(loc, EntityType.ARROW);
+						arrow.setShooter(damager);
+						arrow.setFireTicks(200);
+						arrow.setVelocity(vec2.multiply(8));
+					}
+				}
+				pPlayer(damager).EstablirPropietat("PerfectBowHitCount", 1);
+				damager.playSound(damager.getLocation(), Sound.ENTITY_GENERIC_SWIM, 1, 0.5F);
+			} else {
+				pPlayer(damager).IncrementarPropietat("PerfectBowHitCount");
+				if (crg == 5) {
+					damager.playSound(damager.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+				}
+			}
+			updateScoreBoard(damager);
+		}
+		if (Ability.hasAbility(plugin, this, damager, AbilityType.ARQUER_DE_GEL) && !evt.isCancelled() && ranged) {
+			int crg = pPlayer(damager).ObtenirPropietatInt("StrongBowHitCount");
+			if (crg >= 6) {
+				ArrayList<BlockFace> faces = new ArrayList<>();
+				faces.add(BlockFace.NORTH);
+				faces.add(BlockFace.SOUTH);
+				faces.add(BlockFace.WEST);
+				faces.add(BlockFace.EAST);
+				for (BlockFace face : faces) {
+					Block block = damaged.getLocation().getBlock().getRelative(face);
+					if (block.getType() != Material.AIR) {
+						continue;
+					}
+					block.setType(Material.ICE);
+					scheduleTrackedBlockRemoval(block, 20 * 4, false);
+				}
+				damaged.teleport(damaged.getLocation().getBlock().getLocation().add(new Vector(0.5, 0, 0.5)));
+				Block gblock = damaged.getLocation().add(0, 2, 0).getBlock();
+				if (gblock.getType() == Material.AIR) {
+					gblock.setType(Material.GOLD_BLOCK);
+					scheduleTrackedBlockRemoval(gblock, 20 * 4, false);
+				}
+				pPlayer(damager).EstablirPropietat("StrongBowHitCount", 1);
+				damaged.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_BURP, 1, 0.5F);
+			} else {
+				pPlayer(damager).IncrementarPropietat("StrongBowHitCount");
+				if (crg == 5) {
+					damager.playSound(damager.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+				}
+			}
+			updateScoreBoard(damager);
+		}
+		if (Ability.hasAbility(plugin, this, damager, AbilityType.ESPADATXI) && !evt.isCancelled()) {
+			int crg = pPlayer(damager).ObtenirPropietatInt("StrongHitCount");
+			if (crg >= 5) {
+				evt.setDamage(evt.getDamage() * 1.5);
+				Vector rawDir = damaged.getLocation().toVector().subtract(damager.getLocation().toVector());
+				Vector dir = rawDir.normalize().multiply(2).add(new Vector(0, 0.3, 0));
+				damaged.setVelocity(dir);
+				pPlayer(damager).EstablirPropietat("StrongHitCount", 1);
+				damaged.playSound(damager.getLocation(), Sound.ENTITY_GENERIC_EAT, 1, 0.3F);
+			} else {
+				pPlayer(damager).IncrementarPropietat("StrongHitCount");
+				if (crg == 5) {
+					damaged.playSound(damager.getLocation(), Sound.ENTITY_HORSE_LAND, 1, 0.3F);
+				}
+			}
+			updateScoreBoard(damager);
+		}
+		if (Ability.hasAbility(plugin, this, damaged, AbilityType.RESISTENCIA)) {
+			double dmgm = 0.9;
+			dmgm = dmgm - (Utils.getNearbyPlayers(damaged, 10).size() * 0.08);
+			if (dmgm <= 0.1) { dmgm = 0.1; }
+			double finaldmg = evt.getDamage() * 0.85;
+			evt.setDamage(finaldmg);
+			if (debug) {
+				Bukkit.broadcastMessage("Mal reduït: " + Double.toString(evt.getDamage() - finaldmg) + " - " + dmgm * 100 + "%");
+			}
+		}
+		// The kit armour never wears from hits; bought armour does, faster against a Destructor.
+		ItemStack[] armor = damaged.getInventory().getArmorContents();
+		for (ItemStack i : armor) {
+			if (i == null || !(i.getItemMeta() instanceof Damageable meta)) continue;
+			Material mat = i.getType();
+			if (mat == Material.LEATHER_HELMET || mat == Material.CHAINMAIL_CHESTPLATE || mat == Material.CHAINMAIL_LEGGINGS || mat == Material.CHAINMAIL_BOOTS) {
+				meta.setDamage(0);
+				i.setItemMeta(meta);
+			} else if (Ability.hasAbility(plugin, this, damager, AbilityType.DESTRUCTOR)) {
+				int morts = pTemp().ObtenirPropietatInt(damager.getName() + "Morts");
+				meta.setDamage(meta.getDamage() + 5 + morts);
+				i.setItemMeta(meta);
+			}
+		}
+		damaged.getInventory().setArmorContents(armor);
+	}
+
+	@Override
+	protected void onEntityDamageByEntity(EntityDamageByEntityEvent evt, Entity damaged, Entity damager) {
+		super.onEntityDamageByEntity(evt, damaged, damager);
+		if (damaged instanceof IronGolem && damager instanceof Player p) {
+			ItemStack item = p.getInventory().getItemInMainHand();
+			if (item.getType() == Material.IRON_PICKAXE && item.getItemMeta() instanceof Damageable meta) {
+				evt.setDamage(30);
+				meta.setDamage(meta.getDamage() + (item.getType().getMaxDurability() / 4));
+				item.setItemMeta(meta);
+			}
+		}
+		if (damaged instanceof Player player && damager instanceof IronGolem) {
+			if (Ability.hasAbility(plugin, this, player, AbilityType.PROTECCIÓ_IMPACTE)) {
+				evt.setDamage(evt.getDamage() / 2);
 			}
 		}
 	}
-	public void donarOr(Player plyr, int Or){
-		ItemStack itemstack = new ItemStack(Material.GOLD_NUGGET, Or); // A stack of diamonds
+
+	//---------- Gold ----------
+
+	public void donarOr(Player plyr, int Or) {
+		ItemStack itemstack = new ItemStack(Material.GOLD_NUGGET, Or);
 		Utils.giveItemStack(itemstack, plyr);
 		pPlayer(plyr).IncrementarPropietat("Or", Or);
 		ajuntarOr(plyr);
 		updateScoreBoard(plyr);
 	}
-	public void donarOrAEquip(ArrayList<Player> equip, int Or, Boolean dividir){
-		if (dividir){Or = (int) Math.ceil(Or / equip.size());}
-		for (Player p : equip){
+	public void donarOrAEquip(ArrayList<Player> equip, int Or, Boolean dividir) {
+		if (dividir) { Or = (int) Math.ceil(Or / equip.size()); }
+		for (Player p : equip) {
 			donarOr(p, Or);
 		}
 	}
-	public void donarOrAEquip(ArrayList<Player> equip, int Or, Boolean dividir, String Text, Boolean broadcast){
-		if (dividir){Or = (int) Math.ceil(Or / equip.size());}
-		for (Player p : equip){
+	public void donarOrAEquip(ArrayList<Player> equip, int Or, Boolean dividir, String Text, Boolean broadcast) {
+		if (dividir) { Or = (int) Math.ceil(Or / equip.size()); }
+		for (Player p : equip) {
 			donarOr(p, Or, Text, broadcast);
 		}
 	}
-	public void donarOrATots(int Or){
-		ArrayList<Player> play = getPlayers();
-		for (Player p : play){
+	public void donarOrATots(int Or) {
+		for (Player p : getPlayers()) {
 			donarOr(p, Or);
 		}
 	}
-	public void donarOrATots(int Or, String Text , Boolean broadcast){
-		ArrayList<Player> play = getPlayers();
-		for (Player p : play){
+	public void donarOrATots(int Or, String Text, Boolean broadcast) {
+		for (Player p : getPlayers()) {
 			donarOr(p, Or, Text, broadcast);
 		}
 	}
-	public void donarOr(Player plyr, int Or, String Text , Boolean broadcast){
+	public void donarOr(Player plyr, int Or, String Text, Boolean broadcast) {
 		donarOr(plyr, Or);
 		String message = Text + ChatColor.WHITE + "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")";
-		if (broadcast){
-			Bukkit.broadcastMessage( message);
-		}else{
+		if (broadcast) {
+			Bukkit.broadcastMessage(message);
+		} else {
 			plyr.sendMessage(ChatColor.GRAY + message);
 		}
-
 	}
-	@Override
-	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed,
-			Player killer) {
-		// TODO Auto-generated method stub
-		super.onPlayerDeathByPlayer(evt, killed, killer);
-		boolean explotat = false;
-		Player player = evt.getEntity();
-		Location location = player.getLocation();
-		//Bukkit.broadcastMessage(killer.getName());  
-		//		if (killer == null){
-		//			
-		//			Player victim = plugin.getServer().getPlayer(plugin.pTemp.ObtenirPropietat("LastIgnitePlayerVictim"));
-		//			Player kill = plugin.getServer().getPlayer(plugin.pTemp.ObtenirPropietat("LastIgnitePlayerKiller"));
-		//			if (victim.getName().equals(player.getName())){
-		//				killer = kill;
-		//			}
-		//			
-		//		}
-		if (killer == null){
-
-			//if (milliseconds - millisecondsAntics <= 1000 * 5){    				   			
-
-			//}
-
+	/** Ten nuggets become an ingot. */
+	public void ajuntarOr(Player p) {
+		Inventory inv = p.getInventory();
+		for (ItemStack d : inv.getContents()) {
+			if (d == null) {
+				continue;
+			}
+			if (d.getType() == Material.GOLD_NUGGET) {
+				if (d.getAmount() >= 10) {
+					int lingots = d.getAmount() / 10;
+					int nuggElim = lingots * 10;
+					inv.addItem(new ItemStack(Material.GOLD_INGOT, lingots));
+					inv.removeItem(new ItemStack(Material.GOLD_NUGGET, nuggElim));
+				}
+			}
 		}
-		if (killer == null){
+	}
 
+	//---------- Deaths ----------
+
+	/**
+	 * Every death is credited here, including the ones with no killer entity: an
+	 * explosive-arrow kill inside two seconds of the shot, or the last player to hit
+	 * the victim recently. The bus only calls onPlayerDeathByPlayer with a real killer,
+	 * so that hook is left empty and the death message is written once, here.
+	 */
+	@Override
+	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
+		super.onPlayerDeath(evt, killed);
+		boolean explotat = false;
+		Player player = killed;
+		Location location = player.getLocation();
+		Player killer = player.getKiller();
+		if (killer == null) {
 			Long milliseconds = Calendar.getInstance().getTimeInMillis();
 			Long millisecondsAntics = Long.parseLong(pTemp().ObtenirPropietat("Explo"));
-			//Bukkit.broadcastMessage("Diferència: " + Long.toString(milliseconds - millisecondsAntics));    			
-			if (milliseconds - millisecondsAntics <= 1000 * 2){
+			if (milliseconds - millisecondsAntics <= 1000 * 2) {
 				String prop = pTemp().ObtenirPropietat("ExploPlayer");
-				if (prop.equals(0) == false){
-					Player kill = plugin.getServer().getPlayer(prop);
-					killer = kill;    		
+				Player kill = plugin.getServer().getPlayer(prop);
+				if (kill != null) {
+					killer = kill;
 					explotat = true;
-				}    				
-			}
-		}  
-		//finalment
-		if (killer == null){
-			Player lastDamager = Bukkit.getPlayer(pPlayer(player).ObtenirPropietat("LastHitBy"));
-			int secs = Integer.parseInt(pPlayer(player).ObtenirPropietat("LastHitTime"));
-			if (lastDamager != null){
-				if(segonsTranscorreguts() - secs <= 95){
-					killer = lastDamager;
 				}
 			}
 		}
-		if (killer != null){
-			int mortsKiller = Integer.parseInt(pTemp().ObtenirPropietat(killer.getName() + "Morts"));
-			int mortsMort = Integer.parseInt(pTemp().ObtenirPropietat(player.getName() + "Morts"));
-			int Or = 5 + (mortsMort * 1);
-			if (mortsMort > 4){
-				Or = Or + 2;
+		if (killer == null) {
+			Player lastDamager = getPlayerInfo(player).getLastDamager();
+			Integer segonsCop = segonsÚltimCopRebut.get(player.getUniqueId());
+			if (lastDamager != null && segonsCop != null && segonsTranscorreguts() - segonsCop <= SEGONS_CREDIT_ÚLTIM_COP) {
+				killer = lastDamager;
 			}
-			if (mortsMort > 6){
-				Or = Or + 5;
-			}
-			if (mortsMort > 10){
-				Or = Or + 5;
-			}    
-			if (explotat == true){
-				Or = Or + 1;
-			}
-			if (Or >= 25){
-				Or = 25;
-			}
-			if (killer.getItemInHand().getType() == Material.GOLDEN_PICKAXE){
-				Or = Or * 3;
-				if (Or >= 30){
-					Or = 30;
-				}
-			}
-			if (player.getInventory().contains(Material.DIAMOND_PICKAXE) == true){
-				Or = Or + 1;
-			}
-			if (player.getInventory().contains(Material.GOLD_BLOCK) == true){
-				Or = Or + 1;
-			}
-			if (obtenirEquip(player).getPlayers().contains(killer)){
-				Or = 0;
-			} else{
-				if(!explotat){
-					killer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 40, 3));
-				}
-			}
-			Inventory inventory = killer.getInventory();
-			ItemStack itemstack = new ItemStack(Material.GOLD_NUGGET, Or); // A stack of diamonds
-			// if (inventory.contains(itemstack)) {
-			inventory.addItem(itemstack); // Adds a stack of diamonds to the player's inventory
-			pPlayer(killer).IncrementarPropietat("Or", Or);
-
-			evt.setDeathMessage(killer.getName()  + " ha matat a " + player.getName()+ "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
-			if (explotat == true){
-				evt.setDeathMessage(killer.getName()  + " ha fet explotar a " + player.getName()+ "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
-				pTemp().EstablirPropietat(killer.getName() + "MortsExplotats", Integer.toString(Integer.parseInt(pTemp().ObtenirPropietat(killer.getName() + "MortsExplotats")) + 1));
-
-			}
-			if (killer.getItemInHand().getType() == Material.GOLDEN_PICKAXE){
-				evt.setDeathMessage(killer.getName()  + " ha matat amb el pic d'or a " + player.getName()+ "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")(" + ChatColor.GOLD + "x3" + ChatColor.WHITE + ")");
-			}
-			if(Ability.hasAbility(plugin, this, player, AbilityType.CREEPER)){
-				float explopower = 0.8F + (mortsMort / 2);
-				world.createExplosion(location.getX(), location.getY(), location.getZ(), explopower, false, false);
-			}
-			pTemp().EstablirPropietat(killer.getName() + "Morts", Integer.toString(mortsKiller + 1));
-			pTemp().EstablirPropietat(player.getName() + "Morts", "0");
-			if(Or != 0){
-				pPlayer(killer).IncrementarPropietat("Assassinats");
-				pPlayer(player).IncrementarPropietat("Morts");
-			}
-			if (player.getInventory().contains(Material.DIAMOND_PICKAXE) == true){
-				player.getInventory().remove(Material.DIAMOND_PICKAXE);
-				ItemStack itemstack3 = new ItemStack(Material.GOLDEN_PICKAXE, 1); // A stack of diamonds
-				evt.setDeathMessage(killer.getName()  + " ha matat a " + player.getName()+ " que tenia pic de diamant!(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
-				killer.sendMessage(ChatColor.GOLD + "+2 Or passiu! (pic d'or)");
-				killer.sendMessage(ChatColor.GOLD + "Matar un enemic amb el pic d'or et dona x3 or");
-				inventory.addItem(itemstack3);
-			}
-			if (player.getInventory().contains(Material.GOLDEN_PICKAXE) == true){
-				player.getInventory().remove(Material.GOLDEN_PICKAXE);
-
-			}
-			updateScoreBoards();
-		} else {
+		}
+		if (killer == null || killer == player) {
 			evt.setDeathMessage(player.getName() + " s'ha mort tot sol");
+			pTemp().EstablirPropietat(player.getName() + "Morts", "0");
+			pPlayer(player).IncrementarPropietat("Morts");
+			updateScoreBoards();
+			return;
 		}
+		int mortsKiller = pTemp().ObtenirPropietatInt(killer.getName() + "Morts");
+		int mortsMort = pTemp().ObtenirPropietatInt(player.getName() + "Morts");
+		int Or = 5 + (mortsMort * 1);
+		if (mortsMort > 4) {
+			Or = Or + 2;
+		}
+		if (mortsMort > 6) {
+			Or = Or + 5;
+		}
+		if (mortsMort > 10) {
+			Or = Or + 5;
+		}
+		if (explotat) {
+			Or = Or + 1;
+		}
+		if (Or >= 25) {
+			Or = 25;
+		}
+		boolean picDOr = killer.getInventory().getItemInMainHand().getType() == Material.GOLDEN_PICKAXE;
+		if (picDOr) {
+			Or = Or * 3;
+			if (Or >= 30) {
+				Or = 30;
+			}
+		}
+		if (player.getInventory().contains(Material.DIAMOND_PICKAXE)) {
+			Or = Or + 1;
+		}
+		if (player.getInventory().contains(Material.GOLD_BLOCK)) {
+			Or = Or + 1;
+		}
+		if (areAllies(player, killer)) {
+			Or = 0;
+		} else if (!explotat) {
+			killer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 40, 3));
+		}
+		Inventory inventory = killer.getInventory();
+		inventory.addItem(new ItemStack(Material.GOLD_NUGGET, Or));
+		pPlayer(killer).IncrementarPropietat("Or", Or);
+		ajuntarOr(killer);
+
+		evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
+		if (explotat) {
+			evt.setDeathMessage(killer.getName() + " ha fet explotar a " + player.getName() + "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
+			pTemp().IncrementarPropietat(killer.getName() + "MortsExplotats");
+		}
+		if (picDOr) {
+			evt.setDeathMessage(killer.getName() + " ha matat amb el pic d'or a " + player.getName() + "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")(" + ChatColor.GOLD + "x3" + ChatColor.WHITE + ")");
+		}
+		if (Ability.hasAbility(plugin, this, player, AbilityType.CREEPER)) {
+			float explopower = 0.8F + (mortsMort / 2);
+			world.createExplosion(location.getX(), location.getY(), location.getZ(), explopower, false, false);
+		}
+		pTemp().EstablirPropietat(killer.getName() + "Morts", Integer.toString(mortsKiller + 1));
+		pTemp().EstablirPropietat(player.getName() + "Morts", "0");
+		if (Or != 0) {
+			pPlayer(killer).IncrementarPropietat("Assassinats");
+		}
+		pPlayer(player).IncrementarPropietat("Morts");
+		if (player.getInventory().contains(Material.DIAMOND_PICKAXE)) {
+			player.getInventory().remove(Material.DIAMOND_PICKAXE);
+			evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + " que tenia pic de diamant!(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
+			killer.sendMessage(ChatColor.GOLD + "+3 Or passiu! (pic d'or)");
+			killer.sendMessage(ChatColor.GOLD + "Matar un enemic amb el pic d'or et dona x3 or");
+			inventory.addItem(new ItemStack(Material.GOLDEN_PICKAXE, 1));
+		}
+		if (player.getInventory().contains(Material.GOLDEN_PICKAXE)) {
+			player.getInventory().remove(Material.GOLDEN_PICKAXE);
+		}
+		updateScoreBoards();
 	}
+
+	@Override
+	protected void onPlayerDeathByPlayer(PlayerDeathEvent evt, Player killed, Player killer) {
+		// Credited and announced by onPlayerDeath, which also sees the deaths without a killer entity.
+	}
+
+	//---------- Consumables ----------
+
 	@Override
 	protected void onPlayerInteract(PlayerInteractEvent evt, Player plyr) {
-		// TODO Auto-generated method stub
 		super.onPlayerInteract(evt, plyr);
 		ItemStack stack = evt.getItem();
 		Inventory inv = plyr.getInventory();
-		//		if (evt.getAction() == Action.RIGHT_CLICK_BLOCK){
-		//			Location LocB1 = plugin.pMapaActual.ObtenirLocation("Botiga0", world);
-		//			Location LocB2 = plugin.pMapaActual.ObtenirLocation("Botiga1", world);
-		//			if (LocB1.distanceSquared(evt.getClickedBlock().getLocation()) <= 1 || LocB2.distanceSquared(evt.getClickedBlock().getLocation()) <= 1){
-		//				VillagerTradeOffer[] offers = GeneradorOfertes.generarOfertes(plugin);
-		//				try {
-		//					VillagerTrading.openTrade(plyr, offers);
-		//				} catch (IOException e) {
-		//					e.printStackTrace();
-		//				}
-		//			}
-		//		}
-		if (evt.getItem() != null){
-			if (stack.getType() == Material.WOODEN_SWORD && JocIniciat == false){
-				Ability.openSelectionInventory(plugin, this, plyr);
-			}
-			if (stack.getType() == Material.DIAMOND_BLOCK){
-
-				Inventory inv1 = Bukkit.getServer().createInventory(plyr, 9, "Teletransportar...");
-
-				for (Player p : obtenirEquip(plyr).getPlayers()){
-					if (p.getName().equals(plyr.getName())){
-						continue;
-					}
-					if(p.isDead() || !p.isOnline()){
-						continue;
-					}
-					ItemStack steveItem = new ItemStack(Material.PLAYER_HEAD);
-					inv1.addItem(Utils.setItemName(steveItem, p.getName()));
+		if (stack == null) return;
+		if (stack.getType() == Material.WOODEN_SWORD && !JocIniciat) {
+			Ability.openSelectionInventory(plugin, this, plyr);
+		}
+		if (stack.getType() == Material.DIAMOND_BLOCK) {
+			Inventory inv1 = Bukkit.getServer().createInventory(plyr, 9, "Teletransportar...");
+			for (Player p : obtenirEquip(plyr).getPlayers()) {
+				if (p.getName().equals(plyr.getName())) {
+					continue;
 				}
-
-
-
-
-				plyr.openInventory(inv1);
-			}
-			if (stack.getType() == Material.NETHER_STAR){
-				for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-					p.setHealth(1);
-					p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 20, 4, false), true);
+				if (p.isDead() || !p.isOnline()) {
+					continue;
 				}
-				for(Player p : obtenirEquip(plyr).getPlayers()){    				
-					p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 3, false), true);
-				}
-				Bukkit.broadcastMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha utilitzat una" + ChatColor.BOLD + " nether star" + ChatColor.RESET +"!");
-				evt.getItem().setType(Material.FIREWORK_ROCKET);
+				ItemStack steveItem = new ItemStack(Material.PLAYER_HEAD);
+				inv1.addItem(Utils.setItemName(steveItem, p.getName()));
 			}
-			if (stack.getType() == Material.ARROW){
-				if (stack.getEnchantments().size() >= 1){
-					for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-						p.setHealth(p.getHealth() - 3);        				
-					}
-					plyr.sendMessage("-1 cor a tot l'equip enemic.");
-					inv.removeItem(new ItemStack(stack.getType()));
-				} 
-
+			plyr.openInventory(inv1);
+		}
+		if (!JocEnMarxa() || obtenirEquip(plyr) == null) return;
+		if (stack.getType() == Material.NETHER_STAR) {
+			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+				p.setHealth(1);
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 20, 4, false), true);
 			}
-			if (stack.getType() == Material.MAGMA_CREAM){
-				for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-					p.setFireTicks(3 * 20);        				
+			for (Player p : obtenirEquip(plyr).getPlayers()) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 3, false), true);
+			}
+			sendGlobalMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha utilitzat una" + ChatColor.BOLD + " nether star" + ChatColor.RESET + "!");
+			// The star turns into the charge that makes arrows explosive.
+			stack.setType(Material.FIREWORK_STAR);
+		}
+		if (stack.getType() == Material.ARROW) {
+			if (stack.getEnchantments().size() >= 1) {
+				for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+					p.setHealth(Math.max(0, p.getHealth() - 3));
 				}
-				plyr.sendMessage("Has cremat a l'equip enemic.");        			
+				plyr.sendMessage("-1 cor a tot l'equip enemic.");
 				inv.removeItem(new ItemStack(stack.getType()));
 			}
-			if (stack.getType() == Material.STRING){
-				for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 15 * 20, 2, false), true);
-				}
-				plyr.sendMessage("Has alentit a l'equip enemic un 40% durant 15 segons.");
-				inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.MAGMA_CREAM) {
+			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+				p.setFireTicks(3 * 20);
 			}
-			if (evt.getItem().getType() == Material.SPIDER_EYE){
-				for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 8 * 20, 1, false), true);        				
-				}
-				plyr.sendMessage("Has enverinat a l'equip enemic durant 8 segons.");
-				inv.removeItem(new ItemStack(stack.getType()));
+			plyr.sendMessage("Has cremat a l'equip enemic.");
+			inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.STRING) {
+			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 15 * 20, 2, false), true);
 			}
-			if (evt.getItem().getType() == Material.PAPER){
-				for(Player p : obtenirEquipEnemic(plyr).getPlayers()){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 25 * 20, 5, false), true);
-				}
-				plyr.sendMessage("Has esverat a l'equip enemic durant 25 segons.");
-				inv.removeItem(new ItemStack(stack.getType()));
+			plyr.sendMessage("Has alentit a l'equip enemic un 40% durant 15 segons.");
+			inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.SPIDER_EYE) {
+			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 8 * 20, 1, false), true);
 			}
-			if (evt.getItem().getType() == Material.COCOA){
-				for(Player p : obtenirEquip(plyr).getPlayers()){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6 * 20, 100, false), true);        				
-				}
-				plyr.sendMessage("Tots a l'aigua!");
-				inv.removeItem(new ItemStack(stack.getType()));
+			plyr.sendMessage("Has enverinat a l'equip enemic durant 8 segons.");
+			inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.PAPER) {
+			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 25 * 20, 5, false), true);
 			}
-			if (evt.getItem().getType() == Material.EMERALD){
-				for(Player p : obtenirEquip(plyr).getPlayers()){
-					double newHealth = p.getHealth() + 3;
-					if (newHealth >= 20){
-						newHealth = 20;
-					}
-					p.setHealth(newHealth);        				
-				}
-				plyr.sendMessage("Has curat 1 cor al teu equip.");
-				inv.removeItem(new ItemStack(stack.getType()));
+			plyr.sendMessage("Has esverat a l'equip enemic durant 25 segons.");
+			inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.COCOA_BEANS) {
+			for (Player p : obtenirEquipEnemic(plyr).getPlayers()) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6 * 20, 100, false), true);
 			}
-			if (evt.getItem().getType() == Material.SUGAR){
-				for(Player p : obtenirEquip(plyr).getPlayers()){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 15 * 20, 2, false), true);				
+			plyr.sendMessage("Tots a l'aigua!");
+			inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.EMERALD) {
+			for (Player p : obtenirEquip(plyr).getPlayers()) {
+				double newHealth = p.getHealth() + 3;
+				if (newHealth >= 20) {
+					newHealth = 20;
 				}
-				plyr.sendMessage("Has augmentat la velocitat del teu equip durant 15 segons.");
-
-				inv.removeItem(new ItemStack(stack.getType()));
-
+				p.setHealth(newHealth);
 			}
-			if (stack.getType() == Material.GLASS){
-				for(Player p : obtenirEquip(plyr).getPlayers()){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 15 * 20, 1, false), true);				
-				}
-				plyr.sendMessage("El teu equip és invisible durant 15 segons.");
-				inv.removeItem(new ItemStack(stack.getType()));
+			plyr.sendMessage("Has curat 1 cor al teu equip.");
+			inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.SUGAR) {
+			for (Player p : obtenirEquip(plyr).getPlayers()) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 15 * 20, 2, false), true);
 			}
-			if (stack.getType() == Material.BLAZE_POWDER){    				
-				Player pObj = null;
-				for(Entity e : plyr.getNearbyEntities(25, 40, 25)){
-					if (e instanceof Player){
-						Player p = (Player)e;
-						if (obtenirEquip(p).equals(obtenirEquip(plyr)) == false){
-							if (pObj == null){
-								pObj = p;
-							}else{
-								if (plyr.getLocation().distance(p.getLocation()) < plyr.getLocation().distance(pObj.getLocation())){
-									if (p.getFireTicks() == 0){
-										pObj = p;
-									}
-								}
-							}
-
-						}
+			plyr.sendMessage("Has augmentat la velocitat del teu equip durant 15 segons.");
+			inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.GLASS) {
+			for (Player p : obtenirEquip(plyr).getPlayers()) {
+				p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 15 * 20, 1, false), true);
+			}
+			plyr.sendMessage("El teu equip és invisible durant 15 segons.");
+			inv.removeItem(new ItemStack(stack.getType()));
+		}
+		if (stack.getType() == Material.BLAZE_POWDER) {
+			Player pObj = null;
+			for (Entity e : plyr.getNearbyEntities(25, 40, 25)) {
+				if (e instanceof Player p && areEnemies(p, plyr)) {
+					if (pObj == null) {
+						pObj = p;
+					} else if (plyr.getLocation().distance(p.getLocation()) < plyr.getLocation().distance(pObj.getLocation()) && p.getFireTicks() == 0) {
+						pObj = p;
 					}
 				}
-				if (pObj != null){
-					int kills = Integer.parseInt(pTemp().ObtenirPropietat(plyr.getName() + "Morts"));
-					pObj.setFireTicks((5 + kills + (plyr.getLevel() / 2)) * 20); 
-					inv.removeItem(new ItemStack(stack.getType()));
-					pTemp().EstablirPropietat("LastIgnitePlayerVictim", pObj.getName());
-					pTemp().EstablirPropietat("LastIgnitePlayerKiller", plyr.getName());
-				}else{
-					plyr.sendMessage(ChatColor.GRAY + "No hi ha cap enemic a prop!");
-				}
 			}
-			if (stack.getType() == Material.SLIME_BALL){    
-				//				Location base = plugin.pMapaActual.ObtenirLocation("Slime" + plugin.EquipNum(plugin.ObtenirEquip(plyr)) ,world);
-				//				base.setY(base.getY() + 2);
-				//				//Skeleton skeleton = (Skeleton)world.spawnEntity(base, EntityType.SKELETON);
-				//				//ItemStack bow = new ItemStack(Material.BOW);
-				//				
-				//		      
-				//				Zombie slime = (Zombie)world.spawnEntity(base, EntityType.ZOMBIE);		
-				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 400 * 20, 4, false), true);
-				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 400 * 20, 1, false), true);
-				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 400 * 20, 1, false), true);
-				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 20, 1, false), true);
-				//				slime.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 400 * 20, 1, false), true);
-				//				
-				//				//ControllableMob<Zombie> mob = ControllableMobs.assign(slime);
-				//				//mob.getActions()
-				//				Bukkit.broadcastMessage(ChatColor.GREEN + plyr.getName() + ChatColor.WHITE + " ha fet apareixer un assasí!");
-				//				inv.removeItem(new ItemStack(stack.getType(), 1));
+			if (pObj != null) {
+				int kills = pTemp().ObtenirPropietatInt(plyr.getName() + "Morts");
+				pObj.setFireTicks((5 + kills + (plyr.getLevel() / 2)) * 20);
+				inv.removeItem(new ItemStack(stack.getType()));
+				pTemp().EstablirPropietat("LastIgnitePlayerVictim", pObj.getName());
+				pTemp().EstablirPropietat("LastIgnitePlayerKiller", plyr.getName());
+			} else {
+				plyr.sendMessage(ChatColor.GRAY + "No hi ha cap enemic a prop!");
 			}
-		}    		
-
+		}
 	}
-	public void ajuntarOr(Player p){
-		int preuOr = 10;
-		Inventory inv = p.getInventory();    	
-		for (ItemStack d : inv.getContents()) {  // d gets successively each value in ar.    		
-			if (d == null){
-				continue;
-			}
 
-			if (d.getType() == Material.GOLD_NUGGET){	    			
+	//---------- Explosive arrows ----------
 
-				if (d.getAmount() >= 10){    					
-					int lingots = d.getAmount()/10;
-					int nuggElim = lingots * 10;    					    					
-					inv.addItem(new ItemStack(Material.GOLD_INGOT, lingots ));
-					//inv.addItem(new ItemStack(Material.GOLD_NUGGET, nugg ));
-					inv.removeItem(new ItemStack(Material.GOLD_NUGGET, nuggElim ));
+	@Override
+	protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
+		super.onProjectileHit(evt, proj);
+		if (!(proj.getShooter() instanceof Player player)) return;
+		Entity entity = evt.getEntity();
+		Location loc = entity.getLocation();
+		if (evt.getEntityType() == EntityType.SNOWBALL) {
+			Bukkit.broadcastMessage("Un inutil (" + player.getName() + ") ha tirat una bola de neu!");
+		}
+		if (evt.getEntityType() != EntityType.ARROW) return;
+		boolean spawnProt = false;
+		for (Equip e : Equips) {
+			if (loc.distance(e.getTeamSpawnLocation()) <= 5) spawnProt = true;
+		}
+		if (player.getLocation().getBlockY() >= 49 && entity.getTicksLived() > 5 && !spawnProt) {
+			Inventory inv = player.getInventory();
+			if (inv.contains(Material.FIREWORK_STAR)) {
+				pTemp().EstablirPropietat("Explo", Long.toString(Calendar.getInstance().getTimeInMillis()));
+				pTemp().EstablirPropietat("ExploPlayer", player.getName());
+				inv.removeItem(new ItemStack(Material.FIREWORK_STAR, 1));
+				int mortsExplotats = pTemp().ObtenirPropietatInt(player.getName() + "MortsExplotats");
+				int morts = pTemp().ObtenirPropietatInt(player.getName() + "Morts");
+
+				float explo = 3.25F;
+				explo = explo + (0.12F * mortsExplotats);
+				explo = explo + (0.28F * morts);
+				float mult = ((float) player.getHealth()) / ((float) player.getMaxHealth());
+				explo = explo * mult;
+				if (inv.contains(Material.NETHER_STAR)) {
+					explo = explo + 1F;
+					explo = explo + (explo * 1.012F);
 				}
-
+				if (inv.contains(Material.GOLDEN_SWORD)) {
+					explo = explo + (explo * 0.20F);
+				}
+				if (Ability.hasAbility(plugin, this, player, AbilityType.PIROTÈCNIC)) {
+					explo = explo + (explo * 0.35F);
+				}
+				world.createExplosion(loc.getX(), loc.getY(), loc.getZ(), explo, false, false);
+				if (!pTemp().ObtenirPropietat("ForçaExplo").equals(Float.toString(explo))) {
+					player.sendMessage("Força de les fletxes explosives: " + Float.toString(explo));
+					pTemp().EstablirPropietat("ForçaExplo", Float.toString(explo));
+				}
+				world.dropItem(loc, new ItemStack(Material.GOLD_NUGGET, 1)).setVelocity(new Vector(0, 0, 0));
+				//Automal
+				double hp = player.getHealth();
+				if (hp == 20) {
+					player.sendMessage(ChatColor.GRAY + "Disparar fletxes explosives et treu 1 cor per explosió fins a mig cor. La força de les fletxes explosives varia amb la teva vida (20 hp - 100%, 1 hp 5%");
+				}
+				hp = hp - 2;
+				if (hp <= 0) {
+					hp = 1;
+				}
+				player.setHealth(hp);
 			}
-		} 
+			entity.remove();
+		}
 	}
+
+	//---------- Scoreboard ----------
+
+	@Override
+	protected void updateScoreBoard(Player ply) {
+		super.updateScoreBoard(ply);
+		if (JocIniciat) {
+			ArrayList<String> list = new ArrayList<>();
+			list.add(ChatColor.GREEN + "Kills: " + pPlayer(ply).ObtenirPropietatInt("Assassinats"));
+			list.add(ChatColor.RED + "Morts: " + pPlayer(ply).ObtenirPropietatInt("Morts"));
+			list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
+			if (Ability.hasAbility(plugin, this, ply, AbilityType.ESPADATXI)) {
+				list.add(ChatColor.BLUE + "Espadatxí: " + pPlayer(ply).ObtenirPropietatInt("StrongHitCount"));
+			}
+			if (Ability.hasAbility(plugin, this, ply, AbilityType.ARQUER_DE_GEL)) {
+				list.add(ChatColor.BLUE + "Arquer de gel: " + pPlayer(ply).ObtenirPropietatInt("StrongBowHitCount"));
+			}
+			ScoreBoardUpdater.setScoreBoard(ply, "Estadístiques", list, null);
+		}
+	}
+
+	//---------- Abilities (2015 lobby port; the selection menu is not wired yet) ----------
+
 	public static class Ability {
 
 		public Ability() {
-			// TODO Auto-generated constructor stub
 		}
-		public enum AbilityType{
+		public enum AbilityType {
 			RESISTENCIA,
 			COMANDANT,
 			ESPADATXI,
@@ -693,14 +972,14 @@ public class ObsidianDefenders extends JocEquips {
 			DESTRUCTOR,
 			RANDOM
 		}
-		static ItemStack Icona(lobby plugin, ObsidianDefenders j, Player plyr, AbilityType habilitat){
+		static ItemStack Icona(lobby plugin, ObsidianDefenders j, Player plyr, AbilityType habilitat) {
 			Material mat = Material.OAK_PLANKS;
 			String Titol = "<Nom>";
 			String Desc = "<Descripció>";
 			String Desc2 = "<Descripció2>";
 			boolean disp = false;
 			//-----------
-			switch(habilitat){
+			switch (habilitat) {
 			case ESPADATXI:
 				mat = Material.IRON_SWORD;
 				Titol = "Espadatxí";
@@ -718,7 +997,7 @@ public class ObsidianDefenders extends JocEquips {
 				mat = Material.DIAMOND;
 				Titol = "Resistència";
 				Desc = "Redueix el mal d'enemics un";
-				Desc2 ="10% + 8% per enemic proper (8 blocs)";	
+				Desc2 = "10% + 8% per enemic proper (8 blocs)";
 				disp = true;
 				break;
 			case ARQUER_PERFECTE:
@@ -732,7 +1011,7 @@ public class ObsidianDefenders extends JocEquips {
 				mat = Material.LEATHER_BOOTS;
 				Titol = "Assalt";
 				Desc = "El mal per caiguda es transfereix";
-				Desc2 =	 "als enemics propers (7 blocs)";
+				Desc2 = "als enemics propers (7 blocs)";
 				disp = true;
 				break;
 			case ESQUELET_FORT:
@@ -757,21 +1036,21 @@ public class ObsidianDefenders extends JocEquips {
 				mat = Material.GOLDEN_BOOTS;
 				Titol = "Control de la gravetat";
 				Desc = "Duplica el mal per caiguda dels";
-				Desc2 =	"enemics atacats recentment (10s)";
+				Desc2 = "enemics atacats recentment (10s)";
 				disp = true;
 				break;
 			case RANDOM:
 				mat = Material.BEDROCK;
 				Titol = "Inmortalitat";
 				Desc = "Ets inmortal i guanyes";
-				Desc2 =	"la partida en 5s ;) jaja";
+				Desc2 = "la partida en 5s ;) jaja";
 				disp = false;
 				break;
 			case ARQUER_DE_GEL:
 				mat = Material.ICE;
 				Titol = "Arquer de gel";
 				Desc = "Congela l'enemic que encertis";
-				Desc2 =	"cada 7 fletxes";
+				Desc2 = "cada 7 fletxes";
 				disp = true;
 				break;
 
@@ -779,21 +1058,21 @@ public class ObsidianDefenders extends JocEquips {
 				mat = Material.DIAMOND_AXE;
 				Titol = "Destructor";
 				Desc = "Dismnueix la durabilitat de les";
-				Desc2 =	"armadures de l'enemic (5 + morts)";
+				Desc2 = "armadures de l'enemic (5 + morts)";
 				disp = true;
 				break;
 			case COMANDANT:
 				mat = Material.COMMAND_BLOCK;
 				Titol = "Comandant";
 				Desc = "Augmenta el mal dels aliats propers un";
-				Desc2 =	"12% i comença amb items addicionals";
+				Desc2 = "12% i comença amb items addicionals";
 				disp = false;
 				break;
 			case CREEPER:
 				mat = Material.TNT;
 				Titol = "Creeper";
 				Desc = "Explotes al morir(0.8F). La força augmenta";
-				Desc2 =	"0.5F per cada enemic que hagis matat.";
+				Desc2 = "0.5F per cada enemic que hagis matat.";
 				disp = true;
 				break;
 			default:
@@ -801,19 +1080,19 @@ public class ObsidianDefenders extends JocEquips {
 
 			}
 			//-----------
-			ItemStack item = new ItemStack(mat); 
+			ItemStack item = new ItemStack(mat);
 			ItemMeta meta = item.getItemMeta();
 			meta.setDisplayName(ChatColor.GREEN + Titol);
 			ArrayList<String> lore = new ArrayList<>();
 			lore.add(ChatColor.WHITE + Desc);
-			if (!Desc2.equals("<Descripció2>")){
+			if (!Desc2.equals("<Descripció2>")) {
 				lore.add(ChatColor.WHITE + Desc2);
 			}
-			if (hasAbility(plugin, j, plyr, habilitat)){
+			if (hasAbility(plugin, j, plyr, habilitat)) {
 				lore.add(ChatColor.YELLOW + "Seleccionat!");
 				item.setAmount(2);
 			}
-			if (!disp){
+			if (!disp) {
 				lore.add(ChatColor.DARK_RED + "No funciona");
 			}
 			meta.setLore(lore);
@@ -821,20 +1100,19 @@ public class ObsidianDefenders extends JocEquips {
 			return item;
 
 		}
-		public static void openSelectionInventory(lobby plugin, ObsidianDefenders j, Player plyr){
-			World world = Bukkit.getServer().getWorlds().get(0);
-			Inventory inv = Bukkit.getServer().createInventory(plyr, 9*2, "Selecciona habilitat");
+		public static void openSelectionInventory(lobby plugin, ObsidianDefenders j, Player plyr) {
+			Inventory inv = Bukkit.getServer().createInventory(plyr, 9 * 2, "Selecciona habilitat");
 			int i = 0;
-			for (AbilityType mill : AbilityType.values()){
+			for (AbilityType mill : AbilityType.values()) {
 				inv.setItem(i, Icona(plugin, j, plyr, mill));
 				i++;
 			}
 			plyr.openInventory(inv);
 		}
-		public static boolean hasAbility(lobby plugin, ObsidianDefenders j, Player plyr, AbilityType ab){
+		public static boolean hasAbility(lobby plugin, ObsidianDefenders j, Player plyr, AbilityType ab) {
 			return getPlayerAbilityTypes(plugin, j, plyr).contains(ab);
 		}
-		static ArrayList<AbilityType> getPlayerAbilityTypes(lobby plugin, ObsidianDefenders j, Player plyr){
+		static ArrayList<AbilityType> getPlayerAbilityTypes(lobby plugin, ObsidianDefenders j, Player plyr) {
 			ArrayList<AbilityType> lore = new ArrayList<>();
 			try {
 				lore.add(AbilityType.valueOf(j.pPlayer(plyr).ObtenirPropietat("Habilitat1")));
@@ -845,13 +1123,13 @@ public class ObsidianDefenders extends JocEquips {
 			}
 			return lore;
 		}
-		public static void randomAbilities(lobby plugin, ObsidianDefenders j, Player plyr){
+		public static void randomAbilities(lobby plugin, ObsidianDefenders j, Player plyr) {
 			int i = 1;
-			while(i <= 2){
+			while (i <= 2) {
 				boolean fet = false;
-				while(fet == false){
-					for(AbilityType ab: AbilityType.values()){
-						if(Utils.Possibilitat(10)){
+				while (fet == false) {
+					for (AbilityType ab : AbilityType.values()) {
+						if (Utils.Possibilitat(10)) {
 							setAbility(plugin, j, plyr, ab, i);
 							fet = true;
 						}
@@ -861,12 +1139,12 @@ public class ObsidianDefenders extends JocEquips {
 			}
 
 		}
-		public static void setAbility(lobby plugin, ObsidianDefenders j, Player plyr, AbilityType ab, int id){
+		public static void setAbility(lobby plugin, ObsidianDefenders j, Player plyr, AbilityType ab, int id) {
 			j.pPlayer(plyr).EstablirPropietat("Habilitat" + Integer.toString(id), ab.name());
 		}
-		public static void giveSelectors(lobby plugin, Player plyr){
+		public static void giveSelectors(lobby plugin, Player plyr) {
 			int i = 1;
-			while(i <= 2){
+			while (i <= 2) {
 				ItemStack item = new ItemStack(Material.WOODEN_SWORD);
 				ItemMeta meta = item.getItemMeta();
 				meta.setDisplayName("Habilitat " + Integer.toString(i));
@@ -879,102 +1157,4 @@ public class ObsidianDefenders extends JocEquips {
 			}
 		}
 	}
-	@Override
-	protected void updateScoreBoard(Player ply) {
-		// TODO Auto-generated method stub
-		super.updateScoreBoard(ply);
-		if (JocIniciat){
-			ArrayList<String> list = new ArrayList<>();
-			list.add(ChatColor.GREEN + "Kills: " + pPlayer(ply).ObtenirPropietatInt("Assassinats"));
-			list.add(ChatColor.RED + "Morts: " + pPlayer(ply).ObtenirPropietatInt("Morts"));
-			list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
-			if(Ability.hasAbility(plugin, this, ply, AbilityType.ESPADATXI)){
-				list.add(ChatColor.BLUE + "Espadatxí: " + pPlayer(ply).ObtenirPropietatInt("StrongHitCount"));
-			}
-			if(Ability.hasAbility(plugin, this, ply, AbilityType.ARQUER_DE_GEL)){
-				list.add(ChatColor.BLUE + "Arquer de gel: " + pPlayer(ply).ObtenirPropietatInt("StrongBowHitCount"));
-			}
-			ScoreBoardUpdater.setScoreBoard(ply, "Estadístiques", list, null);
-		}
-	}
-	@Override
-	protected void onProjectileHit(ProjectileHitEvent evt, Projectile proj) {
-		// TODO Auto-generated method stub
-		super.onProjectileHit(evt, proj);
-		LivingEntity shooter = (LivingEntity) proj.getShooter();
-		Entity entity = evt.getEntity();
-		Location loc = entity.getLocation();
-		if (evt.getEntityType() == EntityType.SNOWBALL){
-			if (shooter instanceof Player) {
-				Player ply = (Player) shooter;
-				Bukkit.broadcastMessage("Un inutil ("+ ply.getName() +") ha tirat una bola de neu!");
-			}
-
-		}
-
-		if (evt.getEntityType() == EntityType.ARROW){
-			if (shooter instanceof Player) {
-				Player player = (Player)shooter;
-
-				boolean spawnProt = false;
-				if ((entity.getLocation().distance((pMapaActual().ObtenirLocation("base" + Integer.toString(0), world))) <= 5) || (entity.getLocation().distance((pMapaActual().ObtenirLocation("base" + Integer.toString(1), world))) <= 5)){
-					spawnProt = true;
-				}
-				if (player.getLocation().getBlockY() >= 49 && entity.getTicksLived() > 5 && !spawnProt){
-					Inventory inv = player.getInventory();
-					if (inv.contains(Material.FIREWORK_ROCKET) == true){
-						pTemp().EstablirPropietat("Explo", Long.toString(Calendar.getInstance().getTimeInMillis()));
-						pTemp().EstablirPropietat("ExploPlayer", player.getName());
-						ItemStack item = new ItemStack(Material.FIREWORK_ROCKET, 1);
-						inv.removeItem(item);
-						int mortsExplotats = Integer.parseInt(pTemp().ObtenirPropietat(player.getName() + "MortsExplotats"));
-						int morts = Integer.parseInt(pTemp().ObtenirPropietat(player.getName() + "Morts"));
-
-						float explo = 3.25F;
-						explo = explo + (0.12F * mortsExplotats);
-						explo = explo + (0.28F  * morts);
-						float mult = ((float)player.getHealth()) / ((float)player.getMaxHealth());
-						explo = explo * mult;
-						if (inv.contains(Material.NETHER_STAR) == true){
-							explo = explo + 1F;
-							explo = explo + (explo * 1.012F);
-						}
-						if (inv.contains(Material.GOLDEN_SWORD)){
-							explo = explo + (explo * 0.20F);
-						}
-						if(Ability.hasAbility(plugin, this, player, AbilityType.PIROTÈCNIC)){
-							explo = explo + (explo * 0.35F);
-						}
-						world.createExplosion(loc.getX(), loc.getY(), loc.getZ(), explo, false, false);
-						if (pTemp().ObtenirPropietat("ForçaExplo").equals(Float.toString(explo)) == false){
-							player.sendMessage("Força de les fletxes explosives: " + Float.toString(explo));
-							pTemp().EstablirPropietat("ForçaExplo", Float.toString(explo));
-						}
-						ItemStack itemstack = new ItemStack(Material.GOLD_NUGGET, 1); // A stack of diamonds
-						world.dropItem(loc, itemstack).setVelocity(new Vector(0,0,0));
-						//Automal
-						double hp = player.getHealth();
-						if (hp == 20){
-							player.sendMessage(ChatColor.GRAY + "Disparar fletxes explosives et treu 1 cor per explosió fins a mig cor. La força de les fletxes explosives varia amb la teva vida (20 hp - 100%, 1 hp 5%");
-						}
-						hp = hp - 2;
-						if (hp <= 0){
-							hp = 1;
-						}
-						player.setHealth(hp);
-
-
-
-					}
-
-					entity.remove();
-				}
-			}
-
-		}
-
-
-	}
-
-
 }
