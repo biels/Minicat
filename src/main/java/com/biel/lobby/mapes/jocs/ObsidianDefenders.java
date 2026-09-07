@@ -121,6 +121,9 @@ public class ObsidianDefenders extends JocEquips {
 	/** Where the pickaxe lands when the map has no PicDiamant property: the middle of the jungle, as in 2013. */
 	private static final Vector PIC_DIAMANT_2013 = new Vector(661, 42, -1398);
 	private static final long CICLE_COFRES_TICKS = 32 * 20;
+	/** The first chest cycle waits this long, so no prize is announced before anyone has left the spawn (Biel, 2026-09-08). */
+	private static final long FIRST_CHEST_CYCLE_TICKS = 15 * 20;
+	private static final double RECALL_SECONDS = 3;
 	private static final int MAX_COFRES_OBERTS = 8;
 	private static final long PRIMER_PIC_TICKS = 3 * 60 * 20;
 	private static final long PERIODE_PIC_TICKS = 2 * 60 * 20;
@@ -610,7 +613,7 @@ public class ObsidianDefenders extends JocEquips {
 		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
 		Bukkit.getPluginManager().registerEvents(worldListener, plugin);
 		emptyDispensers();
-		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
+		scheduleGameplayRepeatingTask(this::cicleCofres, FIRST_CHEST_CYCLE_TICKS, CICLE_COFRES_TICKS);
 		scheduleGameplayRepeatingTask(this::tickControlPoints, 20, 20);
 		scheduleGameplayRepeatingTask(this::tickDetonators, 20, DETONATOR_TICK_PERIOD);
 		scheduleGameplayRepeatingTask(this::tickHints, 30, 20);
@@ -662,10 +665,15 @@ public class ObsidianDefenders extends JocEquips {
 		if (ply.getHealth() > maxHealth) ply.setHealth(maxHealth);
 	}
 
-	/** The recall button in the last hotbar slot (Biel, 2026-09-08: "a way to go back home"): a six-second channel to the base, cancelled by moving. */
+	/** The recall clock in the last hotbar slot (Biel, 2026-09-08: "a way to go back home"): a three-second channel to the base, cancelled by moving. */
 	@Override
 	protected boolean isRecallEnabled() {
 		return true;
+	}
+
+	@Override
+	protected double recallSeconds() {
+		return RECALL_SECONDS;
 	}
 
 	/** Gold, pickaxes and consumables survive death: the economy is the game. */

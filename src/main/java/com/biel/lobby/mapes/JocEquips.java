@@ -648,6 +648,10 @@ public abstract class JocEquips extends Joc {
 	protected boolean isRecallEnabled(){
 		return false;
 	}
+	/** Seconds the recall channels before distance is added; games override. */
+	protected double recallSeconds(){
+		return 6;
+	}
 	@Override
 	protected void onPlayerInteractEntity(PlayerInteractEntityEvent evt,
 			Player p) {
@@ -934,10 +938,10 @@ public abstract class JocEquips extends Joc {
 		public void teleportToTeamSpawn(Player ply){
 			ply.teleport(getTeamSpawnLocation());
 		}
+		/** A clock in the last hotbar slot (Biel, 2026-09-08: "maybe a clock, nicer, less time"): right-click channels {@link #recallSeconds()} and lands at the base; moving cancels. */
 		public void giveRecallButton(Player ply){
-			ItemStack dBlk = new ItemStack(Material.DIAMOND_BLOCK);
-			dBlk.addUnsafeEnchantment(Enchantment.FORTUNE, 10);
-			ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.GREEN + "Recall",  ChatColor.WHITE + "Torna el jugador a la base."), ply, event -> RecallUtils.startRecallTeleport(event.getPlayer(), getTeamSpawnLocation()));
+			ItemStack clock = new ItemStack(Material.CLOCK);
+			ItemButton button = new ItemButton(Utils.setItemNameAndLore(clock, ChatColor.AQUA + "Tornar a la base", ChatColor.GRAY + "Clic dret: " + (int) recallSeconds() + " s quiet i ets a la base."), ply, event -> RecallUtils.startRecallTeleport(event.getPlayer(), getTeamSpawnLocation(), recallSeconds()));
 			PlayerInventory inventory = ply.getInventory();
 			inventory.setItem(8, button.getItemStack());
 		}
