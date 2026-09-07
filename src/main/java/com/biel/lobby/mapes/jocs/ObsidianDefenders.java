@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
+import org.bukkit.FireworkEffect;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
@@ -45,6 +46,7 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.IronGolem;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -71,6 +73,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -235,6 +238,8 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<UUID, Integer> starChargeTasks = new HashMap<>();
 	/** Player → deaths to a wither skeleton this match. */
 	private final Map<UUID, Integer> witherDeaths = new HashMap<>();
+	/** Players who have bought their one quartz this match. */
+	private final Set<UUID> quartzBuyers = new HashSet<>();
 
 	boolean debug = false;
 	/** Team id → block positions of the TNT that is that team's base core. */
@@ -595,6 +600,7 @@ public class ObsidianDefenders extends JocEquips {
 		suddenDeath = false;
 		killsByTeam.clear();
 		witherDeaths.clear();
+		quartzBuyers.clear();
 		scheduleGameplayTask(this::warnSuddenDeath, (SUDDEN_DEATH_SECOND - SUDDEN_DEATH_WARNING_SECONDS) * 20L);
 		scheduleGameplayTask(this::startSuddenDeath, SUDDEN_DEATH_SECOND * 20L);
 		scheduleGameplayRepeatingTask(this::presènciaDelGuardià, 20, 20);
@@ -898,8 +904,8 @@ public class ObsidianDefenders extends JocEquips {
 			int slot = Utils.NombreEntre(0, inv.getSize() - 1);
 			if (inv.getItem(slot) == null) inv.setItem(slot, loot); else inv.addItem(loot);
 			Objecte objecte = Objecte.de(loot);
-			if (objecte == Objecte.ESTRELLA_DEL_NETHER) announceLoot(b, objecte, Particle.FLAME, ChatColor.RED + "Una estrella infernal" + ChatColor.WHITE + " ha aparegut a la jungla!");
-			if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) announceLoot(b, objecte, Particle.END_ROD, ChatColor.AQUA + "Una bola de neu encantada" + ChatColor.WHITE + " ha aparegut a la jungla!");
+			if (objecte == Objecte.ESTRELLA_DEL_NETHER) announceLoot(b, objecte, Particle.FLAME, Color.fromRGB(255, 60, 30), ChatColor.RED + "Una estrella infernal" + ChatColor.WHITE + " ha aparegut a la jungla!");
+			if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) announceLoot(b, objecte, Particle.END_ROD, Color.fromRGB(120, 220, 255), ChatColor.AQUA + "Una bola de neu encantada" + ChatColor.WHITE + " ha aparegut a la jungla!");
 		}
 	}
 
@@ -908,17 +914,32 @@ public class ObsidianDefenders extends JocEquips {
 	 * chest is announced to everyone and a beam stands over the chest until the prize is
 	 * taken or the chest closes, so both teams can run for it.
 	 */
-	private void announceLoot(Block chest, Objecte prize, Particle beam, String announcement) {
+	private void announceLoot(Block chest, Objecte prize, Particle beam, Color colour, String announcement) {
 		sendGlobalMessage(announcement);
 		for (Player p : getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_BELL_RESONATE, 0.6F, 1.4F);
 		Location base = chest.getLocation().add(0.5, 1, 0.5);
-		int[] taskId = new int[1];
+		// A firework in the prize's colour at the landing: seen over the canopy from anywhere on the map.
+		Firework firework = world.spawn(base.clone().add(0, 2, 0), Firework.class, fw -> {
+			FireworkMeta meta = fw.getFireworkMeta();
+			meta.addEffect(FireworkEffect.builder().with(FireworkEffect.Type.BALL_LARGE).withColor(colour).withFade(Color.WHITE).withFlicker().withTrail().build());
+			meta.setPower(1);
+			fw.setFireworkMeta(meta);
+		});
+		scheduleGameplayTask(firework::detonate, 15);
+		int[] frame = new int[1], taskId = new int[1];
 		taskId[0] = scheduleGameplayRepeatingTask(() -> {
 			if (!JocEnMarxa() || !(chest.getState() instanceof Chest open) || !holdsPrize(open.getInventory(), prize)) {
 				Bukkit.getScheduler().cancelTask(taskId[0]);
 				return;
 			}
-			for (int i = 0; i < 4; i++) world.spawnParticle(beam, base.clone().add(0, Math.random() * LOOT_BEAM_HEIGHT, 0), 1, 0, 0, 0, 0);
+			frame[0]++;
+			// A solid column two particles a block tall, and a helix of the prize's colour turning around it.
+			for (int i = 0; i < LOOT_BEAM_HEIGHT * 2; i++) world.spawnParticle(beam, base.clone().add(0, i / 2.0, 0), 1, 0.05, 0.05, 0.05, 0);
+			Particle.DustOptions dust = new Particle.DustOptions(colour, 1.6F);
+			for (int i = 0; i < LOOT_BEAM_HEIGHT; i++) {
+				double angle = frame[0] * 0.3 + i * 0.6;
+				world.spawnParticle(Particle.DUST, base.clone().add(0.7 * Math.cos(angle), i, 0.7 * Math.sin(angle)), 1, 0, 0, 0, 0, dust);
+			}
 		}, 0, LOOT_BEAM_PERIOD_TICKS);
 	}
 
@@ -1595,17 +1616,28 @@ public class ObsidianDefenders extends JocEquips {
 			if (objecte != null) for (String línia : objecte.llegenda) info.add(ChatColor.GRAY + línia);
 			else if (m.descripció != null) info.add(ChatColor.GRAY + m.descripció);
 			info.add(ChatColor.WHITE + "Preu: " + ChatColor.GOLD + m.preu + " or");
-			menu.setOption(mercaderies.indexOf(m), new ItemStack(m.material, m.quantitat), ChatColor.YELLOW + m.nom, info);
+			boolean soldOut = m == Mercaderia.QUARS && hasQuartz(p);
+			if (soldOut) info.add(ChatColor.RED + "Ja el tens: només un per persona");
+			menu.setOption(mercaderies.indexOf(m), new ItemStack(m.material, m.quantitat), (soldOut ? ChatColor.DARK_GRAY : ChatColor.YELLOW) + m.nom, info);
 		}
 		menu.open(p);
 	}
 
 	private void comprar(Player p, Mercaderia m) {
-		if (!JocEnMarxa() || !gastarOr(p, m.preu)) {
+		if (!JocEnMarxa()) return;
+		if (m == Mercaderia.QUARS && hasQuartz(p)) {
 			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			PaperMessages.sendActionBar(p, ChatColor.RED + "Només un quars per persona", 60);
 			return;
 		}
-		Utils.giveItemStack(Objecte.descriure(new ItemStack(m.material, m.quantitat)), p);
+		int falta = m.preu - orDisponible(p);
+		if (falta > 0 || !gastarOr(p, m.preu)) {
+			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			PaperMessages.sendActionBar(p, ChatColor.RED + "Et falten " + Math.max(1, falta) + " or", 60);
+			return;
+		}
+		if (m == Mercaderia.QUARS) quartzBuyers.add(p.getUniqueId());
+		giveOrDrop(p, Objecte.descriure(new ItemStack(m.material, m.quantitat)));
 		p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1F, 1F);
 		updateScoreBoard(p);
 	}
@@ -1622,6 +1654,20 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	/** Takes the price in nuggets, breaking ingots when needed and returning the change as nuggets. */
+	/** Quartz is one per person for the match (Biel, 2026-09-07 night): bought once, or already carried. */
+	private boolean hasQuartz(Player p) {
+		return quartzBuyers.contains(p.getUniqueId()) || p.getInventory().contains(Material.QUARTZ);
+	}
+
+	/** Puts the stack in the inventory; what does not fit falls at the player's feet instead of vanishing. */
+	private void giveOrDrop(Player p, ItemStack stack) {
+		if (Utils.isArmor(stack)) {
+			Utils.giveItemStack(stack, p);
+			return;
+		}
+		for (ItemStack leftover : p.getInventory().addItem(stack).values()) world.dropItemNaturally(p.getLocation(), leftover);
+	}
+
 	private boolean gastarOr(Player p, int preu) {
 		if (orDisponible(p) < preu) return false;
 		Inventory inv = p.getInventory();
@@ -1681,7 +1727,7 @@ public class ObsidianDefenders extends JocEquips {
 			sobre.setBlockData(rotatable, false);
 		}
 		if (forja == Forja.BASE) escriureRètol(sobre, ChatColor.GOLD + "Taula", ChatColor.GOLD + "d'encantar", ChatColor.GRAY + "paga amb or", "");
-		else escriureRètol(sobre, ChatColor.LIGHT_PURPLE + "Altar de la", ChatColor.LIGHT_PURPLE + "capçada", ChatColor.GRAY + "encantaments", ChatColor.GRAY + "forts");
+		else escriureRètol(sobre, ChatColor.LIGHT_PURPLE + "Altar de la", ChatColor.LIGHT_PURPLE + "capçada", ChatColor.GRAY + "encanteris", ChatColor.GRAY + "forts");
 		if (sobre.getState() instanceof Sign rètol) {
 			rètol.setWaxed(true);
 			rètol.update(true, false);
@@ -1697,7 +1743,7 @@ public class ObsidianDefenders extends JocEquips {
 			for (Map.Entry<Block, TaulaDEncantar> taula : taulesDEncantar.entrySet()) {
 				if (!aProp(at, taula.getKey())) continue;
 				if (taula.getValue().forja() == Forja.BASE) hint(p, "taula", "Taula d'encantar: clic dret amb l'eina a la mà. Es paga amb or.");
-				else hint(p, "altar", "Altar de la capçada: els encantaments forts. Clic dret amb l'eina a la mà.");
+				else hint(p, "altar", "Altar de la capçada: els encanteris forts. Clic dret amb l'eina a la mà.");
 			}
 			for (ControlPoint point : controlPoints) {
 				for (Block plate : point.plateByTeam.values()) if (aProp(at, plate)) hint(p, "placa", "Punt de control: 3 s sobre la placa del teu color per capturar-lo.");
@@ -1756,8 +1802,10 @@ public class ObsidianDefenders extends JocEquips {
 	private void encantar(Player p, Forja forja, Encantament encantament) {
 		ItemStack item = p.getInventory().getItemInMainHand();
 		int nivell = encantament.nivellSegüent(forja, item);
-		if (!JocEnMarxa() || nivell == 0 || !gastarOr(p, encantament.preu(nivell))) {
+		int falta = nivell == 0 ? 0 : encantament.preu(nivell) - orDisponible(p);
+		if (!JocEnMarxa() || nivell == 0 || falta > 0 || !gastarOr(p, encantament.preu(nivell))) {
 			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			if (falta > 0) PaperMessages.sendActionBar(p, ChatColor.RED + "Et falten " + falta + " or", 60);
 			return;
 		}
 		item.addUnsafeEnchantment(encantament.encantament, nivell);
@@ -2842,7 +2890,8 @@ public class ObsidianDefenders extends JocEquips {
 			ArrayList<String> list = new ArrayList<>();
 			list.add(ChatColor.GREEN + "Kills: " + pPlayer(ply).ObtenirPropietatInt("Assassinats"));
 			list.add(ChatColor.RED + "Morts: " + pPlayer(ply).ObtenirPropietatInt("Morts"));
-			list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
+			// The gold you can spend now, not the gold earned so far: the shops count the inventory.
+			list.add(ChatColor.GOLD + "Or: " + orDisponible(ply));
 			if (pMapaActual().ExisteixPropietat("Golem")) {
 				// Aqua only while it lives; grey and coarse while it is dead, so the line does not pull the eye.
 				String estat = estatGuardià();
