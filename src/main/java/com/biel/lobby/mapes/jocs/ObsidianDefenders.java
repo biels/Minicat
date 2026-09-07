@@ -854,18 +854,22 @@ public class ObsidianDefenders extends JocEquips {
 			Location llavor = pMapaActual().ExisteixPropietat("PontMoat" + e.getId())
 					? pMapaActual().ObtenirLocation("PontMoat" + e.getId(), world)
 					: PONT_MOAT_2013[Math.min(e.getId(), PONT_MOAT_2013.length - 1)].toLocation(world);
-			List<List<Block>> columnes = new ArrayList<>();
-			for (int direcció : new int[] { -1, 1 }) {
-				for (int pas = direcció == 1 ? 1 : 0; pas < 20; pas++) {
-					Block centre = world.getBlockAt(llavor.getBlockX() + direcció * pas, PONT_ALÇADA, llavor.getBlockZ());
-					if (!ésBuitSobreAigua(centre)) break;
-					List<Block> columna = new ArrayList<>();
-					for (int dz = -1; dz <= 1; dz++) columna.add(centre.getRelative(0, 0, dz));
-					columnes.add(columna);
+			// Each of the three rows is walked on its own: the 2013 decks are not square,
+			// one row's planks start a block further out than its neighbours'.
+			Map<Integer, List<Block>> columnesPerX = new java.util.TreeMap<>();
+			for (int dz = -1; dz <= 1; dz++) {
+				for (int direcció : new int[] { -1, 1 }) {
+					for (int pas = direcció == 1 ? 1 : 0; pas < 20; pas++) {
+						int x = llavor.getBlockX() + direcció * pas;
+						Block deck = world.getBlockAt(x, PONT_ALÇADA, llavor.getBlockZ() + dz);
+						if (!ésBuitSobreAigua(deck)) break;
+						columnesPerX.computeIfAbsent(x, k -> new ArrayList<>()).add(deck);
+					}
 				}
 			}
+			List<List<Block>> columnes = new ArrayList<>(columnesPerX.values());
 			Location base = e.getTeamSpawnLocation();
-			columnes.sort((a, b) -> Double.compare(b.get(1).getLocation().distance(base), a.get(1).getLocation().distance(base)));
+			columnes.sort((a, b) -> Double.compare(b.get(0).getLocation().distance(base), a.get(0).getLocation().distance(base)));
 			pontsPerMoat.put(e.getId(), columnes);
 			càrregaPont.put(e.getId(), 0);
 			if (columnes.isEmpty()) {
@@ -947,7 +951,7 @@ public class ObsidianDefenders extends JocEquips {
 	private void posarColumnaDePont(List<Block> columna, boolean posar) {
 		if (!JocEnMarxa()) return;
 		for (Block b : columna) b.setType(posar ? Material.OAK_PLANKS : Material.AIR);
-		Location so = columna.get(1).getLocation();
+		Location so = columna.get(0).getLocation();
 		world.playSound(so, posar ? Sound.BLOCK_PISTON_EXTEND : Sound.BLOCK_PISTON_CONTRACT, 1F, 1F);
 	}
 
