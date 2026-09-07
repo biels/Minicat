@@ -1171,7 +1171,7 @@ public class ObsidianDefenders extends JocEquips {
 		if (ara == abans) return;
 		càrregaPont.put(e.getId(), ara);
 		if (ara == PONT_CÀRREGA_MÀXIMA) {
-			sendTeamMessage(e, ChatColor.AQUA + "Pont enemic a punt.");
+			sendTeamMessage(e, ChatColor.AQUA + "Pont enemic a punt " + ChatColor.GRAY + "(activar des de la base)");
 			for (Player p : e.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 1.4F);
 		}
 		mostrarCàrregaPont(e);
