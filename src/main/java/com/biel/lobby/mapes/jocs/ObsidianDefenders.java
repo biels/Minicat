@@ -11,14 +11,17 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -70,6 +73,7 @@ import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
 import io.papermc.paper.registry.RegistryAccess;
+import net.kyori.adventure.bossbar.BossBar;
 import io.papermc.paper.registry.RegistryKey;
 
 /**
@@ -89,6 +93,20 @@ public class ObsidianDefenders extends JocEquips {
 	private static final long PERIODE_PIC_TICKS = 2 * 60 * 20;
 	private static final long GOLEM_INICIAL_TICKS = 5 * 20;
 	private static final int OR_PER_GOLEM = 22;
+	/** The iron golem is El Guardià: named, lit by an aura and documented in game (docs/games/obsidian-defenders/guardian-golem-design.md). */
+	private static final String NOM_GUARDIÀ = "El Guardià";
+	/** Glacial cyan, deliberately neither team's colour: the blue team is navy. */
+	private static final Color COLOR_AURA_GUARDIÀ = Color.fromRGB(90, 200, 255);
+	private static final Color COLOR_AURA_ENFURISMAT = Color.fromRGB(220, 245, 255);
+	private static final double RADI_AURA_GUARDIÀ = 1.2;
+	private static final long AURA_GUARDIÀ_PERIODE_TICKS = 5;
+	private static final double FRACCIÓ_VIDA_ENFURISMAT = 0.3;
+	/** Players this close to the Guardian see its boss bar: the hut, the canal, the sewers and the deck above. */
+	private static final double DISTÀNCIA_BARRA_GUARDIÀ = 24;
+	/** The beam over the lair starts on the deck block above the Golem property (nine blocks up on the 2013 map) and rises this far. */
+	private static final int FEIX_GUARDIÀ_BASE = 9;
+	private static final int FEIX_GUARDIÀ_ALÇADA = 10;
+	private static final int SEGONS_ENTRE_BRUNZITS_GUARDIÀ = 4;
 	/**
 	 * How far from a team's spawn the base's TNT is looked for when the match starts.
 	 * On the 2013 map each core is a cluster of about 23 TNT blocks 20 to 27 blocks
@@ -107,6 +125,14 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<Integer, Set<Vector>> nuclisPerEquip = new HashMap<>();
 	private final Map<UUID, Integer> segonsÚltimCopRebut = new HashMap<>();
 	private UUID golemActual;
+	private BossBar barraGuardià;
+	private int tascaAuraGuardià = -1;
+	private int passosAura = 0;
+	private int segonsPresènciaGuardià = 0;
+	private boolean guardiàEnfurismat = false;
+	private boolean guardiàAnunciat = false;
+	/** Game second at which the Guardian (re)appears; read only while it is dead. */
+	private int guardiàTornaAlSegon = 0;
 	private boolean primerPicAnunciat = false;
 	/** Team id → bridge charge, 0..PONT_CÀRREGA_MÀXIMA. */
 	private final Map<Integer, Integer> càrregaPont = new HashMap<>();
@@ -196,7 +222,9 @@ public class ObsidianDefenders extends JocEquips {
 		registrarPonts();
 		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
 		scheduleGameplayRepeatingTask(this::apareixerPicDiamant, PRIMER_PIC_TICKS, PERIODE_PIC_TICKS);
+		guardiàTornaAlSegon = (int) (GOLEM_INICIAL_TICKS / 20);
 		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
+		scheduleGameplayRepeatingTask(this::presènciaDelGuardià, 20, 20);
 	}
 
 	@Override
@@ -244,7 +272,8 @@ public class ObsidianDefenders extends JocEquips {
 		ArrayList<String> info = new ArrayList<>();
 		info.add("Fes explotar la TNT de la base enemiga. L'obsidiana es pot trencar.");
 		info.add("Els cofres de la jungla canvien de lloc cada 32 s; el pic de diamant cau al mig als 4 min.");
-		info.add("L'or paga tot: matar, obrir cofres, matar el golem de ferro.");
+		info.add("L'or paga tot: matar, obrir cofres, matar el Guardià.");
+		info.add("El Guardià viu sota el mig: matar-lo dona " + OR_PER_GOLEM + " d'or i 3 min de Resistència i Velocitat.");
 		return info;
 	}
 
@@ -479,11 +508,11 @@ public class ObsidianDefenders extends JocEquips {
 		}
 	}
 
-	//---------- Iron golem (ApareixerGolem, 2013) ----------
+	//---------- The Guardian: the iron golem (ApareixerGolem, 2013) with its aura ----------
 
 	private void apareixerGolem() {
 		if (!JocEnMarxa() || !pMapaActual().ExisteixPropietat("Golem")) return;
-		Location punt = pMapaActual().ObtenirLocation("Golem", world).add(0.5, 1, 0.5);
+		Location punt = puntDelGuardià().add(0.5, 1, 0.5);
 		Block b = punt.getBlock();
 		if (b.getState() instanceof Chest cofre) cofre.getInventory().clear();
 		b.setType(Material.AIR);
@@ -493,11 +522,117 @@ public class ObsidianDefenders extends JocEquips {
 		golem.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 400 * 20, 1, true), true);
 		golem.setRemoveWhenFarAway(false);
 		golem.setPersistent(true);
+		golem.customName(PaperMessages.legacy(ChatColor.AQUA + NOM_GUARDIÀ));
+		golem.setCustomNameVisible(true);
 		golemActual = golem.getUniqueId();
+		guardiàEnfurismat = false;
+		barraGuardià().progress(1F);
+		world.playSound(punt, Sound.BLOCK_BEACON_ACTIVATE, 2F, 1F);
+		world.playSound(punt, Sound.ENTITY_IRON_GOLEM_REPAIR, 1.5F, 0.8F);
+		for (Player p : getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.6F, 1F);
+		if (!guardiàAnunciat) {
+			guardiàAnunciat = true;
+			sendGlobalMessage(ChatColor.AQUA + NOM_GUARDIÀ + ChatColor.WHITE + " s'ha despertat sota el mig: " + ChatColor.GOLD + OR_PER_GOLEM + " d'or" + ChatColor.WHITE + " i 3 min de Resistència i Velocitat per a qui el mati.");
+		} else {
+			sendGlobalMessage(ChatColor.AQUA + NOM_GUARDIÀ + ChatColor.WHITE + " s'ha despertat.");
+		}
+		if (tascaAuraGuardià != -1) Bukkit.getScheduler().cancelTask(tascaAuraGuardià);
+		tascaAuraGuardià = scheduleGameplayRepeatingTask(this::auraDelGuardià, 0, AURA_GUARDIÀ_PERIODE_TICKS);
+		updateScoreBoards();
+	}
+
+	private Location puntDelGuardià() {
+		return pMapaActual().ObtenirLocation("Golem", world);
 	}
 
 	private boolean ésElGolem(Entity e) {
 		return e instanceof IronGolem && golemActual != null && golemActual.equals(e.getUniqueId());
+	}
+
+	private IronGolem guardiàViu() {
+		if (golemActual == null) return null;
+		Entity e = Bukkit.getEntity(golemActual);
+		return e instanceof IronGolem golem && !golem.isDead() ? golem : null;
+	}
+
+	private BossBar barraGuardià() {
+		if (barraGuardià == null) {
+			barraGuardià = BossBar.bossBar(PaperMessages.legacy(ChatColor.AQUA + NOM_GUARDIÀ), 1F, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_10);
+		}
+		return barraGuardià;
+	}
+
+	/**
+	 * Every five ticks while the Guardian lives: a slowly turning ring of dust and soul
+	 * flames at its feet, a mote rising from its chest, and the beam over the lair that
+	 * tells the surface it is up. Particles only; no block is touched.
+	 */
+	private void auraDelGuardià() {
+		IronGolem golem = guardiàViu();
+		if (golem == null) return;
+		passosAura++;
+		Location peus = golem.getLocation();
+		Particle.DustOptions pols = new Particle.DustOptions(guardiàEnfurismat ? COLOR_AURA_ENFURISMAT : COLOR_AURA_GUARDIÀ, 1.1F);
+		double gir = passosAura * 0.15;
+		for (int i = 0; i < 12; i++) {
+			double angle = gir + i * Math.PI / 6;
+			world.spawnParticle(Particle.DUST, peus.clone().add(RADI_AURA_GUARDIÀ * Math.cos(angle), 0.1, RADI_AURA_GUARDIÀ * Math.sin(angle)), 1, 0, 0, 0, 0, pols);
+		}
+		int flames = guardiàEnfurismat ? 4 : 2;
+		for (int i = 0; i < flames; i++) {
+			double angle = Math.random() * 2 * Math.PI, radi = Math.random() * RADI_AURA_GUARDIÀ;
+			world.spawnParticle(Particle.SOUL_FIRE_FLAME, peus.clone().add(radi * Math.cos(angle), 0.1, radi * Math.sin(angle)), 0, 0, 1, 0, 0.04);
+		}
+		if (passosAura % 2 == 0) world.spawnParticle(Particle.END_ROD, peus.clone().add(0, 1.4, 0), 0, 0, 1, 0, 0.03);
+		Location feix = puntDelGuardià().add(0.5, FEIX_GUARDIÀ_BASE, 0.5);
+		for (int i = 0; i < 3; i++) world.spawnParticle(Particle.END_ROD, feix.clone().add(0, Math.random() * FEIX_GUARDIÀ_ALÇADA, 0), 1, 0, 0, 0, 0);
+		if (passosAura % 2 == 0) {
+			for (int i = 0; i < 8; i++) {
+				double angle = gir + i * Math.PI / 4;
+				world.spawnParticle(Particle.DUST, feix.clone().add(0.8 * Math.cos(angle), 0.1, 0.8 * Math.sin(angle)), 1, 0, 0, 0, 0, pols);
+			}
+		}
+	}
+
+	/**
+	 * Every second for the whole match. While the Guardian lives: who sees its boss bar,
+	 * the hum on the canal, and the enrage tint under 30 % health. While it is dead: the
+	 * scoreboard countdown to its return.
+	 */
+	private void presènciaDelGuardià() {
+		IronGolem golem = guardiàViu();
+		if (golem == null) {
+			if (guardiàTornaAlSegon > segonsTranscorreguts()) updateScoreBoards();
+			return;
+		}
+		BossBar barra = barraGuardià();
+		double fracció = golem.getHealth() / golem.getAttribute(Attribute.MAX_HEALTH).getValue();
+		barra.progress((float) Math.max(0, Math.min(1, fracció)));
+		for (Player p : getPlayers()) {
+			if (p.getLocation().distance(golem.getLocation()) <= DISTÀNCIA_BARRA_GUARDIÀ) p.showBossBar(barra);
+			else p.hideBossBar(barra);
+		}
+		if (!guardiàEnfurismat && fracció < FRACCIÓ_VIDA_ENFURISMAT) {
+			guardiàEnfurismat = true;
+			world.playSound(golem.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 1.5F, 0.6F);
+		}
+		if (++segonsPresènciaGuardià % SEGONS_ENTRE_BRUNZITS_GUARDIÀ == 0) world.playSound(golem.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.7F, 1F);
+	}
+
+	private void apagarAuraDelGuardià() {
+		if (tascaAuraGuardià != -1) {
+			Bukkit.getScheduler().cancelTask(tascaAuraGuardià);
+			tascaAuraGuardià = -1;
+		}
+		if (barraGuardià != null && world != null) for (Player p : world.getPlayers()) p.hideBossBar(barraGuardià);
+	}
+
+	/** The scoreboard's word for the Guardian: alive, or the time until it returns. */
+	private String estatGuardià() {
+		if (guardiàViu() != null) return "viu";
+		int segons = guardiàTornaAlSegon - segonsTranscorreguts();
+		if (segons <= 0) return "arriba";
+		return String.format("%d:%02d", segons / 60, segons % 60);
 	}
 
 	@Override
@@ -505,16 +640,26 @@ public class ObsidianDefenders extends JocEquips {
 		super.onEntityDeath(evt, e);
 		if (!ésElGolem(e)) return;
 		golemActual = null;
+		apagarAuraDelGuardià();
+		Location pit = e.getLocation().add(0, 1.3, 0);
+		world.playSound(pit, Sound.BLOCK_BEACON_DEACTIVATE, 2F, 1F);
+		world.spawnParticle(Particle.DUST, pit, 60, 0.6, 0.8, 0.6, 0, new Particle.DustOptions(COLOR_AURA_GUARDIÀ, 1.4F));
+		world.spawnParticle(Particle.END_ROD, pit, 20, 0.3, 0.5, 0.3, 0.1);
+		for (Player p : getPlayers()) p.playSound(p.getLocation(), Sound.ENTITY_IRON_GOLEM_DEATH, 0.5F, 1F);
 		Player p = ((IronGolem) e).getKiller();
 		if (p != null) {
 			donarOr(p, OR_PER_GOLEM);
 			p.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 3 * 60 * 20, 1, false), true);
 			p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 1, false), true);
 			p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 3 * 60 * 20, 1, false), true);
-			sendGlobalMessage(p.getName() + " ha matat el golem de ferro " + "(" + ChatColor.GOLD + "+" + OR_PER_GOLEM + ChatColor.WHITE + ")");
+			PaperMessages.sendActionBar(p, ChatColor.AQUA + "Benedicció del Guardià", 60);
+			sendGlobalMessage(p.getName() + " ha matat " + ChatColor.AQUA + NOM_GUARDIÀ + ChatColor.WHITE + ", el golem de ferro (" + ChatColor.GOLD + "+" + OR_PER_GOLEM + ChatColor.WHITE + ")");
 		}
 		int minuts = getPlayers().size() >= 5 ? 2 : 3;
+		guardiàTornaAlSegon = segonsTranscorreguts() + minuts * 60;
+		sendGlobalMessage(ChatColor.AQUA + NOM_GUARDIÀ + ChatColor.WHITE + " tornarà d'aquí a " + minuts + " min.");
 		scheduleGameplayTask(this::apareixerGolem, minuts * 60L * 20L);
+		updateScoreBoards();
 	}
 
 	//---------- Combat ----------
@@ -760,6 +905,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	public void clearExternals() {
+		apagarAuraDelGuardià();
 		for (UUID id : botiguers.keySet()) {
 			Entity botiguer = Bukkit.getEntity(id);
 			if (botiguer != null) botiguer.remove();
@@ -1351,6 +1497,7 @@ public class ObsidianDefenders extends JocEquips {
 			list.add(ChatColor.GREEN + "Kills: " + pPlayer(ply).ObtenirPropietatInt("Assassinats"));
 			list.add(ChatColor.RED + "Morts: " + pPlayer(ply).ObtenirPropietatInt("Morts"));
 			list.add(ChatColor.GOLD + "Or: " + pPlayer(ply).ObtenirPropietatInt("Or"));
+			if (pMapaActual().ExisteixPropietat("Golem")) list.add(ChatColor.AQUA + "Guardià: " + estatGuardià());
 			Equip equip = obtenirEquip(ply);
 			if (equip != null) list.add(ChatColor.AQUA + "Pont: " + barraPont(equip));
 			if (Ability.hasAbility(plugin, this, ply, AbilityType.ESPADATXI)) {
