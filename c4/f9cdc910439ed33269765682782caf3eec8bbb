@@ -1,0 +1,16 @@
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  h_c9701b0283fbf3 1893,1899-1910
+src/main/java/com/biel/lobby/minions/SnowmanMinion.java
+  h_c9701b0283fbf3 25-27,50,52-53,56,80-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "c4f9cdc910439ed33269765682782caf3eec8bbb",
+  "prompts": {},
+  "humans": {
+    "h_c9701b0283fbf3": {
+      "author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
