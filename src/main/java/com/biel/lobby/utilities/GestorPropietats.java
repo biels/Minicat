@@ -13,26 +13,17 @@ public class GestorPropietats {
 		Ruta = RutaArxiuPropietats;
 	}
 	
+	/** A file that does not exist yet holds no properties; every first read of a player's or a match's file is that case. */
 	private ArrayList<String> LlegirArxiuPropietats(){
 		ArrayList<String> Arr = new ArrayList<>();
-		try{
-			// Open the file that is the first 
-			// command line parameter
-			FileInputStream fstream = new FileInputStream(Ruta);
-			// Get the object of DataInputStream
-			DataInputStream in = new DataInputStream(fstream);
-			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+		if (!new File(Ruta).isFile()) return Arr;
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(Ruta)))) {
 			String strLine;
-			//Read File Line By Line
-			while ((strLine = br.readLine()) != null)   {
-				// Print the content on the console
+			while ((strLine = br.readLine()) != null) {
 				Arr.add(strLine);
-
 			}
-			//Close the input stream
-			in.close();
-		}catch (Exception e){//Catch exception if any
-			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING, "Error reading properties", e);
+		} catch (IOException e) {
+			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING, "Error reading properties " + Ruta, e);
 		}
 		return Arr;
 	}

@@ -78,8 +78,13 @@ public class ObsidianDefenders extends JocEquips {
 	private static final long PERIODE_PIC_TICKS = 2 * 60 * 20;
 	private static final long GOLEM_INICIAL_TICKS = 5 * 20;
 	private static final int OR_PER_GOLEM = 22;
-	/** How far from a team's spawn the base's TNT is looked for when the match starts. */
-	private static final int RADI_NUCLI = 12;
+	/**
+	 * How far from a team's spawn the base's TNT is looked for when the match starts.
+	 * On the 2013 map each core is a cluster of about 23 TNT blocks 20 to 27 blocks
+	 * behind the spawn at y 39 (x 589-597 for the red base, 729-737 for the blue one);
+	 * the small five-block TNT crosses 45 blocks out are traps, not cores.
+	 */
+	private static final int RADI_NUCLI = 30;
 	private static final int ALÇADA_NUCLI = 8;
 	/** A primed TNT counts as a base core while it is this close to one of the TNT blocks found at start. */
 	private static final double TOLERÀNCIA_NUCLI = 3;
