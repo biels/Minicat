@@ -1725,6 +1725,7 @@ public class ObsidianDefenders extends JocEquips {
 			info.add(ChatColor.WHITE + "Preu: " + ChatColor.GOLD + m.preu + " or");
 			boolean soldOut = m == Mercaderia.QUARS && hasQuartz(p);
 			if (soldOut) info.add(ChatColor.RED + "Ja el tens: només un per persona");
+			if (m == Mercaderia.FLETXES && !hasBow(p)) { soldOut = true; info.add(ChatColor.RED + "Primer compra un arc"); }
 			menu.setOption(mercaderies.indexOf(m), new ItemStack(m.material, m.quantitat), (soldOut ? ChatColor.DARK_GRAY : ChatColor.YELLOW) + m.nom, info);
 		}
 		menu.open(p);
@@ -1735,6 +1736,11 @@ public class ObsidianDefenders extends JocEquips {
 		if (m == Mercaderia.QUARS && hasQuartz(p)) {
 			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
 			PaperMessages.sendActionBar(p, ChatColor.RED + "Només un quars per persona", 60);
+			return;
+		}
+		if (m == Mercaderia.FLETXES && !hasBow(p)) {
+			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			PaperMessages.sendActionBar(p, ChatColor.RED + "Primer compra un arc", 60);
 			return;
 		}
 		int falta = m.preu - orDisponible(p);
@@ -1761,6 +1767,11 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	/** Takes the price in nuggets, breaking ingots when needed and returning the change as nuggets. */
+	/** Arrows without a bow are gold thrown away (Biel, 2026-09-08): Gerry sells them only to a player who carries one. */
+	private static boolean hasBow(Player p) {
+		return p.getInventory().contains(Material.BOW);
+	}
+
 	/** Quartz is one per person for the match (Biel, 2026-09-07 night): bought once, or already carried. */
 	private boolean hasQuartz(Player p) {
 		return quartzBuyers.contains(p.getUniqueId()) || p.getInventory().contains(Material.QUARTZ);
