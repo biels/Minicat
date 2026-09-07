@@ -182,8 +182,14 @@ public class ObsidianDefenders extends JocEquips {
 	 */
 	private static final class ControlPoint {
 		final Map<Integer, Block> plateByTeam = new HashMap<>();
+		/** The side lamps and the tower: lit on the owner's side. */
 		final List<Block> lamps = new ArrayList<>();
+		/** The lamps on the centre line at room level, west to east: the capture progress, lit from the charging team's side. */
+		final List<Block> wallLamps = new ArrayList<>();
 		Integer owner = null;
+		/** The team whose progress the wall lamps show; the owner once a capture completes or the challenge fades. */
+		Integer chargingTeam = null;
+		int progress = 0;
 
 		int sideOf(Block block) {
 			return Integer.signum(block.getX() - centre().getBlockX());
@@ -215,6 +221,8 @@ public class ObsidianDefenders extends JocEquips {
 	 * pays the capturer.
 	 */
 	private static final int SECONDS_PER_POINT_SQUARE = 5;
+	/** Seconds on your plate to take a point; the wall lamps light one per second from your side. */
+	private static final int CAPTURE_SECONDS = 3;
 	private static final int GOLD_PER_CAPTURE = 5;
 	/** Plates are looked for between the two spawns, this far either side of the line joining them, at the map's play heights. */
 	private static final int PLATE_BAND_HALF_WIDTH = 60;
@@ -1266,10 +1274,12 @@ public class ObsidianDefenders extends JocEquips {
 			Location centre = point.centre();
 			int cy = centre.getBlockY();
 			for (Block lamp : blocksBetween(centre.getBlockX() - CONTROL_POINT_LAMP_REACH, centre.getBlockZ() - CONTROL_POINT_LAMP_REACH, centre.getBlockX() + CONTROL_POINT_LAMP_REACH, centre.getBlockZ() + CONTROL_POINT_LAMP_REACH, m -> m == Material.REDSTONE_LAMP)) {
-				if (lamp.getY() >= cy - 2 && lamp.getY() <= cy + CONTROL_POINT_TOWER_HEIGHT) point.lamps.add(lamp);
+				if (lamp.getY() < cy - 2 || lamp.getY() > cy + CONTROL_POINT_TOWER_HEIGHT) continue;
+				if (point.sideOf(lamp) == 0 || (lamp.getY() <= cy + 3 && Math.abs(lamp.getX() - centre.getBlockX()) <= 1)) point.wallLamps.add(lamp); else point.lamps.add(lamp);
 			}
+			point.wallLamps.sort((l1, l2) -> Integer.compare(l1.getX(), l2.getX()));
 			showControlPoint(point);
-			plugin.getLogger().info(getGameName() + " " + getMapName() + ": control point at " + centre.toVector() + " with plates " + point.plateByTeam.keySet() + " and " + point.lamps.size() + " lamps");
+			plugin.getLogger().info(getGameName() + " " + getMapName() + ": control point at " + centre.toVector() + " with plates " + point.plateByTeam.keySet() + ", " + point.wallLamps.size() + " wall lamps and " + point.lamps.size() + " side lamps");
 		}
 		for (Equip e : Equips) {
 			Block sign = rètolsPont.get(e.getId());
@@ -1336,11 +1346,12 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	/**
-	 * Once a second: captures for whoever stands on their colour's plate, the pressed look
-	 * for whoever stepped off, and a bridge square per captured point every five seconds.
+	 * Once a second: the pressed look for whoever steps on or off a plate, the capture
+	 * channel of every point, and a bridge square per captured point every five seconds.
 	 */
 	private void tickControlPoints() {
 		if (!JocEnMarxa()) return;
+		Map<ControlPoint, Map<Integer, Player>> standing = new HashMap<>();
 		for (Player p : getPlayers()) {
 			UUID id = p.getUniqueId();
 			Block feet = p.getLocation().getBlock();
@@ -1360,9 +1371,9 @@ public class ObsidianDefenders extends JocEquips {
 				if (refusedOnPlate.add(id)) rebutjarElementEnemic(p);
 				continue;
 			}
-			if (point.owner != null && point.owner == team.getId()) continue;
-			capture(point, team, p);
+			standing.computeIfAbsent(point, k -> new HashMap<>()).putIfAbsent(team.getId(), p);
 		}
+		for (ControlPoint point : controlPoints) channel(point, standing.getOrDefault(point, Map.of()));
 		for (Equip e : Equips) {
 			int held = pointsHeldBy(e);
 			if (held == 0) continue;
@@ -1375,8 +1386,48 @@ public class ObsidianDefenders extends JocEquips {
 		}
 	}
 
+	/**
+	 * One second of a point's capture channel. One team on its plate charges toward the
+	 * capture, a lamp a second from its side; both teams at once freeze it; nobody lets a
+	 * challenge fade back a lamp a second until the owner's full triple returns.
+	 */
+	private void channel(ControlPoint point, Map<Integer, Player> standing) {
+		if (standing.size() == 1) {
+			Map.Entry<Integer, Player> challenger = standing.entrySet().iterator().next();
+			int team = challenger.getKey();
+			if (point.owner != null && point.owner == team) {
+				point.chargingTeam = team;
+				point.progress = CAPTURE_SECONDS;
+				return;
+			}
+			if (point.chargingTeam == null || point.chargingTeam != team) {
+				point.chargingTeam = team;
+				point.progress = 0;
+			}
+			point.progress++;
+			showControlPoint(point);
+			if (point.progress >= CAPTURE_SECONDS) {
+				capture(point, obtenirEquip(team), challenger.getValue());
+			} else {
+				world.playSound(point.centre(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8F, 0.8F + 0.2F * point.progress);
+			}
+			return;
+		}
+		if (standing.size() > 1) return;
+		boolean challenging = point.chargingTeam != null && (point.owner == null || !point.owner.equals(point.chargingTeam));
+		if (!challenging) return;
+		point.progress--;
+		if (point.progress <= 0) {
+			point.chargingTeam = point.owner;
+			point.progress = point.owner == null ? 0 : CAPTURE_SECONDS;
+		}
+		showControlPoint(point);
+	}
+
 	private void capture(ControlPoint point, Equip team, Player captor) {
 		point.owner = team.getId();
+		point.chargingTeam = team.getId();
+		point.progress = CAPTURE_SECONDS;
 		showControlPoint(point);
 		donarOr(captor, GOLD_PER_CAPTURE);
 		sendGlobalMessage(ChatColor.GRAY + captor.getName() + " ha capturat el punt de control (" + team.getChatColor() + pointsHeldBy(team) + ChatColor.GRAY + "/" + controlPoints.size() + ")");
@@ -1384,8 +1435,18 @@ public class ObsidianDefenders extends JocEquips {
 		for (Player p : team.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6F, 1.6F);
 	}
 
-	/** The owner's side of the room lights up, the centre line lights while anyone holds it, the other side goes dark. */
+	/**
+	 * The wall lamps show the channel: {@code progress} of them lit, counted from the
+	 * charging team's side of the room. The side lamps and the tower show the owner.
+	 */
 	private void showControlPoint(ControlPoint point) {
+		int n = point.wallLamps.size();
+		int lit = point.chargingTeam == null ? 0 : Math.min(n, Math.round((float) point.progress * n / CAPTURE_SECONDS));
+		boolean fromEast = point.chargingTeam != null && point.sideOfTeam(point.chargingTeam) > 0;
+		for (int i = 0; i < n; i++) {
+			int rank = fromEast ? n - 1 - i : i;
+			setLit(point.wallLamps.get(i), rank < lit);
+		}
 		int ownerSide = point.owner == null ? 0 : point.sideOfTeam(point.owner);
 		for (Block lamp : point.lamps) {
 			int side = point.sideOf(lamp);
