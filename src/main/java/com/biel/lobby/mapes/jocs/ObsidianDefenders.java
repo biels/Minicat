@@ -268,6 +268,8 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<UUID, Integer> witherDeaths = new HashMap<>();
 	/** Players who have bought their one quartz this match. */
 	private final Set<UUID> quartzBuyers = new HashSet<>();
+	/** Prizes already announced this match: the first landing of each also says what it does and where it is. */
+	private final Set<Objecte> prizesAnnounced = new HashSet<>();
 
 	/** The game's words, written once in guides/obsidian-defenders.md: start lines, tooltips, hints and the book; the numbers come from here. */
 	private static final GameGuide GUIDE = GameGuide.of("Obsidian Defenders").withValues(guideValues());
@@ -674,6 +676,7 @@ public class ObsidianDefenders extends JocEquips {
 		killsByTeam.clear();
 		witherDeaths.clear();
 		quartzBuyers.clear();
+		prizesAnnounced.clear();
 		scheduleGameplayTask(this::warnSuddenDeath, (SUDDEN_DEATH_SECOND - SUDDEN_DEATH_WARNING_SECONDS) * 20L);
 		scheduleGameplayTask(this::startSuddenDeath, SUDDEN_DEATH_SECOND * 20L);
 		scheduleGameplayRepeatingTask(this::presènciaDelGuardià, 20, 20);
@@ -998,6 +1001,8 @@ public class ObsidianDefenders extends JocEquips {
 	 */
 	private void announceLoot(Block chest, Objecte prize, Particle beam, Color colour, String announcement) {
 		sendGlobalMessage(announcement);
+		// The first time a prize lands in a match, one more line: what it does and where to look (Biel, 2026-09-08).
+		if (prizesAnnounced.add(prize)) for (String line : GUIDE.lines("anunci " + prize.name())) sendGlobalMessage(ChatColor.GRAY + line);
 		for (Player p : getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_BELL_RESONATE, 0.6F, 1.4F);
 		Location base = chest.getLocation().add(0.5, 1, 0.5);
 		// A firework in the prize's colour at the landing: seen over the canopy from anywhere on the map.

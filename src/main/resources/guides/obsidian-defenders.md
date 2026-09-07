@@ -63,6 +63,12 @@
 - A la mà en matar: or x3.
 - A l'inventari: +3 or cada cicle.
 
+## anunci BOLA_DE_NEU_ENCANTADA
+- Bola de neu encantada: llança-la i en surt un superninot amb molt més abast, que dispara x3 el primer minut. Segueix el feix blau: és en un cofre de la jungla.
+
+## anunci ESTRELLA_DEL_NETHER
+- Estrella infernal: clic dret, es carrega {ESTRELLA_CARREGA_S} s, i els enemics a menys de {ESTRELLA_RADI} blocs queden a 1 cor. Segueix el feix vermell fins al cofre.
+
 ## pista taula
 - Taula d'encantar: clic dret amb l'eina a la mà. Es paga amb or.
 
