@@ -70,8 +70,8 @@ public final class SnowmanMinion extends Minion {
 	/** The hero's aura: a ring this wide at its feet, redrawn this often, like the Guardian's. */
 	private static final double HERO_AURA_RADIUS = 0.8;
 	private static final long HERO_AURA_PERIOD_TICKS = 5;
-	/** The target is picked this far beyond the shooting range, so the snowman turns before the enemy is in reach. */
-	private static final double ACQUIRE_PER_RANGE = ACQUIRE_RADIUS / RANGE;
+	/** The target is picked this far beyond the shooting range, so the snowman turns before the enemy is in reach but does not roam after far ones. */
+	private static final double ACQUIRE_MARGIN = ACQUIRE_RADIUS - RANGE;
 	/** The head while the cage is armed: the next snowball shuts its victim in ice. */
 	private static final Material ARMED_HEAD = Material.ICE;
 
@@ -221,7 +221,7 @@ public final class SnowmanMinion extends Minion {
 	/** The target and shooting goals with the numbers of this moment: a hero's change once its surge ends. */
 	private void installAttackGoals(Mob mob) {
 		double range = range();
-		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, range * ACQUIRE_PER_RANGE, true, RESCAN_TICKS, this::isEnemy));
+		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, range + ACQUIRE_MARGIN, true, RESCAN_TICKS, this::isEnemy));
 		Bukkit.getMobGoals().addGoal(mob, 2, new RangedAttackGoal(mob, 0, range, currentCooldownTicks(), false, MARCH_SPEED, Volley.innate()));
 	}
 

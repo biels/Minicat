@@ -173,10 +173,14 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int SNOWBALL_FIRE_TICKS = 60;
 	private static final int SNOWMAN_HITS_TO_ARM_CAGE = 3;
 	private static final int ICE_CAGE_TICKS = 60;
+	/** After a cage melts, hits on that victim charge no cage and spend none for this long, so three snowmen cannot chain cages on one player. */
+	private static final int ICE_CAGE_GRACE_SECONDS = 6;
 	/** Chance, per chest opened, of an enchanted snowball, the hero snowman (Biel: "incentives to go to the trees"). */
 	private static final int HERO_SNOWBALL_CHEST_CHANCE = 5;
 	/** The team whose player last felled the Guardian throws magma snowmen until the other team fells it. */
 	private Equip guardianSlayerTeam;
+	/** Victim → game second until which snowballs neither charge nor spend a cage on them. */
+	private final Map<UUID, Integer> iceCageGraceUntil = new HashMap<>();
 
 	boolean debug = false;
 	/** Team id → block positions of the TNT that is that team's base core. */
@@ -2451,15 +2455,20 @@ public class ObsidianDefenders extends JocEquips {
 	 * damage, slow them, or an ice cage after a few hits"): half a heart always. A snowman
 	 * with its cage armed (ice on its head, three hits landed) spends it: the victim is shut
 	 * in ice and the head goes back to the kind's. Otherwise the kind's effect, neu slows
-	 * and magma sets on fire, and one more hit toward the cage. The hit counts as the
+	 * and magma sets on fire, and one more hit toward the cage. A victim just out of a cage
+	 * is in grace: the kind's effect applies, but no cage charges or spends on them, so
+	 * three snowmen cannot hold one player in a loop of cages. The hit counts as the
 	 * owner's for kill credit (JocEquips records the last damager; the second is recorded
 	 * here).
 	 */
 	private void snowballHit(SnowmanMinion snowman, EntityDamageByEntityEvent evt, Player victim) {
 		evt.setDamage(1);
-		if (snowman.cageArmed()) {
+		int now = segonsTranscorreguts();
+		boolean inGrace = iceCageGraceUntil.getOrDefault(victim.getUniqueId(), 0) > now;
+		if (snowman.cageArmed() && !inGrace) {
 			snowman.dischargeCage();
 			encaseInIce(victim, ICE_CAGE_TICKS);
+			iceCageGraceUntil.put(victim.getUniqueId(), now + ICE_CAGE_TICKS / 20 + ICE_CAGE_GRACE_SECONDS);
 			PaperMessages.sendActionBar(victim, ChatColor.AQUA + "Congelat!", 40);
 		} else {
 			switch (snowman.kind()) {
@@ -2469,9 +2478,9 @@ public class ObsidianDefenders extends JocEquips {
 					world.playSound(victim.getLocation(), Sound.ENTITY_GENERIC_BURN, 0.6F, 1.2F);
 				}
 			}
-			snowman.chargeCage(SNOWMAN_HITS_TO_ARM_CAGE);
+			if (!inGrace) snowman.chargeCage(SNOWMAN_HITS_TO_ARM_CAGE);
 		}
-		segonsÚltimCopRebut.put(victim.getUniqueId(), segonsTranscorreguts());
+		segonsÚltimCopRebut.put(victim.getUniqueId(), now);
 	}
 
 	/** The snowman whose snowball landed the killing hit, if one did. */
