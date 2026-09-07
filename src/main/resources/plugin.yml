@@ -14,8 +14,8 @@ libraries:
 - com.mysql:mysql-connector-j:9.6.0
 commands:
   prova:
-    description: Crea, llista o elimina instàncies de diagnòstic operatiu.
-    usage: /prova <joc> [variant] | /prova llista | /prova elimina <món>
+    description: Crea, llista o elimina instàncies de diagnòstic operatiu; importa plantilles antigues.
+    usage: /prova <joc> [variant] | /prova llista | /prova elimina <món> | /prova importa
   mapes:
     description: Mostra una llista dels mapes.
     usage: /mapes

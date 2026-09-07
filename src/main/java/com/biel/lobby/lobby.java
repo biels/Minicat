@@ -18,6 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
+import com.biel.lobby.mapes.TemplateImport;
 import com.biel.lobby.mapes.jocs.RainbowClay;
 import com.biel.lobby.agent.AgentSnapshotHttpServer;
 import com.biel.lobby.utilities.GestorPropietats;
@@ -42,7 +43,8 @@ public final class lobby extends JavaPlugin {
 		new LoginListener();
 
 		getLobbyWorld().setAutoSave(true);
-		MapaResetejable.cleanupStaleRuntimeWorlds();
+		TemplateImport.restoreInterrupted();
+		MapaResetejable.deleteUnloadedLiveWorlds();
 
 		gest = new GestorMapes();
 		agentSnapshotHttpServer = new AgentSnapshotHttpServer(this);
@@ -121,8 +123,13 @@ public final class lobby extends JavaPlugin {
 				}
 				return true;
 			}
+			if(args.length == 1 && args[0].equalsIgnoreCase("importa")){
+				gest.importOriginalTemplates();
+				sender.sendMessage(ChatColor.GRAY + "Importació de plantilles acabada; el registre del servidor en té el detall.");
+				return true;
+			}
 			if(args.length < 1 || args.length > 2){
-				sender.sendMessage("Ús: /prova <joc> [variant] | /prova llista | /prova elimina <món>");
+				sender.sendMessage("Ús: /prova <joc> [variant] | /prova llista | /prova elimina <món> | /prova importa");
 				return true;
 			}
 			Integer mapId = null;

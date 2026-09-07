@@ -1,6 +1,5 @@
 package com.biel.lobby;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,14 +27,9 @@ public abstract class Mapa extends WorldEventBus{
 	public Mapa() {
 		super();
 		this.plugin = lobby.getPlugin();
-		if(isWorldLoaded())setWorld(getWorld());
 	}
 	public  abstract  String getGameName(); //GameName
-	
-	protected Boolean isWorldLoaded(){
-        return Bukkit.getWorld(NomWorld) != null;
-	}
-	
+
 	public String getGameDisplayName() {
 		return ChatColor.GOLD + "[" + ChatColor.AQUA + getGameName() + ChatColor.GOLD + "] " + ChatColor.GRAY;
 	}
@@ -131,45 +125,6 @@ public abstract class Mapa extends WorldEventBus{
 		}
 		Bukkit.broadcastMessage("El mapa és de tipus indeterminat");
 		return null;
-	}
-	public void copyDirectory(File sourceLocation , File targetLocation) throws IOException {
-		if (sourceLocation.isDirectory()) {
-			if (!targetLocation.exists()) {
-				targetLocation.mkdir();
-			}
-
-			String[] children = sourceLocation.list();
-			for (String aChildren : children) {
-				copyDirectory(new File(sourceLocation, aChildren),
-						new File(targetLocation, aChildren));
-			}
-		} else {
-
-			InputStream in = new FileInputStream(sourceLocation);
-			OutputStream out = new FileOutputStream(targetLocation);
-
-			// Copy the bits from instream to outstream
-			byte[] buf = new byte[1024];
-			int len;
-			while ((len = in.read(buf)) > 0) {
-				out.write(buf, 0, len);
-			}
-			in.close();
-			out.close();
-		}
-	}
-	public static void deleteFolder(File folder) {
-		File[] files = folder.listFiles();
-		if(files!=null) { //some JVMs return null for empty dirs
-			for(File f: files) {
-				if(f.isDirectory()) {
-					deleteFolder(f);
-				} else {
-					f.delete();
-				}
-			}
-		}
-		folder.delete();
 	}
 
 }

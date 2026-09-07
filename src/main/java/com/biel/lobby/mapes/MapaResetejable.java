@@ -1,14 +1,21 @@
 package com.biel.lobby.mapes;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Locale;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -17,18 +24,36 @@ import com.biel.lobby.Com;
 import com.biel.lobby.Mapa;
 import com.biel.lobby.utilities.GestorPropietats;
 
-
+/**
+ * A game map that starts from a template and is thrown away afterwards.
+ *
+ * Paper 26.2 keeps every world inside the main save, at
+ * {@code <save>/dimensions/<namespace>/<key>}, and chooses that folder from the
+ * world's key. Live instances are created under the {@code liveworlds} namespace,
+ * so one folder holds an instance whole: its region files and the property files
+ * the game reads. Creating an instance copies a template into that folder and
+ * loads it; deleting one unloads it and removes the folder.
+ *
+ * A template is the same folder minus identity: no {@code data/paper/metadata.dat}
+ * (the world UUID), no {@code pTemp.txt}, no {@code pPlayers/}. A template that
+ * still carries a {@code level.dat} is in the pre-26.2 format and goes through
+ * {@link TemplateImport} once, before the game is offered.
+ */
 public abstract class MapaResetejable extends Mapa {
-	static String FolderLiveWorlds = "LiveWorlds"; 
-	static String FolderLiveMetadata = "LiveMetadata";
-	static String FolderMaps = "mapes"; 
-	static String FolderCopies = "copies";
+	static final String LiveWorldNamespace = "liveworlds";
+	static final String FolderMaps = "mapes";
+	static final String FolderOriginals = "mapes-originals";
+	static final String FolderCopies = "copies";
+	static final String WorldUuidFile = "data/paper/metadata.dat";
+	static final String PropertiesFile = "pMapaActual.txt";
+	static final String TempPropertiesFile = "pTemp.txt";
+	static final String PlayersFolder = "pPlayers";
+	private static final String BackupTimestampFormat = "yyyyMMdd-HHmmss";
 	private int multiMapId;
 	protected Boolean EditMode = false;
 	public enum MapMode{SINGLE, MULTIPLE};
 	public MapaResetejable() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 	/**
 	 * Loads the live world. Its files must already be in place: an instance is made
@@ -37,175 +62,145 @@ public abstract class MapaResetejable extends Mapa {
 	public void initialize() {
 		loadVirtualWorld();
 	}
-	public static void cleanupStaleRuntimeWorlds() {
-		File metadataRoot = new File(FolderLiveMetadata);
-		File[] metadataDirectories = metadataRoot.listFiles(File::isDirectory);
-		if (metadataDirectories == null) return;
 
-		File worldContainer = Bukkit.getWorldContainer();
-		for (File metadataDirectory : metadataDirectories) {
-			String worldName = metadataDirectory.getName();
-			if (!worldName.matches("[A-Za-z][A-Za-z0-9 _-]*\\d+")) {
-				Com.getPlugin().getLogger().warning("Skipping unexpected live metadata directory: " + worldName);
-				continue;
-			}
-			if (Bukkit.getWorld(worldName) != null) {
-				Com.getPlugin().getLogger().warning("Skipping loaded runtime world during startup cleanup: " + worldName);
-				continue;
-			}
-
-			File legacyWorldDirectory = new File(worldContainer, worldName);
-			File paperWorldDirectory = paperDimensionDirectory(worldName);
-			try {
-				FileUtils.deleteDirectory(legacyWorldDirectory);
-				FileUtils.deleteDirectory(paperWorldDirectory);
-				FileUtils.deleteDirectory(metadataDirectory);
-				Com.getPlugin().getLogger().info("Removed stale runtime world: " + worldName);
-			} catch (IOException exception) {
-				Com.getPlugin().getLogger().log(java.util.logging.Level.SEVERE,
-						"Could not remove stale runtime world " + worldName, exception);
-			}
-		}
-	}
-	String getLiveWorldAvaliableName(String where){
-		String nouNom = "";
-		int LastNum = 1;
-		File folder = new File(where);
-		if (!folder.exists()) {
-			folder.mkdir();
-		}
-		for (final File fileEntry : folder.listFiles()) {
-			if (fileEntry.isDirectory()){
-				String nomArxiu = fileEntry.getName();
-				int mapLength = getGameName().length() ; // -1
-				if (nomArxiu.length() < mapLength){continue;}
-				//Bukkit.broadcastMessage("Substring: " + nomArxiu.substring(mapLength));
-				if(getGameName().equals(nomArxiu.substring(0, mapLength))){
-					int num = Integer.parseInt(nomArxiu.substring(mapLength));
-					if (num > LastNum){
-						LastNum = num;
-					}
-					//nouNom = getMapName() + Integer.toString(num + 1);
-					//Bukkit.broadcastMessage("Numero: " + Integer.toString(num) + "---------" + nomArxiu.substring(0, mapLength));
-				}
-			}
-		}
-		nouNom = getGameName() + Integer.toString(LastNum + 1);
-		if (nouNom.equals("")){
-			nouNom = getGameName() + "1";
-		}
-		//Bukkit.broadcastMessage(nouNom);
-		return nouNom;
-	}
-
+	//--WHERE A LIVE WORLD LIVES--
 	/**
-	 * Claims the next free live world name by creating its metadata directory at
-	 * once, so two instances being created at the same time cannot pick the same
-	 * name. Main thread only.
+	 * The key of the live world for an instance name, in the live worlds namespace.
+	 * Paper derives the path part from the name the way it would for any world, and
+	 * names the world after the key ("Arena 42" becomes liveworlds:arena_42, named
+	 * liveworlds_arena_42); the instance keeps its own name for players and commands.
+	 */
+	static NamespacedKey liveWorldKey(String instanceName) {
+		return new NamespacedKey(LiveWorldNamespace, new WorldCreator(instanceName).key().getKey());
+	}
+	/** {@code <save>/dimensions/liveworlds}: the folder Paper gives every live world. */
+	@SuppressWarnings("deprecation")
+	static File liveWorldsRoot() {
+		File mainSave = new File(Bukkit.getWorldContainer(), Bukkit.getUnsafe().getMainLevelName());
+		return new File(new File(mainSave, "dimensions"), LiveWorldNamespace);
+	}
+	static File liveWorldFolder(String worldName) {
+		return new File(liveWorldsRoot(), liveWorldKey(worldName).getKey());
+	}
+	private File getLiveWorldFile() {
+		return liveWorldFolder(NomWorld);
+	}
+	/** Removes every live world folder that no loaded world owns. Startup only. */
+	public static void deleteUnloadedLiveWorlds() {
+		File[] folders = liveWorldsRoot().listFiles(File::isDirectory);
+		if (folders == null) return;
+		List<String> loadedFolders = new ArrayList<>();
+		for (World world : Bukkit.getWorlds()) loadedFolders.add(canonicalPath(world.getWorldFolder()));
+		for (File folder : folders) {
+			if (loadedFolders.contains(canonicalPath(folder))) continue;
+			try {
+				FileUtils.deleteDirectory(folder);
+				Com.getPlugin().getLogger().info("Removed unloaded live world folder: " + folder.getName());
+			} catch (IOException failure) {
+				Com.getPlugin().getLogger().log(Level.SEVERE, "Could not remove live world folder " + folder, failure);
+			}
+		}
+	}
+	private static String canonicalPath(File file) {
+		try {
+			return file.getCanonicalPath();
+		} catch (IOException failure) {
+			return file.getAbsolutePath();
+		}
+	}
+	private static void deleteLiveWorldFolder(File folder) {
+		try {
+			FileUtils.deleteDirectory(folder);
+		} catch (IOException failure) {
+			Com.getPlugin().getLogger().log(Level.SEVERE, "Could not delete live world folder " + folder, failure);
+		}
+	}
+
+	//--CREATE--
+	/** The game name followed by one more than the highest number among its live world folders. */
+	private String nextLiveWorldName() {
+		String keyPrefix = liveWorldKey(getGameName()).getKey();
+		Pattern numbered = Pattern.compile("^" + Pattern.quote(keyPrefix) + "(\\d+)$");
+		int highest = 1;
+		File[] folders = liveWorldsRoot().listFiles(File::isDirectory);
+		if (folders != null) {
+			for (File folder : folders) {
+				Matcher match = numbered.matcher(folder.getName());
+				if (match.matches()) highest = Math.max(highest, Integer.parseInt(match.group(1)));
+			}
+		}
+		return getGameName() + (highest + 1);
+	}
+	/**
+	 * Claims the next free live world name by creating its folder at once, so two
+	 * instances being created at the same time cannot pick the same name. Main
+	 * thread only.
 	 */
 	public void reserveLiveWorld(){
 		if (getGameName().equals("")) throw new IllegalStateException("A game without a name cannot reserve a world");
-		NomWorld = getLiveWorldAvaliableName(FolderLiveMetadata);
-		File metadataDirectory = getLiveMetadataFile();
-		if (!metadataDirectory.mkdirs()) {
-			throw new IllegalStateException("Could not reserve live metadata directory " + metadataDirectory);
+		NomWorld = nextLiveWorldName();
+		File liveWorld = getLiveWorldFile();
+		if (!liveWorld.mkdirs()) {
+			throw new IllegalStateException("Could not reserve live world folder " + liveWorld);
 		}
 	}
 	/**
-	 * Copies the template into the reserved live folder. Pure file work that touches
-	 * nothing in Bukkit, so it runs off the main thread: copying a world inside a
-	 * menu click used to freeze the whole server for the duration.
+	 * Copies the template into the reserved folder and drops the world UUID that a
+	 * template must not carry. Pure file work, so it runs off the main thread.
 	 */
 	public void copyWorldFiles(){
-		File worldOrigin = getWorldOriginMappedFile();
-		File worldLive = getLiveWorldFile();
-		File metadataDirectory = getLiveMetadataFile();
 		try {
-			copyDirectory(worldOrigin, worldLive);
-			File sourceProperties = new File(worldOrigin, "pMapaActual.txt");
-			if (sourceProperties.isFile()) {
-				FileUtils.copyFile(sourceProperties, new File(metadataDirectory, "pMapaActual.txt"));
-			}
-			new File(worldLive, "uid.dat").delete();
-		} catch (IOException e) {
-			throw new IllegalStateException("El mon no s'ha pogut copiar: " + getGameName(), e);
+			FileUtils.copyDirectory(getWorldOriginMappedFile(), getLiveWorldFile());
+			Files.deleteIfExists(new File(getLiveWorldFile(), WorldUuidFile).toPath());
+		} catch (IOException failure) {
+			throw new IllegalStateException("El mon no s'ha pogut copiar: " + getGameName(), failure);
 		}
 	}
-	/** Removes what a creation that never loaded a world left on disk. */
+	/** Removes the folder of a creation that never loaded a world. */
 	public void discardLiveWorldFiles(){
-		deleteFolder(getLiveWorldFile());
-		deleteFolder(getLiveMetadataFile());
-	}
-	/**
-	 * Where Paper 26.2 keeps a world's region files once it has migrated the legacy
-	 * folder: {@code world/dimensions/minecraft/<key>}, the key being the world name
-	 * lowercased with every character a resource location cannot hold turned into an
-	 * underscore ("Arena 42" becomes "arena_42"). Paper refuses to migrate over a
-	 * directory that is already there, so a leftover from an earlier instance with the
-	 * same name makes the next creation fail.
-	 */
-	static File paperDimensionDirectory(String worldName) {
-		String key = worldName.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9/._-]", "_");
-		File dimensionsRoot = new File(new File(new File(Bukkit.getWorldContainer(), "world"), "dimensions"), "minecraft");
-		return new File(dimensionsRoot, key);
-	}
-	private static void deletePaperDimensionDirectory(String worldName) {
-		File directory = paperDimensionDirectory(worldName);
-		if (!directory.isDirectory()) return;
-		try {
-			FileUtils.deleteDirectory(directory);
-		} catch (IOException exception) {
-			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING,
-					"Could not remove the migrated world directory " + directory, exception);
-		}
+		deleteLiveWorldFolder(getLiveWorldFile());
 	}
 	private void loadVirtualWorld(){
-		if (isWorldLoaded()) return;
-		// A fresh copy of the template is about to be migrated into this directory.
-		deletePaperDimensionDirectory(getLiveWorldFolder());
-		world = Bukkit.createWorld(new WorldCreator(getLiveWorldFolder()));
+		world = Bukkit.createWorld(new WorldCreator(liveWorldKey(NomWorld)));
 		if (world == null) {
-			throw new IllegalStateException("Paper no ha pogut carregar el mon " + getLiveWorldFolder());
+			throw new IllegalStateException("Paper no ha pogut carregar el mon " + NomWorld);
 		}
-		updateWorldToRegisteredHandler();
-	}
-	private void updateWorldToRegisteredHandler() {
 		setWorld(world);
 	}
-	//--MAP-MODE--
+
+	//--DELETE--
+	public boolean deleteVirtualWorld(){
+		if (world == null) return false;
+		File liveWorld = world.getWorldFolder();
+		if (!Bukkit.unloadWorld(world, false)) return false;
+		world = null;
+		Bukkit.getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
+			deleteLiveWorldFolder(liveWorld);
+			Bukkit.broadcastMessage("Mapa esborrat! - " + NomWorld);
+		}, 200L);
+		return true;
+	}
+
+	//--TEMPLATES--
 	public boolean isWorld(File folder){
-		ArrayList<String> result = new ArrayList<>();
-		if (!folder.exists()) return false;
-		File[] fileEntries = folder.listFiles((dir, name) -> name.equals("region"));
-		return fileEntries.length != 0;
+		return new File(folder, "region").isDirectory();
 	}
 	public MapMode getMapMode(){
 		return isWorld(getMapOriginFile()) ? MapMode.SINGLE : MapMode.MULTIPLE;
 	}
+	/** The template maps of this game: the game itself for a single-map game, else every world folder under it. */
 	public ArrayList<String> getMultiWorldList(){
-
-		ArrayList<String> r = new ArrayList<>();
-
-		if(getMapMode() == MapMode.MULTIPLE) {
-
-			File folder = getMapOriginFile();
-			File[] files = folder.listFiles();
-
-			if(files != null && files.length > 0) {
-				for(File f : files) {
-					if(f.isDirectory()){
-						r.add(f.getName());
-					}
-				}
-			}
-
+		ArrayList<String> maps = new ArrayList<>();
+		if (getMapMode() == MapMode.SINGLE) {
+			maps.add(getGameName());
+			return maps;
 		}
-		if(getMapMode() == MapMode.SINGLE) {
-			r.add(getMapName());
-
-
+		File[] folders = getMapOriginFile().listFiles(File::isDirectory);
+		if (folders == null) return maps;
+		for (File folder : folders) {
+			if (isWorld(folder)) maps.add(folder.getName());
 		}
-		return r;
+		return maps;
 	}
 	public String getMultiMapName() {
 		return getActiveMultipleMapName();
@@ -213,7 +208,6 @@ public abstract class MapaResetejable extends Mapa {
 	public void setMultiMapId(int multiMapId) {
 		this.multiMapId = multiMapId;
 	}
-	//------------
 	public static ArrayList<String> getAllMapNames(){
 		ArrayList<String> result = new ArrayList<>();
 		File folder = new File(FolderMaps);
@@ -223,78 +217,19 @@ public abstract class MapaResetejable extends Mapa {
 		File[] fileEntries = folder.listFiles();
 		for(File fileEntry : fileEntries){
 			if (fileEntry.isDirectory()){
-				String nomArxiu = fileEntry.getName();
-				result.add(nomArxiu);
+				result.add(fileEntry.getName());
 			}
 		}
 		return result;
 	}
-	private String getLiveWorldFolder() {
-		return NomWorld;
-	}
-	public static void deleteLiveWorldsFolder(){
-		try {
-			FileUtils.deleteDirectory(new File(FolderLiveWorlds));
-		} catch (IOException e) {
-			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING, "Error esborrant els mons temporals", e);
-		}
-	}
-	public boolean deleteVirtualWorld(){
-		if (world == null) return false;
-		File worldLive = world.getWorldFolder();
-		File metadataDirectory = getLiveMetadataFile();
-		String worldName = NomWorld;
-		if (!Bukkit.unloadWorld(world, false)) return false;
-		world = null;
-		Com.getPlugin().getServer().getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> {
-            deleteFolder(worldLive);
-			deleteFolder(metadataDirectory);
-			deletePaperDimensionDirectory(worldName);
-            Bukkit.broadcastMessage("Mapa esborrat! - " + NomWorld);
-        }, 200L);
-		return true;
-	}
-	public void save(){
-		if (EditMode){
-			world.save();
-			//Copy world
-			File worldOrigin = getWorldOriginMappedFile();
-			File worldLive = world.getWorldFolder();
-			String copyName = getLiveWorldAvaliableName(FolderCopies);
-			File worldCopy = new File(FolderCopies + "/" + copyName);
-			try {
-				//Copy
-				copyDirectory(worldOrigin, worldCopy);
-				//Save
-				copyDirectory(worldLive, worldOrigin);
-				File liveProperties = new File(getLiveMetadataFile(), "pMapaActual.txt");
-				if (liveProperties.isFile()) {
-					FileUtils.copyFile(liveProperties, new File(worldOrigin, "pMapaActual.txt"));
-				}
-				Bukkit.broadcastMessage(ChatColor.GOLD + "Mapa guardat (" + NomWorld + "), copia de seguretat (" + copyName + ")");
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				Bukkit.broadcastMessage("El mon no s'ha pogut copiar (guardant)");
-				e.printStackTrace();
-			}
-		}else{
-			Bukkit.broadcastMessage("Ha fallat l'operació: No hi ha el mode d'edició activat");
-		}
-	}
-	private File getLiveWorldFile() {
-		return new File(getLiveWorldFolder());
-	}
-	private File getLiveMetadataFile() {
-		return new File(FolderLiveMetadata, NomWorld);
-	}
 	private File getMapOriginFile() {
-		return new File(FolderMaps + "/" + getGameName());
+		return new File(FolderMaps, getGameName());
+	}
+	private File templateFolder(String mapName) {
+		return getMapMode() == MapMode.SINGLE ? getMapOriginFile() : new File(getMapOriginFile(), mapName);
 	}
 	private File getWorldOriginMappedFile() {
-		MapMode m = getMapMode();
-		if(m == MapMode.SINGLE)return new File(FolderMaps + "/" + getGameName());
-		if(m == MapMode.MULTIPLE)return new File(FolderMaps + "/" + getGameName() + "/" + getActiveMultipleMapName());
-		return null;
+		return templateFolder(getActiveMultipleMapName());
 	}
 	/**
 	 * @return The name of the current map. To get the game's name, please use getGameName().
@@ -304,6 +239,29 @@ public abstract class MapaResetejable extends Mapa {
 		if(m == MapMode.SINGLE)return getGameName();
 		return getMultiWorldList().get(multiMapId);
 	}
+	/**
+	 * Brings every template of this game that is still in the pre-26.2 format into
+	 * the current one. False when one of them could not be imported.
+	 */
+	public boolean importOriginalTemplates(){
+		boolean allImported = true;
+		for (String mapName : getMultiWorldList()) {
+			File template = templateFolder(mapName);
+			if (!TemplateImport.isOriginal(template)) continue;
+			File archive = getMapMode() == MapMode.SINGLE
+					? new File(FolderOriginals, getGameName())
+					: new File(new File(FolderOriginals, getGameName()), mapName);
+			try {
+				TemplateImport.run(template, archive);
+			} catch (IOException | RuntimeException failure) {
+				Com.getPlugin().getLogger().log(Level.SEVERE, "Could not import template " + template, failure);
+				allImported = false;
+			}
+		}
+		return allImported;
+	}
+
+	//--EDIT MODE--
 	public Boolean getEditMode() {
 		return EditMode;
 	}
@@ -311,8 +269,37 @@ public abstract class MapaResetejable extends Mapa {
 		EditMode = editMode;
 		sendGlobalMessage("Mode edició = " + Boolean.toString(editMode));
 	}
+	/** Writes the live world back over its template, keeping the previous template under copies/. */
+	public void save(){
+		if (!EditMode){
+			Bukkit.broadcastMessage("Ha fallat l'operació: No hi ha el mode d'edició activat");
+			return;
+		}
+		world.save(true);
+		File template = getWorldOriginMappedFile();
+		File liveWorld = world.getWorldFolder();
+		String backupName = getGameName() + "-" + getActiveMultipleMapName() + "-" + new SimpleDateFormat(BackupTimestampFormat).format(new Date());
+		File backup = new File(FolderCopies, backupName);
+		try {
+			FileUtils.copyDirectory(template, backup);
+			FileUtils.copyDirectory(liveWorld, template);
+			stripInstanceState(template);
+			Bukkit.broadcastMessage(ChatColor.GOLD + "Mapa guardat (" + NomWorld + "), copia de seguretat (" + backupName + ")");
+		} catch (IOException failure) {
+			Com.getPlugin().getLogger().log(Level.SEVERE, "Could not save " + NomWorld + " over " + template, failure);
+			Bukkit.broadcastMessage("El mon no s'ha pogut copiar (guardant)");
+		}
+	}
+	/** What a template must not carry: the world UUID and the per-match files. */
+	private static void stripInstanceState(File template) throws IOException {
+		Files.deleteIfExists(new File(template, WorldUuidFile).toPath());
+		Files.deleteIfExists(new File(template, TempPropertiesFile).toPath());
+		FileUtils.deleteDirectory(new File(template, PlayersFolder));
+	}
+
+	//--PROPERTIES--
 	public GestorPropietats pMapaActual(){
-		return new GestorPropietats(new File(getLiveMetadataFile(), "pMapaActual.txt").getPath());
+		return new GestorPropietats(new File(getLiveWorldFile(), PropertiesFile).getPath());
 	}
 	/**
 	 * The properties a template map would start with, read from the template itself,
@@ -320,15 +307,15 @@ public abstract class MapaResetejable extends Mapa {
 	 * template has no properties file. Pass null for a single-map game.
 	 */
 	public GestorPropietats pTemplate(String templateMapName){
-		File templateFolder = templateMapName == null ? getMapOriginFile() : new File(getMapOriginFile(), templateMapName);
-		File properties = new File(templateFolder, "pMapaActual.txt");
+		File template = templateMapName == null ? getMapOriginFile() : new File(getMapOriginFile(), templateMapName);
+		File properties = new File(template, PropertiesFile);
 		return properties.isFile() ? new GestorPropietats(properties.getPath()) : null;
 	}
 	public GestorPropietats pTemp(){
-		return new GestorPropietats(new File(getLiveMetadataFile(), "pTemp.txt").getPath());
+		return new GestorPropietats(new File(getLiveWorldFile(), TempPropertiesFile).getPath());
 	}
 	public GestorPropietats pPlayer(Player ply){
-		File playersFolder = new File(getLiveMetadataFile(), "pPlayers");
+		File playersFolder = new File(getLiveWorldFile(), PlayersFolder);
 		if (!playersFolder.exists()) {
 			playersFolder.mkdir();
 		}
@@ -338,7 +325,7 @@ public abstract class MapaResetejable extends Mapa {
 	protected synchronized void gameEvent(Event event) {
 		if (!EditMode){
 			super.gameEvent(event);
-		}		
+		}
 	}
 
 }

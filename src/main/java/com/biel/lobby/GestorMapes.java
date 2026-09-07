@@ -15,6 +15,7 @@ import com.biel.lobby.utilities.PaperMessages;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -72,6 +73,20 @@ public class GestorMapes implements Listener{
 		// No Mapes/BedWars template exists in either recovered server tree.
 		// Keep the implementation source, but do not advertise an instance that cannot be created.
 		// Mapes.add(new ContenidorJoc(BedWars.class, "Bed Wars", Material.RED_BED, DevelopmentState.InDevelopment));
+		importOriginalTemplates();
+	}
+	/**
+	 * Brings pre-26.2 templates into the current format. A game whose template
+	 * cannot be imported is withdrawn from the registry rather than offered.
+	 */
+	public void importOriginalTemplates(){
+		for (ContenidorJoc container : getGameContainers()) {
+			Joc template = container.getTempInstance();
+			if (template != null && template.importOriginalTemplates()) continue;
+			plugin.getLogger().severe("Game " + container.getNom() + " is withdrawn: its template could not be imported");
+			HandlerList.unregisterAll(container);
+			Mapes.remove(container);
+		}
 	}
 	public void queryAutoRatings() {
 		auto_ratings = Com.getDataAPI().getAutoRating();
