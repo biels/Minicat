@@ -941,7 +941,7 @@ public abstract class JocEquips extends Joc {
 		/** A clock in the last hotbar slot (Biel, 2026-09-08: "maybe a clock, nicer, less time"): right-click channels {@link #recallSeconds()} and lands at the base; moving cancels. */
 		public void giveRecallButton(Player ply){
 			ItemStack clock = new ItemStack(Material.CLOCK);
-			ItemButton button = new ItemButton(Utils.setItemNameAndLore(clock, ChatColor.AQUA + "Tornar a la base", ChatColor.GRAY + "Clic dret: " + (int) recallSeconds() + " s quiet i ets a la base."), ply, event -> RecallUtils.startRecallTeleport(event.getPlayer(), getTeamSpawnLocation(), recallSeconds()));
+			ItemButton button = new ItemButton(Utils.setItemNameAndLore(clock, ChatColor.AQUA + "Tornar a la base", ChatColor.GRAY + "Clic dret: " + (int) recallSeconds() + " s quiet i ets a la base."), ply, event -> RecallUtils.startRecallTeleport(event.getPlayer(), getTeamSpawnLocation(), recallSeconds(), com.biel.lobby.utilities.ColorConverter.hexToColor(com.biel.lobby.utilities.ColorConverter.chatToHex(getChatColor()))));
 			PlayerInventory inventory = ply.getInventory();
 			inventory.setItem(8, button.getItemStack());
 		}
