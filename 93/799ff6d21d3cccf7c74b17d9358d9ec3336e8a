@@ -1,0 +1,31 @@
+src/main/resources/plugin.yml
+  s_56b39451d43974::t_a11a31b67c6b8a 17-18
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_56b39451d43974::t_a11a31b67c6b8a 18,76-89
+src/main/java/com/biel/lobby/lobby.java
+  s_56b39451d43974::t_a11a31b67c6b8a 21,46-47,126-130,132
+src/main/java/com/biel/lobby/mapes/TemplateImport.java
+  s_56b39451d43974::t_4a3a1fb557db1e 1-22,26-51,55-56,58-73,75-79,81-88,91-163
+  s_56b39451d43974::t_b5c8106e01c965 23-25,52-54,57,74,80,89-90
+src/main/java/com/biel/lobby/Mapa.java
+  s_56b39451d43974::t_a775c0a90fbfde 32
+src/main/java/com/biel/lobby/mapes/MapaResetejable.java
+  s_56b39451d43974::t_b5c8106e01c965 67-74,164
+  s_56b39451d43974::t_a1aa47ddecc1cf 5-6,8-12,17-18,27-41,43-51,66,75-95,97-100,104-108,110-115,119-133,135-137,141-144,148-149,153-156,159,161,166,170-184,186,191,193-196,198-201,203,220,226-229,232,242-264,272-300,302,310-311,315,318,328
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "93799ff6d21d3cccf7c74b17d9358d9ec3336e8a",
+  "prompts": {},
+  "sessions": {
+    "s_56b39451d43974": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6daef96a-c6af-473d-b048-90413e63b27f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
