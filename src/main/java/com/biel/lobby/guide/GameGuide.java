@@ -199,6 +199,18 @@ public final class GameGuide {
 		return PaperMessages.legacy(text.toString());
 	}
 
+	private static final java.util.Set<String> OPENED_THIS_SESSION = new java.util.HashSet<>();
+
+	/**
+	 * The book opens by itself the first time a player enters this game since the server
+	 * started (Biel, 2026-09-08: "people don't read the chat; JoniMega was interested and
+	 * still didn't read anything"). Later joins say /guia instead.
+	 */
+	public void openOnce(Player player) {
+		if (!exists() || !OPENED_THIS_SESSION.add(slug(gameName) + "/" + player.getUniqueId())) return;
+		Bukkit.getScheduler().runTaskLater(Com.getPlugin(), () -> { if (player.isOnline()) open(player); }, 30);
+	}
+
 	public void open(Player player) {
 		if (!exists()) {
 			player.sendMessage(ChatColor.GRAY + "Encara no hi ha guia " + com.biel.lobby.utilities.Catalan.de(gameName) + ".");

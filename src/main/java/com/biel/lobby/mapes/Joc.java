@@ -1042,6 +1042,7 @@ public abstract class Joc extends MapaResetejable {
 		
 		updateScoreBoard(ply);
 		anunciarWiki(ply, false);
+		com.biel.lobby.guide.GameGuide.of(getGameName()).openOnce(ply);
 	}
 	/** The player leaves on purpose, still here to be told; a lost connection goes through the seat instead. */
 	@Override
