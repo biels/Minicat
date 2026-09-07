@@ -684,6 +684,7 @@ public abstract class Joc extends MapaResetejable {
 			for (String s : gameInfo) {
 				sendPlayerMessage(p, ChatColor.WHITE + "" + ChatColor.BOLD + " + " + ChatColor.RESET + s);
 			}
+			if (com.biel.lobby.guide.GameGuide.of(getGameName()).exists()) sendPlayerMessage(p, ChatColor.GRAY + "/guia obre la guia sencera.");
 			sendPlayerMessage(p, ChatColor.BLUE + "" + ChatColor.BOLD + "----------------------");
 		}
 	}

@@ -48,6 +48,7 @@ public final class lobby extends JavaPlugin {
 		MapaResetejable.deleteUnloadedLiveWorlds();
 
 		gest = new GestorMapes();
+		getServer().getPluginManager().registerEvents(new com.biel.lobby.guide.GuideSigns(), this);
 		agentSnapshotHttpServer = new AgentSnapshotHttpServer(this);
 		agentSnapshotHttpServer.start();
 		dataAPI = new DataAPI();
@@ -85,6 +86,11 @@ public final class lobby extends JavaPlugin {
 		return agentSnapshotHttpServer != null && agentSnapshotHttpServer.isRunning();
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
+		if(cmd.getName().equalsIgnoreCase("guia")){
+			if(!(sender instanceof Player reader)) return true;
+			com.biel.lobby.guide.GameGuide.open(reader, args.length == 0 ? null : String.join(" ", args));
+			return true;
+		}
 		if(cmd.getName().equalsIgnoreCase("prova")){
 			if(sender instanceof Player && !sender.isOp()){
 				sender.sendMessage(ChatColor.RED + "Aquesta ordre requereix permisos d'operador.");

@@ -91,6 +91,7 @@ import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
+import com.biel.lobby.guide.GameGuide;
 import com.biel.lobby.minions.Lane;
 import com.biel.lobby.minions.LaneMinion;
 import com.biel.lobby.minions.LaneMinionKind;
@@ -262,6 +263,43 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<UUID, Integer> witherDeaths = new HashMap<>();
 	/** Players who have bought their one quartz this match. */
 	private final Set<UUID> quartzBuyers = new HashSet<>();
+
+	/** The game's words, written once in guides/obsidian-defenders.md: start lines, tooltips, hints and the book; the numbers come from here. */
+	private static final GameGuide GUIDE = GameGuide.of("Obsidian Defenders").withValues(guideValues());
+
+	private static Map<String, String> guideValues() {
+		Map<String, String> v = new HashMap<>();
+		v.put("PIC_PRIMER_MIN", String.valueOf(PRIMER_PIC_TICKS / 20 / 60));
+		v.put("PIC_PERIODE_MIN", String.valueOf(PERIODE_PIC_TICKS / 20 / 60));
+		v.put("MORT_BASE_S", String.valueOf(RESPAWN_WAIT_BASE_SECONDS));
+		v.put("MORT_CADA_MIN", String.valueOf(RESPAWN_WAIT_MINUTES_PER_EXTRA_SECOND));
+		v.put("MORT_MAX_S", String.valueOf(RESPAWN_WAIT_MAX_SECONDS));
+		v.put("RECALL_S", String.valueOf((int) RECALL_SECONDS));
+		v.put("CAPTURA_S", String.valueOf(CAPTURE_SECONDS));
+		v.put("CAPTURA_OR", String.valueOf(GOLD_PER_CAPTURE));
+		v.put("PUNT_QUADRE_S", String.valueOf(SECONDS_PER_POINT_SQUARE));
+		v.put("PONT_QUADRES", String.valueOf(PONT_CÀRREGA_MÀXIMA));
+		v.put("PONT_S", String.valueOf(PONT_TICKS_DESPLEGAT / 20));
+		v.put("GUARDIA_MIN", String.valueOf(GOLEM_INICIAL_TICKS / 20 / 60));
+		v.put("GUARDIA_OR", String.valueOf(OR_PER_GOLEM));
+		v.put("OR_INICIAL", String.valueOf(INITIAL_GOLD));
+		v.put("COFRES_S", String.valueOf(CICLE_COFRES_TICKS / 20));
+		v.put("BLOC_OR_PASSIU", String.valueOf(GOLD_BLOCK_PASSIVE_GOLD));
+		v.put("REMUNTADA_KILLS", String.valueOf(CATCH_UP_KILL_GAP));
+		v.put("REMUNTADA_OR", String.valueOf(CATCH_UP_GOLD));
+		v.put("MAX_NINOTS", String.valueOf(MAX_SNOWMEN_PER_PLAYER));
+		v.put("GEL_S", String.valueOf(ICE_CAGE_TICKS / 20));
+		v.put("GEL_COPS_ARMAR", String.valueOf(SNOWMAN_HITS_TO_ARM_CAGE));
+		v.put("FOC_S", String.valueOf(SNOWBALL_FIRE_TICKS / 20));
+		v.put("SUPERNINOT_PERCENT", String.valueOf(HERO_SNOWBALL_CHEST_CHANCE));
+		v.put("ESTRELLA_RADI", String.valueOf((int) NETHER_STAR_RADIUS));
+		v.put("ESTRELLA_CARREGA_S", String.valueOf(NETHER_STAR_CHARGE_TICKS / 20));
+		v.put("ESTRELLA_PERCENT", String.valueOf(NETHER_STAR_CHEST_CHANCE));
+		v.put("MORT_SOBTADA_MIN", String.valueOf(SUDDEN_DEATH_SECOND / 60));
+		for (Mercaderia m : Mercaderia.values()) v.put("PREU_" + m.name(), String.valueOf(m.preu));
+		for (Encantament e : Encantament.values()) v.put("ENCANT_" + e.name(), String.valueOf(e.preu(1)));
+		return v;
+	}
 
 	boolean debug = false;
 	/** Team id → block positions of the TNT that is that team's base core. */
@@ -438,31 +476,34 @@ public class ObsidianDefenders extends JocEquips {
 	 * is the quietest channel there is: read only when hovered, never repeated.
 	 */
 	private enum Objecte {
-		ESTRELLA_DEL_NETHER(Material.NETHER_STAR, "Estrella infernal", "Clic dret: es carrega " + NETHER_STAR_CHARGE_TICKS / 20 + " s i els enemics", "a menys de " + (int) NETHER_STAR_RADIUS + " blocs queden a 1 cor i lents 20 s;", "aliats ràpids 20 s. Es converteix en estrella de foc."),
-		ESTRELLA_DE_FOC(Material.FIREWORK_STAR, "Estrella de foc", "Amb ella a l'inventari, una fletxa disparada", "des de dalt explota en caure."),
-		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma", "Clic dret: crema tot l'equip enemic 3 s."),
-		MARAGDA(Material.EMERALD, "Maragda", "Clic dret: +1 cor a tot el teu equip."),
-		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí cap a la base enemiga.", "Empeny; amb el cap de gel, el proper cop", "tanca l'enemic en gel " + ICE_CAGE_TICKS / 20 + " s (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots).", "Si el teu equip ha matat el Guardià, crema."),
-		BOLA_DE_NEU_ENCANTADA(Material.SNOWBALL, true, "Bola de neu encantada", "Llança-la: apareix un superninot, que fa", "tot el que fa un ninot amb molt més abast", "i dispara x3 el primer minut, x2 després."),
-		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender", "Llança-la per teletransportar-te on caigui."),
-		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or", "A l'inventari: fletxes explosives un 20 % més fortes."),
-		PIC_DE_DIAMANT(Material.DIAMOND_PICKAXE, "Pic de diamant", "Obre una bretxa a l'obsidiana de la base enemiga:", "a la bretxa hi apareix el detonador.", "Encanta'l a una taula: Eficiència.", "Qui et mati es queda un pic d'or."),
-		PIC_D_OR(Material.GOLDEN_PICKAXE, "Pic d'or", "A la mà en matar: or x3.", "A l'inventari: +3 or cada cicle.");
+		ESTRELLA_DEL_NETHER(Material.NETHER_STAR, "Estrella infernal"),
+		ESTRELLA_DE_FOC(Material.FIREWORK_STAR, "Estrella de foc"),
+		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma"),
+		MARAGDA(Material.EMERALD, "Maragda"),
+		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu"),
+		BOLA_DE_NEU_ENCANTADA(Material.SNOWBALL, true, "Bola de neu encantada"),
+		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender"),
+		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or"),
+		PIC_DE_DIAMANT(Material.DIAMOND_PICKAXE, "Pic de diamant"),
+		PIC_D_OR(Material.GOLDEN_PICKAXE, "Pic d'or");
 
 		final Material material;
 		/** Shown with the enchantment glint; the glint is what tells it from the plain item of the same material. */
 		final boolean brillant;
 		final String nom;
-		final List<String> llegenda;
-		Objecte(Material material, String nom, String... llegenda) {
-			this(material, false, nom, llegenda);
+		Objecte(Material material, String nom) {
+			this(material, false, nom);
 		}
 
-		Objecte(Material material, boolean brillant, String nom, String... llegenda) {
+		Objecte(Material material, boolean brillant, String nom) {
 			this.material = material;
 			this.brillant = brillant;
 			this.nom = nom;
-			this.llegenda = List.of(llegenda);
+		}
+
+		/** The tooltip, from the guide's {@code objecte NAME} section. */
+		List<String> llegenda() {
+			return GUIDE.lines("objecte " + name());
 		}
 
 		static Objecte de(Material material) {
@@ -496,7 +537,7 @@ public class ObsidianDefenders extends JocEquips {
 			if (objecte.brillant) meta.setEnchantmentGlintOverride(true);
 			meta.displayName(Component.text(objecte.nom, NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
 			List<Component> lore = new ArrayList<>();
-			for (String línia : objecte.llegenda) lore.add(Component.text(línia, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+			for (String línia : objecte.llegenda()) lore.add(Component.text(línia, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
 			meta.lore(lore);
 			item.setItemMeta(meta);
 			return item;
@@ -694,12 +735,8 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	protected ArrayList<String> getGameInfo(Player p) {
-		ArrayList<String> info = new ArrayList<>();
-		// Three lines; the rest is taught where it happens: item tooltips, signs, the one-shot hints and the sounds.
-		info.add("Obre una bretxa a l'obsidiana de la base enemiga i trepitja el detonador que hi apareix. El pic de diamant cau al mig als 3 min.");
-		info.add("L'or paga tot: cofres de la jungla, kills, captures, el Guardià. Es gasta a les botigues i a les taules d'encantar.");
-		info.add("Els punts de control del mig carreguen el pont del teu equip; les torres de llums mostren les dues barres.");
-		return info;
+		// Three lines; the rest is taught where it happens: item tooltips, signs, the one-shot hints, and the book (/guia).
+		return new ArrayList<>(GUIDE.lines("inici"));
 	}
 
 	//---------- Base cores and the win ----------
@@ -1097,8 +1134,8 @@ public class ObsidianDefenders extends JocEquips {
 		Item item = evt.getItem();
 		if (item.getItemStack().getType() == Material.GOLD_NUGGET || item.getItemStack().getType() == Material.GOLD_INGOT) refreshGoldSoon(p);
 		Objecte objecte = Objecte.de(item.getItemStack());
-		if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) hint(p, "superninot", "Bola de neu encantada: llança-la i en surt un superninot, més abast i més ràpid");
-		if (objecte == Objecte.ESTRELLA_DEL_NETHER) hint(p, "estrella", "Estrella infernal: clic dret, " + NETHER_STAR_CHARGE_TICKS / 20 + " s de càrrega, i els enemics a " + (int) NETHER_STAR_RADIUS + " blocs queden a 1 cor");
+		if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) hint(p, "superninot");
+		if (objecte == Objecte.ESTRELLA_DEL_NETHER) hint(p, "estrella");
 		if (item.getItemStack().getType() != Material.DIAMOND_PICKAXE) return;
 		if (item.getLocation().distance(puntPicDiamant()) < 1.5) {
 			int or = 3;
@@ -1683,7 +1720,7 @@ public class ObsidianDefenders extends JocEquips {
 		for (Mercaderia m : mercaderies) {
 			ArrayList<String> info = new ArrayList<>();
 			Objecte objecte = Objecte.de(m.material);
-			if (objecte != null) for (String línia : objecte.llegenda) info.add(ChatColor.GRAY + línia);
+			if (objecte != null) for (String línia : objecte.llegenda()) info.add(ChatColor.GRAY + línia);
 			else if (m.descripció != null) info.add(ChatColor.GRAY + m.descripció);
 			info.add(ChatColor.WHITE + "Preu: " + ChatColor.GOLD + m.preu + " or");
 			boolean soldOut = m == Mercaderia.QUARS && hasQuartz(p);
@@ -1812,21 +1849,21 @@ public class ObsidianDefenders extends JocEquips {
 			Location at = p.getLocation();
 			for (Map.Entry<Block, TaulaDEncantar> taula : taulesDEncantar.entrySet()) {
 				if (!aProp(at, taula.getKey())) continue;
-				if (taula.getValue().forja() == Forja.BASE) hint(p, "taula", "Taula d'encantar: clic dret amb l'eina a la mà. Es paga amb or.");
-				else hint(p, "altar", "Altar de la capçada: els encanteris forts. Clic dret amb l'eina a la mà.");
+				if (taula.getValue().forja() == Forja.BASE) hint(p, "taula");
+				else hint(p, "altar");
 			}
 			for (ControlPoint point : controlPoints) {
-				for (Block plate : point.plateByTeam.values()) if (aProp(at, plate)) hint(p, "placa", "Punt de control: 3 s sobre la placa del teu color per capturar-lo.");
+				for (Block plate : point.plateByTeam.values()) if (aProp(at, plate)) hint(p, "placa");
 			}
-			for (Block botó : botonsPont.keySet()) if (aProp(at, botó)) hint(p, "botó", "Botó del pont: amb la barra plena, prem-lo per desplegar el pont sobre el fossat enemic.");
-			for (Block detonator : teamByDetonator.keySet()) if (aProp(at, detonator)) hint(p, "detonador", "Detonador: si un enemic el trepitja, la TNT de la base explota.");
+			for (Block botó : botonsPont.keySet()) if (aProp(at, botó)) hint(p, "botó");
+			for (Block detonator : teamByDetonator.keySet()) if (aProp(at, detonator)) hint(p, "detonador");
 			Equip team = obtenirEquip(p);
 			if (team == null) continue;
 			for (Equip enemy : Equips) {
 				if (enemy == team) continue;
 				for (Vector core : nuclisPerEquip.getOrDefault(enemy.getId(), Set.of())) {
 					if (core.toLocation(world).add(0.5, 0.5, 0.5).distance(at) > VAULT_HINT_DISTANCE) continue;
-					hint(p, "cambra", "La cambra enemiga: trenca un bloc de l'anell d'obsidiana amb el pic de diamant i trepitja el detonador que hi apareix.");
+					hint(p, "cambra");
 					break;
 				}
 			}
@@ -1837,9 +1874,9 @@ public class ObsidianDefenders extends JocEquips {
 		return block.getLocation().add(0.5, 0.5, 0.5).distance(at) <= HINT_DISTANCE;
 	}
 
-	private void hint(Player p, String clau, String text) {
+	private void hint(Player p, String clau) {
 		if (!hintsShown.computeIfAbsent(p.getUniqueId(), id -> new HashSet<>()).add(clau)) return;
-		PaperMessages.sendActionBar(p, ChatColor.YELLOW + text, HINT_TICKS);
+		PaperMessages.sendActionBar(p, ChatColor.YELLOW + GUIDE.line("pista " + clau), HINT_TICKS);
 	}
 
 	/** A click on a table: never the vanilla screen; the team's tables refuse the enemy. */
