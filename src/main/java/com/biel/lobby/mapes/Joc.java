@@ -54,6 +54,9 @@ import com.biel.lobby.utilities.data.MatchData;
 import com.biel.lobby.utilities.data.PlayerData;
 import com.biel.lobby.utilities.events.skills.SkillPool;
 import com.biel.lobby.utilities.events.skills.types.specificskills.*;
+import org.bukkit.block.BlockFace;
+import org.bukkit.Sound;
+import com.biel.lobby.utilities.events.statuseffects.FrozenStatusEffect;
 import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
 import com.biel.lobby.utilities.events.statuseffects.AuraRendererStatusEffect;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect
@@ -186,6 +189,34 @@ public abstract class Joc extends MapaResetejable {
 				block.setType(Material.AIR);
 			}
 		}, delayTicks);
+	}
+	/**
+	 * Shuts a player in ice for {@code ticks}: ice on the four sides at foot level and over
+	 * the head, the player centred in the cell and unable to break out ({@link FrozenStatusEffect});
+	 * the ice melts away on its own. The frost archer's prison and the gel snowmen's.
+	 */
+	public void encaseInIce(Player victim, int ticks) {
+		Block feet = victim.getLocation().getBlock();
+		for (BlockFace face : List.of(BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST, BlockFace.EAST)) {
+			Block side = feet.getRelative(face);
+			if (side.getType().isSolid()) continue;
+			side.setType(Material.ICE);
+			scheduleTrackedBlockRemoval(side, ticks, false);
+		}
+		Block roof = feet.getRelative(0, 2, 0);
+		if (!roof.getType().isSolid()) {
+			roof.setType(Material.ICE);
+			scheduleTrackedBlockRemoval(roof, ticks, false);
+		}
+		Location centred = victim.getLocation();
+		centred.setX(feet.getX() + 0.5);
+		centred.setZ(feet.getZ() + 0.5);
+		victim.teleport(centred);
+		FrozenStatusEffect frozen = new FrozenStatusEffect(victim);
+		frozen.setRemainingTicks(ticks);
+		getPlayerInfo(victim).addStatusEffect(frozen);
+		world.playSound(victim.getLocation(), Sound.BLOCK_GLASS_PLACE, 1F, 0.7F);
+		world.playSound(victim.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, 1F, 1F);
 	}
 	private Long establirTempsInicial() {
 		return startTimeMillis = System.currentTimeMillis();

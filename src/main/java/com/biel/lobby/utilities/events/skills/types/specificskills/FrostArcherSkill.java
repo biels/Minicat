@@ -1,19 +1,13 @@
 package com.biel.lobby.utilities.events.skills.types.specificskills;
 
-import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.util.Vector;
 
 import com.biel.lobby.mapes.Joc.PlayerInfo;
-import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.events.skills.types.InherentSkill;
 import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
 import com.biel.lobby.utilities.events.statuseffects.StatusEffect;
@@ -81,9 +75,6 @@ public class FrostArcherSkill extends InherentSkill {
 				ef.setValue(0);
 				ef.setModal(false);
 				evt.setDamage(evt.getDamage() / 3);
-				FrostBindngStatusEffect bindingEffect = new FrostBindngStatusEffect(damaged);
-				bindingEffect.setRemainingTicks((int) (getModifier() * 20));
-				getPlayerInfo(damaged).addStatusEffect(bindingEffect);
 				ef.setRemainingTicks(0);
 				ef.setModal(false);
 			}			       				
@@ -100,29 +91,10 @@ public class FrostArcherSkill extends InherentSkill {
 		}
 	}
 
+	/** The prison is the game's ({@link com.biel.lobby.mapes.Joc#encaseInIce}), shared with the gel snowmen. */
 	public void empresonar(Player damaged, Player damager) {
-		ArrayList <BlockFace> faces = new ArrayList<>();
-		faces.add(BlockFace.NORTH);
-		faces.add(BlockFace.SOUTH);
-		faces.add(BlockFace.WEST);
-		faces.add(BlockFace.EAST);
-		for (BlockFace face : faces){			
-			Block block = damaged.getLocation().getBlock().getRelative(face);
-			if (block.getType().isSolid()){
-				continue;
-			}
-			block.setType(Material.ICE);
-			getGame().scheduleTrackedBlockRemoval(block, (int) (20 * getModifier()), false);
-			
-		}
-		damaged.teleport(damaged.getLocation().getBlock().getLocation().add(new Vector(0.5,0,0.5)));
-		Block gblock = damaged.getLocation().add(0, 2, 0).getBlock();
-		if (gblock.getType() == Material.AIR){
-			gblock.setType(Material.GOLD_BLOCK);
-			getGame().scheduleTrackedBlockRemoval(gblock, (int) (20 * getModifier()), false);
-		}
+		getGame().encaseInIce(damaged, (int) (20 * getModifier()));
 		damaged.playSound(damager.getLocation(), Sound.ENTITY_PLAYER_BURP, 1, 0.5F);
-		//Remove aura
 		removeDefaultNamedAura();
 	}
 	public FrostArcherStatusEffect getAssociatedEffect(){
@@ -157,35 +129,4 @@ public class FrostArcherSkill extends InherentSkill {
 		}
 		
 	}
-	public class FrostBindngStatusEffect extends StatusEffect{
-
-		public FrostBindngStatusEffect(Player ply) {
-			super(ply);
-			setType(StatusEffectType.DEBUFF);
-			setModal(true);
-		}
-
-		@Override
-		public String getName() {
-			// TODO Auto-generated method stub
-			return "Congelat";
-		}
-		@Override
-		public double getMaxValue() {
-			// TODO Auto-generated method stub
-			return 6;
-		}
-		@Override
-		public String getDescription() {
-			// TODO Auto-generated method stub
-			return "Efecte de l'enllaç de gel";
-		}
-		@Override
-		protected void onBlockBreak(BlockBreakEvent evt, Block blk) {
-			// TODO Auto-generated method stub
-			super.onBlockBreak(evt, blk);
-			evt.setCancelled(true);
-		}
-	}
-
 }
