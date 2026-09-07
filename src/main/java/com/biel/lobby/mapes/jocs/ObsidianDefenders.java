@@ -98,6 +98,7 @@ import com.biel.lobby.minions.LaneMinionKind;
 import com.biel.lobby.minions.Minion;
 import com.biel.lobby.minions.SnowmanKind;
 import com.biel.lobby.minions.SnowmanMinion;
+import com.biel.lobby.utilities.InventoryTidy;
 import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
@@ -127,6 +128,8 @@ public class ObsidianDefenders extends JocEquips {
 	private static final double RECALL_SECONDS = 3;
 	/** The objective stays on a boss bar at the top of the screen this long after the start, draining, then goes (Biel, 2026-09-08: what a first-timer must know). */
 	private static final int OBJECTIVE_BAR_SECONDS = 60;
+	/** The recall clock's slot, which the inventory tidy never touches. */
+	private static final int RECALL_SLOT = 8;
 	private static final int MAX_COFRES_OBERTS = 8;
 	private static final long PRIMER_PIC_TICKS = 3 * 60 * 20;
 	private static final long PERIODE_PIC_TICKS = 2 * 60 * 20;
@@ -1138,6 +1141,7 @@ public class ObsidianDefenders extends JocEquips {
 		super.onPlayerPickupItem(evt, p);
 		Item item = evt.getItem();
 		if (item.getItemStack().getType() == Material.GOLD_NUGGET || item.getItemStack().getType() == Material.GOLD_INGOT) refreshGoldSoon(p);
+		tidySoon(p);
 		Objecte objecte = Objecte.de(item.getItemStack());
 		if (objecte == Objecte.BOLA_DE_NEU) hint(p, "bola");
 		if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) hint(p, "superninot");
@@ -1535,9 +1539,32 @@ public class ObsidianDefenders extends JocEquips {
 
 		@EventHandler
 		public void onInventoryClose(InventoryCloseEvent evt) {
-			if (evt.getPlayer() instanceof Player p) refreshGoldSoon(p);
+			if (!(evt.getPlayer() instanceof Player p)) return;
+			if (evt.getInventory().getHolder() instanceof Chest chest && isJungleChest(chest.getBlock())) emptyChestInto(chest, p);
+			refreshGoldSoon(p);
+			tidySoon(p);
 		}
 	};
+
+	private boolean isJungleChest(Block block) {
+		if (world == null || block.getWorld() != world) return false;
+		for (Location spot : pMapaActual().ObtenirLocations("cofres", world)) if (spot.getBlock().equals(block)) return true;
+		return false;
+	}
+
+	/** Closing a jungle chest takes everything still inside (Biel, 2026-09-08: "no need to click on each"). */
+	private void emptyChestInto(Chest chest, Player p) {
+		Inventory inv = chest.getInventory();
+		int taken = 0;
+		for (int i = 0; i < inv.getSize(); i++) {
+			ItemStack item = inv.getItem(i);
+			if (item == null || item.getType() == Material.AIR) continue;
+			giveOrDrop(p, item);
+			inv.setItem(i, null);
+			taken++;
+		}
+		if (taken > 0) p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8F, 1.1F);
+	}
 
 	private void refreshGoldSoon(Player p) {
 		if (world == null || p.getWorld() != world || !JocEnMarxa()) return;
@@ -1759,6 +1786,7 @@ public class ObsidianDefenders extends JocEquips {
 		}
 		if (m == Mercaderia.QUARS) quartzBuyers.add(p.getUniqueId());
 		giveOrDrop(p, Objecte.descriure(new ItemStack(m.material, m.quantitat)));
+		tidySoon(p);
 		p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1F, 1F);
 		updateScoreBoard(p);
 	}
@@ -1785,13 +1813,14 @@ public class ObsidianDefenders extends JocEquips {
 		return quartzBuyers.contains(p.getUniqueId()) || p.getInventory().contains(Material.QUARTZ);
 	}
 
-	/** Puts the stack in the inventory; what does not fit falls at the player's feet instead of vanishing. */
+	/** Puts the stack in the inventory; what does not fit falls at the player's feet instead of vanishing. Armour is worn by the tidy when it is better. */
 	private void giveOrDrop(Player p, ItemStack stack) {
-		if (Utils.isArmor(stack)) {
-			Utils.giveItemStack(stack, p);
-			return;
-		}
 		for (ItemStack leftover : p.getInventory().addItem(stack).values()) world.dropItemNaturally(p.getLocation(), leftover);
+	}
+
+	/** The inventory tidies itself the tick after something arrives: a purchase, a chest, a pickup, a respawn (design in GAMES.md, "Inventory tidy"). */
+	private void tidySoon(Player p) {
+		scheduleGameplayTask(() -> { if (p.isOnline() && JocEnMarxa()) InventoryTidy.tidy(p, RECALL_SLOT); }, 1);
 	}
 
 	private boolean gastarOr(Player p, int preu) {
@@ -2979,6 +3008,11 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected int respawnWaitSeconds(Player p) {
 		return Math.min(RESPAWN_WAIT_MAX_SECONDS, RESPAWN_WAIT_BASE_SECONDS + segonsTranscorreguts() / 60 / RESPAWN_WAIT_MINUTES_PER_EXTRA_SECOND);
+	}
+
+	@Override
+	protected void onRespawnWaitOver(Player p) {
+		tidySoon(p);
 	}
 
 	/** A player who died to a wither skeleton comes back with less: one heart of max health per such death, never below two. */
