@@ -55,6 +55,8 @@ import com.biel.lobby.utilities.data.PlayerData;
 import com.biel.lobby.utilities.events.skills.SkillPool;
 import com.biel.lobby.utilities.events.skills.types.specificskills.*;
 import org.bukkit.block.BlockFace;
+import org.bukkit.Color;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import com.biel.lobby.utilities.events.statuseffects.FrozenStatusEffect;
 import com.biel.lobby.utilities.events.statuseffects.AuraInfo;
@@ -195,6 +197,23 @@ public abstract class Joc extends MapaResetejable {
 	 * the head, the player centred in the cell and unable to break out ({@link FrozenStatusEffect});
 	 * the ice melts away on its own. The frost archer's prison and the gel snowmen's.
 	 */
+	/**
+	 * One frame of an aura at a creature's feet: twelve dust motes of the colour on a ring
+	 * of the radius, turned by the angle, and a few soul flames rising inside it. The
+	 * Guardian's and the hero snowman's; the caller advances the angle every frame.
+	 */
+	public static void auraRing(Location feet, Color colour, double radius, double turn, int soulFlames) {
+		Particle.DustOptions dust = new Particle.DustOptions(colour, 1.1F);
+		for (int i = 0; i < 12; i++) {
+			double angle = turn + i * Math.PI / 6;
+			feet.getWorld().spawnParticle(Particle.DUST, feet.clone().add(radius * Math.cos(angle), 0.1, radius * Math.sin(angle)), 1, 0, 0, 0, 0, dust);
+		}
+		for (int i = 0; i < soulFlames; i++) {
+			double angle = Math.random() * 2 * Math.PI, r = Math.random() * radius;
+			feet.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, feet.clone().add(r * Math.cos(angle), 0.1, r * Math.sin(angle)), 0, 0, 1, 0, 0.04);
+		}
+	}
+
 	public void encaseInIce(Player victim, int ticks) {
 		Block feet = victim.getLocation().getBlock();
 		for (BlockFace face : List.of(BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST, BlockFace.EAST)) {

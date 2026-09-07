@@ -1030,17 +1030,10 @@ public class ObsidianDefenders extends JocEquips {
 		if (golem == null) return;
 		passosAura++;
 		Location peus = golem.getLocation();
-		Particle.DustOptions pols = new Particle.DustOptions(guardiàEnfurismat ? COLOR_AURA_ENFURISMAT : COLOR_AURA_GUARDIÀ, 1.1F);
+		Color colorAura = guardiàEnfurismat ? COLOR_AURA_ENFURISMAT : COLOR_AURA_GUARDIÀ;
+		Particle.DustOptions pols = new Particle.DustOptions(colorAura, 1.1F);
 		double gir = passosAura * 0.15;
-		for (int i = 0; i < 12; i++) {
-			double angle = gir + i * Math.PI / 6;
-			world.spawnParticle(Particle.DUST, peus.clone().add(RADI_AURA_GUARDIÀ * Math.cos(angle), 0.1, RADI_AURA_GUARDIÀ * Math.sin(angle)), 1, 0, 0, 0, 0, pols);
-		}
-		int flames = guardiàEnfurismat ? 4 : 2;
-		for (int i = 0; i < flames; i++) {
-			double angle = Math.random() * 2 * Math.PI, radi = Math.random() * RADI_AURA_GUARDIÀ;
-			world.spawnParticle(Particle.SOUL_FIRE_FLAME, peus.clone().add(radi * Math.cos(angle), 0.1, radi * Math.sin(angle)), 0, 0, 1, 0, 0.04);
-		}
+		auraRing(peus, colorAura, RADI_AURA_GUARDIÀ, gir, guardiàEnfurismat ? 4 : 2);
 		if (passosAura % 2 == 0) world.spawnParticle(Particle.END_ROD, peus.clone().add(0, 1.4, 0), 0, 0, 1, 0, 0.03);
 		Location feix = puntDelGuardià().add(0.5, FEIX_GUARDIÀ_BASE, 0.5);
 		for (int i = 0; i < 3; i++) world.spawnParticle(Particle.END_ROD, feix.clone().add(0, Math.random() * FEIX_GUARDIÀ_ALÇADA, 0), 1, 0, 0, 0, 0);

@@ -3,6 +3,7 @@ package com.biel.lobby.minions;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -25,8 +26,10 @@ import com.biel.BielAPI.ai.NearestTargetGoal;
 import com.biel.BielAPI.ai.RangedAttackGoal;
 import com.biel.BielAPI.ai.Volley;
 import com.biel.BielAPI.ai.WaypointWalkGoal;
+import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
+import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.PaperMessages;
 
 /**
@@ -42,8 +45,9 @@ import com.biel.lobby.utilities.PaperMessages;
  * wears ice, whatever the kind, until {@link #dischargeCage} at the caging hit.
  * A hero snowman (Biel, 2026-09-07 night: "a superhero snowman from an enchanted snowball
  * found in the trees: whatever a regular one does, with more range and a faster rate, at
- * least for the first minute") glows, and its attack goals are reinstalled once its
- * surge ends, since a goal's numbers are fixed at construction.
+ * least for the first minute") glows, walks with Speed I, carries the Guardian's kind of
+ * aura in its team's colour, and its attack goals are reinstalled once its surge ends,
+ * since a goal's numbers are fixed at construction.
  */
 public final class SnowmanMinion extends Minion {
 	public static final double ACQUIRE_RADIUS = 12;
@@ -63,6 +67,9 @@ public final class SnowmanMinion extends Minion {
 	private static final int HERO_SURGE_RATE = 3;
 	private static final double HERO_RANGE_BONUS = 5;
 	private static final int HERO_RATE = 2;
+	/** The hero's aura: a ring this wide at its feet, redrawn this often, like the Guardian's. */
+	private static final double HERO_AURA_RADIUS = 0.8;
+	private static final long HERO_AURA_PERIOD_TICKS = 5;
 	/** The target is picked this far beyond the shooting range, so the snowman turns before the enemy is in reach. */
 	private static final double ACQUIRE_PER_RANGE = ACQUIRE_RADIUS / RANGE;
 	/** The head while the cage is armed: the next snowball shuts its victim in ice. */
@@ -78,6 +85,8 @@ public final class SnowmanMinion extends Minion {
 	private final int cooldownTicks;
 	private final boolean hero;
 	private int ageSeconds;
+	private int auraTaskId = -1;
+	private int auraFrames;
 	private final SnowballHit hitOnPlayer;
 	private final Lane lane;
 	private UUID headId;
@@ -167,6 +176,10 @@ public final class SnowmanMinion extends Minion {
 		golem.customName(PaperMessages.legacy(team().getChatColor() + (hero ? "Superninot de " : "Ninot de ") + kind.label + " de " + ownerName()));
 		golem.setCustomNameVisible(true);
 		golem.setGlowing(hero);
+		if (hero) {
+			golem.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, true, false));
+			auraTaskId = game.scheduleGameplayRepeatingTask(this::drawAura, 0, HERO_AURA_PERIOD_TICKS);
+		}
 		showHead(golem, kind.headBlock);
 		return golem;
 	}
@@ -234,14 +247,34 @@ public final class SnowmanMinion extends Minion {
 		}
 	}
 
+	/** One frame of the hero's aura; the task ends itself once the body is gone. */
+	private void drawAura() {
+		Mob body = mob();
+		if (body == null) {
+			stopAura();
+			return;
+		}
+		auraFrames++;
+		Color colour = ColorConverter.hexToColor(ColorConverter.chatToHex(team().getChatColor()));
+		Joc.auraRing(body.getLocation(), colour, HERO_AURA_RADIUS, auraFrames * 0.15, 1);
+	}
+
+	private void stopAura() {
+		if (auraTaskId == -1) return;
+		Bukkit.getScheduler().cancelTask(auraTaskId);
+		auraTaskId = -1;
+	}
+
 	@Override
 	public void onMinionDeath(EntityDeathEvent evt, Player killer) {
 		removeHead();
+		stopAura();
 	}
 
 	@Override
 	public void remove() {
 		removeHead();
+		stopAura();
 		super.remove();
 	}
 
