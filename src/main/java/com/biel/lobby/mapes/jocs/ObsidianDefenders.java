@@ -782,10 +782,16 @@ public class ObsidianDefenders extends JocEquips {
 		evt.setCancelled(true);
 		if (evt.getHand() != EquipmentSlot.HAND || !JocEnMarxa()) return;
 		if (obtenirEquip(p) != parada.equip()) {
-			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			rebutjarElementEnemic(p);
 			return;
 		}
 		obrirMenúParada(p, parada.parada());
+	}
+
+	/** An enemy's booth villager or bridge button: the villager's "no" and a grey line saying why. */
+	private static void rebutjarElementEnemic(Player p) {
+		p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+		p.sendMessage(ChatColor.GRAY + "No pots interactuar amb elements de l'equip enemic");
 	}
 
 	private void obrirMenúParada(Player p, Parada parada) {
@@ -916,8 +922,9 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	private void prémerBotóPont(Player p, Equip e) {
-		if (!JocEnMarxa() || obtenirEquip(p) != e) {
-			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+		if (!JocEnMarxa()) return;
+		if (obtenirEquip(p) != e) {
+			rebutjarElementEnemic(p);
 			return;
 		}
 		Equip enemic = obtenirEquipEnemic(e);
