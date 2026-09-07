@@ -174,11 +174,25 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<UUID, Block> shownPressedPlate = new HashMap<>();
 	private final Set<UUID> refusedOnPlate = new HashSet<>();
 
-	/** A middle room: one plate per team, the lamp beside each plate, and who holds it. */
+	/**
+	 * A middle room: one plate per team, its lamps, and who holds it. The room's lamps are
+	 * split by the side of the room they sit on: the lamps on a team's plate side (the wall
+	 * lamp beside the plate and that half of the tower on top) light when that team holds
+	 * the point, the lamps on the centre line light while anyone does.
+	 */
 	private static final class ControlPoint {
 		final Map<Integer, Block> plateByTeam = new HashMap<>();
-		final Map<Integer, Block> lampByTeam = new HashMap<>();
+		final List<Block> lamps = new ArrayList<>();
 		Integer owner = null;
+
+		int sideOf(Block block) {
+			return Integer.signum(block.getX() - centre().getBlockX());
+		}
+
+		int sideOfTeam(int team) {
+			Block plate = plateByTeam.get(team);
+			return plate == null ? 0 : sideOf(plate);
+		}
 
 		Integer teamOfPlate(Block block) {
 			for (Map.Entry<Integer, Block> plate : plateByTeam.entrySet()) if (plate.getValue().equals(block)) return plate.getKey();
@@ -206,8 +220,13 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int PLATE_BAND_HALF_WIDTH = 60;
 	private static final int SCAN_MIN_Y = 30;
 	private static final int SCAN_MAX_Y = 70;
-	/** Plates closer than this belong to the same control point; a point's lamp is within it of its plate. */
+	/** Plates closer than this belong to the same control point. */
 	private static final double CONTROL_POINT_RADIUS = 8;
+	/** A control point's lamps: within this many blocks horizontally of the room's centre, from the floor up to the tower on top of it. */
+	private static final int CONTROL_POINT_LAMP_REACH = 6;
+	private static final int CONTROL_POINT_TOWER_HEIGHT = 20;
+	/** A base's bridge lamps are the ones around its bridge sign. */
+	private static final int BRIDGE_LAMP_REACH = 6;
 	/** Who is shown a plate pressed: everyone this close to it. */
 	private static final double PLATE_VIEW_DISTANCE = 16;
 	private static final long PONT_TICKS_PER_COLUMNA = 10;
@@ -1244,21 +1263,25 @@ public class ObsidianDefenders extends JocEquips {
 			point.plateByTeam.put(team.getId(), plate);
 		}
 		for (ControlPoint point : controlPoints) {
-			for (Map.Entry<Integer, Block> plate : point.plateByTeam.entrySet()) {
-				Block lamp = nearestBlock(plate.getValue().getLocation(), CONTROL_POINT_RADIUS, m -> m == Material.REDSTONE_LAMP);
-				if (lamp != null) point.lampByTeam.put(plate.getKey(), lamp);
+			Location centre = point.centre();
+			int cy = centre.getBlockY();
+			for (Block lamp : blocksBetween(centre.getBlockX() - CONTROL_POINT_LAMP_REACH, centre.getBlockZ() - CONTROL_POINT_LAMP_REACH, centre.getBlockX() + CONTROL_POINT_LAMP_REACH, centre.getBlockZ() + CONTROL_POINT_LAMP_REACH, m -> m == Material.REDSTONE_LAMP)) {
+				if (lamp.getY() >= cy - 2 && lamp.getY() <= cy + CONTROL_POINT_TOWER_HEIGHT) point.lamps.add(lamp);
 			}
 			showControlPoint(point);
-			plugin.getLogger().info(getGameName() + " " + getMapName() + ": control point at " + point.centre().toVector() + " with plates " + point.plateByTeam.keySet() + " and lamps " + point.lampByTeam.keySet());
+			plugin.getLogger().info(getGameName() + " " + getMapName() + ": control point at " + centre.toVector() + " with plates " + point.plateByTeam.keySet() + " and " + point.lamps.size() + " lamps");
 		}
 		for (Equip e : Equips) {
-			Location base = e.getTeamSpawnLocation();
-			List<Block> lamps = blocksBetween(base.getBlockX() - RADI_RÈTOLS, base.getBlockZ() - RADI_RÈTOLS, base.getBlockX() + RADI_RÈTOLS, base.getBlockZ() + RADI_RÈTOLS, m -> m == Material.REDSTONE_LAMP);
-			lamps.removeIf(l -> l.getLocation().distance(base) > RADI_RÈTOLS);
-			lamps.sort((l1, l2) -> Double.compare(l1.getLocation().distance(base), l2.getLocation().distance(base)));
+			Block sign = rètolsPont.get(e.getId());
+			List<Block> lamps = new ArrayList<>();
+			if (sign != null) {
+				lamps = blocksBetween(sign.getX() - BRIDGE_LAMP_REACH, sign.getZ() - BRIDGE_LAMP_REACH, sign.getX() + BRIDGE_LAMP_REACH, sign.getZ() + BRIDGE_LAMP_REACH, m -> m == Material.REDSTONE_LAMP);
+				lamps.removeIf(l -> l.getLocation().distance(sign.getLocation()) > BRIDGE_LAMP_REACH);
+				lamps.sort((l1, l2) -> l1.getY() != l2.getY() ? Integer.compare(l1.getY(), l2.getY()) : Integer.compare(l1.getX(), l2.getX()));
+			}
 			lampsByTeam.put(e.getId(), lamps);
 			lightLamps(e);
-			plugin.getLogger().info(getGameName() + " " + getMapName() + ": base" + e.getId() + " has " + lamps.size() + " lamps");
+			plugin.getLogger().info(getGameName() + " " + getMapName() + ": base" + e.getId() + " has " + lamps.size() + " bridge lamps");
 		}
 		if (controlPoints.isEmpty()) plugin.getLogger().warning(getGameName() + " " + getMapName() + ": no coloured plates between the bases; the bridge cannot be charged");
 	}
@@ -1277,27 +1300,13 @@ public class ObsidianDefenders extends JocEquips {
 		return blocks;
 	}
 
-	private Block nearestBlock(Location centre, double radius, Predicate<Material> kind) {
-		Block nearest = null;
-		int r = (int) Math.ceil(radius);
-		for (int dx = -r; dx <= r; dx++) {
-			for (int dy = -r; dy <= r; dy++) {
-				for (int dz = -r; dz <= r; dz++) {
-					Block block = centre.getBlock().getRelative(dx, dy, dz);
-					if (!kind.test(block.getType()) || block.getLocation().distance(centre) > radius) continue;
-					if (nearest == null || block.getLocation().distance(centre) < nearest.getLocation().distance(centre)) nearest = block;
-				}
-			}
-		}
-		return nearest;
-	}
-
-	/** The team whose colour (wool, carpet, concrete, terracotta) rings the plate, if one does. */
+	/** The team whose colour the plate sits on (the block under it), else whose colour rings it. */
 	private Equip teamOfColourAround(Block plate) {
 		Equip best = null;
 		int bestCount = 0;
 		for (Equip e : Equips) {
 			String prefix = e.getColor().name() + "_";
+			if (plate.getRelative(BlockFace.DOWN).getType().name().startsWith(prefix)) return e;
 			int count = 0;
 			for (int dx = -1; dx <= 1; dx++) {
 				for (int dz = -1; dz <= 1; dz++) {
@@ -1375,10 +1384,12 @@ public class ObsidianDefenders extends JocEquips {
 		for (Player p : team.getPlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6F, 1.6F);
 	}
 
-	/** The lamp beside the owner's plate is lit, the other one dark. */
+	/** The owner's side of the room lights up, the centre line lights while anyone holds it, the other side goes dark. */
 	private void showControlPoint(ControlPoint point) {
-		for (Map.Entry<Integer, Block> lamp : point.lampByTeam.entrySet()) {
-			setLit(lamp.getValue(), point.owner != null && point.owner.equals(lamp.getKey()));
+		int ownerSide = point.owner == null ? 0 : point.sideOfTeam(point.owner);
+		for (Block lamp : point.lamps) {
+			int side = point.sideOf(lamp);
+			setLit(lamp, point.owner != null && (side == 0 || side == ownerSide));
 		}
 	}
 
