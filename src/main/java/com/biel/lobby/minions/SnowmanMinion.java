@@ -40,6 +40,10 @@ import com.biel.lobby.utilities.PaperMessages;
  * cage; when the next shot will do that, the snowman should change his head to be the
  * ice block"): the game counts the hits with {@link #chargeCage}, and once armed the head
  * wears ice, whatever the kind, until {@link #dischargeCage} at the caging hit.
+ * A hero snowman (Biel, 2026-09-07 night: "a superhero snowman from an enchanted snowball
+ * found in the trees: whatever a regular one does, with more range and a faster rate, at
+ * least for the first minute") glows, and its attack goals are reinstalled once its
+ * surge ends, since a goal's numbers are fixed at construction.
  */
 public final class SnowmanMinion extends Minion {
 	public static final double ACQUIRE_RADIUS = 12;
@@ -53,6 +57,14 @@ public final class SnowmanMinion extends Minion {
 	/** The head block: a cube this wide, riding at the golem's top and lowered onto the head, where the pumpkin sits. */
 	private static final float HEAD_SIZE = 0.64f;
 	private static final float HEAD_LIFT = -0.66f;
+	/** A hero shoots this much farther and this many times faster: the surge for its first seconds, then the rest for life. */
+	private static final int HERO_SURGE_SECONDS = 60;
+	private static final double HERO_SURGE_RANGE_BONUS = 10;
+	private static final int HERO_SURGE_RATE = 3;
+	private static final double HERO_RANGE_BONUS = 5;
+	private static final int HERO_RATE = 2;
+	/** The target is picked this far beyond the shooting range, so the snowman turns before the enemy is in reach. */
+	private static final double ACQUIRE_PER_RANGE = ACQUIRE_RADIUS / RANGE;
 	/** The head while the cage is armed: the next snowball shuts its victim in ice. */
 	private static final Material ARMED_HEAD = Material.ICE;
 
@@ -64,6 +76,8 @@ public final class SnowmanMinion extends Minion {
 
 	private final SnowmanKind kind;
 	private final int cooldownTicks;
+	private final boolean hero;
+	private int ageSeconds;
 	private final SnowballHit hitOnPlayer;
 	private final Lane lane;
 	private UUID headId;
@@ -71,13 +85,41 @@ public final class SnowmanMinion extends Minion {
 	private int cageCharge;
 	private boolean cageArmed;
 
-	/** {@code cooldownTicks}: the kind's, or faster when the thrower carried quartz. {@code lane}: this team's, base to enemy base. */
-	public SnowmanMinion(JocEquips game, Equip team, Player owner, SnowmanKind kind, int cooldownTicks, Lane lane, SnowballHit hitOnPlayer) {
+	/**
+	 * {@code cooldownTicks}: the kind's, or faster when the thrower carried quartz, before
+	 * the hero rate. {@code hero}: thrown as an enchanted snowball. {@code lane}: this
+	 * team's, base to enemy base.
+	 */
+	public SnowmanMinion(JocEquips game, Equip team, Player owner, SnowmanKind kind, int cooldownTicks, boolean hero, Lane lane, SnowballHit hitOnPlayer) {
 		super(game, team, owner);
 		this.kind = kind;
 		this.cooldownTicks = cooldownTicks;
+		this.hero = hero;
 		this.lane = lane;
 		this.hitOnPlayer = hitOnPlayer;
+	}
+
+	public boolean isHero() {
+		return hero;
+	}
+
+	/** The player-facing noun, "ninot" or "superninot". */
+	public String noun() {
+		return hero ? "superninot" : "ninot";
+	}
+
+	private boolean surging() {
+		return hero && ageSeconds < HERO_SURGE_SECONDS;
+	}
+
+	private double range() {
+		if (!hero) return RANGE;
+		return RANGE + (surging() ? HERO_SURGE_RANGE_BONUS : HERO_RANGE_BONUS);
+	}
+
+	private int currentCooldownTicks() {
+		if (!hero) return cooldownTicks;
+		return Math.max(1, cooldownTicks / (surging() ? HERO_SURGE_RATE : HERO_RATE));
 	}
 
 	public SnowmanKind kind() {
@@ -122,8 +164,9 @@ public final class SnowmanMinion extends Minion {
 		golem.setHealth(kind.maxHealth);
 		golem.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(FOLLOW_RANGE);
 		golem.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, PotionEffect.INFINITE_DURATION, 0, true, false));
-		golem.customName(PaperMessages.legacy(team().getChatColor() + "Ninot de " + kind.label + " de " + ownerName()));
+		golem.customName(PaperMessages.legacy(team().getChatColor() + (hero ? "Superninot de " : "Ninot de ") + kind.label + " de " + ownerName()));
 		golem.setCustomNameVisible(true);
+		golem.setGlowing(hero);
 		showHead(golem, kind.headBlock);
 		return golem;
 	}
@@ -158,9 +201,28 @@ public final class SnowmanMinion extends Minion {
 
 	@Override
 	protected void installGoals(Mob mob) {
-		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, ACQUIRE_RADIUS, true, RESCAN_TICKS, this::isEnemy));
-		Bukkit.getMobGoals().addGoal(mob, 2, new RangedAttackGoal(mob, 0, RANGE, cooldownTicks, false, MARCH_SPEED, Volley.innate()));
+		installAttackGoals(mob);
 		Bukkit.getMobGoals().addGoal(mob, 3, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), MARCH_SPEED, ARRIVE_DISTANCE));
+	}
+
+	/** The target and shooting goals with the numbers of this moment: a hero's change once its surge ends. */
+	private void installAttackGoals(Mob mob) {
+		double range = range();
+		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, range * ACQUIRE_PER_RANGE, true, RESCAN_TICKS, this::isEnemy));
+		Bukkit.getMobGoals().addGoal(mob, 2, new RangedAttackGoal(mob, 0, range, currentCooldownTicks(), false, MARCH_SPEED, Volley.innate()));
+	}
+
+	@Override
+	public void tick() {
+		boolean wasSurging = surging();
+		ageSeconds++;
+		if (!wasSurging || surging()) return;
+		Mob body = mob();
+		if (body == null) return;
+		Bukkit.getMobGoals().removeGoal(body, NearestTargetGoal.KEY);
+		Bukkit.getMobGoals().removeGoal(body, RangedAttackGoal.KEY);
+		installAttackGoals(body);
+		body.getWorld().playSound(body.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.6F, 1.6F);
 	}
 
 	@Override

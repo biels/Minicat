@@ -173,6 +173,8 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int SNOWBALL_FIRE_TICKS = 60;
 	private static final int SNOWMAN_HITS_TO_ARM_CAGE = 3;
 	private static final int ICE_CAGE_TICKS = 60;
+	/** Chance, per chest opened, of an enchanted snowball, the hero snowman (Biel: "incentives to go to the trees"). */
+	private static final int HERO_SNOWBALL_CHEST_CHANCE = 5;
 	/** The team whose player last felled the Guardian throws magma snowmen until the other team fells it. */
 	private Equip guardianSlayerTeam;
 
@@ -356,30 +358,57 @@ public class ObsidianDefenders extends JocEquips {
 		CREMA_DE_MAGMA(Material.MAGMA_CREAM, "Crema de magma", "Clic dret: crema tot l'equip enemic 3 s."),
 		MARAGDA(Material.EMERALD, "Maragda", "Clic dret: +1 cor a tot el teu equip."),
 		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu", "Llança-la: on caigui apareix un ninot de neu", "que segueix el camí cap a la base enemiga.", "Alenteix; amb el cap de gel, el proper cop", "tanca l'enemic en gel " + ICE_CAGE_TICKS / 20 + " s (màx. " + MAX_SNOWMEN_PER_PLAYER + " ninots).", "Si el teu equip ha matat el Guardià, crema."),
+		BOLA_DE_NEU_ENCANTADA(Material.SNOWBALL, true, "Bola de neu encantada", "Llança-la: apareix un superninot, que fa", "tot el que fa un ninot amb molt més abast", "i dispara x3 el primer minut, x2 després."),
 		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender", "Llança-la per teletransportar-te on caigui."),
 		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or", "A l'inventari: fletxes explosives un 20 % més fortes."),
 		PIC_DE_DIAMANT(Material.DIAMOND_PICKAXE, "Pic de diamant", "Obre una bretxa a l'obsidiana de la base enemiga:", "a la bretxa hi apareix el detonador.", "Encanta'l a una taula: Eficiència.", "Qui et mati es queda un pic d'or."),
 		PIC_D_OR(Material.GOLDEN_PICKAXE, "Pic d'or", "A la mà en matar: or x3.", "A l'inventari: +3 or cada cicle.");
 
 		final Material material;
+		/** Shown with the enchantment glint; the glint is what tells it from the plain item of the same material. */
+		final boolean brillant;
 		final String nom;
 		final List<String> llegenda;
 		Objecte(Material material, String nom, String... llegenda) {
+			this(material, false, nom, llegenda);
+		}
+
+		Objecte(Material material, boolean brillant, String nom, String... llegenda) {
 			this.material = material;
+			this.brillant = brillant;
 			this.nom = nom;
 			this.llegenda = List.of(llegenda);
 		}
 
 		static Objecte de(Material material) {
-			for (Objecte o : values()) if (o.material == material) return o;
+			return de(material, false);
+		}
+
+		static Objecte de(ItemStack item) {
+			if (item == null) return null;
+			boolean brillant = item.hasItemMeta() && item.getItemMeta().hasEnchantmentGlintOverride() && item.getItemMeta().getEnchantmentGlintOverride();
+			return de(item.getType(), brillant);
+		}
+
+		static Objecte de(Material material, boolean brillant) {
+			for (Objecte o : values()) if (o.material == material && o.brillant == brillant) return o;
 			return null;
+		}
+
+		/** A fresh stack of one, named. */
+		ItemStack nou() {
+			return descriure(new ItemStack(material), this);
 		}
 
 		/** Names and explains the item when the game has words for it; returns the same stack. */
 		static ItemStack descriure(ItemStack item) {
-			Objecte objecte = de(item.getType());
+			return descriure(item, de(item));
+		}
+
+		static ItemStack descriure(ItemStack item, Objecte objecte) {
 			if (objecte == null) return item;
 			ItemMeta meta = item.getItemMeta();
+			if (objecte.brillant) meta.setEnchantmentGlintOverride(true);
 			meta.displayName(Component.text(objecte.nom, NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
 			List<Component> lore = new ArrayList<>();
 			for (String línia : objecte.llegenda) lore.add(Component.text(línia, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
@@ -814,6 +843,7 @@ public class ObsidianDefenders extends JocEquips {
 		if (Utils.Possibilitat(20)) loot.add(new ItemStack(Material.EMERALD));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.MAGMA_CREAM));
 		if (Utils.Possibilitat(14)) loot.add(new ItemStack(Material.SNOWBALL));
+		if (Utils.Possibilitat(HERO_SNOWBALL_CHEST_CHANCE)) loot.add(Objecte.BOLA_DE_NEU_ENCANTADA.nou());
 		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.EXPERIENCE_BOTTLE, Utils.NombreEntre(1, 3)));
 		if (Utils.Possibilitat(5)) loot.add(new ItemStack(Material.ENDER_PEARL));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.NETHER_STAR));
@@ -2153,7 +2183,7 @@ public class ObsidianDefenders extends JocEquips {
 		}
 		SnowmanMinion ninot = explotat || picDOr ? null : snowmanThatKilled(player);
 		if (ninot != null) {
-			evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + " amb un ninot de " + ninot.kind().label + " (" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
+			evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + " amb un " + ninot.noun() + " de " + ninot.kind().label + " (" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
 		}
 		if (Ability.hasAbility(plugin, this, player, AbilityType.CREEPER)) {
 			float explopower = 0.8F + (mortsMort / 2);
@@ -2353,9 +2383,9 @@ public class ObsidianDefenders extends JocEquips {
 	 * A thrown snowball becomes a snow golem owned by the thrower on the nearest spot with
 	 * a floor; a fourth one melts the thrower's oldest. Every snowball is the same item
 	 * (Biel, 2026-09-07 night: "make them all spawn from the same snowball"): the snowman
-	 * is of magma while the thrower's team holds the Guardian's last kill, of neu otherwise.
-	 * Quartz in the thrower's inventory at this moment makes the new snowman fire faster
-	 * for the rest of its life.
+	 * is of magma while the thrower's team holds the Guardian's last kill, of neu otherwise;
+	 * an enchanted ball, chest loot only, makes it a hero. Quartz in the thrower's
+	 * inventory at this moment makes the new snowman fire faster for the rest of its life.
 	 */
 	private void throwSnowman(Player thrower, ProjectileHitEvent evt, Location impact) {
 		Equip team = obtenirEquip(thrower);
@@ -2378,11 +2408,17 @@ public class ObsidianDefenders extends JocEquips {
 			}
 		}
 		SnowmanKind kind = team == guardianSlayerTeam ? SnowmanKind.MAGMA : SnowmanKind.NEU;
+		boolean hero = evt.getEntity() instanceof Snowball ball && Objecte.de(ball.getItem()) == Objecte.BOLA_DE_NEU_ENCANTADA;
 		int cooldown = thrower.getInventory().contains(Material.QUARTZ) ? (int) Math.round(kind.cooldownTicks * SNOWMAN_QUARTZ_COOLDOWN_FACTOR) : kind.cooldownTicks;
-		enlist(new SnowmanMinion(this, team, thrower, kind, cooldown, snowmanLane(team), this::snowballHit), spot);
+		SnowmanMinion snowman = new SnowmanMinion(this, team, thrower, kind, cooldown, hero, snowmanLane(team), this::snowballHit);
+		enlist(snowman, spot);
 		world.playSound(spot, Sound.ENTITY_SNOW_GOLEM_AMBIENT, 1F, 1F);
 		world.playSound(spot, kind == SnowmanKind.MAGMA ? Sound.BLOCK_FIRE_AMBIENT : Sound.BLOCK_SNOW_PLACE, 1F, 1F);
-		PaperMessages.sendActionBar(thrower, ChatColor.WHITE + "Ninot de " + kind.label + " " + (mine.size() + 1) + "/" + MAX_SNOWMEN_PER_PLAYER, 60);
+		if (hero) {
+			world.playSound(spot, Sound.ENTITY_PLAYER_LEVELUP, 1F, 1.5F);
+			world.spawnParticle(Particle.END_ROD, spot.clone().add(0, 1, 0), 40, 0.4, 0.8, 0.4, 0.08);
+		}
+		PaperMessages.sendActionBar(thrower, ChatColor.WHITE + (hero ? "Superninot de " : "Ninot de ") + kind.label + " " + (mine.size() + 1) + "/" + MAX_SNOWMEN_PER_PLAYER, 60);
 	}
 
 	/**
