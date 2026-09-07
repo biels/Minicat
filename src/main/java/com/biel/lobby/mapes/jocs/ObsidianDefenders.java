@@ -34,14 +34,18 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -51,10 +55,12 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
+import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
@@ -97,6 +103,34 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<UUID, Integer> segonsÚltimCopRebut = new HashMap<>();
 	private UUID golemActual;
 	private boolean primerPicAnunciat = false;
+	/** Shopkeeper villager id → the team it sells to. */
+	private final Map<UUID, Equip> botiguers = new HashMap<>();
+
+	/** What the shop sells, in menu order. Prices in gold nuggets; an ingot pays for ten. */
+	private enum Mercaderia {
+		FLETXES(Material.ARROW, 8, 3, "8 fletxes", null),
+		ESTRELLES(Material.FIREWORK_STAR, 2, 10, "2 estrelles de foc", "Permet disparar fletxes explosives des de llocs elevats."),
+		ESPASA_FERRO(Material.IRON_SWORD, 1, 10, "Espasa de ferro", null),
+		ARC(Material.BOW, 1, 12, "Arc", null),
+		PIC_FERRO(Material.IRON_PICKAXE, 1, 12, "Pic de ferro", "+30 dany al golem"),
+		PITRAL_FERRO(Material.IRON_CHESTPLATE, 1, 18, "Pitral de ferro", null),
+		BLOC_OR(Material.GOLD_BLOCK, 1, 25, "Bloc d'or", "+2 or cada " + (CICLE_COFRES_TICKS / 20) + " segons"),
+		CALCES_DIAMANT(Material.DIAMOND_LEGGINGS, 1, 30, "Calces de diamant", null),
+		ESPASA_DIAMANT(Material.DIAMOND_SWORD, 1, 40, "Espasa de diamant", null);
+
+		final Material material;
+		final int quantitat;
+		final int preu;
+		final String nom;
+		final String descripció;
+		Mercaderia(Material material, int quantitat, int preu, String nom, String descripció) {
+			this.material = material;
+			this.quantitat = quantitat;
+			this.preu = preu;
+			this.nom = nom;
+			this.descripció = descripció;
+		}
+	}
 
 	public ObsidianDefenders() {
 	}
@@ -112,6 +146,7 @@ public class ObsidianDefenders extends JocEquips {
 		setBlockBreakPlace(false);
 		setGiveStartingItemsRespawn(false);
 		registrarNuclis();
+		obrirBotigues();
 		scheduleGameplayRepeatingTask(this::cicleCofres, 20, CICLE_COFRES_TICKS);
 		scheduleGameplayRepeatingTask(this::apareixerPicDiamant, PRIMER_PIC_TICKS, PERIODE_PIC_TICKS);
 		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
@@ -566,6 +601,113 @@ public class ObsidianDefenders extends JocEquips {
 				evt.setDamage(evt.getDamage() / 2);
 			}
 		}
+	}
+
+	//---------- Shop (Botiga0/1 on the map) ----------
+
+	/** One shopkeeper per team on the map's Botiga<n> spot, selling to that team only. */
+	private void obrirBotigues() {
+		for (Equip e : Equips) {
+			String propietat = "Botiga" + e.getId();
+			if (!pMapaActual().ExisteixPropietat(propietat)) continue;
+			Location punt = pMapaActual().ObtenirLocation(propietat, world).add(0.5, 1, 0.5);
+			Villager botiguer = world.spawn(punt, Villager.class);
+			botiguer.setAI(false);
+			botiguer.setInvulnerable(true);
+			botiguer.setSilent(true);
+			botiguer.setCollidable(false);
+			botiguer.setRemoveWhenFarAway(false);
+			botiguer.setPersistent(true);
+			botiguer.setRecipes(java.util.Collections.emptyList());
+			botiguer.setProfession(Villager.Profession.WEAPONSMITH);
+			botiguer.customName(PaperMessages.legacy(ChatColor.GOLD + "Botiga"));
+			botiguer.setCustomNameVisible(true);
+			botiguers.put(botiguer.getUniqueId(), e);
+		}
+	}
+
+	@Override
+	public void clearExternals() {
+		for (UUID id : botiguers.keySet()) {
+			Entity botiguer = Bukkit.getEntity(id);
+			if (botiguer != null) botiguer.remove();
+		}
+		botiguers.clear();
+		super.clearExternals();
+	}
+
+	@Override
+	protected void onEntityDamage(EntityDamageEvent evt, Entity e) {
+		super.onEntityDamage(evt, e);
+		if (botiguers.containsKey(e.getUniqueId())) evt.setCancelled(true);
+	}
+
+	@Override
+	protected void onPlayerInteractEntity(PlayerInteractEntityEvent evt, Player p) {
+		super.onPlayerInteractEntity(evt, p);
+		Equip venedor = botiguers.get(evt.getRightClicked().getUniqueId());
+		if (venedor == null) return;
+		evt.setCancelled(true);
+		if (evt.getHand() != EquipmentSlot.HAND || !JocEnMarxa()) return;
+		if (obtenirEquip(p) != venedor) {
+			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			return;
+		}
+		obrirMenúBotiga(p);
+	}
+
+	private void obrirMenúBotiga(Player p) {
+		Mercaderia[] mercaderies = Mercaderia.values();
+		IconMenu menu = new IconMenu(ChatColor.GOLD + "Botiga", 9, event -> {
+			int posició = event.getPosition();
+			if (posició < mercaderies.length) comprar(event.getPlayer(), mercaderies[posició]);
+			event.setWillClose(false);
+		});
+		for (Mercaderia m : mercaderies) {
+			ArrayList<String> info = new ArrayList<>();
+			if (m.descripció != null) info.add(ChatColor.GRAY + m.descripció);
+			info.add(ChatColor.WHITE + "Preu: " + ChatColor.GOLD + m.preu + " or");
+			menu.setOption(m.ordinal(), new ItemStack(m.material, m.quantitat), ChatColor.YELLOW + m.nom, info);
+		}
+		menu.open(p);
+	}
+
+	private void comprar(Player p, Mercaderia m) {
+		if (!JocEnMarxa() || !gastarOr(p, m.preu)) {
+			p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+			return;
+		}
+		Utils.giveItemStack(new ItemStack(m.material, m.quantitat), p);
+		p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1F, 1F);
+		updateScoreBoard(p);
+	}
+
+	private int orDisponible(Player p) {
+		Inventory inv = p.getInventory();
+		int nuggets = 0;
+		for (ItemStack item : inv.getContents()) {
+			if (item == null) continue;
+			if (item.getType() == Material.GOLD_NUGGET) nuggets += item.getAmount();
+			if (item.getType() == Material.GOLD_INGOT) nuggets += 10 * item.getAmount();
+		}
+		return nuggets;
+	}
+
+	/** Takes the price in nuggets, breaking ingots when needed and returning the change as nuggets. */
+	private boolean gastarOr(Player p, int preu) {
+		if (orDisponible(p) < preu) return false;
+		Inventory inv = p.getInventory();
+		int nuggets = 0;
+		for (ItemStack item : inv.getContents()) {
+			if (item != null && item.getType() == Material.GOLD_NUGGET) nuggets += item.getAmount();
+		}
+		int lingots = 0;
+		while (nuggets + 10 * lingots < preu) lingots++;
+		if (lingots > 0) inv.removeItem(new ItemStack(Material.GOLD_INGOT, lingots));
+		int aPagarEnNuggets = preu - 10 * lingots;
+		if (aPagarEnNuggets > 0) inv.removeItem(new ItemStack(Material.GOLD_NUGGET, aPagarEnNuggets));
+		if (aPagarEnNuggets < 0) inv.addItem(new ItemStack(Material.GOLD_NUGGET, -aPagarEnNuggets));
+		return true;
 	}
 
 	//---------- Gold ----------
