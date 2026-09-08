@@ -801,7 +801,8 @@ public abstract class JocEquips extends Joc {
 			return;
 		}
 		if (attacker == null || !(damaged instanceof LivingEntity victim)) return;
-		if (victim instanceof Player player && (isSpectator(player) || getPlayerInfo(player).isImmune())) {
+		if (victim instanceof Player player && (isSpectator(player) || getPlayerInfo(player).isImmune()
+				|| isUndeBaseProtection(player.getLocation().getBlock()))) {
 			evt.setCancelled(true);
 			return;
 		}
