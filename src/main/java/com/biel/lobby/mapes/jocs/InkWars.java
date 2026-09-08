@@ -92,10 +92,10 @@ public class InkWars extends JocEquips {
 	 * A full reserve buys about seventeen blocks of neutral ground at full speed, ten of enemy ink; twenty blocks of own ink refill it.
 	 */
 	static final double RESERVE_REFILL = 0.012;
-	static final double RESERVE_DRAIN_NEUTRAL = 0.02;
-	static final double RESERVE_DRAIN_NEUTRAL_PER_BLOCK = 0.035;
-	static final double RESERVE_DRAIN_ENEMY = 0.03;
-	static final double RESERVE_DRAIN_ENEMY_PER_BLOCK = 0.06;
+	static final double RESERVE_DRAIN_NEUTRAL = 0.015;
+	static final double RESERVE_DRAIN_NEUTRAL_PER_BLOCK = 0.028;
+	static final double RESERVE_DRAIN_ENEMY = 0.024;
+	static final double RESERVE_DRAIN_ENEMY_PER_BLOCK = 0.05;
 	/** Ink sacs shown in the squid's hand for a full reserve. */
 	static final int INK_SACS_FOR_FULL_RESERVE = 32;
 	/** The squid's hop off a floor and its leap off a wall, in blocks per tick upward; in the air the keys still turn it and push it at this share of the throttle, and the speed bleeds by this share per tick. */
@@ -120,8 +120,8 @@ public class InkWars extends JocEquips {
 	 * about twice the reach for half the paint. The two blend over half a second either way, so the jet tightens and relaxes rather than switching.
 	 * A press of right-click keeps the pinch this many ticks, longer than the client's repeat of a held click, so holding it is one steady pinch.
 	 */
-	static final double HOSE_SPEED = 0.9, HOSE_SCATTER = 0.035, HOSE_PARCEL_INK = 0.22, HOSE_SPLASH_RADIUS = 0.8, HOSE_STING = 1.0, HOSE_PARCELS_PER_TICK = 2;
-	static final double PINCHED_SPEED = 1.4, PINCHED_SCATTER = 0.008, PINCHED_PARCEL_INK = 0.3, PINCHED_SPLASH_RADIUS = 0.5, PINCHED_STING = 1.5, PINCHED_PARCELS_PER_TICK = 1;
+	static final double HOSE_SPEED = 0.9, HOSE_SCATTER = 0.035, HOSE_PARCEL_INK = 0.22, HOSE_SPLASH_RADIUS = 0.8, HOSE_STING = 1.0, HOSE_PARCELS_PER_TICK = 2, HOSE_GRAVITY = 0.06;
+	static final double PINCHED_SPEED = 2.2, PINCHED_SCATTER = 0.006, PINCHED_PARCEL_INK = 0.3, PINCHED_SPLASH_RADIUS = 0.5, PINCHED_STING = 1.5, PINCHED_PARCELS_PER_TICK = 1, PINCHED_GRAVITY = 0.022;
 	static final int PINCH_BLEND_TICKS = 10;
 	static final int PINCH_TRIGGER_TICKS = 6;
 	final Predicate<Block> solid = block -> !block.isPassable();
@@ -397,7 +397,7 @@ public class InkWars extends JocEquips {
 		}
 	}
 	int getBlockCountToLevelUp(){ //Configurable for multi-map
-		int r = 150;
+		int r = 250;
 		if(pMapaActual().ExisteixPropietat("LevelUpBlocks")){
 			r = pMapaActual().ObtenirPropietatInt("LevelUpBlocks");
 		}
@@ -564,6 +564,8 @@ public class InkWars extends JocEquips {
 		private int pinchTriggerTicks = 0;
 		/** Parcels owed but not yet thrown: the per-tick count blends between the modes, so fractions carry over. */
 		private double parcelCarry = 0;
+		private int hoseSoundTicks = 0;
+		private int landingsSinceSplat = 0;
 		/** True while this kit is dealing ink damage through the direct damage call, which the melee hook would otherwise cancel. */
 		private boolean dealingInkDamage = false;
 		private boolean valid = true;
@@ -627,13 +629,16 @@ public class InkWars extends JocEquips {
 			Vector look = eyes.getDirection();
 			Vector right = new Vector(-look.getZ(), 0, look.getX());
 			if(right.lengthSquared() > 1e-6)right.normalize();
-			Location nozzle = eyes.clone().add(look.clone().multiply(0.5)).add(right.multiply(0.32)).add(0, -0.12, 0);
+			Location nozzle = eyes.clone().add(look.clone().multiply(0.25)).add(right.multiply(0.32)).add(0, -0.12, 0);
 			double levelBonus = level() * 0.02;
-			InkStream.Load load = new InkStream.Load(blend(HOSE_PARCEL_INK, PINCHED_PARCEL_INK) + levelBonus, blend(HOSE_SPLASH_RADIUS + level() * 0.05, PINCHED_SPLASH_RADIUS + level() * 0.03), blend(HOSE_STING, PINCHED_STING));
+			InkStream.Load load = new InkStream.Load(blend(HOSE_PARCEL_INK, PINCHED_PARCEL_INK) + levelBonus, blend(HOSE_SPLASH_RADIUS + level() * 0.05, PINCHED_SPLASH_RADIUS + level() * 0.03), blend(HOSE_STING, PINCHED_STING), blend(HOSE_GRAVITY, PINCHED_GRAVITY));
 			parcelCarry += blend(HOSE_PARCELS_PER_TICK, PINCHED_PARCELS_PER_TICK);
 			int count = (int) parcelCarry;
 			parcelCarry -= count;
 			hose.emit(nozzle, look, blend(HOSE_SPEED, PINCHED_SPEED) + levelBonus, blend(HOSE_SCATTER, PINCHED_SCATTER), load, count);
+			hoseSoundTicks++; // the open jet bloops, the pinched jet hisses, crossfading with the squeeze
+			if(hoseSoundTicks % 3 == 0 && pinch < 0.99)getWorld().playSound(nozzle, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, (float) (0.22 * (1 - pinch)), (float) (1.4 + Math.random() * 0.4));
+			if(hoseSoundTicks % 5 == 0 && pinch > 0.01)getWorld().playSound(nozzle, Sound.BLOCK_LAVA_EXTINGUISH, (float) (0.12 * pinch), 1.9F);
 		}
 		/** A hose figure between its open and its pinched value, by how far the tip is squeezed. */
 		double blend(double open, double pinched){
@@ -649,10 +654,15 @@ public class InkWars extends JocEquips {
 				if(landing.body() instanceof Player hit){
 					hurt(hit, load.sting());
 					splashDown(hit.getLocation(), load.splashRadius(), load.ink());
+					getWorld().playSound(hit.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.4F, 1.4F);
 					continue;
 				}
 				Location impact = landing.where().toLocation(getWorld()).add(landing.surfaceNormal().clone().multiply(0.3));
 				splash(impact, landing.velocity(), landing.surfaceNormal(), load.splashRadius(), load.ink());
+				if(++landingsSinceSplat >= 6){ // the impact zone crackles, not every parcel
+					landingsSinceSplat = 0;
+					getWorld().playSound(impact, Sound.ENTITY_SLIME_SQUISH_SMALL, 0.25F, (float) (1.1 + Math.random() * 0.4));
+				}
 			}
 			int parity = wetInkTicks % 2;
 			int index = 0;
@@ -750,6 +760,7 @@ public class InkWars extends JocEquips {
 			if(p != getPlayer() || isSubmerged() || !movedFeet(evt))return;
 			if(p.getInventory().getItemInMainHand().getType() != Material.STICK)return;
 			rollerLinePaint(1 + Math.sqrt(level()), 0.4 + level() / 24.0, p, ROLLER_AHEAD);
+			if(wetInkTicks % 5 == 0)getWorld().playSound(p.getLocation(), Sound.BLOCK_SLIME_BLOCK_STEP, 0.35F, 0.9F);
 		}
 		@Override
 		protected void onPlayerInteract(PlayerInteractEvent evt, Player p) {
@@ -764,7 +775,9 @@ public class InkWars extends JocEquips {
 			}
 			if(inHand != Material.TORCH || !rightClick)return;
 			evt.setCancelled(true); // the torch is the hose, it is never placed
-			if(!isSubmerged())pinchTriggerTicks = PINCH_TRIGGER_TICKS;
+			if(isSubmerged())return;
+			if(pinchTriggerTicks == 0)p.playSound(p.getEyeLocation(), Sound.ENTITY_SLIME_SQUISH_SMALL, 0.5F, 1.5F); // the squeeze starting
+			pinchTriggerTicks = PINCH_TRIGGER_TICKS;
 		}
 		/** A squid takes no damage: the ink is what it pays with. */
 		@Override
@@ -1070,7 +1083,8 @@ public class InkWars extends JocEquips {
 				mount();
 				p.getInventory().setArmorContents(null);
 				kit.showInkSacs(reserve);
-				p.playSound(feet, Sound.ENTITY_GENERIC_SPLASH, 0.8F, 0.7F);
+				getWorld().playSound(feet, Sound.ITEM_BUCKET_EMPTY, 0.8F, 0.8F); // the glug of sinking into the ink
+				getWorld().playSound(feet, Sound.ENTITY_GENERIC_SPLASH, 0.5F, 0.7F);
 				getWorld().spawnParticle(Particle.SPLASH, feet.clone().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 			}
 			void mount(){
@@ -1117,7 +1131,8 @@ public class InkWars extends JocEquips {
 				boolean onFloor = surface == Surface.FLOOR;
 				surfaceQuietly();
 				Player p = player();
-				p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 1.3F);
+				getWorld().playSound(p.getLocation(), Sound.ITEM_BUCKET_FILL, 0.8F, 1.1F); // the glug of coming out
+				getWorld().playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.5F, 1.3F);
 				getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 				if(onFloor){
 					releaseSurge(reserve, p.getLocation(), new Vector(0, -1, 0));
@@ -1199,7 +1214,6 @@ public class InkWars extends JocEquips {
 					return;
 				}
 				ripple(team, pushed);
-				if(touched != null)layStrip(team, touched);
 
 				Keys keys = readKeys();
 				Vector before = centre.clone();
@@ -1210,6 +1224,7 @@ public class InkWars extends JocEquips {
 					case AIR -> tickAir(keys);
 				}
 				pushed = centre.clone().subtract(before);
+				layStripAlong(team, before);
 				carrier.teleport(seatLocation()); // a vehicle keeps its passengers through a teleport since 1.21.10
 				showMeters();
 			}
@@ -1221,7 +1236,9 @@ public class InkWars extends JocEquips {
 			/** Gathered per block swum on the team's colour, spent per tick and per block elsewhere: a long run on own ink is what pays for a crossing. */
 			void tickReserve(EquipInkWars team, EquipInkWars ground, Vector moved){
 				double blocksSwum = moved.length();
+				boolean wasFull = reserve >= 1;
 				if(ground == team)reserve = Math.min(1, reserve + RESERVE_REFILL * (0.3 + blocksSwum * 4));
+				if(!wasFull && reserve >= 1)player().playSound(player().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6F, 1.6F); // full
 				else if(ground == null)reserve -= RESERVE_DRAIN_NEUTRAL + RESERVE_DRAIN_NEUTRAL_PER_BLOCK * blocksSwum;
 				else reserve -= RESERVE_DRAIN_ENEMY + RESERVE_DRAIN_ENEMY_PER_BLOCK * blocksSwum;
 				reserve = Math.max(0, reserve);
@@ -1236,7 +1253,8 @@ public class InkWars extends JocEquips {
 				reserve -= SQUID_THRUST_COST;
 				speed = Math.min(SQUID_THRUST_CEILING, speed + SQUID_THRUST);
 				Location burst = surfacePoint();
-				p.playSound(burst, Sound.ENTITY_SQUID_SQUIRT, 1F, 0.8F);
+				getWorld().playSound(burst, Sound.ENTITY_SQUID_SQUIRT, 1F, 0.8F);
+				getWorld().playSound(burst, Sound.ENTITY_BREEZE_SHOOT, 0.5F, 1.3F);
 				Particle.DustOptions dust = new Particle.DustOptions(team().getStrongColor().getColor(), 1.6F);
 				Vector back = heading.clone().multiply(-1);
 				getWorld().spawnParticle(Particle.DUST, burst.clone().add(back.multiply(0.6)), 24, 0.35, 0.25, 0.35, 0, dust);
@@ -1246,21 +1264,49 @@ public class InkWars extends JocEquips {
 			void forcedOut(){
 				Player p = player();
 				swimForm = false;
-				p.playSound(p.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_UPWARDS_AMBIENT, 1F, 0.6F);
+				p.playSound(p.getLocation(), Sound.BLOCK_SPONGE_ABSORB, 0.9F, 0.8F); // dry
 				PaperMessages.sendActionBar(p, ChatColor.RED + "Out of ink", 30);
 				surface();
 			}
 			/** The point on the surface under the body, where the ink shows. */
 			Location surfacePoint(){
+				return surfacePointAt(centre);
+			}
+			/** The point on the current surface under a body centred at a given point. */
+			Location surfacePointAt(Vector bodyCentre){
 				Vector at = switch(surface){
-					case FLOOR -> centre.clone().subtract(new Vector(0, SQUID_RIDE_HEIGHT - 0.15, 0));
-					case WALL -> centre.clone().add(wallSide.getDirection().multiply(SQUID_RADIUS - 0.1));
-					case CEILING -> centre.clone().add(new Vector(0, SQUID_RADIUS - 0.1, 0));
-					case AIR -> centre.clone();
+					case FLOOR -> bodyCentre.clone().subtract(new Vector(0, SQUID_RIDE_HEIGHT - 0.15, 0));
+					case WALL -> bodyCentre.clone().add(wallSide.getDirection().multiply(SQUID_RADIUS - 0.1));
+					case CEILING -> bodyCentre.clone().add(new Vector(0, SQUID_RADIUS - 0.1, 0));
+					case AIR -> bodyCentre.clone();
 				};
 				return at.toLocation(getWorld());
 			}
+			/** The block of the current surface a body centred at a given point rides on; none in the air. */
+			Block blockAt(Vector bodyCentre){
+				Vector at = switch(surface){
+					case FLOOR -> bodyCentre.clone().subtract(new Vector(0, SQUID_RIDE_HEIGHT + 0.05, 0));
+					case WALL -> bodyCentre.clone().add(wallSide.getDirection().multiply(SQUID_RADIUS + 0.05));
+					case CEILING -> bodyCentre.clone().add(new Vector(0, SQUID_RADIUS + 0.05, 0));
+					case AIR -> null;
+				};
+				return at == null ? null : at.toLocation(getWorld()).getBlock();
+			}
+			/** The strip laid along the whole of this tick's path, a stroke every half block, so a thrust leaves no gaps. */
+			void layStripAlong(EquipInkWars team, Vector before){
+				if(surface == Surface.AIR)return;
+				Vector step = centre.clone().subtract(before);
+				int samples = Math.max(1, (int) Math.ceil(step.length() / 0.5));
+				for(int i = 1; i <= samples; i++){
+					Vector at = before.clone().add(step.clone().multiply((double) i / samples));
+					Block touched = blockAt(at);
+					if(touched != null)layStrip(team, touched, at);
+				}
+			}
 			void ripple(EquipInkWars team, Vector moved){
+				if(submergedTicks % 8 == 0 && speed > 0.1){ // a bloop under the ink, louder the faster; anyone near can hear a squid coming
+					getWorld().playSound(surfacePoint(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, (float) (0.15 + 0.35 * Math.min(1, speed / SQUID_TOP_SPEED)), (float) (0.6 + Math.random() * 0.3));
+				}
 				if(submergedTicks % 2 != 0)return;
 				Particle.DustOptions dust = new Particle.DustOptions(team.getStrongColor().getColor(), 1.4F);
 				getWorld().spawnParticle(Particle.DUST, surfacePoint(), (int) (3 + moved.length() * 12), 0.45, 0.05, 0.45, 0, dust);
@@ -1269,7 +1315,7 @@ public class InkWars extends JocEquips {
 			 * The strip the squid lays: on its own colour a full re-wet, elsewhere a stroke across the heading that thins with the reserve down to the one block under the body.
 			 * What the ground was is remembered before the stroke covers it.
 			 */
-			void layStrip(EquipInkWars team, Block touched){
+			void layStrip(EquipInkWars team, Block touched, Vector at){
 				Player p = player();
 				if(getTeamOwningBlock(touched) == team){
 					rewet(touched, team, p.getName());
@@ -1286,7 +1332,7 @@ public class InkWars extends JocEquips {
 				}else if(surface != Surface.FLOOR || halfWidth < 0.9){
 					stroke.add(touched);
 				}else{
-					stroke = kit.rollerStrokeBlocks(halfWidth, surfacePoint(), new Vector(heading.getX(), 0, heading.getZ()), 0);
+					stroke = kit.rollerStrokeBlocks(halfWidth, surfacePointAt(at), new Vector(heading.getX(), 0, heading.getZ()), 0);
 				}
 				for(Block b : stroke){
 					EquipInkWars owner = getTeamOwningBlock(b);
@@ -1410,6 +1456,7 @@ public class InkWars extends JocEquips {
 				wallSide = side;
 				gripped = wall.block();
 				restOn(wall.block(), wall.face());
+				getWorld().playSound(surfacePoint(), Sound.ENTITY_SLIME_SQUISH, 0.4F, 0.9F);
 			}
 			/** Onto a ceiling: the road bends to run along it, the speed is kept, the body rests under it. */
 			void attachToCeiling(Contact ceiling, Vector oldNormal){
@@ -1461,6 +1508,7 @@ public class InkWars extends JocEquips {
 				steer(keys.flat(), 1, true);
 				if(keys.jumpPressed()){
 					takeOff(SQUID_HOP);
+					player().playSound(player().getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.6F, 1.3F);
 					return;
 				}
 				double travel = speed;
@@ -1625,6 +1673,7 @@ public class InkWars extends JocEquips {
 				}
 				if(hit.face() == BlockFace.UP){
 					landOnFloor(new Vector(0, 1, 0), hit.block(), hit.block().getY() + 1);
+					getWorld().playSound(surfacePoint(), Sound.ENTITY_SLIME_SQUISH_SMALL, 0.5F, 0.8F);
 					return;
 				}
 				if(hit.face() == BlockFace.DOWN){

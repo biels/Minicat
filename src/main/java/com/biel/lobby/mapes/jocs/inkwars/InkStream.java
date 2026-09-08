@@ -20,8 +20,6 @@ import org.bukkit.util.Vector;
  * aimed up it carries, aimed level it drops to the floor a few blocks out. Pure motion: it decides nothing about colour, score or damage.
  */
 public final class InkStream {
-	/** Blocks per tick squared; a hair above the players' gravity so the arc bends visibly. */
-	public static final double GRAVITY = 0.06;
 	/** Share of the velocity kept per tick in the air. */
 	public static final double DRAG = 0.985;
 	/** Ticks a parcel flies before it is lost as mist. */
@@ -29,8 +27,8 @@ public final class InkStream {
 	/** How far off its centre a parcel still counts as hitting a body. */
 	public static final double PARCEL_RADIUS = 0.3;
 
-	/** What one parcel carries: ink for the block it lands on, the radius of the splash it makes, and the sting it gives a body. Set at the nozzle. */
-	public record Load(double ink, double splashRadius, double sting) {}
+	/** What one parcel carries: ink for the block it lands on, the radius of the splash it makes, the sting it gives a body, and the gravity that bends its arc. Set at the nozzle. */
+	public record Load(double ink, double splashRadius, double sting, double gravity) {}
 
 	/** Where a parcel came down: the point, the velocity it arrived with, the outward normal of what it hit, the block or the body, and what it carried. */
 	public record Landing(Vector where, Vector velocity, Vector surfaceNormal, Block block, Entity body, Load load) {}
@@ -60,7 +58,7 @@ public final class InkStream {
 		for (int i = 0; i < count; i++) {
 			Vector velocity = aim.clone().add(new Vector(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).multiply(scatter)).normalize();
 			velocity.multiply(speed * (1 + 0.08 * random.nextGaussian()));
-			parcels.add(new Parcel(nozzle.toVector().add(velocity.clone().multiply(random.nextDouble())), velocity, load));
+			parcels.add(new Parcel(nozzle.toVector().add(velocity.clone().multiply(0.3 * random.nextDouble())), velocity, load));
 		}
 	}
 
@@ -91,7 +89,7 @@ public final class InkStream {
 		Iterator<Parcel> iterator = parcels.iterator();
 		while (iterator.hasNext()) {
 			Parcel parcel = iterator.next();
-			parcel.velocity.setY(parcel.velocity.getY() - GRAVITY).multiply(DRAG);
+			parcel.velocity.setY(parcel.velocity.getY() - parcel.load.gravity()).multiply(DRAG);
 			double length = parcel.velocity.length();
 			if (length > 1e-6) {
 				Location from = parcel.position.toLocation(world);
