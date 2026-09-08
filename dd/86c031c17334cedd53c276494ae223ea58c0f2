@@ -1,0 +1,45 @@
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianWatchtowersTest.java
+  s_3c4d38f3809c52::t_579f02852a7643 1-92
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianLauncherCalibration.java
+  s_3c4d38f3809c52::t_07155c83bc6436 1-73
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianLauncherController.java
+  s_3c4d38f3809c52::t_579f02852a7643 32,62,65,220,235-236,270-274
+  s_3c4d38f3809c52::t_a4a45069a67906 165,215
+  s_3c4d38f3809c52::t_8dfeed246c476a 228-231
+  s_3c4d38f3809c52::t_36bbeac11744f6 51,287-288
+  s_3c4d38f3809c52::t_d7d3a02d12be1f 1-31,33-50,52-61,63-64,66-164,166-214,216-219,221-227,232-234,237-269,275-286,289-290
+docs/obsidian-interactions.md
+  s_3c4d38f3809c52::t_36bbeac11744f6 80-113
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianWatchtowers.java
+  s_3c4d38f3809c52::t_579f02852a7643 85-95
+  s_3c4d38f3809c52::t_d7d3a02d12be1f 1-84,96-101
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianLauncherTrajectory.java
+  s_3c4d38f3809c52::t_8dfeed246c476a 1-15,17-41,53,62-98
+  s_3c4d38f3809c52::t_dc38f0aa5af3fa 16,42-52,54-61
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_3c4d38f3809c52::t_36bbeac11744f6 707
+  s_3c4d38f3809c52::t_8dfeed246c476a 358,702-706,1390,1403,1606,1620,1983,2926-2936
+build.gradle
+  s_3c4d38f3809c52::t_579f02852a7643 56-57
+  s_3c4d38f3809c52::t_07155c83bc6436 92-99
+src/main/resources/guides/obsidian-defenders.md
+  s_3c4d38f3809c52::t_579f02852a7643 162,164,166,168
+  s_3c4d38f3809c52::t_c4c3d3aeb0d3c2 167
+  s_3c4d38f3809c52::t_07155c83bc6436 163,165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "dd86c031c17334cedd53c276494ae223ea58c0f2",
+  "prompts": {},
+  "sessions": {
+    "s_3c4d38f3809c52": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08094-9a37-7ae2-9d4f-3b28b8208de4",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
