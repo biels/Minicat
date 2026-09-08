@@ -114,8 +114,14 @@ public final class InkSplash {
 
 	/** Walks the grid from origin along direction until a block stops the ink, or the reach runs out. */
 	private static Hit walk(World world, Vector origin, Vector direction, double reach, Predicate<Block> stopsInk) {
+		if (!(direction.lengthSquared() > 1e-9) || !Double.isFinite(origin.getX() + origin.getY() + origin.getZ())) return null;
 		int steps = (int) Math.ceil(reach) + 1;
-		BlockIterator iterator = new BlockIterator(world, origin, direction, 0, steps);
+		BlockIterator iterator;
+		try {
+			iterator = new BlockIterator(world, origin, direction, 0, steps);
+		} catch (IllegalStateException startBlockMissed) { // BlockIterator refuses some starts on a block boundary; that ray is lost
+			return null;
+		}
 		Block previous = null;
 		while (iterator.hasNext()) {
 			Block block = iterator.next();

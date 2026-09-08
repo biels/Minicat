@@ -626,12 +626,22 @@ public class InkWars extends JocEquips {
 			}
 		}
 		//Painting methods
+		/** A stroke across the player's path: a line on the floor perpendicular to where they face. Looking straight up or down has no across, so the stroke is the block underfoot. */
 		public void rollerLinePaint(double width, double ink, Player p){
-			Vector normal = new Vector(0, 1, 0);
-			Vector forward = p.getLocation().getDirection();
-			Vector paintDir = normal.crossProduct(forward).normalize().multiply(width);
+			Vector forward = p.getLocation().getDirection().setY(0);
+			if(forward.lengthSquared() < 1e-6){
+				paintBlock(p.getLocation().getBlock(), ink);
+				return;
+			}
+			Vector paintDir = new Vector(0, 1, 0).crossProduct(forward).normalize().multiply(width);
 			Vector startLoc = p.getLocation().toVector().subtract(paintDir);
-			BlockIterator i = new BlockIterator(getWorld(), startLoc, paintDir, -1, (int) Math.round(2 * width));
+			BlockIterator i;
+			try {
+				i = new BlockIterator(getWorld(), startLoc, paintDir, -1, (int) Math.round(2 * width));
+			} catch (IllegalStateException startBlockMissed) {
+				paintBlock(p.getLocation().getBlock(), ink);
+				return;
+			}
 			for (;i.hasNext();) {
 				Block b = i.next();
 				if (Utils.pointToLineDistance(startLoc, paintDir, b.getLocation().toVector()) < 0.8) {
