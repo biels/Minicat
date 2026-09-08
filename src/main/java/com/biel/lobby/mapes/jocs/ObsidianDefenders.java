@@ -82,6 +82,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -126,6 +127,8 @@ public class ObsidianDefenders extends JocEquips {
 	/** The first chest cycle waits this long, so no prize is announced before anyone has left the spawn (Biel, 2026-09-08). */
 	private static final long FIRST_CHEST_CYCLE_TICKS = 15 * 20;
 	private static final double RECALL_SECONDS = 3;
+	/** Karen's speed potion lasts this long. */
+	private static final int SPEED_POTION_TICKS = 3 * 60 * 20;
 	/** The objective stays on a boss bar at the top of the screen this long after the start, draining, then goes (Biel, 2026-09-08: what a first-timer must know). */
 	private static final int OBJECTIVE_BAR_SECONDS = 60;
 	/** The recall clock's slot, which the inventory tidy never touches. */
@@ -445,7 +448,7 @@ public class ObsidianDefenders extends JocEquips {
 	private enum Parada {
 		GERRY("weapons", "Gerry", "armes", Mercaderia.FLETXES, Mercaderia.ESTRELLES, Mercaderia.ESPASA_FERRO, Mercaderia.ARC, Mercaderia.PIC_FERRO, Mercaderia.ESPASA_DIAMANT),
 		SEON("armors", "Seon", "armadures", Mercaderia.PITRAL_FERRO, Mercaderia.CALCES_DIAMANT),
-		KAREN("potions", "Karen", "altres coses", Mercaderia.BLOC_OR, Mercaderia.BOLA_DE_NEU, Mercaderia.QUARS, Mercaderia.PERLA_D_ENDER);
+		KAREN("potions", "Karen", "altres coses", Mercaderia.BLOC_OR, Mercaderia.BOLA_DE_NEU, Mercaderia.QUARS, Mercaderia.PERLA_D_ENDER, Mercaderia.POMA_DAURADA, Mercaderia.POCIO_DE_VELOCITAT, Mercaderia.MARAGDA);
 
 		final String rètolOriginal;
 		final String nom;
@@ -471,6 +474,9 @@ public class ObsidianDefenders extends JocEquips {
 		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", null),
 		QUARS(Material.QUARTZ, 1, 15, "Quars", "Mentre el portis, els teus nous ninots disparen un 50 % més ràpid"),
 		PERLA_D_ENDER(Material.ENDER_PEARL, 1, 15, "Perla d'Ender", null),
+		POMA_DAURADA(Material.GOLDEN_APPLE, 1, 10, "Poma daurada", null),
+		POCIO_DE_VELOCITAT(Material.POTION, 1, 12, "Poció de velocitat", null),
+		MARAGDA(Material.EMERALD, 1, 8, "Maragda", null),
 		CALCES_DIAMANT(Material.DIAMOND_LEGGINGS, 1, 30, "Calces de diamant", null),
 		ESPASA_DIAMANT(Material.DIAMOND_SWORD, 1, 40, "Espasa de diamant", null);
 
@@ -479,6 +485,16 @@ public class ObsidianDefenders extends JocEquips {
 		final int preu;
 		final String nom;
 		final String descripció;
+		/** The stack handed over: the speed potion is three minutes of Speed I, the rest the bare item. */
+		ItemStack stack() {
+			ItemStack item = new ItemStack(material, quantitat);
+			if (this == POCIO_DE_VELOCITAT && item.getItemMeta() instanceof PotionMeta meta) {
+				meta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, SPEED_POTION_TICKS, 0), true);
+				meta.setColor(Color.fromRGB(120, 200, 255));
+				item.setItemMeta(meta);
+			}
+			return item;
+		}
 		Mercaderia(Material material, int quantitat, int preu, String nom, String descripció) {
 			this.material = material;
 			this.quantitat = quantitat;
@@ -501,6 +517,8 @@ public class ObsidianDefenders extends JocEquips {
 		BOLA_DE_NEU(Material.SNOWBALL, "Bola de neu"),
 		BOLA_DE_NEU_ENCANTADA(Material.SNOWBALL, true, "Bola de neu encantada"),
 		PERLA_D_ENDER(Material.ENDER_PEARL, "Perla d'Ender"),
+		POMA_DAURADA(Material.GOLDEN_APPLE, "Poma daurada"),
+		POCIO_DE_VELOCITAT(Material.POTION, "Poció de velocitat"),
 		ESPASA_D_OR(Material.GOLDEN_SWORD, "Espasa d'or"),
 		PIC_DE_DIAMANT(Material.DIAMOND_PICKAXE, "Pic de diamant"),
 		PIC_D_OR(Material.GOLDEN_PICKAXE, "Pic d'or");
@@ -1802,7 +1820,7 @@ public class ObsidianDefenders extends JocEquips {
 			boolean soldOut = m == Mercaderia.QUARS && hasQuartz(p);
 			if (soldOut) info.add(ChatColor.RED + "Ja el tens: només un per persona");
 			if (m == Mercaderia.FLETXES && !hasBow(p)) { soldOut = true; info.add(ChatColor.RED + "Primer compra un arc"); }
-			menu.setOption(mercaderies.indexOf(m), new ItemStack(m.material, m.quantitat), (soldOut ? ChatColor.DARK_GRAY : ChatColor.YELLOW) + m.nom, info);
+			menu.setOption(mercaderies.indexOf(m), m.stack(), (soldOut ? ChatColor.DARK_GRAY : ChatColor.YELLOW) + m.nom, info);
 		}
 		menu.open(p);
 	}
@@ -1826,7 +1844,7 @@ public class ObsidianDefenders extends JocEquips {
 			return;
 		}
 		if (m == Mercaderia.QUARS) quartzBuyers.add(p.getUniqueId());
-		giveOrDrop(p, Objecte.descriure(new ItemStack(m.material, m.quantitat)));
+		giveOrDrop(p, Objecte.descriure(m.stack()));
 		tidySoon(p);
 		p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_YES, 1F, 1F);
 		updateScoreBoard(p);

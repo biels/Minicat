@@ -47,6 +47,12 @@
 - tot el que fa un ninot amb molt més abast
 - i dispara x3 el primer minut, x2 després.
 
+## objecte POMA_DAURADA
+- Menja-la: 2 cors extra durant 2 min i curació ràpida uns segons.
+
+## objecte POCIO_DE_VELOCITAT
+- Beu-la: Velocitat I durant 3 min.
+
 ## objecte PERLA_D_ENDER
 - Llança-la per teletransportar-te on caigui.
 
@@ -134,7 +140,7 @@ A la base, tres paradistes. Gerry, armes: 8 fletxes {PREU_FLETXES}, 2 estrelles 
 
 Seon, armadures: pitral de ferro {PREU_PITRAL_FERRO}, calces de diamant {PREU_CALCES_DIAMANT}.
 
-Karen: bloc d'or {PREU_BLOC_OR}, bola de neu {PREU_BOLA_DE_NEU}, quars {PREU_QUARS} (només un), perla d'Ender {PREU_PERLA_D_ENDER}.
+Karen: bloc d'or {PREU_BLOC_OR}, bola de neu {PREU_BOLA_DE_NEU}, quars {PREU_QUARS} (només un), perla d'Ender {PREU_PERLA_D_ENDER}, poma daurada {PREU_POMA_DAURADA}, poció de velocitat {PREU_POCIO_DE_VELOCITAT}, maragda {PREU_MARAGDA}.
 
 ## pàgina Encanteris
 Les taules de la base venen els encanteris senzills per or, sense lapislàtzuli: Retrocés i Empenta {ENCANT_RETROCÉS}, Flama i Eficiència {ENCANT_FLAMA} per nivell.
