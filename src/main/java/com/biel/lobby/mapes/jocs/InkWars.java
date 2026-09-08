@@ -90,7 +90,7 @@ public class InkWars extends JocEquips {
 	static final double SQUID_CRAWL_SPEED = 0.06;
 	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. A squid in the air feels far less. */
 	static final double INK_GRAVITY = 0.05;
-	static final double SQUID_GRAVITY = 0.018;
+	static final double SQUID_GRAVITY = 0.026;
 	/** A squid idle on a wall sinks this much per tick, the little gravity it does feel there; pressing toward a wall climbs at no less than this speed, from a standstill. */
 	static final double SQUID_WALL_SAG = 0.006;
 	static final double SQUID_CLIMB_MIN_SPEED = 0.2;
