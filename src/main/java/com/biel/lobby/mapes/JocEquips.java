@@ -652,6 +652,33 @@ public abstract class JocEquips extends Joc {
 	protected double recallSeconds(){
 		return 6;
 	}
+	/** Seconds since the last blow given or taken before a recall may start (Biel, 2026-09-08: "not allow recall while in fights"); zero allows it always. */
+	protected double recallCombatSeconds(){
+		return 5;
+	}
+	/** Player → the last moment they hit a player or were hit; blows landed by a minion count for the victim. */
+	private final Map<UUID, Long> lastCombatMillis = new HashMap<>();
+
+	private void noteCombat(Entity entity){
+		if (entity instanceof Player p) lastCombatMillis.put(p.getUniqueId(), System.currentTimeMillis());
+	}
+
+	/** Seconds still to wait before a recall, zero when the player is out of combat. */
+	protected double combatSecondsLeft(Player p){
+		Long last = lastCombatMillis.get(p.getUniqueId());
+		if (last == null) return 0;
+		return Math.max(0, recallCombatSeconds() - (System.currentTimeMillis() - last) / 1000D);
+	}
+
+	private void tryRecall(Player p, Location base){
+		double left = combatSecondsLeft(p);
+		if (left > 0){
+			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8F, 0.5F);
+			PaperMessages.sendActionBar(p, ChatColor.RED + "En combat: espera " + (int) Math.ceil(left) + " s per tornar a la base", 40);
+			return;
+		}
+		RecallUtils.startRecallTeleport(p, base, recallSeconds(), com.biel.lobby.utilities.ColorConverter.hexToColor(com.biel.lobby.utilities.ColorConverter.chatToHex(obtenirEquip(p).getChatColor())));
+	}
 	@Override
 	protected void onPlayerInteractEntity(PlayerInteractEntityEvent evt,
 			Player p) {
@@ -732,6 +759,14 @@ public abstract class JocEquips extends Joc {
 	@Override
 	protected void onEntityDamageByEntity(EntityDamageByEntityEvent evt, Entity damaged, Entity damager) {
 		super.onEntityDamageByEntity(evt, damaged, damager);
+		if (!evt.isCancelled() && damaged instanceof Player victim && (damager instanceof Player || damager instanceof Projectile || attackingMinion(damager) != null)) {
+			noteCombat(victim);
+			noteCombat(damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter ? shooter : damager);
+			if (RecallUtils.isRecalling(victim)) {
+				RecallUtils.interruptRecall(victim);
+				PaperMessages.sendActionBar(victim, ChatColor.RED + "Tornada interrompuda: t'han colpejat", 40);
+			}
+		}
 		Minion attacker = attackingMinion(damager);
 		Minion victimMinion = minionOf(damaged);
 		if (attacker == null && victimMinion == null) return;
@@ -941,7 +976,7 @@ public abstract class JocEquips extends Joc {
 		/** A clock in the last hotbar slot (Biel, 2026-09-08: "maybe a clock, nicer, less time"): right-click channels {@link #recallSeconds()} and lands at the base; moving cancels. */
 		public void giveRecallButton(Player ply){
 			ItemStack clock = new ItemStack(Material.CLOCK);
-			ItemButton button = new ItemButton(Utils.setItemNameAndLore(clock, ChatColor.AQUA + "Tornar a la base", ChatColor.GRAY + "Clic dret: " + (int) recallSeconds() + " s quiet i ets a la base."), ply, event -> RecallUtils.startRecallTeleport(event.getPlayer(), getTeamSpawnLocation(), recallSeconds(), com.biel.lobby.utilities.ColorConverter.hexToColor(com.biel.lobby.utilities.ColorConverter.chatToHex(getChatColor()))));
+			ItemButton button = new ItemButton(Utils.setItemNameAndLore(clock, ChatColor.AQUA + "Tornar a la base", ChatColor.GRAY + "Clic dret: " + (int) recallSeconds() + " s quiet i ets a la base."), ply, event -> tryRecall(event.getPlayer(), getTeamSpawnLocation()));
 			PlayerInventory inventory = ply.getInventory();
 			inventory.setItem(8, button.getItemStack());
 		}
