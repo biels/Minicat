@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_29a62c0fc85e08::t_793fb5f780cada 174,737
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f1546204a65669fee96439cd913d6d6672c2398e",
+  "prompts": {},
+  "sessions": {
+    "s_29a62c0fc85e08": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0812a-11f8-7482-92e7-6f7eb4a98c72",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
