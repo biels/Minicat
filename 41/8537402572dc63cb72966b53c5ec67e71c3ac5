@@ -1,0 +1,32 @@
+src/test/java/com/biel/lobby/minions/MinionRetreatTest.java
+  s_6b5a2f54eee20a::t_7bf3ea26045f1e 196-198
+  s_6b5a2f54eee20a::t_47712d9a0d6a16 1-3,5-6,10-13,15-16,24-42,45-48,50-51,53-54,56-77,79-128,130-131,185,207-221
+  s_6b5a2f54eee20a::t_8768bf31a862f4 4,7-8,14,43-44,186-195,204-206
+  s_6b5a2f54eee20a::t_c7888efb066b06 199-203
+  s_6b5a2f54eee20a::t_44defac3787214 9,17-23,49,55,78,129,132-184
+  s_6b5a2f54eee20a::t_513e4fa9742a7b 52
+src/main/java/com/biel/lobby/minions/MinionRetreatGoal.java
+  s_6b5a2f54eee20a::t_66ba9bd40086ec 1-82
+src/main/java/com/biel/lobby/minions/SnowmanMinion.java
+  s_6b5a2f54eee20a::t_66ba9bd40086ec 93-94,191,226-227,235,240-250
+build.gradle
+  s_6b5a2f54eee20a::t_47712d9a0d6a16 93-100
+src/main/java/com/biel/lobby/minions/SkeletonArcherMinion.java
+  s_6b5a2f54eee20a::t_66ba9bd40086ec 76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "418537402572dc63cb72966b53c5ec67e71c3ac5",
+  "prompts": {},
+  "sessions": {
+    "s_6b5a2f54eee20a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0817b-4c49-7a80-a6e4-989efc4606e5",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
