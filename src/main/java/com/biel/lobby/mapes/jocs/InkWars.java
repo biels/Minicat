@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -34,7 +35,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.util.BlockIterator;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -42,6 +42,7 @@ import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.jocs.inkwars.InkSplash;
+import com.biel.lobby.mapes.jocs.inkwars.InkStream;
 import com.biel.lobby.mapes.jocs.inkwars.InkSurfaceFlow;
 import com.biel.lobby.mapes.jocs.inkwars.WetInk;
 import com.biel.lobby.utilities.PaperMessages;
@@ -80,7 +81,23 @@ public class InkWars extends JocEquips {
 	static final int INK_SACS_FOR_FULL_RESERVE = 32;
 	/** Looking within this angle of straight away from a wall lets go of it into a jump. */
 	static final double DETACH_COS = Math.cos(Math.toRadians(30));
-	static final double BRUSH_REACH = 4.5;
+	/**
+	 * The squid feels a surface before its body touches it: the probe along the heading reaches this far beyond the next tick's travel,
+	 * and the attachment carries the body the rest of the way in one push, so a wall is never a collision, only a bend.
+	 */
+	static final double PROBE_MARGIN = 0.2;
+	/** The Roller's head sits this far ahead of the feet; the stroke is laid there. */
+	static final double ROLLER_AHEAD = 1.0;
+	/**
+	 * The Hose: a jet of ink parcels thrown from the hand at this speed in blocks per tick, this many per tick while the trigger is held,
+	 * each carrying this much ink into a small splash where it lands, stinging a body it hits; a press of the trigger keeps the jet running this many ticks,
+	 * longer than the client's repeat of a held right-click, so holding it is one continuous jet.
+	 */
+	static final double HOSE_SPEED = 0.9;
+	static final int HOSE_PARCELS_PER_TICK = 2;
+	static final double HOSE_PARCEL_INK = 0.22;
+	static final double HOSE_PARCEL_DAMAGE = 1.0;
+	static final int HOSE_TRIGGER_TICKS = 6;
 	final Predicate<Block> solid = block -> !block.isPassable();
 	int wetInkTicks = 0;
 	int paintableFloorBlocks = 0;
@@ -111,7 +128,7 @@ public class InkWars extends JocEquips {
 		i.add("You win by having more than 80% of the map painted");
 		i.add("In this map you level up every " + getBlockCountToLevelUp() + " effectively painted blocks");
 		i.add("The ink won't dry instantly, use it to your advantage");
-		i.add("One kit: the Roller paints the floor while you walk with it, the Brush paints the wall you look at (hold right-click), ink balls splash at range");
+		i.add("One kit: the Roller paints the floor ahead of you while you walk with it, the Hose throws a jet of ink that flies in an arc (hold right-click), ink balls splash at range");
 		i.add("Press sneak once for squid form: invisible, fast, healing, with momentum; press again to stand up");
 		i.add("The squid lives on ink (the green bar): it refills on your colour, drains on neutral ground, faster on enemy ink, and at zero you are thrown back on your feet");
 		i.add("A squid runs up any wall it hits and round corners as if the floor continued; on a wall you go where you look, look straight out to jump off");
@@ -506,16 +523,20 @@ public class InkWars extends JocEquips {
 		return false;
 	}
 	/**
-	 * The one kit everybody carries. The held item decides what paints: the Roller stick paints the floor under a walking player,
-	 * the Brush torch paints the wall in the crosshair while right-click is held, ink balls splash where they land and hurt around the impact.
+	 * The one kit everybody carries. The held item decides what paints: the Roller stick paints the floor a step ahead of a walking player,
+	 * the Hose torch throws a jet of ink that flies in an arc while right-click is held, ink balls splash where they land and hurt around the impact.
 	 * Melee does nothing here; ink kills.
 	 */
 	class InkKit extends PlayerWorldEventBus{
 		static final int ROLLER_SLOT = 0;
-		static final int BRUSH_SLOT = 1;
+		static final int HOSE_SLOT = 1;
 		static final int BALL_SLOT = 2;
 		private int reloadTicks = 0;
-		private int brushCooldownTicks = 0;
+		/** Ticks the hose keeps spraying after the last press of the trigger. */
+		private int hoseTriggerTicks = 0;
+		private final InkStream hose = new InkStream();
+		/** True while this kit is dealing ink damage through the direct damage call, which the melee hook would otherwise cancel. */
+		private boolean dealingInkDamage = false;
 		private boolean valid = true;
 		private final ArrayList<Projectile> inkBalls = new ArrayList<>();
 
@@ -545,8 +566,8 @@ public class InkWars extends JocEquips {
 		ItemStack rollerItem(){
 			return Utils.setItemNameAndLore(new ItemStack(Material.STICK, 1), teamColour() + "Roller", ChatColor.WHITE + "Hold it and walk: paints the floor under you.");
 		}
-		ItemStack brushItem(){
-			return Utils.setItemNameAndLore(new ItemStack(Material.TORCH, 1), teamColour() + "Brush", ChatColor.WHITE + "Hold right-click: paints the wall you look at, four blocks away at most.");
+		ItemStack hoseItem(){
+			return Utils.setItemNameAndLore(new ItemStack(Material.TORCH, 1), teamColour() + "Hose", ChatColor.WHITE + "Hold right-click: a jet of ink that flies in an arc and lands where it lands.");
 		}
 		ItemStack inkBallItem(){
 			return Utils.setItemName(new ItemStack(Material.SNOWBALL, 1), teamColour() + "Ink ball");
@@ -555,28 +576,76 @@ public class InkWars extends JocEquips {
 		public void give(){
 			Player p = getPlayer();
 			p.getInventory().setItem(ROLLER_SLOT, rollerItem());
-			p.getInventory().setItem(BRUSH_SLOT, brushItem());
+			p.getInventory().setItem(HOSE_SLOT, hoseItem());
 			p.getInventory().setHeldItemSlot(ROLLER_SLOT);
 			p.playSound(p.getEyeLocation(), Sound.BLOCK_CHEST_OPEN, 1F, 1F);
 			p.playSound(p.getEyeLocation(), Sound.BLOCK_PISTON_EXTEND, 1F, 1F);
 		}
 		public void tick(){
-			if(brushCooldownTicks > 0)brushCooldownTicks--;
-			if(isSubmerged())return; // a squid has no tools in hand, only its ink
+			tickHose();
+			if(isSubmerged()){ // a squid has no tools in hand, only its ink; a jet already in the air still comes down
+				hoseTriggerTicks = 0;
+				return;
+			}
+			if(hoseTriggerTicks > 0){
+				hoseTriggerTicks--;
+				sprayHose();
+			}
 			reloadTick();
 			if(wetInkTicks % 20 == 0)restoreTools();
+		}
+		/** The hose is invisible, only its jet shows: the nozzle sits at the hand, a little right of and below the eyes, and throws along the look. */
+		void sprayHose(){
+			Player p = getPlayer();
+			Location eyes = p.getEyeLocation();
+			Vector look = eyes.getDirection();
+			Vector right = new Vector(-look.getZ(), 0, look.getX());
+			if(right.lengthSquared() > 1e-6)right.normalize();
+			Location nozzle = eyes.clone().add(look.clone().multiply(0.4)).add(right.multiply(0.25)).add(0, -0.25, 0);
+			hose.emit(nozzle, look, HOSE_SPEED + level() * 0.02, HOSE_PARCEL_INK + level() * 0.02, HOSE_PARCELS_PER_TICK);
+			if(wetInkTicks % 5 == 0)getWorld().playSound(nozzle, Sound.ENTITY_SLIME_SQUISH, 0.3F, 1.7F);
+		}
+		/** Every parcel in the air flies one tick; the ones that came down splash where they landed, and one that met an enemy stings them. */
+		void tickHose(){
+			if(hose.isEmpty())return;
+			Player shooter = getPlayer();
+			Particle.DustOptions drop = new Particle.DustOptions(obtenirEquip(shooter).getStrongColor().getColor(), 1.1F);
+			for(InkStream.Landing landing : hose.advance(getWorld(), body -> body instanceof Player hit && hit != shooter && areEnemies(hit, shooter))){
+				double radius = 0.8 + level() * 0.05;
+				if(landing.body() instanceof Player hit){
+					hurt(hit, HOSE_PARCEL_DAMAGE);
+					splashDown(hit.getLocation(), radius, landing.ink());
+					continue;
+				}
+				Location impact = landing.where().toLocation(getWorld()).add(landing.surfaceNormal().clone().multiply(0.3));
+				splash(impact, landing.velocity(), landing.surfaceNormal(), radius, landing.ink());
+			}
+			int parity = wetInkTicks % 2;
+			int index = 0;
+			for(Vector position : hose.positions()){
+				if(index++ % 2 == parity)getWorld().spawnParticle(Particle.DUST, position.getX(), position.getY(), position.getZ(), 1, 0, 0, 0, 0, drop);
+			}
+		}
+		/** Ink damage from this kit: the ball's splash, the hose's jet, the squid's surge. Direct damage reads as melee to the hook below, so it is flagged past it. */
+		void hurt(Player enemy, double amount){
+			dealingInkDamage = true;
+			try {
+				enemy.damage(amount, getPlayer());
+			} finally {
+				dealingInkDamage = false;
+			}
 		}
 		/** A dropped or lost tool comes back to its slot: the kit is the player, not loot. */
 		void restoreTools(){
 			Player p = getPlayer();
 			if(!p.getInventory().contains(Material.STICK))p.getInventory().setItem(ROLLER_SLOT, rollerItem());
-			if(!p.getInventory().contains(Material.TORCH))p.getInventory().setItem(BRUSH_SLOT, brushItem());
+			if(!p.getInventory().contains(Material.TORCH))p.getInventory().setItem(HOSE_SLOT, hoseItem());
 		}
 		/** The squid's hand: the tools go away and a stack of ink sacs shows how much ink it carries. */
 		void showInkSacs(double reserve){
 			Player p = getPlayer();
 			p.getInventory().setItem(ROLLER_SLOT, null);
-			p.getInventory().setItem(BRUSH_SLOT, null);
+			p.getInventory().setItem(HOSE_SLOT, null);
 			p.getInventory().remove(Material.SNOWBALL);
 			int sacs = Math.max(1, (int) Math.ceil(reserve * INK_SACS_FOR_FULL_RESERVE));
 			p.getInventory().setItem(ROLLER_SLOT, Utils.setItemNameAndLore(new ItemStack(Material.INK_SAC, sacs), teamColour() + "Ink", ChatColor.WHITE + "Your ink: gathered on your colour, spent elsewhere.", ChatColor.WHITE + "Right-click: blow it around you and stand up."));
@@ -643,7 +712,7 @@ public class InkWars extends JocEquips {
 			super.onPlayerMove(evt, p);
 			if(p != getPlayer() || isSubmerged() || !movedFeet(evt))return;
 			if(p.getInventory().getItemInMainHand().getType() != Material.STICK)return;
-			rollerLinePaint(1 + Math.sqrt(level()), 0.4 + level() / 24.0, p);
+			rollerLinePaint(1 + Math.sqrt(level()), 0.4 + level() / 24.0, p, ROLLER_AHEAD);
 		}
 		@Override
 		protected void onPlayerInteract(PlayerInteractEvent evt, Player p) {
@@ -656,20 +725,14 @@ public class InkWars extends JocEquips {
 				return;
 			}
 			if(p.getInventory().getItemInMainHand().getType() != Material.TORCH)return;
-			evt.setCancelled(true); // the torch is a brush, it is never placed
-			if(brushCooldownTicks > 0 || isSubmerged())return;
-			RayTraceResult sight = p.rayTraceBlocks(BRUSH_REACH);
-			if(sight == null || sight.getHitBlock() == null)return;
-			Vector normal = sight.getHitBlockFace() == null ? new Vector(0, 1, 0) : sight.getHitBlockFace().getDirection();
-			Location impact = sight.getHitPosition().toLocation(getWorld()).add(normal.clone().multiply(0.3));
-			splash(impact, p.getEyeLocation().getDirection(), normal, 1.1 + level() * 0.1, 0.9);
-			getWorld().playSound(impact, Sound.ENTITY_SLIME_SQUISH, 0.5F, 1.5F);
-			brushCooldownTicks = 3;
+			evt.setCancelled(true); // the torch is the hose, it is never placed
+			if(isSubmerged())return;
+			hoseTriggerTicks = HOSE_TRIGGER_TICKS;
 		}
 		@Override
 		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
 			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-			if(damager == getPlayer() && !ranged)evt.setCancelled(true);
+			if(damager == getPlayer() && !ranged && !dealingInkDamage)evt.setCancelled(true);
 		}
 		@Override
 		protected void onProjectileLaunch(ProjectileLaunchEvent evt, Projectile proj) {
@@ -707,33 +770,40 @@ public class InkWars extends JocEquips {
 					double targetDistance = Math.max(p.getLocation().distance(impact), 0.25);
 					double shotDistance = Math.max(impact.distance(getPlayer().getEyeLocation()), 0.25);
 					double splashDamage = 2 + (6.5 + (level() / 2.2)) / (targetDistance * (shotDistance / 3));
-					p.damage(splashDamage, getPlayer());
+					hurt(p, splashDamage);
 				}
 			}
 		}
 		//Painting methods
-		/** A stroke across the player's path: a line on the floor perpendicular to where they face. Looking straight up or down has no across, so the stroke is the block underfoot. */
-		public void rollerLinePaint(double width, double ink, Player p){
-			Vector forward = p.getLocation().getDirection().setY(0);
+		/**
+		 * A stroke across the player's path: a line on the floor perpendicular to where they face, centred the given distance ahead of the feet.
+		 * Each sample along the line paints the floor under it, so a step up or down along the stroke gets its share and a riser ahead takes the roller's head.
+		 * Looking straight up or down has no across, so the stroke is the block underfoot.
+		 */
+		public void rollerLinePaint(double halfWidth, double ink, Player p, double ahead){
+			Location feet = p.getLocation();
+			Vector forward = feet.getDirection().setY(0);
 			if(forward.lengthSquared() < 1e-6){
-				paintBlock(p.getLocation().getBlock(), ink);
+				paintBlock(floorUnder(feet), ink);
 				return;
 			}
-			Vector paintDir = new Vector(0, 1, 0).crossProduct(forward).normalize().multiply(width);
-			Vector startLoc = p.getLocation().toVector().subtract(paintDir);
-			BlockIterator i;
-			try {
-				i = new BlockIterator(getWorld(), startLoc, paintDir, -1, (int) Math.round(2 * width));
-			} catch (IllegalStateException startBlockMissed) {
-				paintBlock(p.getLocation().getBlock(), ink);
-				return;
+			forward.normalize();
+			Vector across = new Vector(0, 1, 0).crossProduct(forward).normalize();
+			Location centre = feet.clone().add(forward.multiply(ahead));
+			HashSet<Block> stroked = new HashSet<>();
+			for(double offset = -halfWidth; offset <= halfWidth + 1e-9; offset += 0.5){
+				Block floor = floorUnder(centre.clone().add(across.clone().multiply(offset)));
+				if(floor != null && stroked.add(floor))paintBlock(floor, ink);
 			}
-			for (;i.hasNext();) {
-				Block b = i.next();
-				if (Utils.pointToLineDistance(startLoc, paintDir, b.getLocation().toVector()) < 0.8) {
-					paintBlock(b, ink);
-				}
+		}
+		/** The floor a roller's head rests on at a point: the first solid block from the point down two, or the block itself when it is solid, a riser. */
+		Block floorUnder(Location point){
+			Block block = point.getBlock();
+			for(int depth = 0; depth <= 2; depth++){
+				if(!block.isPassable())return block;
+				block = block.getRelative(BlockFace.DOWN);
 			}
+			return null;
 		}
 		public void paintBlock(Block b, double inkAmount){
 			paint(b, obtenirEquip(getPlayer()), getPlayer().getName(), inkAmount);
@@ -895,6 +965,10 @@ public class InkWars extends JocEquips {
 			double speed = 0;
 			/** What was pushed last tick, so the client's own steering is read against it. */
 			Vector pushed = new Vector();
+			/** The gap still open between the body and the wall it just attached to: closed by the next push, so the body arrives on the wall the tick it bends up it. */
+			double snapIntoWall = 0;
+			/** The wall block the body holds, from the last probe toward the wall. */
+			Block gripped = null;
 			/** The ink: gathered swimming on the team's colour, spent swimming elsewhere, and what the surge throws. Zero on every dive. */
 			double reserve = 0;
 			double pendingSurge = -1;
@@ -945,6 +1019,8 @@ public class InkWars extends JocEquips {
 				submerged = false;
 				surface = Surface.AIR;
 				wallSide = null;
+				gripped = null;
+				snapIntoWall = 0;
 				Player p = player();
 				p.removePotionEffect(PotionEffectType.INVISIBILITY);
 				dropFakeCeiling();
@@ -975,7 +1051,7 @@ public class InkWars extends JocEquips {
 				getWorld().playSound(feet, Sound.ENTITY_SLIME_ATTACK, (float) (0.6 + amount), (float) (1.3 - 0.5 * amount));
 				getWorld().spawnParticle(Particle.SPLASH, feet.clone().add(0, 0.3, 0), (int) (30 + 80 * amount), radius * 0.4, 0.3, radius * 0.4, 0);
 				for(Player enemy : Utils.getNearbyPlayers(feet, radius)){
-					if(areEnemies(enemy, p))enemy.damage(2 + 4 * amount, p);
+					if(areEnemies(enemy, p))kit.hurt(enemy, 2 + 4 * amount);
 				}
 			}
 
@@ -1009,11 +1085,7 @@ public class InkWars extends JocEquips {
 			}
 			/** The block the body rides on: under the feet on a floor, the gripped block on a wall, none in the air. */
 			Block touchedBlock(){
-				Player p = player();
-				if(surface == Surface.WALL && wallSide != null){
-					Block beside = p.getLocation().getBlock().getRelative(wallSide);
-					return gripable(beside) ? beside : beside.getRelative(BlockFace.UP);
-				}
+				if(surface == Surface.WALL)return gripped;
 				if(surface == Surface.FLOOR)return getBlockWherePlayerStands();
 				return null;
 			}
@@ -1052,7 +1124,7 @@ public class InkWars extends JocEquips {
 				}
 				double halfWidth = 0.5 + 1.5 * reserve;
 				if(halfWidth < 0.9)kit.paintBlock(touched, 0.15 + 0.35 * reserve);
-				else kit.rollerLinePaint(halfWidth, 0.15 + 0.35 * reserve, p);
+				else kit.rollerLinePaint(halfWidth, 0.15 + 0.35 * reserve, p, 0);
 			}
 			/** The ink on the experience bar and as the stack of sacs in hand. */
 			void showMeters(){
@@ -1066,8 +1138,50 @@ public class InkWars extends JocEquips {
 			boolean gripable(Block b){
 				return isPaintable(b) || isPaintableUnsafely(b);
 			}
-			boolean wallAt(Block feet, BlockFace side){
-				return gripable(feet.getRelative(side)) || gripable(feet.getRelative(side).getRelative(BlockFace.UP));
+			/** A surface the probe found: the block, the face of it that faces the body, and how far the body's edge is from that face along the probe. */
+			record Contact(Block block, BlockFace face, double gap) {}
+			/**
+			 * Feels along a direction for the first block face within the next tick's travel plus the margin, with rays from the ankles, the middle and the crown of the body.
+			 * The reach and the gap are measured from the body's edge in that direction, not from its centre, so the answer is "will the body touch it", whatever the angle.
+			 * Null when nothing is that close.
+			 */
+			Contact probe(Vector direction, double travel){
+				if(direction.lengthSquared() < 1e-6)return null;
+				Player p = player();
+				Vector unit = direction.clone().normalize();
+				double height = p.getHeight();
+				double[] rayHeights = height <= 0.7 ? new double[]{0.15, height - 0.15} : new double[]{0.15, height / 2, height - 0.15};
+				Contact nearest = null;
+				for(double rayHeight : rayHeights){
+					double extent = 0.3 * (Math.abs(unit.getX()) + Math.abs(unit.getZ())) + (unit.getY() > 0 ? unit.getY() * (height - rayHeight) : -unit.getY() * rayHeight);
+					Location origin = p.getLocation().add(0, rayHeight, 0);
+					RayTraceResult hit = getWorld().rayTraceBlocks(origin, unit, extent + travel + PROBE_MARGIN, FluidCollisionMode.NEVER, true);
+					if(hit == null || hit.getHitBlock() == null || hit.getHitBlockFace() == null)continue;
+					double gap = hit.getHitPosition().subtract(origin.toVector()).dot(unit) - extent;
+					if(nearest == null || gap < nearest.gap())nearest = new Contact(hit.getHitBlock(), hit.getHitBlockFace(), gap);
+				}
+				return nearest;
+			}
+			/** Whether a contact is a wall the squid can hold: a side face of a gripable block. */
+			boolean holdableWall(Contact contact){
+				return contact != null && contact.face().getModY() == 0 && gripable(contact.block());
+			}
+			/** The wall the body holds, if it is still there within reach on the gripped side. */
+			Contact wallBeside(){
+				Contact beside = probe(wallSide.getDirection(), 1.0);
+				return holdableWall(beside) && beside.face().getOppositeFace() == wallSide ? beside : null;
+			}
+			/** Past the end of the gripped face: the wall round the corner, the heading's own side first. */
+			Contact wallAround(){
+				ArrayList<BlockFace> order = new ArrayList<>();
+				BlockFace along = sideOf(heading);
+				if(along != null && along != wallSide)order.add(along);
+				for(BlockFace side : SIDES)if(side != wallSide && !order.contains(side))order.add(side);
+				for(BlockFace side : order){
+					Contact around = probe(side.getDirection(), 0.5);
+					if(holdableWall(around) && around.face().getOppositeFace() == side)return around;
+				}
+				return null;
 			}
 			/**
 			 * The universal bend: passing from a surface with one normal onto a surface with another, the part of the heading that pointed into the new surface
@@ -1079,14 +1193,14 @@ public class InkWars extends JocEquips {
 				if(heading.lengthSquared() < 1e-6)heading = oldNormal.clone();
 				heading.normalize();
 			}
-			Vector normalOf(Surface s, BlockFace side){
-				if(s == Surface.FLOOR)return new Vector(0, 1, 0);
-				return side.getDirection().multiply(-1);
-			}
-			void attachToWall(BlockFace side, Vector oldNormal){
+			/** Onto a wall at whatever angle: the road bends, the speed is kept, and the gap still open to the wall is closed by the next push. */
+			void attachToWall(Contact wall, Vector oldNormal){
+				BlockFace side = wall.face().getOppositeFace();
 				redirect(oldNormal, side.getDirection().multiply(-1));
 				surface = Surface.WALL;
 				wallSide = side;
+				gripped = wall.block();
+				snapIntoWall = Math.max(0, wall.gap());
 			}
 			void landOnFloor(Vector oldNormal){
 				redirect(oldNormal, new Vector(0, 1, 0));
@@ -1096,27 +1210,23 @@ public class InkWars extends JocEquips {
 				heading.normalize();
 				surface = Surface.FLOOR;
 				wallSide = null;
+				gripped = null;
 			}
 
 			/**
-			 * On a floor the cart is steered by the keys. Running into a wall at more than a glancing angle bends the road up it, speed kept;
-			 * a glancing wall only takes the part of the heading that pointed into it. Off an edge the squid is in the air.
+			 * On a floor the cart is steered by the keys. A wall the body is about to touch, at any angle, bends the road up it with the speed kept:
+			 * the probe finds it a tick before the hitbox would, so the body never stops against it. Off an edge the squid is in the air.
 			 */
 			void tickFloor(Vector moved){
 				Player p = player();
 				steerByKeys(moved);
-				Block feet = p.getLocation().getBlock();
-				BlockFace ahead = sideOf(heading);
-				if(ahead != null && wallAt(feet, ahead)){
-					double into = -heading.dot(ahead.getDirection().multiply(-1));
-					if(into > 0.5){
+				if(speed >= SQUID_CRAWL_SPEED){
+					Contact ahead = probe(heading, speed);
+					if(holdableWall(ahead)){
 						attachToWall(ahead, new Vector(0, 1, 0));
 						pushAlongSurface();
 						return;
 					}
-					Vector normal = ahead.getDirection().multiply(-1);
-					heading.subtract(normal.multiply(heading.dot(normal)));
-					if(heading.lengthSquared() > 1e-6)heading.normalize();
 				}
 				if(!p.isOnGround() && moved.getY() < -0.05){
 					surface = Surface.AIR;
@@ -1128,29 +1238,48 @@ public class InkWars extends JocEquips {
 			}
 			/**
 			 * On a wall the squid goes where it looks: the look projected onto the wall is the target, the heading turns toward it and the throttle is on.
-			 * Looking into the wall brakes; looking straight out lets go into a jump, still a squid. When the gripped face ends: another face beside means a corner
-			 * and the road bends onto it; a climb that runs out of wall goes over the top onto the roof; a descent that meets the floor bends onto it; otherwise the air.
+			 * Looking into the wall brakes; looking straight out lets go into a jump, still a squid. Ahead along the road: another wall is a concave corner and the road
+			 * bends onto it, a ceiling ends the climb and the rest of the heading runs along the seam, a floor under a descent bends onto it. When the gripped face ends:
+			 * a wall round the corner and the road bends onto it, a climb that runs out of wall goes over the top onto the roof, otherwise the air.
 			 */
 			void tickWall(Vector moved){
 				Player p = player();
-				Block feet = p.getLocation().getBlock();
 				Vector normal = wallSide.getDirection().multiply(-1);
 				Vector look = p.getLocation().getDirection();
-				double outward = look.dot(normal);
-				if(outward > DETACH_COS){
+				if(look.dot(normal) > DETACH_COS){
 					detach(normal);
 					return;
 				}
-				if(!wallAt(feet, wallSide)){
-					BlockFace next = null;
-					BlockFace alongSide = sideOf(heading);
-					if(alongSide != null && alongSide != wallSide && wallAt(feet, alongSide))next = alongSide;
-					else for(BlockFace side : SIDES)if(side != wallSide && wallAt(feet, side)){ next = side; break; }
-					if(next != null){
-						Vector oldNormal = normal;
-						attachToWall(next, oldNormal);
+				Contact ahead = speed > 1e-3 ? probe(heading, speed) : null;
+				if(ahead != null){
+					if(holdableWall(ahead) && ahead.face().getOppositeFace() != wallSide){
+						attachToWall(ahead, normal);
 						cornerTicks = CORNER_TICKS;
-						speed *= 0.85;
+						pushAlongSurface();
+						return;
+					}
+					if(ahead.face() == BlockFace.UP && heading.getY() < 0){
+						landOnFloor(normal);
+						pushAlongSurface();
+						return;
+					}
+					if(ahead.face() == BlockFace.DOWN && heading.getY() > 0){
+						heading.setY(0);
+						if(heading.lengthSquared() < 1e-6)heading = look.clone().subtract(normal.clone().multiply(look.dot(normal))).setY(0);
+						if(heading.lengthSquared() < 1e-6){
+							heading = normal.clone();
+							speed = 0;
+						}else{
+							heading.normalize();
+						}
+					}
+				}
+				Contact beside = wallBeside();
+				if(beside == null){
+					Contact around = wallAround();
+					if(around != null){
+						attachToWall(around, normal);
+						cornerTicks = CORNER_TICKS;
 						pushAlongSurface();
 						return;
 					}
@@ -1163,8 +1292,10 @@ public class InkWars extends JocEquips {
 					}
 					surface = Surface.AIR;
 					wallSide = null;
+					gripped = null;
 					return;
 				}
+				gripped = beside.block();
 				if(p.isOnGround() && heading.getY() < -0.1){
 					landOnFloor(normal);
 					pushAlongSurface();
@@ -1181,21 +1312,24 @@ public class InkWars extends JocEquips {
 				speed = Math.max(0, Math.min(SQUID_TOP_SPEED, speed));
 				pushAlongSurface();
 			}
-			/** In the air the squid keeps its form and flies; the first surface it meets becomes its road again. */
+			/** In the air the squid keeps its form and flies; the first surface it meets becomes its road again, a wall a tick before the body would hit it. */
 			void tickAir(Vector moved){
 				Player p = player();
-				Block feet = p.getLocation().getBlock();
-				BlockFace ahead = sideOf(new Vector(moved.getX(), 0, moved.getZ()));
-				if(ahead != null && wallAt(feet, ahead) && Math.abs(moved.getX()) + Math.abs(moved.getZ()) > 0.05){
-					setMomentum(new Vector(moved.getX(), 0, moved.getZ()));
-					attachToWall(ahead, new Vector(0, 1, 0));
-					pushAlongSurface();
-					return;
+				Vector flight = new Vector(moved.getX(), 0, moved.getZ());
+				if(flight.lengthSquared() > 0.0025){
+					Contact ahead = probe(flight, flight.length());
+					if(holdableWall(ahead)){
+						setMomentum(flight);
+						attachToWall(ahead, new Vector(0, 1, 0));
+						pushAlongSurface();
+						return;
+					}
 				}
 				if(p.isOnGround()){
-					setMomentum(new Vector(moved.getX(), 0, moved.getZ()));
+					setMomentum(flight);
 					surface = Surface.FLOOR;
 					wallSide = null;
+					gripped = null;
 				}
 			}
 			void detach(Vector normal){
@@ -1203,17 +1337,22 @@ public class InkWars extends JocEquips {
 				double launch = Math.max(speed, 0.4);
 				surface = Surface.AIR;
 				wallSide = null;
+				gripped = null;
 				heading = normal.clone();
 				pushed = normal.clone().multiply(launch);
 				p.setVelocity(new Vector(pushed.getX(), 0.35, pushed.getZ()));
 				p.playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.8F, 1.1F);
 			}
-			/** The velocity for the current surface: along the heading at the speed, hugging a wall a little; on a wall the vertical part is the heading's, gravity is not consulted. */
+			/**
+			 * The velocity for the current surface: along the heading at the speed. On a wall the body is pressed into it a little, plus whatever gap was still open
+			 * when it attached, and the vertical part is the heading's, gravity is not consulted.
+			 */
 			void pushAlongSurface(){
 				Player p = player();
 				pushed = heading.clone().multiply(speed);
 				if(surface == Surface.WALL){
-					Vector into = wallSide.getDirection().multiply(0.1);
+					Vector into = wallSide.getDirection().multiply(0.1 + snapIntoWall);
+					snapIntoWall = 0;
 					p.setVelocity(new Vector(pushed.getX() + into.getX(), pushed.getY(), pushed.getZ() + into.getZ()));
 				}else{
 					p.setVelocity(new Vector(pushed.getX(), Math.max(pushed.getY(), 0), pushed.getZ()));
