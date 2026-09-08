@@ -601,22 +601,17 @@ public class InkWars extends JocEquips {
 			reloadTick();
 			if(wetInkTicks % 20 == 0)restoreTools();
 		}
-		/** The hose is invisible, only its jet shows: the nozzle sits at the hand, a little right of and below the eyes, and throws along the look. */
+		/** The hose is the torch in the main hand and its jet leaves the torch's tip: a little right of the eyes, a hand's length forward, just below eye height; it throws along the look. Quiet, the jet is the show. */
 		void sprayHose(){
 			Player p = getPlayer();
 			Location eyes = p.getEyeLocation();
 			Vector look = eyes.getDirection();
 			Vector right = new Vector(-look.getZ(), 0, look.getX());
 			if(right.lengthSquared() > 1e-6)right.normalize();
-			Location nozzle = eyes.clone().add(look.clone().multiply(0.4)).add(right.multiply(0.25)).add(0, -0.25, 0);
+			Location nozzle = eyes.clone().add(look.clone().multiply(0.5)).add(right.multiply(0.32)).add(0, -0.12, 0);
 			double levelBonus = level() * 0.02;
-			if(pinched){
-				hose.emit(nozzle, look, PINCHED_SPEED + levelBonus, PINCHED_SCATTER, new InkStream.Load(PINCHED_PARCEL_INK + levelBonus, PINCHED_SPLASH_RADIUS + level() * 0.03, PINCHED_STING), PINCHED_PARCELS_PER_TICK);
-				if(wetInkTicks % 5 == 0)getWorld().playSound(nozzle, Sound.BLOCK_BUBBLE_COLUMN_WHIRLPOOL_AMBIENT, 0.5F, 1.9F);
-			}else{
-				hose.emit(nozzle, look, HOSE_SPEED + levelBonus, HOSE_SCATTER, new InkStream.Load(HOSE_PARCEL_INK + levelBonus, HOSE_SPLASH_RADIUS + level() * 0.05, HOSE_STING), HOSE_PARCELS_PER_TICK);
-				if(wetInkTicks % 5 == 0)getWorld().playSound(nozzle, Sound.ENTITY_SLIME_SQUISH, 0.3F, 1.7F);
-			}
+			if(pinched)hose.emit(nozzle, look, PINCHED_SPEED + levelBonus, PINCHED_SCATTER, new InkStream.Load(PINCHED_PARCEL_INK + levelBonus, PINCHED_SPLASH_RADIUS + level() * 0.03, PINCHED_STING), PINCHED_PARCELS_PER_TICK);
+			else hose.emit(nozzle, look, HOSE_SPEED + levelBonus, HOSE_SCATTER, new InkStream.Load(HOSE_PARCEL_INK + levelBonus, HOSE_SPLASH_RADIUS + level() * 0.05, HOSE_STING), HOSE_PARCELS_PER_TICK);
 		}
 		/** The tip squeezed or let go. */
 		void togglePinch(){
@@ -629,7 +624,7 @@ public class InkWars extends JocEquips {
 		void tickHose(){
 			if(hose.isEmpty())return;
 			Player shooter = getPlayer();
-			Particle.DustOptions drop = new Particle.DustOptions(obtenirEquip(shooter).getStrongColor().getColor(), 1.1F);
+			ItemStack drop = new ItemStack(Material.valueOf(obtenirEquip(shooter).getStrongColor().name() + "_CONCRETE")); // crumbs of the team's colour that fly with the jet
 			for(InkStream.Landing landing : hose.advance(getWorld(), body -> body instanceof Player hit && hit != shooter && areEnemies(hit, shooter))){
 				InkStream.Load load = landing.load();
 				if(landing.body() instanceof Player hit){
@@ -642,8 +637,11 @@ public class InkWars extends JocEquips {
 			}
 			int parity = wetInkTicks % 2;
 			int index = 0;
-			for(Vector position : hose.positions()){
-				if(index++ % 2 == parity)getWorld().spawnParticle(Particle.DUST, position.getX(), position.getY(), position.getZ(), 1, 0, 0, 0, 0, drop);
+			for(InkStream.Flight flight : hose.flights()){
+				if(index++ % 2 != parity)continue;
+				Vector at = flight.position();
+				Vector along = flight.velocity();
+				getWorld().spawnParticle(Particle.ITEM, at.getX(), at.getY(), at.getZ(), 0, along.getX(), along.getY(), along.getZ(), 1.0, drop);
 			}
 		}
 		/** Ink damage from this kit: the ball's splash, the hose's jet, the squid's surge. Direct damage reads as melee to the hook below, so it is flagged past it. */

@@ -68,11 +68,14 @@ public final class InkStream {
 		return parcels.isEmpty();
 	}
 
-	/** Where every parcel is right now, for drawing the jet. */
-	public List<Vector> positions() {
-		List<Vector> positions = new ArrayList<>(parcels.size());
-		for (Parcel parcel : parcels) positions.add(parcel.position.clone());
-		return positions;
+	/** A parcel in flight: where it is and where it is going, for drawing the jet. */
+	public record Flight(Vector position, Vector velocity) {}
+
+	/** Every parcel in flight right now. */
+	public List<Flight> flights() {
+		List<Flight> flights = new ArrayList<>(parcels.size());
+		for (Parcel parcel : parcels) flights.add(new Flight(parcel.position.clone(), parcel.velocity.clone()));
+		return flights;
 	}
 
 	public void clear() {
