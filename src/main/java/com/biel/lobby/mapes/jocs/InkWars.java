@@ -144,7 +144,7 @@ public class InkWars extends JocEquips {
 		i.add("One kit: the Roller paints the floor ahead of you while you walk with it, the Hose in hand throws a jet of ink that flies in an arc, left-click pinches the tip for a longer thinner shot, ink balls splash at range");
 		i.add("Press sneak on your own ink for squid form: invisible, fast, healing, with momentum; press again to stand up");
 		i.add("The squid lives on ink (the green bar): it refills on your colour, drains on neutral ground, faster on enemy ink, and at zero you are thrown back on your feet; the strip you lay as you go does not count as yours until you stand up");
-		i.add("A squid runs up any wall it touches and round corners as if the floor continued; the keys work the same everywhere: on a wall, toward it climbs, away from it descends; look where you like; jump hops, and leaps off a wall");
+		i.add("A squid runs up any wall it touches, across ceilings and round every corner as if the floor continued; the keys work the same everywhere: on a wall, toward it climbs, away from it descends; look where you like; jump hops, leaps off a wall, drops off a ceiling");
 		i.add("Swimming fast charges a surge (the meter): surfacing or landing releases it as a splash that hurts");
 		i.add("Ink balls reload x5 faster on your own colour, x8 while submerged");
 		return i;
@@ -984,14 +984,14 @@ public class InkWars extends JocEquips {
 		}
 
 		/**
-		 * The squid: a body that treats floor, walls and corners as one continuous surface and never feels gravity while it touches one.
+		 * The squid: a body that treats floor, walls, ceilings and corners as one continuous surface and never feels gravity while it touches one.
 		 * Its engine owns the speed: a heading and a scalar the client cannot reset, redirected at every change of surface so a 90-degree edge is just a bend in the road.
 		 * It lives on an ink reserve, refilled on its own colour and drained elsewhere; while the reserve lasts it stays a squid and lays a strip that thins with the reserve.
 		 */
 		class Squid {
 			boolean submerged = false;
 			int submergedTicks = 0;
-			/** Where the body is attached: a floor, a wall on one side, or nothing (in the air). */
+			/** Where the body is attached: a floor, a wall on one side, a ceiling overhead, or nothing (in the air). */
 			Surface surface = Surface.AIR;
 			BlockFace wallSide = null;
 			int cornerTicks = 0;
@@ -1005,9 +1005,9 @@ public class InkWars extends JocEquips {
 			int airTicks = 0;
 			int offGroundTicks = 0;
 			boolean jumpHeld = false;
-			/** The gap still open between the body and the wall it just attached to: closed by the next push, so the body arrives on the wall the tick it bends up it. */
-			double snapIntoWall = 0;
-			/** The wall block the body holds, from the last probe toward the wall. */
+			/** The gap still open between the body and the wall or ceiling it just attached to: closed by the next push, so the body arrives on the surface the tick it bends onto it. */
+			double snapIntoSurface = 0;
+			/** The wall or ceiling block the body holds, from the last probe toward it. */
 			Block gripped = null;
 			/** What the ground was before this dive's own strip painted it, by block: the reserve judges the ground by this, so the squid cannot live on the ink it lays. */
 			final HashMap<Block, EquipInkWars> groundUnderStrip = new HashMap<>();
@@ -1064,7 +1064,7 @@ public class InkWars extends JocEquips {
 				surface = Surface.AIR;
 				wallSide = null;
 				gripped = null;
-				snapIntoWall = 0;
+				snapIntoSurface = 0;
 				airTicks = 0;
 				offGroundTicks = 0;
 				Player p = player();
@@ -1125,15 +1125,16 @@ public class InkWars extends JocEquips {
 				switch(surface){
 					case FLOOR -> tickFloor(keys, moved);
 					case WALL -> tickWall(keys);
+					case CEILING -> tickCeiling(keys);
 					case AIR -> tickAir(keys, moved);
 				}
 				if(surface == Surface.FLOOR)tickCrawlPose();
 				else dropFakeCeiling();
 				showMeters();
 			}
-			/** The block the body rides on: under the feet on a floor, the gripped block on a wall, none in the air. */
+			/** The block the body rides on: under the feet on a floor, the gripped block on a wall or a ceiling, none in the air. */
 			Block touchedBlock(){
-				if(surface == Surface.WALL)return gripped;
+				if(surface == Surface.WALL || surface == Surface.CEILING)return gripped;
 				if(surface == Surface.FLOOR)return getBlockWherePlayerStands();
 				return null;
 			}
@@ -1181,7 +1182,7 @@ public class InkWars extends JocEquips {
 				if(surface == Surface.WALL){
 					stroke.add(touched);
 					if(gripable(touched.getRelative(BlockFace.UP)))stroke.add(touched.getRelative(BlockFace.UP)); // the body is two blocks tall on a wall
-				}else if(halfWidth < 0.9)stroke.add(touched);
+				}else if(surface == Surface.CEILING || halfWidth < 0.9)stroke.add(touched);
 				else stroke = kit.rollerStrokeBlocks(halfWidth, p, 0);
 				for(Block b : stroke){
 					EquipInkWars owner = getTeamOwningBlock(b);
@@ -1233,11 +1234,14 @@ public class InkWars extends JocEquips {
 			 * Null when nothing is that close.
 			 */
 			Contact probe(Vector direction, double travel){
+				double height = player().getHeight();
+				return probe(direction, travel, height <= 0.7 ? new double[]{0.15, height - 0.15} : new double[]{0.15, height / 2, height - 0.15});
+			}
+			Contact probe(Vector direction, double travel, double[] rayHeights){
 				if(direction.lengthSquared() < 1e-6)return null;
 				Player p = player();
 				Vector unit = direction.clone().normalize();
 				double height = p.getHeight();
-				double[] rayHeights = height <= 0.7 ? new double[]{0.15, height - 0.15} : new double[]{0.15, height / 2, height - 0.15};
 				Contact nearest = null;
 				for(double rayHeight : rayHeights){
 					double extent = 0.3 * (Math.abs(unit.getX()) + Math.abs(unit.getZ())) + (unit.getY() > 0 ? unit.getY() * (height - rayHeight) : -unit.getY() * rayHeight);
@@ -1253,18 +1257,24 @@ public class InkWars extends JocEquips {
 			boolean holdableWall(Contact contact){
 				return contact != null && contact.face().getModY() == 0 && gripable(contact.block());
 			}
-			/** The wall the body holds, if it is still there within reach on the gripped side. */
+			/** The wall the body holds, if it is still there within reach on the gripped side; one ray just above the crown, for the wall a ceiling's edge turns onto. */
 			Contact wallBeside(){
-				Contact beside = probe(wallSide.getDirection(), 1.0);
+				double height = player().getHeight();
+				Contact beside = probe(wallSide.getDirection(), 1.0, new double[]{0.15, height / 2, height - 0.15, height + 0.3});
 				return holdableWall(beside) && beside.face().getOppositeFace() == wallSide ? beside : null;
+			}
+			/** The ceiling the body holds, if it is still there within reach overhead. */
+			Contact ceilingAbove(){
+				Contact above = probe(new Vector(0, 1, 0), 1.0);
+				return above != null && above.face() == BlockFace.DOWN && gripable(above.block()) ? above : null;
 			}
 			/**
 			 * Past the end of the gripped face, round the outside corner: the new face belongs to the block just held, on the side the body came from.
 			 * Rays from the body cannot find it, the body sits outside the block's column, so it is taken from the block itself. Null when that face is not open.
 			 */
-			Contact wallAroundCorner(){
+			Contact wallAroundCorner(double leastGap){
 				BlockFace travelled = sideOf(new Vector(heading.getX(), 0, heading.getZ()));
-				if(gripped == null || travelled == null || travelled == wallSide || travelled == wallSide.getOppositeFace())return null;
+				if(gripped == null || travelled == null || (wallSide != null && (travelled == wallSide || travelled == wallSide.getOppositeFace())))return null;
 				if(!gripped.getRelative(travelled).isPassable())return null; // the wall goes on in that direction, this is not a corner
 				Location body = player().getLocation();
 				boolean alongX = travelled.getModX() != 0;
@@ -1272,7 +1282,7 @@ public class InkWars extends JocEquips {
 				double bodyCentre = alongX ? body.getX() : body.getZ();
 				double facePlane = (alongX ? gripped.getX() : gripped.getZ()) + (positive ? 1 : 0);
 				double gap = positive ? (bodyCentre - 0.3) - facePlane : facePlane - (bodyCentre + 0.3);
-				if(gap < -0.35)return null; // the body has not reached that face: it is somewhere else along the wall, not at its corner
+				if(gap < leastGap)return null; // the body has not reached that face: it is somewhere else along the surface, not at its edge
 				return new Contact(gripped, travelled, Math.max(0, gap));
 			}
 			/**
@@ -1292,7 +1302,19 @@ public class InkWars extends JocEquips {
 				surface = Surface.WALL;
 				wallSide = side;
 				gripped = wall.block();
-				snapIntoWall = Math.max(0, wall.gap());
+				snapIntoSurface = Math.max(0, wall.gap());
+			}
+			/** Onto a ceiling: the road bends to run along it, the speed is kept, and the gap still open overhead is closed by the next push. */
+			void attachToCeiling(Contact ceiling, Vector oldNormal){
+				redirect(oldNormal, new Vector(0, -1, 0));
+				heading.setY(0);
+				if(heading.lengthSquared() < 1e-6)heading = oldNormal.clone().setY(0);
+				if(heading.lengthSquared() < 1e-6)heading = new Vector(1, 0, 0);
+				heading.normalize();
+				surface = Surface.CEILING;
+				wallSide = null;
+				gripped = ceiling.block();
+				snapIntoSurface = Math.max(0, ceiling.gap());
 			}
 			void landOnFloor(Vector oldNormal){
 				redirect(oldNormal, new Vector(0, 1, 0));
@@ -1369,7 +1391,13 @@ public class InkWars extends JocEquips {
 						return;
 					}
 					if(ahead.face() == BlockFace.DOWN && heading.getY() > 0){
-						heading.setY(0);
+						if(gripable(ahead.block())){
+							attachToCeiling(ahead, normal);
+							cornerTicks = CORNER_TICKS;
+							pushAlongSurface();
+							return;
+						}
+						heading.setY(0); // a ceiling that cannot be held ends the climb; the rest of the heading runs along the seam
 						if(heading.lengthSquared() < 1e-6){
 							heading = normal.clone();
 							speed = 0;
@@ -1385,7 +1413,7 @@ public class InkWars extends JocEquips {
 						pushAlongSurface();
 						return;
 					}
-					Contact corner = wallAroundCorner();
+					Contact corner = wallAroundCorner(-0.35);
 					if(corner != null){
 						attachToWall(corner, normal);
 						cornerTicks = CORNER_TICKS;
@@ -1424,6 +1452,14 @@ public class InkWars extends JocEquips {
 						return;
 					}
 				}
+				if(verticalSpeed > 0){
+					Contact overhead = probe(new Vector(0, 1, 0), verticalSpeed);
+					if(overhead != null && overhead.face() == BlockFace.DOWN && gripable(overhead.block())){
+						attachToCeiling(overhead, new Vector(0, 1, 0));
+						pushAlongSurface();
+						return;
+					}
+				}
 				if(airTicks >= MIN_AIR_TICKS && p.isOnGround() && verticalSpeed <= 0){
 					Vector landed = new Vector(moved.getX(), 0, moved.getZ());
 					if(landed.lengthSquared() > 1e-4)setMomentum(landed);
@@ -1431,6 +1467,47 @@ public class InkWars extends JocEquips {
 					pushAlongSurface();
 					return;
 				}
+				pushAlongSurface();
+			}
+			/**
+			 * Under a ceiling the keys work as on the floor and the body is pressed up into it. Jump lets go into a fall. Ahead along the road: a wall is a concave corner and
+			 * the road bends down it. When the ceiling ends: the block's side face is the road up onto its roof, taken from the block just held once the body has cleared it;
+			 * before that the body holds on; with no face to turn onto, the air.
+			 */
+			void tickCeiling(Keys keys){
+				Vector normal = new Vector(0, -1, 0);
+				if(keys.jumpPressed()){
+					takeOff(0);
+					pushAlongSurface();
+					player().playSound(player().getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.8F, 0.9F);
+					return;
+				}
+				Vector flat = new Vector(heading.getX(), 0, heading.getZ());
+				heading = flat.lengthSquared() < 1e-6 ? new Vector(1, 0, 0) : flat.normalize();
+				steer(keys.flat(), 1, true);
+				if(speed > 1e-3){
+					Contact ahead = probe(heading, speed);
+					if(holdableWall(ahead)){
+						attachToWall(ahead, normal);
+						cornerTicks = CORNER_TICKS;
+						pushAlongSurface();
+						return;
+					}
+				}
+				Contact above = ceilingAbove();
+				if(above == null){
+					Contact edge = wallAroundCorner(0);
+					if(edge != null){
+						attachToWall(edge, normal);
+						cornerTicks = CORNER_TICKS;
+						pushAlongSurface();
+						return;
+					}
+					if(wallAroundCorner(-0.35) == null)takeOff(0); // nothing to turn onto; otherwise the body still overlaps the edge and holds on until it clears
+					pushAlongSurface();
+					return;
+				}
+				gripped = above.block();
 				pushAlongSurface();
 			}
 			/** Off the wall into the air, away from it, still a squid. */
@@ -1445,16 +1522,21 @@ public class InkWars extends JocEquips {
 			}
 			/**
 			 * The velocity for the current surface: along the heading at the speed. On a floor a small press into the ground; on a wall a small press into it, plus whatever
-			 * gap was still open when it attached, and the vertical part is the heading's; in the air the engine's own vertical speed. The client's gravity never decides here.
+			 * gap was still open when it attached, and the vertical part is the heading's; under a ceiling a small press up into it, plus the gap; in the air the engine's own
+			 * vertical speed. The client's gravity never decides here.
 			 */
 			void pushAlongSurface(){
 				Player p = player();
 				pushed = heading.clone().multiply(speed);
 				switch(surface){
 					case WALL -> {
-						Vector into = wallSide.getDirection().multiply(0.1 + snapIntoWall);
-						snapIntoWall = 0;
+						Vector into = wallSide.getDirection().multiply(0.1 + snapIntoSurface);
+						snapIntoSurface = 0;
 						p.setVelocity(new Vector(pushed.getX() + into.getX(), pushed.getY(), pushed.getZ() + into.getZ()));
+					}
+					case CEILING -> {
+						p.setVelocity(new Vector(pushed.getX(), 0.1 + snapIntoSurface, pushed.getZ()));
+						snapIntoSurface = 0;
 					}
 					case FLOOR -> p.setVelocity(new Vector(pushed.getX(), -INK_GRAVITY, pushed.getZ()));
 					case AIR -> p.setVelocity(new Vector(pushed.getX(), verticalSpeed, pushed.getZ()));
@@ -1539,7 +1621,7 @@ public class InkWars extends JocEquips {
 			}
 		}
 	}
-	enum Surface { FLOOR, WALL, AIR }
+	enum Surface { FLOOR, WALL, CEILING, AIR }
 	@Override
 	protected void onPlayerToggleSneak(PlayerToggleSneakEvent evt, Player p) {
 		super.onPlayerToggleSneak(evt, p);
