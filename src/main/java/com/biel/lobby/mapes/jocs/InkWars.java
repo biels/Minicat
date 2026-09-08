@@ -171,7 +171,7 @@ public class InkWars extends JocEquips {
 		i.add("The squid lives on ink (the green bar): it refills on your colour, drains on neutral ground, faster on enemy ink, and at zero you are thrown back on your feet; the strip you lay as you go does not count as yours until you stand up");
 		i.add("A squid runs up any wall it touches, across ceilings and round every corner as if the floor continued; the keys work the same everywhere: on a wall, toward it climbs, away from it descends; look where you like; jump hops, leaps off a wall, drops off a ceiling");
 		i.add("A squid gathers speed on a straight line and bleeds it on sharp turns; right-click the ink sacs to burn ten of them for a thrust past the top speed; what is left when you stand up goes off as a splash that hurts");
-		i.add("Ink balls reload x5 faster on your own colour, x8 while submerged");
+		i.add("Ink balls reload while holding their slot, x5 faster on your own colour or in your base");
 		return i;
 	}
 	@Override
@@ -734,7 +734,7 @@ public class InkWars extends JocEquips {
 			return 6 + Math.round(level() / 2f);
 		}
 		public int neededReloadTicks(){
-			return 50 - level() * 2;
+			return Math.max(100, 250 - level() * 10);
 		}
 		/** Reloading runs five times faster on the team's colour or in the base. */
 		public int reloadTickIncrement(){
