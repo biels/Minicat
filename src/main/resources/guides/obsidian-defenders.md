@@ -84,7 +84,7 @@
 - Aquest altar ven millores més potents. Fes-hi clic dret amb l'arma o l'eina a la mà.
 
 ## pista placa
-- Queda't {CAPTURA_S} s sobre la placa del teu color. Capturaràs el punt i carregaràs el pont del teu equip.
+- Queda't {CAPTURA_S} s sobre la placa del teu color per capturar el punt.
 
 ## pista botó
 - Quan la barra del pont sigui plena, prem el botó. S'obrirà un camí per travessar el fossat enemic.

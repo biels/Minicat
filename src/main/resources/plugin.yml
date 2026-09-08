@@ -13,9 +13,10 @@ libraries:
 - commons-lang:commons-lang:2.6
 - com.mysql:mysql-connector-j:9.6.0
 commands:
-  guia:
-    description: Obre la guia del joc on ets, o d'un joc pel nom.
-    usage: /guia [joc]
+  info:
+    description: Obre el llibre d'informació del joc.
+    usage: /info [joc]
+    aliases: [i, guia]
   prova:
     description: Crea, llista o elimina instàncies de diagnòstic operatiu; importa plantilles antigues.
     usage: /prova <joc> [variant] | /prova llista | /prova elimina <món> | /prova importa

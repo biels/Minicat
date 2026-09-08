@@ -86,7 +86,7 @@ public final class lobby extends JavaPlugin {
 		return agentSnapshotHttpServer != null && agentSnapshotHttpServer.isRunning();
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
-		if(cmd.getName().equalsIgnoreCase("guia")){
+		if(cmd.getName().equalsIgnoreCase("info")){
 			if(!(sender instanceof Player reader)) return true;
 			com.biel.lobby.guide.GameGuide.open(reader, args.length == 0 ? null : String.join(" ", args));
 			return true;

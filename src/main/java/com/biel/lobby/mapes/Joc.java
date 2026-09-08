@@ -684,7 +684,7 @@ public abstract class Joc extends MapaResetejable {
 			for (String s : gameInfo) {
 				sendPlayerMessage(p, ChatColor.WHITE + "" + ChatColor.BOLD + " + " + ChatColor.RESET + s);
 			}
-			if (com.biel.lobby.guide.GameGuide.of(getGameName()).exists()) sendPlayerMessage(p, ChatColor.GRAY + "/guia obre la guia sencera.");
+			if (com.biel.lobby.guide.GameGuide.of(getGameName()).exists()) sendPlayerMessage(p, ChatColor.GRAY + "Obre el llibre amb /info o /i.");
 			sendPlayerMessage(p, ChatColor.BLUE + "" + ChatColor.BOLD + "----------------------");
 		}
 	}
@@ -1042,7 +1042,6 @@ public abstract class Joc extends MapaResetejable {
 		}
 		
 		updateScoreBoard(ply);
-		anunciarWiki(ply, false);
 		com.biel.lobby.guide.GameGuide.of(getGameName()).openOnce(ply);
 	}
 	/** The player leaves on purpose, still here to be told; a lost connection goes through the seat instead. */
@@ -1112,33 +1111,6 @@ public abstract class Joc extends MapaResetejable {
 		
 		lastProgressETA = gameProgressETA;
 	}
-	public void anunciarWiki(Player p, boolean requested){
-
-		/*
-		if(pMapaActual().ExisteixPropietat("wiki")){
-			String pageName = pMapaActual().ObtenirPropietat("wiki");
-			boolean local = p.getAddress().getHostString().startsWith("10.0.0.");
-			if(!requested)p.sendMessage("Pots veure la informació del mapa a:");
-			if(requested)p.sendMessage("Article del mapa " + getGameName() + ":");
-			p.sendMessage(ChatColor.BLUE + getWikiLink(pageName, local));
-			p.sendMessage("(Clic->Si per obrir)");
-		}else{
-			sendPlayerMessage(p, "Aquest mode de joc no té un article a la wiki");
-		}
-		*/
-
-	}
-	public String getWikiLink(String pageName, boolean local){
-		String protocol = "http://";
-		String domain = "ordinadorcasa.no-ip.org";
-		if (local){
-			domain = "10.0.0.100";
-		}
-		String wiki = "/w";
-		String wikirequest = "/index.php?title=";
-		return protocol + domain + wiki + wikirequest + pageName;
-
-	}
 	protected void updateScoreBoards(){
 		getViewers().forEach(this::updateScoreBoard);
 	}
@@ -1185,7 +1157,7 @@ public abstract class Joc extends MapaResetejable {
 
 		ItemButton btnStartGame = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_ROD), ChatColor.GREEN + "Inicia la partida"), ply, event -> iniciarCommand(event.getPlayer()));
 		if(hasHostPrivilleges(ply))inventory.setItem(0, btnStartGame.getItemStack());
-		ItemButton btnWiki = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Wiki " + getGameName()), ply, event -> anunciarWiki(event.getPlayer(), true));
+		ItemButton infoButton = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Info " + getGameName()), ply, event -> com.biel.lobby.guide.GameGuide.of(getGameName()).open(event.getPlayer()));
 		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.PLAYER_HEAD), ChatColor.GREEN + "Afegir jugadors"), ply, event -> {
             final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
             IconMenu menu = new IconMenu("Afegeix...", 27, event12 -> {
@@ -1226,7 +1198,7 @@ public abstract class Joc extends MapaResetejable {
             menu.open(ply);
         });
 		//if(hasHostPrivilleges(ply))inventory.setItem(7, button2.getItemStack()); // AND isOp()
-		inventory.setItem(6, btnWiki.getItemStack());
+		inventory.setItem(6, infoButton.getItemStack());
 		ItemButton btnInvitePlayers = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), ChatColor.GREEN + "Convidar jugadors"), ply, event -> {
             final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
             IconMenu menu = new IconMenu("Convida...", 27, event1 -> {

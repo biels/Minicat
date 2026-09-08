@@ -811,7 +811,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	protected ArrayList<String> getGameInfo(Player p) {
-		// Three lines; the rest is taught where it happens: item tooltips, signs, the one-shot hints, and the book (/guia).
+		// Three lines; the rest is taught where it happens: item tooltips, signs, the one-shot hints, and the book (/info).
 		return new ArrayList<>(GUIDE.lines("inici"));
 	}
 

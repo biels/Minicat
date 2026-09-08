@@ -182,7 +182,7 @@ public final class GameGuide {
 	/**
 	 * The book opens by itself the first time a player enters this game since the server
 	 * started (Biel, 2026-09-08: "people don't read the chat; JoniMega was interested and
-	 * still didn't read anything"). Later joins say /guia instead.
+	 * still didn't read anything"). Later joins say /info instead.
 	 */
 	public void openOnce(Player player) {
 		if (!exists() || !OPENED_THIS_SESSION.add(slug(gameName) + "/" + player.getUniqueId())) return;
@@ -191,7 +191,7 @@ public final class GameGuide {
 
 	public void open(Player player) {
 		if (!exists()) {
-			player.sendMessage(ChatColor.GRAY + "Encara no hi ha guia " + com.biel.lobby.utilities.Catalan.de(gameName) + ".");
+			player.sendMessage(ChatColor.GRAY + "Encara no hi ha informació " + com.biel.lobby.utilities.Catalan.de(gameName) + ".");
 			return;
 		}
 		Book book = book();
@@ -202,14 +202,14 @@ public final class GameGuide {
 	}
 
 	/**
-	 * {@code /guia} and the lobby signs: the guide of the game the player is in, or of the
+	 * {@code /info} and the lobby signs: the guide of the game the player is in, or of the
 	 * registered game whose name contains the words given.
 	 */
 	public static void open(Player player, String gameNameOrNull) {
 		if (gameNameOrNull == null || gameNameOrNull.isBlank()) {
 			Mapa map = Com.getGest().getMapWherePlayerIs(player);
 			if (map == null) {
-				player.sendMessage(ChatColor.GRAY + "Escriu /guia <joc>, o fes clic al rètol de la guia d'un joc.");
+				player.sendMessage(ChatColor.GRAY + "Escriu /info <joc>, o fes clic al rètol Wiki d'un joc.");
 				return;
 			}
 			of(map.getGameName()).open(player);
