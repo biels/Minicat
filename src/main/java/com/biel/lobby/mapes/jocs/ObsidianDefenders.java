@@ -355,6 +355,7 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<Integer, Block> rètolsPont = new HashMap<>();
 	/** Bridge button block → team id that owns it. */
 	private final Map<Block, Integer> botonsPont = new HashMap<>();
+	private ObsidianLauncherController watchtowerLaunchers;
 	/** Team id → the plank columns of the bridge over that team's moat, deploy order. */
 	private final Map<Integer, List<List<Block>>> pontsPerMoat = new HashMap<>();
 	private final Set<Integer> pontsDesplegats = new HashSet<>();
@@ -698,6 +699,12 @@ public class ObsidianDefenders extends JocEquips {
 		registerControlPointsAndLamps();
 		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
 		Bukkit.getPluginManager().registerEvents(worldListener, plugin);
+		watchtowerLaunchers = new ObsidianLauncherController(world, plugin,
+				player -> JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player)
+						&& player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR,
+				player -> obtenirEquip(player) == null ? -1 : obtenirEquip(player).getId(),
+				this::gastarOr, this::updateScoreBoard);
+		scheduleGameplayRepeatingTask(() -> { if (watchtowerLaunchers != null) watchtowerLaunchers.tick(); }, 1, 1);
 		createShopPortals();
 		scheduleGameplayRepeatingTask(this::tickShopPortals, 2, 2);
 		scheduleGameplayRepeatingTask(this::tickChestLoot, 1, 1);
@@ -1380,6 +1387,7 @@ public class ObsidianDefenders extends JocEquips {
 	/** A player who leaves the match (/l, a teleport out) must not carry the Guardian's bar to the lobby. */
 	@Override
 	protected void customLeave(Player ply, List<String> attatchments) {
+		if (watchtowerLaunchers != null) watchtowerLaunchers.forget(ply.getUniqueId());
 		goldScore.removePlayer(ply.getUniqueId());
 		super.customLeave(ply, attatchments);
 		if (barraGuardià != null) ply.hideBossBar(barraGuardià);
@@ -1392,6 +1400,7 @@ public class ObsidianDefenders extends JocEquips {
 	/** A lost connection mid-charge: the charge task must not fire on a player who is gone; the star drops at their feet as a death would. */
 	@Override
 	protected void onSeatDropped(Player ply) {
+		if (watchtowerLaunchers != null) watchtowerLaunchers.forget(ply.getUniqueId());
 		super.onSeatDropped(ply);
 		updateGoldBalance(ply);
 		cancelStarCharge(ply);
@@ -1594,7 +1603,7 @@ public class ObsidianDefenders extends JocEquips {
 	 * Reads the signs around each base once. A booth sign hands its villager (the map's
 	 * own, adopted in place, or a new one when the booth is empty) to the team; the
 	 * "Deploy enemy's bridge" sign becomes that team's charge bar and its button the
-	 * control; the sewers sign just says the sewers are open, since they always are now.
+	 * control. The former sewer controls are registered separately as base upgrades.
 	 */
 	private void registrarControlsIParades() {
 		for (Equip e : Equips) {
@@ -1608,7 +1617,7 @@ public class ObsidianDefenders extends JocEquips {
 					if (botó != null) botonsPont.put(botó, e.getId());
 					escriureRètol(bloc, etiquetaPont(e, "Pont enemic"), barraPont(e), "", "");
 				} else if (text.contains("sewers")) {
-					escriureRètol(bloc, ChatColor.DARK_GRAY + "Clavegueres", ChatColor.GRAY + "obertes", "", "");
+					// The launcher controller owns this sign, including registration retries.
 				} else {
 					boolean booth = false;
 					for (Parada parada : Parada.values()) {
@@ -1971,6 +1980,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	public void clearExternals() {
+		if (watchtowerLaunchers != null) { watchtowerLaunchers.close(); watchtowerLaunchers = null; }
 		HandlerList.unregisterAll(worldListener);
 		if (lookoutSign != null) { lookoutSign.delete(); lookoutSign = null; }
 		goldScore.clear();
@@ -2913,6 +2923,17 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected void onPlayerInteract(PlayerInteractEvent evt, Player plyr) {
 		super.onPlayerInteract(evt, plyr);
+		if (watchtowerLaunchers != null && evt.getClickedBlock() != null) {
+			if (evt.getAction() == Action.PHYSICAL && watchtowerLaunchers.isPlate(evt.getClickedBlock())) {
+				evt.setCancelled(true);
+				return;
+			}
+			if (evt.getAction() == Action.RIGHT_CLICK_BLOCK && evt.getHand() == EquipmentSlot.HAND
+					&& watchtowerLaunchers.interact(plyr, evt.getClickedBlock())) {
+				evt.setCancelled(true);
+				return;
+			}
+		}
 		if (evt.getAction() == Action.PHYSICAL && evt.getClickedBlock() != null
 				&& shopPortals.values().stream().anyMatch(portal -> portal.entrance().getBlock().equals(evt.getClickedBlock()))) {
 			evt.setCancelled(true);

@@ -159,6 +159,13 @@ Quan sigui plena, prem el botó del pont.
 
 Tens {PONT_S} s per travessar el fossat enemic. Aneu-hi junts!
 
+## pàgina Els llançadors
+50 or a la base activen les dues torres.
+
+Sobre la placa de ferro, prem el botó: saltaràs sense mal de caiguda.
+
+També des de baix. Recarrega: 5 s.
+
 ## pàgina El Guardià
 És el golem de ferro que apareix sota el centre al minut {GUARDIA_MIN}.
 

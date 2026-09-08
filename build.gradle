@@ -53,8 +53,8 @@ dependencies {
 }
 configurations.testCompileOnly.extendsFrom(configurations.compileOnly)
 
-['SquidMotionTest', 'SquidCollisionTest', 'InkStreamTest', 'InkWarsMovementTest', 'ObsidianInteractionsTest', 'ObsidianGoldScoreTest'].each { testClass ->
-    def packageName = testClass in ['InkWarsMovementTest', 'ObsidianInteractionsTest', 'ObsidianGoldScoreTest'] ? 'com.biel.lobby.mapes.jocs.' : 'com.biel.lobby.mapes.jocs.inkwars.'
+['SquidMotionTest', 'SquidCollisionTest', 'InkStreamTest', 'InkWarsMovementTest', 'ObsidianInteractionsTest', 'ObsidianGoldScoreTest', 'ObsidianWatchtowersTest'].each { testClass ->
+    def packageName = testClass in ['InkWarsMovementTest', 'ObsidianInteractionsTest', 'ObsidianGoldScoreTest', 'ObsidianWatchtowersTest'] ? 'com.biel.lobby.mapes.jocs.' : 'com.biel.lobby.mapes.jocs.inkwars.'
     def regressionTask = tasks.register(testClass, JavaExec) {
         dependsOn testClasses
         javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
@@ -88,4 +88,12 @@ tasks.register('verifyGameGuide', JavaExec) {
 }
 tasks.named('check') {
     dependsOn 'verifyGameGuide'
+}
+
+tasks.register('calibrateObsidianLaunchers', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath + configurations.testCompileClasspath
+    mainClass = 'com.biel.lobby.mapes.jocs.ObsidianLauncherCalibration'
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+    doFirst { args project.property('launcherSurvey'), project.property('launcherReport') }
 }

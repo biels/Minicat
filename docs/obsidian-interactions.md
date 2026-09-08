@@ -77,6 +77,40 @@ The display refreshes once per second, rewrites only changed text and is removed
 on match cleanup. Its visibility is shared by both teams and spectators through
 the existing hologram system.
 
+## Watchtower Launchers
+
+The former sewer button sells the first base upgrade for 50 gold: both of that
+team's towers receive three rear iron plates, an upper stone button and two
+lower buttons. The other base buys independently. This does not consume bridge
+charge. Installation is validated and rolled back before any failed payment;
+successful purchases use the same held-plus-spent gold accounting as shops.
+
+Tower rear rows are X=617 (red) / 709 (blue), Y=52, centered on Z=-1409/-1391.
+Upper buttons are two blocks forward, lower buttons two blocks backward at
+Y=42 and two blocks either side of the middle Z. Purchase buttons are
+`611,42,-1369` and `715,42,-1431`. Exact layouts live in `ObsidianWatchtowers`.
+
+Any living participant can operate an unlocked launcher, regardless of team.
+One standing plate occupant launches per press: the activator if eligible,
+otherwise the longest waiting player. Each tower has its own 100-tick reload;
+empty presses do not spend it. The piston sound is sent to nearby players only.
+
+A short lift is followed by a single natural airborne impulse selected from
+the player's actual position. The existing swept-body collision helper checks
+the whole route using actual block shapes and Y/X/Z collision order. The target
+is lower leaves 30-39 blocks forward, with nine support samples at landing.
+No clear route means no forward impulse. Camera direction is preserved; active
+steering or combat can change the natural flight. Teleports and interruptions
+cancel pending launches. The launch's first fall is protected, not later jumps
+or other damage. All tasks, registrations and installed blocks follow match
+cleanup, and the purchase resets between matches.
+
+Offline calibration checked 39 starting positions per tower against a runtime
+world survey, then independently replayed all 156 selected impulses through
+Prismarine physics: all landed on lower leaves without a side collision.
+`calibrateObsidianLaunchers` accepts `-PlauncherSurvey=...` (NBT export with
+Prismarine collision shapes) and `-PlauncherReport=...` for reproducibility.
+
 ## Verification
 
 `./gradlew build` includes `ObsidianInteractionsTest` (approved coordinates,
