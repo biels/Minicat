@@ -51,6 +51,18 @@ dependencies {
     testCompileOnly 'io.papermc.paper:paper-api:26.2.build.92-stable'
 
 }
+configurations.testCompileOnly.extendsFrom(configurations.compileOnly)
+
+['SquidMotionTest', 'SquidCollisionTest', 'InkWarsMovementTest'].each { testClass ->
+    def packageName = testClass == 'InkWarsMovementTest' ? 'com.biel.lobby.mapes.jocs.' : 'com.biel.lobby.mapes.jocs.inkwars.'
+    def regressionTask = tasks.register(testClass, JavaExec) {
+        dependsOn testClasses
+        javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+        classpath = sourceSets.test.runtimeClasspath + configurations.testCompileClasspath + configurations.compileClasspath
+        mainClass = packageName + testClass
+    }
+    tasks.named('check') { dependsOn regressionTask }
+}
 
 task deploy(type: Copy){
 
@@ -60,3 +72,8 @@ task deploy(type: Copy){
     into 'F:\\Servers MC\\Lobby - 1.9\\plugins'
 }
 deploy.dependsOn assemble
+
+tasks.named('test') {
+    // Standalone regression entrypoints are executed by check's JavaExec tasks.
+    failOnNoDiscoveredTests = false
+}
