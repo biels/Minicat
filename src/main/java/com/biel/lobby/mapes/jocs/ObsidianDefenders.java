@@ -144,7 +144,6 @@ public class ObsidianDefenders extends JocEquips {
 	 * strikes the enemies within its radius. It used to reach the whole map at once.
 	 */
 	private static final double NETHER_STAR_RADIUS = 30;
-	private static final int NETHER_STAR_CHEST_CHANCE = 6;
 	private static final long NETHER_STAR_CHARGE_TICKS = 40;
 	/** A beam over a chest that holds a star or a hero snowball: this tall, redrawn this often, until the item is taken. */
 	private static final int LOOT_BEAM_HEIGHT = 14;
@@ -251,8 +250,16 @@ public class ObsidianDefenders extends JocEquips {
 	private static final int ICE_CAGE_TICKS = 60;
 	/** After a cage melts, hits on that victim charge no cage and spend none for this long, so three snowmen cannot chain cages on one player. */
 	private static final int ICE_CAGE_GRACE_SECONDS = 6;
-	/** Chance, per chest opened, of an enchanted snowball, the hero snowman (Biel: "incentives to go to the trees"). */
-	private static final int HERO_SNOWBALL_CHEST_CHANCE = 5;
+	/**
+	 * Prizes, the star and the enchanted snowball (Biel, 2026-09-08: "no two things at once,
+	 * a way to reduce noise"): at most one per chest cycle, rolled once for the whole map, and
+	 * a kind lands only while none of that kind is still lying unclaimed (a standing ball does
+	 * not stop a star); the star gets this share of the rolls. An emptied chest closes by
+	 * itself after this long.
+	 */
+	private static final int PRIZE_CYCLE_CHANCE = 33;
+	private static final int PRIZE_STAR_SHARE = 60;
+	private static final long EMPTY_CHEST_CLOSE_TICKS = 5 * 20;
 	/** The team whose player last felled the Guardian throws magma snowmen until the other team fells it. */
 	private Equip guardianSlayerTeam;
 	/** Victim → game second until which snowballs neither charge nor spend a cage on them. */
@@ -270,6 +277,8 @@ public class ObsidianDefenders extends JocEquips {
 	private final Set<UUID> quartzBuyers = new HashSet<>();
 	/** Prizes already announced this match: the first landing of each also says what it does and where it is. */
 	private final Set<Objecte> prizesAnnounced = new HashSet<>();
+	/** Prize kind → the chest where one of that kind still lies unclaimed. */
+	private final Map<Objecte, Block> prizeChests = new HashMap<>();
 
 	/** The game's words, written once in guides/obsidian-defenders.md: start lines, tooltips, hints and the book; the numbers come from here. */
 	private static final GameGuide GUIDE = GameGuide.of("Obsidian Defenders").withValues(guideValues());
@@ -298,10 +307,9 @@ public class ObsidianDefenders extends JocEquips {
 		v.put("GEL_S", String.valueOf(ICE_CAGE_TICKS / 20));
 		v.put("GEL_COPS_ARMAR", String.valueOf(SNOWMAN_HITS_TO_ARM_CAGE));
 		v.put("FOC_S", String.valueOf(SNOWBALL_FIRE_TICKS / 20));
-		v.put("SUPERNINOT_PERCENT", String.valueOf(HERO_SNOWBALL_CHEST_CHANCE));
+		v.put("PREMI_PERCENT", String.valueOf(PRIZE_CYCLE_CHANCE));
 		v.put("ESTRELLA_RADI", String.valueOf((int) NETHER_STAR_RADIUS));
 		v.put("ESTRELLA_CARREGA_S", String.valueOf(NETHER_STAR_CHARGE_TICKS / 20));
-		v.put("ESTRELLA_PERCENT", String.valueOf(NETHER_STAR_CHEST_CHANCE));
 		v.put("MORT_SOBTADA_MIN", String.valueOf(SUDDEN_DEATH_SECOND / 60));
 		for (Mercaderia m : Mercaderia.values()) v.put("PREU_" + m.name(), String.valueOf(m.preu));
 		for (Encantament e : Encantament.values()) v.put("ENCANT_" + e.name(), String.valueOf(e.preu(1)));
@@ -677,6 +685,7 @@ public class ObsidianDefenders extends JocEquips {
 		witherDeaths.clear();
 		quartzBuyers.clear();
 		prizesAnnounced.clear();
+		prizeChests.clear();
 		scheduleGameplayTask(this::warnSuddenDeath, (SUDDEN_DEATH_SECOND - SUDDEN_DEATH_WARNING_SECONDS) * 20L);
 		scheduleGameplayTask(this::startSuddenDeath, SUDDEN_DEATH_SECOND * 20L);
 		scheduleGameplayRepeatingTask(this::presènciaDelGuardià, 20, 20);
@@ -965,6 +974,7 @@ public class ObsidianDefenders extends JocEquips {
 					oberts.add(b);
 				}
 			}
+			rollPrize(new ArrayList<>(oberts));
 		}
 		for (Player p : getPlayers()) {
 			donarOrPassiu(p);
@@ -988,10 +998,26 @@ public class ObsidianDefenders extends JocEquips {
 		for (ItemStack loot : lootCofre()) {
 			int slot = Utils.NombreEntre(0, inv.getSize() - 1);
 			if (inv.getItem(slot) == null) inv.setItem(slot, loot); else inv.addItem(loot);
-			Objecte objecte = Objecte.de(loot);
-			if (objecte == Objecte.ESTRELLA_DEL_NETHER) announceLoot(b, objecte, Particle.FLAME, Color.fromRGB(255, 60, 30), ChatColor.RED + "Una estrella infernal" + ChatColor.WHITE + " ha aparegut a la jungla!");
-			if (objecte == Objecte.BOLA_DE_NEU_ENCANTADA) announceLoot(b, objecte, Particle.END_ROD, Color.fromRGB(120, 220, 255), ChatColor.AQUA + "Una bola de neu encantada" + ChatColor.WHITE + " ha aparegut a la jungla!");
 		}
+	}
+
+	/** One roll per cycle for the whole map, and none while a prize still lies unclaimed: the star or the enchanted ball into one of the chests just opened. */
+	private void rollPrize(List<Block> opened) {
+		if (opened.isEmpty() || !Utils.Possibilitat(PRIZE_CYCLE_CHANCE)) return;
+		boolean star = Utils.Possibilitat(PRIZE_STAR_SHARE);
+		Objecte prize = star ? Objecte.ESTRELLA_DEL_NETHER : Objecte.BOLA_DE_NEU_ENCANTADA;
+		if (prizeStanding(prize)) return;
+		Block chest = opened.get(Utils.NombreEntre(0, opened.size() - 1));
+		if (!(chest.getState() instanceof Chest open)) return;
+		open.getInventory().addItem(prize.nou());
+		prizeChests.put(prize, chest);
+		if (star) announceLoot(chest, prize, Particle.FLAME, Color.fromRGB(255, 60, 30), ChatColor.RED + "Una estrella infernal" + ChatColor.WHITE + " ha aparegut a la jungla!");
+		else announceLoot(chest, prize, Particle.END_ROD, Color.fromRGB(120, 220, 255), ChatColor.AQUA + "Una bola de neu encantada" + ChatColor.WHITE + " ha aparegut a la jungla!");
+	}
+
+	private boolean prizeStanding(Objecte prize) {
+		Block chest = prizeChests.get(prize);
+		return chest != null && chest.getState() instanceof Chest open && holdsPrize(open.getInventory(), prize);
 	}
 
 	/**
@@ -1048,10 +1074,8 @@ public class ObsidianDefenders extends JocEquips {
 		if (Utils.Possibilitat(20)) loot.add(new ItemStack(Material.EMERALD));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.MAGMA_CREAM));
 		if (Utils.Possibilitat(14)) loot.add(new ItemStack(Material.SNOWBALL));
-		if (Utils.Possibilitat(HERO_SNOWBALL_CHEST_CHANCE)) loot.add(Objecte.BOLA_DE_NEU_ENCANTADA.nou());
 		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.EXPERIENCE_BOTTLE, Utils.NombreEntre(1, 3)));
 		if (Utils.Possibilitat(5)) loot.add(new ItemStack(Material.ENDER_PEARL));
-		if (Utils.Possibilitat(NETHER_STAR_CHEST_CHANCE)) loot.add(new ItemStack(Material.NETHER_STAR));
 		if (Utils.Possibilitat(8)) loot.add(new ItemStack(Material.ARROW, 4));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.GOLDEN_SWORD));
 		if (Utils.Possibilitat(6)) loot.add(new ItemStack(Material.IRON_SWORD));
@@ -1545,7 +1569,10 @@ public class ObsidianDefenders extends JocEquips {
 		@EventHandler
 		public void onInventoryClose(InventoryCloseEvent evt) {
 			if (!(evt.getPlayer() instanceof Player p)) return;
-			if (evt.getInventory().getHolder() instanceof Chest chest && isJungleChest(chest.getBlock())) emptyChestInto(chest, p);
+			if (evt.getInventory().getHolder() instanceof Chest chest && isJungleChest(chest.getBlock())) {
+				emptyChestInto(chest, p);
+				closeWhenLeftEmpty(chest.getBlock());
+			}
 			refreshGoldSoon(p);
 			tidySoon(p);
 		}
@@ -1555,6 +1582,14 @@ public class ObsidianDefenders extends JocEquips {
 		if (world == null || block.getWorld() != world) return false;
 		for (Location spot : pMapaActual().ObtenirLocations("cofres", world)) if (spot.getBlock().equals(block)) return true;
 		return false;
+	}
+
+	/** A chest left empty turns back into leaves after a few seconds: the forest reads as collected. */
+	private void closeWhenLeftEmpty(Block block) {
+		scheduleGameplayTask(() -> {
+			if (!JocEnMarxa() || !(block.getState() instanceof Chest chest) || !chest.getInventory().isEmpty()) return;
+			tancarCofre(block);
+		}, EMPTY_CHEST_CLOSE_TICKS);
 	}
 
 	/** Closing a jungle chest takes everything still inside (Biel, 2026-09-08: "no need to click on each"). */

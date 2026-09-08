@@ -123,7 +123,7 @@ Un golem de ferro que es desperta sota el mig al minut {GUARDIA_MIN}. Un pic de 
 Qui el mata s'endú {GUARDIA_OR} or, Resistència i Velocitat 3 min, i el seu equip llança ninots de magma fins que l'altre equip el mati. Torna al cap de 3 min.
 
 ## pàgina Or
-Comences amb {OR_INICIAL} or. Els cofres de la jungla s'obren cada {COFRES_S} s; una estrella o una bola encantada s'anuncia amb un feix.
+Comences amb {OR_INICIAL} or. Els cofres de la jungla s'obren cada {COFRES_S} s; un cofre buit es tanca sol. Una estrella o una bola encantada s'anuncia amb un feix.
 
 Cada kill val 5 or i més si la víctima portava ratxa. Cada {COFRES_S} s, 1 or passiu; +{BLOC_OR_PASSIU} amb un bloc d'or.
 
@@ -151,12 +151,12 @@ Els ninots de magma, del que ha matat el Guardià, cremen {FOC_S} s.
 ## pàgina Superninot
 {{objecte BOLA_DE_NEU_ENCANTADA}}
 
-Es troba als cofres de la jungla ({SUPERNINOT_PERCENT} % cada cofre), mai a la botiga. Brilla, va amb Velocitat i porta una aura del color de l'equip.
+Es troba als cofres de la jungla, mai a la botiga: com a molt un premi cada cicle de cofres, i cap bola nova mentre n'hi hagi una sense recollir. Brilla, va amb Velocitat i porta una aura del color de l'equip.
 
 ## pàgina Estrella infernal
 {{objecte ESTRELLA_DEL_NETHER}}
 
-Surt als cofres ({ESTRELLA_PERCENT} % cada cofre) i s'anuncia a tothom. Mentre es carrega, brilles i tot el mapa ho sent: qui s'allunya se n'escapa. Si mors carregant-la, cau a terra.
+Surt als cofres de la jungla, com a molt un premi per cicle i en un {PREMI_PERCENT} % dels cicles, i s'anuncia a tothom. Mentre es carrega, brilles i tot el mapa ho sent: qui s'allunya se n'escapa. Si mors carregant-la, cau a terra.
 
 ## pàgina Mort sobtada
 Al minut {MORT_SOBTADA_MIN} tothom queda a 1 cor. Des de llavors, cada kill aixeca un esquelet wither a la base del que ha matat, que marxa pel camí fins a la base enemiga.
