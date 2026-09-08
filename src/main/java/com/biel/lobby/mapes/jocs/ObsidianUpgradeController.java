@@ -81,8 +81,7 @@ final class ObsidianUpgradeController {
             case ENEMY -> message(player, "Aquesta millora és de l'equip enemic");
             case LOADING -> message(player, "La següent millora encara no està preparada");
             case COMPLETE -> message(player, "Totes les millores activades");
-            case FAILED -> message(player, "Calen " + next.price + " or" +
-                    (next == ObsidianTeamUpgrades.Upgrade.LAUNCHERS ? " i les torres han d'estar lliures" : ""));
+            case FAILED -> message(player, "Calen " + next.price + " d'or");
         }
     }
 
