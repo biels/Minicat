@@ -16,7 +16,8 @@ final class ObsidianInteractions {
     static String[] lookoutLines(long redGold, long blueGold, int redKills, int blueKills) {
         return new String[]{
             ChatColor.GOLD + "Punt de Guaita",
-            ChatColor.WHITE + "Or total: " + ChatColor.RED + formatGold(redGold) + ChatColor.GRAY + " vs " + ChatColor.BLUE + formatGold(blueGold),
+            ChatColor.WHITE + "Or total",
+            ChatColor.RED + formatGold(redGold) + ChatColor.GRAY + " vs " + ChatColor.BLUE + formatGold(blueGold),
             ChatColor.WHITE + "Kills: " + ChatColor.RED + redKills + ChatColor.GRAY + " vs " + ChatColor.BLUE + blueKills
         };
     }

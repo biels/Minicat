@@ -72,12 +72,13 @@ public final class ObsidianInteractionsTest {
     private static void lookoutDisplay() {
         require(ObsidianInteractions.lookoutFloor().equals(new Vector(662, 73, -1392)), "lookout is on the audited highest crown");
         String[] lines = ObsidianInteractions.lookoutLines(123, 45, 6, 7);
-        require(lines.length == 3, "one title and two statistics rows");
+        require(lines.length == 4, "display fits the four sign lines");
         require(org.bukkit.ChatColor.stripColor(lines[0]).equals("Punt de Guaita"), "lookout title");
-        require(org.bukkit.ChatColor.stripColor(lines[1]).equals("Or total: 0.12k vs 0.05k"), "red gold appears before blue gold");
-        require(org.bukkit.ChatColor.stripColor(lines[2]).equals("Kills: 6 vs 7"), "kill order matches gold order");
-        require(lines[1].contains(org.bukkit.ChatColor.RED + "0.12k") && lines[1].contains(org.bukkit.ChatColor.BLUE + "0.05k"), "team colors label the values");
-        require(org.bukkit.ChatColor.stripColor(ObsidianInteractions.lookoutLines(0, 0, 0, 0)[1]).equals("Or total: 0.00k vs 0.00k"), "empty teams show zero");
+        require(org.bukkit.ChatColor.stripColor(lines[1]).equals("Or total"), "gold label has its own sign line");
+        require(org.bukkit.ChatColor.stripColor(lines[2]).equals("0.12k vs 0.05k"), "red gold appears before blue gold");
+        require(org.bukkit.ChatColor.stripColor(lines[3]).equals("Kills: 6 vs 7"), "kill order matches gold order");
+        require(lines[2].contains(org.bukkit.ChatColor.RED + "0.12k") && lines[2].contains(org.bukkit.ChatColor.BLUE + "0.05k"), "team colors label the values");
+        require(org.bukkit.ChatColor.stripColor(ObsidianInteractions.lookoutLines(0, 0, 0, 0)[2]).equals("0.00k vs 0.00k"), "empty teams show zero");
         require(ObsidianInteractions.formatGold(3000000000L).equals("3000000.00k"), "large team totals do not overflow or truncate");
         require(ObsidianInteractions.formatGold(1250).equals("1.25k"), "thousand nugget units");
         require(ObsidianInteractions.formatGold(4).equals("0.00k") && ObsidianInteractions.formatGold(5).equals("0.01k"), "half-up rounding to ten nuggets");

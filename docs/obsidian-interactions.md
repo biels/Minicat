@@ -45,14 +45,15 @@ the pickaxe on the same tick it appears.
 
 ## Canopy Lookout
 
-The shared `Punt de Guaita` hologram is centered at `(662.5,77,-1391.5)`,
-above leaf block `(662,73,-1392)`. The current template's highest leaves are at
+The shared `Punt de Guaita` oak sign stands at `(662,74,-1392)`,
+on leaf block `(662,73,-1392)`, facing east/west with glowing text on both sides.
+The sign is waxed to prevent editing. The current template's highest leaves are at
 Y=73; this broad crown offers more standing room than the narrow northern peak.
-Air above the crown is clear through Y=78, and no chest or block is replaced.
+Only air is replaced, and the original block is restored on match cleanup.
 The optional `Lookout` map property specifies the supporting block, not the
-hologram's position; the display is centered four blocks above it.
+sign's position; the sign stands one block above it.
 
-The title is followed by exactly two rows: `Or total: <red> vs <blue>` and
+The four lines are the title, `Or total`, `<red> vs <blue>` gold values, and
 `Kills: <red> vs <blue>`. Gold score is currency currently held by the team plus
 gold already spent on successful shop purchases and enchantments. It is displayed
 in thousands of nuggets with two decimals (`1250` nuggets becomes `1.25k`). Exact
@@ -74,8 +75,7 @@ losses. No gold metadata or loot-generation markers are needed.
 Kills reuse the match's existing team counters, including credited minion kills.
 
 The display refreshes once per second, rewrites only changed text and is removed
-on match cleanup. Its visibility is shared by both teams and spectators through
-the existing hologram system.
+on match cleanup. Both teams and spectators can read either side of the sign.
 
 ## Watchtower Launchers
 

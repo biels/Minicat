@@ -278,7 +278,8 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<Integer, Integer> killsByTeam = new HashMap<>();
 	/** Team id → the sign by that team's shop that shows both teams' kills. */
 	private final Map<Integer, Block> killsSigns = new HashMap<>();
-	private HologramFacade.Handle lookoutSign;
+	private Block lookoutSign;
+	private BlockState originalLookoutBlock;
 	private List<String> lastLookoutLines = List.of();
 	private final ObsidianGoldScore goldScore = new ObsidianGoldScore();
 	/** Player → the task that will discharge the star they are charging. */
@@ -1871,14 +1872,18 @@ public class ObsidianDefenders extends JocEquips {
 		Location floor = pMapaActual().ExisteixPropietat("Lookout")
 				? pMapaActual().ObtenirLocation("Lookout", world) : ObsidianInteractions.lookoutFloor().toLocation(world);
 		Location standing = floor.clone().add(0.5, 1, 0.5);
-		Location display = standing.clone().add(0, 3, 0);
-		if (!safeStandingSpot(standing) || !display.getBlock().isPassable()) {
+		Block display = standing.getBlock();
+		if (!safeStandingSpot(standing) || !display.getType().isAir()) {
 			plugin.getLogger().warning("Lookout sign not created: canopy position is obstructed at " + floor.toVector());
 			return;
 		}
-		lookoutSign = HologramFacade.create(display);
+		originalLookoutBlock = display.getState();
+		org.bukkit.block.data.type.Sign signData = (org.bukkit.block.data.type.Sign) Material.OAK_SIGN.createBlockData();
+		signData.setRotation(BlockFace.EAST);
+		display.setBlockData(signData, false);
+		lookoutSign = display;
 		updateLookoutSign();
-		plugin.getLogger().info("Lookout sign at " + display.toVector() + ": red vs blue, held plus spent gold (0.01k nuggets) and team kills");
+		plugin.getLogger().info("Lookout sign at " + display.getLocation().toVector() + ": red vs blue, held plus spent gold (0.01k nuggets) and team kills");
 	}
 
 	private void updateLookoutSign() {
@@ -1895,8 +1900,14 @@ public class ObsidianDefenders extends JocEquips {
 				killsByTeam.getOrDefault(0, 0), killsByTeam.getOrDefault(1, 0));
 		List<String> next = List.of(lines);
 		if (!next.equals(lastLookoutLines)) {
-			lookoutSign.setLines(lines);
-			lastLookoutLines = next;
+			if (lookoutSign.getState() instanceof Sign sign) {
+				for (Side side : Side.values()) {
+					for (int line = 0; line < 4; line++) sign.getSide(side).line(line, PaperMessages.legacy(lines[line]));
+					sign.getSide(side).setGlowingText(true);
+				}
+				sign.setWaxed(true);
+				if (sign.update(false, false)) lastLookoutLines = next;
+			}
 		}
 	}
 
@@ -1982,7 +1993,8 @@ public class ObsidianDefenders extends JocEquips {
 	public void clearExternals() {
 		if (watchtowerLaunchers != null) { watchtowerLaunchers.close(); watchtowerLaunchers = null; }
 		HandlerList.unregisterAll(worldListener);
-		if (lookoutSign != null) { lookoutSign.delete(); lookoutSign = null; }
+		if (originalLookoutBlock != null) { originalLookoutBlock.update(true, false); originalLookoutBlock = null; }
+		lookoutSign = null;
 		goldScore.clear();
 		lastLookoutLines = List.of();
 		for (FlyingLoot flight : flyingChestLoot) if (flight.item().isValid()) releaseChestLoot(flight.item());
