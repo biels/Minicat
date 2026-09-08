@@ -1559,7 +1559,7 @@ public class ObsidianDefenders extends JocEquips {
 				}
 			}
 			if (!rètolsPont.containsKey(e.getId())) {
-				plugin.getLogger().warning(getGameName() + " " + getMapName() + ": no bridge sign within " + RADI_RÈTOLS + " blocks of base" + e.getId());
+				plugin.getLogger().info(getGameName() + " " + getMapName() + ": no bridge sign within " + RADI_RÈTOLS + " blocks of base" + e.getId() + " yet; the check after the start scans again");
 			}
 			registerKillsSign(e, boothSigns, unusedSigns);
 			boothSigns.clear();
@@ -1637,13 +1637,21 @@ public class ObsidianDefenders extends JocEquips {
 	 */
 	private void verifyRegistrations() {
 		if (!JocEnMarxa()) return;
+		List<String> missing = missingRegistrations();
+		if (missing.isEmpty()) return;
+		if (missing.stream().anyMatch(m -> m.startsWith("bridge sign"))) registrarControlsIParades();
+		registerControlPointsAndLamps();
+		List<String> still = missingRegistrations();
+		// The first scan of a freshly created instance misses base0's sign about one time in three and the rescan always finds it (logs of 2026-09-08); only a second miss is worth a warning.
+		if (still.isEmpty()) plugin.getLogger().info(getGameName() + " " + getMapName() + ": " + missing + " found on the second scan");
+		else plugin.getLogger().warning(getGameName() + " " + getMapName() + ": " + still + " still missing after the second scan; the map or its property file needs a look");
+	}
+
+	private List<String> missingRegistrations() {
 		List<String> missing = new ArrayList<>();
 		for (Equip e : Equips) if (!rètolsPont.containsKey(e.getId())) missing.add("bridge sign of base" + e.getId());
 		if (controlPoints.isEmpty()) missing.add("control points");
-		if (missing.isEmpty()) return;
-		plugin.getLogger().warning(getGameName() + " " + getMapName() + ": " + missing + " missing " + REGISTRATION_CHECK_TICKS / 20 + " s after the start; scanning again");
-		if (missing.stream().anyMatch(m -> m.startsWith("bridge sign"))) registrarControlsIParades();
-		registerControlPointsAndLamps();
+		return missing;
 	}
 
 	private final List<Block> boothSigns = new ArrayList<>();
