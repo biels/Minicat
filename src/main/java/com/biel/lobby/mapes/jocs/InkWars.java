@@ -66,11 +66,13 @@ public class InkWars extends JocEquips {
 	 * along the heading; speed lost per tick with the keys against it (the brake); the share of speed kept per tick when coasting; how far the heading turns per tick;
 	 * and below this speed the heading simply snaps to the keys, so a standing squid sets off in any direction.
 	 */
-	static final double SQUID_TOP_SPEED = 0.85;
-	static final double SQUID_ACCELERATION = 0.03;
-	static final double SQUID_BRAKE = 0.03;
-	static final double SQUID_COAST = 0.992;
-	static final double SQUID_TURN_RATE = Math.toRadians(3.5);
+	static final double SQUID_TOP_SPEED = 0.65;
+	static final double SQUID_ACCELERATION = 0.035;
+	static final double SQUID_BRAKE = 0.05;
+	static final double SQUID_COAST = 0.985;
+	/** The heading turns this far per tick at a standstill and this far at full speed: a slow squid turns on the spot, a fast one takes a bend. */
+	static final double SQUID_TURN_RATE_SLOW = Math.toRadians(10);
+	static final double SQUID_TURN_RATE_FAST = Math.toRadians(5);
 	static final double SQUID_CRAWL_SPEED = 0.06;
 	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. */
 	static final double INK_GRAVITY = 0.05;
@@ -1561,18 +1563,19 @@ public class InkWars extends JocEquips {
 				}
 				speed = Math.max(0, Math.min(SQUID_TOP_SPEED, speed));
 			}
-			/** Turns the heading toward a unit target by at most the turn rate, in whatever plane the two span. */
+			/** Turns the heading toward a unit target by at most the turn rate for the current speed, in whatever plane the two span. */
 			void turnHeadingToward(Vector target){
+				double rate = SQUID_TURN_RATE_SLOW + (SQUID_TURN_RATE_FAST - SQUID_TURN_RATE_SLOW) * Math.min(1, speed / SQUID_TOP_SPEED);
 				double dot = Math.max(-1, Math.min(1, heading.dot(target)));
 				double wanted = Math.acos(dot);
-				if(wanted <= SQUID_TURN_RATE){
+				if(wanted <= rate){
 					heading = target.clone();
 					return;
 				}
 				Vector perpendicular = target.clone().subtract(heading.clone().multiply(dot));
 				if(perpendicular.lengthSquared() < 1e-9)return; // straight behind: no side to turn to yet
 				perpendicular.normalize();
-				heading = heading.clone().multiply(Math.cos(SQUID_TURN_RATE)).add(perpendicular.multiply(Math.sin(SQUID_TURN_RATE))).normalize();
+				heading = heading.clone().multiply(Math.cos(rate)).add(perpendicular.multiply(Math.sin(rate))).normalize();
 			}
 			void setMomentum(Vector velocity){
 				pushed = velocity.clone();
