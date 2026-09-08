@@ -27,6 +27,7 @@ import org.bukkit.util.VoxelShape;
 
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid;
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.Keys;
+import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.SwimSound;
 import com.biel.lobby.mapes.jocs.inkwars.SquidCollision;
 import com.biel.lobby.mapes.jocs.inkwars.InkStream;
 
@@ -53,8 +54,38 @@ public final class InkWarsMovementTest {
         jumpForgiveness();
         trailCoversSubsteps();
         directCameraSteering();
+        squidSoundDesign();
         System.out.println("InkWars movement controller checks passed");
     }
+
+    private static void squidSoundDesign() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.FLOOR);
+        require(squid.allowSound(SwimSound.DIVE, 0), "first dive cue plays");
+        require(!squid.allowSound(SwimSound.SURFACE, 100_000_000), "rapid form toggles share a cooldown");
+        require(squid.allowSound(SwimSound.SURFACE, 180_000_000), "form cue recovers at cooldown boundary");
+        require(squid.allowSound(SwimSound.CONTACT, 0), "first contact plays");
+        require(!squid.allowSound(SwimSound.CONTACT, 50_000_000), "contact chatter is suppressed");
+        require(squid.allowSound(SwimSound.TURBO, 50_000_000), "contact cooldown does not suppress turbo");
+        squid.lastSoundNanos.clear();
+        squid.sound(SwimSound.DIVE, fixture.playerLocation, 0);
+        require(fixture.heardSounds.size() == 2, "dive consists of two quiet liquid layers");
+        require(fixture.heardSounds.get(0).sound() == Sound.ENTITY_PLAYER_SWIM
+                && fixture.heardSounds.get(1).sound() == Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP,
+                "dive contains no squid vocal or heavy slime fall");
+        for (HeardSound sound : fixture.heardSounds) require(sound.volume() <= 0.28F, "dive stays quiet");
+        fixture.heardSounds.clear();
+        squid.sound(SwimSound.LAND, fixture.playerLocation, 0.1);
+        float softLanding = fixture.heardSounds.getLast().volume();
+        squid.lastSoundNanos.clear();
+        squid.sound(SwimSound.LAND, fixture.playerLocation, 0.8);
+        require(fixture.heardSounds.getLast().volume() > softLanding, "harder landing produces a larger splash");
+        require(fixture.heardSounds.getLast().volume() <= 0.5F, "landing volume is capped");
+        squid.sound(SwimSound.READY, fixture.playerLocation, 0);
+        require(fixture.heardSounds.getLast().privateCue(), "reserve feedback is private to the player");
+    }
+
+    private record HeardSound(Sound sound, float volume, float pitch, boolean privateCue) {}
 
     private static void responsiveSteering() throws Exception {
         Fixture fixture = new Fixture();
@@ -439,6 +470,7 @@ public final class InkWarsMovementTest {
         private final World world;
         private final TestGame game;
         private final Location playerLocation;
+        private final List<HeardSound> heardSounds = new ArrayList<>();
 
         Fixture() throws Exception {
             world = proxy(World.class, (object, method, args) -> switch (method.getName()) {
@@ -450,7 +482,10 @@ public final class InkWarsMovementTest {
                 case "getUID" -> worldId;
                 case "getName" -> "movement-fixture";
                 case "rayTraceBlocks" -> rayTrace((Location) args[0], (Vector) args[1], (double) args[2]);
-                case "playSound" -> null;
+                case "playSound" -> {
+                    heardSounds.add(new HeardSound((Sound) args[1], (float) args[2], (float) args[3], false));
+                    yield null;
+                }
                 default -> defaultValue(object, method, args);
             });
             // The normal constructor registers a live plugin event bus; this fixture only exercises geometry.
@@ -466,7 +501,10 @@ public final class InkWarsMovementTest {
                 case "getCurrentInput" -> proxy(Input.class, (inputObject, inputMethod, inputArgs) ->
                         inputMethod.getName().equals("isForward") ? true : defaultValue(inputObject, inputMethod, inputArgs));
                 case "getWorld" -> world;
-                case "playSound" -> null;
+                case "playSound" -> {
+                    heardSounds.add(new HeardSound((Sound) args[1], (float) args[2], (float) args[3], true));
+                    yield null;
+                }
                 default -> defaultValue(object, method, args);
             });
         }

@@ -1,6 +1,7 @@
 package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -962,17 +963,15 @@ public class InkWars extends JocEquips {
 		public void toggleSwimForm(){
 			Player p = getPlayer();
 			if(!swimForm && !squid.submerged && getTeamColorWherePlayerStands() != obtenirEquip(p)){ // no ink of yours here to dive into
-				p.playSound(p.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.6F, 0.7F);
+				squid.sound(Squid.SwimSound.EMPTY, p.getLocation(), 0);
 				PaperMessages.sendActionBar(p, ChatColor.RED + "Dive on your own ink", 30);
 				return;
 			}
 			swimForm = !swimForm;
 			if(swimForm)squid.blockedSurfaceTicks = 0;
 			if(swimForm){
-				p.playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.7F, 1.4F);
 				PaperMessages.sendActionBar(p, obtenirEquip(p).getChatColor() + "Squid form", 30);
 			}else{
-				p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_SWIM, 0.6F, 1.2F);
 				PaperMessages.sendActionBar(p, ChatColor.GRAY + "On your feet", 30);
 			}
 		}
@@ -1085,6 +1084,49 @@ public class InkWars extends JocEquips {
 			double trailDistanceSinceParcel = 0;
 			boolean thrustPending = false;
 			float lastControlYaw = Float.NaN;
+			enum SwimSound { DIVE, SURFACE, CONTACT, JUMP, LAND, TURBO, TAIL, READY, EMPTY, RIPPLE }
+			final EnumMap<SwimSound, Long> lastSoundNanos = new EnumMap<>(SwimSound.class);
+			int turboSoundTailTicks = 0;
+
+			boolean allowSound(SwimSound cue, long now){
+				SwimSound group = cue == SwimSound.SURFACE ? SwimSound.DIVE : cue;
+				long cooldown = switch(group){
+					case DIVE -> 180_000_000L;
+					case CONTACT, LAND, JUMP -> 150_000_000L;
+					case READY -> 1_000_000_000L;
+					case EMPTY, RIPPLE -> 600_000_000L;
+					default -> 120_000_000L;
+				};
+				Long previous = lastSoundNanos.get(group);
+				if(previous != null && now - previous < cooldown)return false;
+				lastSoundNanos.put(group, now);
+				return true;
+			}
+			void sound(SwimSound cue, Location at, double impact){
+				if(!allowSound(cue, System.nanoTime()))return;
+				float variation = (float) (Math.random() * 0.12 - 0.06);
+				switch(cue){
+					case DIVE -> {
+						getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.28F, 1.3F + variation);
+						getWorld().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.12F, 1.5F + variation);
+					}
+					case SURFACE -> getWorld().playSound(at, Sound.ENTITY_GENERIC_SPLASH, 0.28F, 1.55F + variation);
+					case CONTACT -> getWorld().playSound(at, Sound.BLOCK_SLIME_BLOCK_STEP, 0.16F, 1.5F + variation);
+					case JUMP -> getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.24F, 1.65F + variation);
+					case LAND -> {
+						double weight = Math.min(1, Math.max(0, impact) / 0.8);
+						getWorld().playSound(at, Sound.ENTITY_GENERIC_SPLASH, (float) (0.12 + 0.38 * weight), (float) (1.65 - 0.45 * weight) + variation);
+					}
+					case TURBO -> {
+						getWorld().playSound(at, Sound.ENTITY_SQUID_SQUIRT, 0.55F, 1.35F + variation);
+						getWorld().playSound(at, Sound.ENTITY_BREEZE_SHOOT, 0.38F, 1.5F + variation);
+					}
+					case TAIL -> getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.22F, 1.15F + variation);
+					case READY -> player().playSound(at, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.22F, 1.8F);
+					case EMPTY -> player().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.22F, 1.05F);
+					case RIPPLE -> getWorld().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.10F, 1.3F + variation);
+				}
+			}
 			/** The carrier the player rides while a squid: an empty item display, nothing to see, no physics, placed by the engine every tick. */
 			ItemDisplay carrier = null;
 			/** Where the player sits relative to the carrier, measured once riding; the carrier is placed so the camera lands on the centre. */
@@ -1116,6 +1158,7 @@ public class InkWars extends JocEquips {
 				turboTrailTicks = 0;
 				thrustPending = false;
 				lastControlYaw = Float.NaN;
+				turboSoundTailTicks = 0;
 				Location feet = p.getLocation();
 				centre = feet.toVector().add(new Vector(0, SQUID_RIDE_HEIGHT, 0));
 				cameraCentre = p.getEyeLocation().toVector();
@@ -1136,8 +1179,7 @@ public class InkWars extends JocEquips {
 				mount();
 				p.getInventory().setArmorContents(null);
 				kit.showInkSacs(reserve);
-				getWorld().playSound(feet, Sound.ENTITY_SQUID_SQUIRT, 0.9F, 0.6F); // the squid's own voice, low: going under
-				getWorld().playSound(feet, Sound.BLOCK_SLIME_BLOCK_FALL, 0.7F, 0.8F);
+				sound(SwimSound.DIVE, feet, 0);
 				getWorld().spawnParticle(Particle.SPLASH, feet.clone().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 			}
 			void mount(){
@@ -1213,8 +1255,7 @@ public class InkWars extends JocEquips {
 				boolean onFloor = surface == Surface.FLOOR;
 				surfaceQuietly(exit);
 				Player p = player();
-				getWorld().playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.9F, 1.4F); // the squid's voice, high: coming out
-				getWorld().playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.5F, 1.3F);
+				sound(SwimSound.SURFACE, p.getLocation(), 0);
 				getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 				if(onFloor){
 					releaseSurge(reserve, p.getLocation(), new Vector(0, -1, 0));
@@ -1333,6 +1374,7 @@ public class InkWars extends JocEquips {
 					}
 				}
 				pushed = centre.clone().subtract(before);
+				if(turboSoundTailTicks > 0 && --turboSoundTailTicks == 0)sound(SwimSound.TAIL, surfacePoint(), 0);
 				if(turboTrailTicks > 0)turboTrailTicks--;
 				Location standing = standingSpot();
 				if(standingClear(standing))lastClearStandingSpot = standing;
@@ -1369,18 +1411,18 @@ public class InkWars extends JocEquips {
 				else if(ground == null)reserve -= RESERVE_DRAIN_NEUTRAL + RESERVE_DRAIN_NEUTRAL_PER_BLOCK * blocksSwum;
 				else reserve -= RESERVE_DRAIN_ENEMY + RESERVE_DRAIN_ENEMY_PER_BLOCK * blocksSwum;
 				reserve = Math.max(0, reserve);
-				if(!wasFull && reserve >= 1)player().playSound(player().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6F, 1.6F); // full
+				if(!wasFull && reserve >= 1)sound(SwimSound.READY, player().getLocation(), 0);
 			}
 			/** Ten sacs of ink out the back: the speed jumps by the thrust, past the top speed, and settles back on its own; the surface point gets the burst. */
 			void thrust(){
 				Player p = player();
 				if(!tryThrust(p.getEyeLocation().getDirection())){
-					p.playSound(p.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.6F, 0.7F);
+					sound(SwimSound.EMPTY, p.getLocation(), 0);
 					return;
 				}
 				Location burst = surfacePoint();
-				getWorld().playSound(burst, Sound.ENTITY_SQUID_SQUIRT, 1F, 0.8F);
-				getWorld().playSound(burst, Sound.ENTITY_BREEZE_SHOOT, 0.5F, 1.3F);
+				sound(SwimSound.TURBO, burst, 0);
+				turboSoundTailTicks = 3;
 				Particle.DustOptions dust = new Particle.DustOptions(team().getStrongColor().getColor(), 1.6F);
 				Vector back = heading.clone().multiply(-1);
 				getWorld().spawnParticle(Particle.DUST, burst.clone().add(back.multiply(0.6)), 24, 0.35, 0.25, 0.35, 0, dust);
@@ -1420,7 +1462,7 @@ public class InkWars extends JocEquips {
 			void forcedOut(){
 				Player p = player();
 				if(swimForm){
-					p.playSound(p.getLocation(), Sound.BLOCK_SPONGE_ABSORB, 0.9F, 0.8F);
+					sound(SwimSound.EMPTY, p.getLocation(), 0);
 					PaperMessages.sendActionBar(p, ChatColor.RED + "Out of ink", 30);
 				}
 				swimForm = false;
@@ -1462,8 +1504,8 @@ public class InkWars extends JocEquips {
 				}
 			}
 			void ripple(EquipInkWars team, Vector moved){
-				if(submergedTicks % 8 == 0 && speed > 0.1){ // a bloop under the ink, louder the faster; anyone near can hear a squid coming
-					getWorld().playSound(surfacePoint(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, (float) (0.15 + 0.35 * Math.min(1, speed / SQUID_TOP_SPEED)), (float) (0.6 + Math.random() * 0.3));
+				if(surface != Surface.AIR && submergedTicks % 16 == 0 && moved.lengthSquared() > 0.01){
+					sound(SwimSound.RIPPLE, surfacePoint(), 0);
 				}
 				if(submergedTicks % 2 != 0)return;
 				Particle.DustOptions dust = new Particle.DustOptions(team.getStrongColor().getColor(), 1.4F);
@@ -1722,6 +1764,7 @@ public class InkWars extends JocEquips {
 			/** Onto a wall at whatever angle: the road bends, the speed is kept, the body rests on the face. */
 			void attachToWall(Contact wall, Vector oldNormal){
 				BlockFace side = wall.face().getOppositeFace();
+				boolean newContact = surface != Surface.WALL || wallSide != side;
 				if(surface == Surface.AIR){
 					Vector incoming = velocity();
 					Vector tangent = SquidMotion.slide(incoming, wall.face().getDirection());
@@ -1736,10 +1779,11 @@ public class InkWars extends JocEquips {
 				gripped = wall.block();
 				restOn(wall);
 				verticalSpeed = 0;
-				getWorld().playSound(surfacePoint(), Sound.ENTITY_SLIME_SQUISH, 0.4F, 0.9F);
+				if(newContact)sound(SwimSound.CONTACT, surfacePoint(), 0);
 			}
 			/** Onto a ceiling: the road bends to run along it, the speed is kept, the body rests under it. */
 			void attachToCeiling(Contact ceiling, Vector oldNormal){
+				boolean newContact = surface != Surface.CEILING;
 				redirect(oldNormal, new Vector(0, -1, 0));
 				flattenHeading(oldNormal);
 				surface = Surface.CEILING;
@@ -1747,6 +1791,7 @@ public class InkWars extends JocEquips {
 				gripped = ceiling.block();
 				restOn(ceiling);
 				verticalSpeed = 0;
+				if(newContact)sound(SwimSound.CONTACT, surfacePoint(), 0);
 			}
 			/** Onto a floor: the road bends to run along it, the body rides at its height over the block. */
 			void landOnFloor(Vector oldNormal, Block floor, double top){
@@ -1786,7 +1831,7 @@ public class InkWars extends JocEquips {
 				detachTicks = SQUID_DETACH_TICKS;
 				takeOff(launch.getY());
 				setMomentum(launch.setY(0));
-				p.playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.8F, 1.1F);
+				sound(SwimSound.JUMP, p.getLocation(), 0);
 			}
 
 			//--- the surfaces
@@ -1800,7 +1845,7 @@ public class InkWars extends JocEquips {
 				if(firstMovementStep)steer(movementKeys(keys), 1, true);
 				if(consumeJump(keys)){
 					takeOff(SQUID_HOP);
-					player().playSound(player().getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.6F, 1.3F);
+					sound(SwimSound.JUMP, player().getLocation(), 0);
 					return;
 				}
 				double travel = speed * movementFraction;
@@ -1931,7 +1976,7 @@ public class InkWars extends JocEquips {
 					detachedFace = BlockFace.DOWN;
 					detachTicks = SQUID_DETACH_TICKS;
 					takeOff(0);
-					player().playSound(player().getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.8F, 0.9F);
+					sound(SwimSound.JUMP, player().getLocation(), 0);
 					return;
 				}
 				flattenHeading(new Vector(1, 0, 0));
@@ -1976,7 +2021,10 @@ public class InkWars extends JocEquips {
 			void tickAir(Keys keys){
 				flattenHeading(new Vector(1, 0, 0));
 				if(firstMovementStep){
-					if(floorGraceTicks > 0 && consumeJump(keys))verticalSpeed = SQUID_HOP;
+					if(floorGraceTicks > 0 && consumeJump(keys)){
+						verticalSpeed = SQUID_HOP;
+						sound(SwimSound.JUMP, player().getLocation(), 0);
+					}
 					steer(keys.flat(), SQUID_AIR_THROTTLE, false);
 					speed *= SQUID_AIR_DRAG;
 					verticalSpeed = (verticalSpeed - SQUID_GRAVITY) * 0.98;
@@ -1999,8 +2047,9 @@ public class InkWars extends JocEquips {
 					return;
 				}
 				if(hit.face() == BlockFace.UP){
+					double impactSpeed = Math.max(0, -verticalSpeed);
 					landOnFloor(new Vector(0, 1, 0), hit.block(), hit.point().getY());
-					getWorld().playSound(surfacePoint(), Sound.ENTITY_SLIME_SQUISH_SMALL, 0.5F, 0.8F);
+					sound(SwimSound.LAND, surfacePoint(), impactSpeed);
 					advance(heading, speed * remainingTime);
 					return;
 				}

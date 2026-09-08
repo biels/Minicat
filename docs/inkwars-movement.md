@@ -21,6 +21,13 @@ segments with a maximum of eight parcels per tick. Parcels share hose gravity,
 drag, impact splashes and painting, but deal no damage. They keep flying after
 conversion to human form. Ordinary jumps do not generate this extra paint.
 
+Squid audio uses quiet liquid cues for actual form changes, jumps and new surface
+contacts. Form changes share a 180ms retrigger guard; contacts and jumps use 150ms.
+Movement bubbles require resolved travel on a surface and occur at most every
+16 ticks. Landing volume scales with incoming downward speed and caps at 0.5.
+Turbo keeps the stronger squirt/pressure release and a watery tail three ticks
+later. Reserve cues are private and rate-limited. Weapon/combat sounds are unchanged.
+
 ## Playtest course
 
 Use a disposable Ink Wars instance, not a map template. Build the following
