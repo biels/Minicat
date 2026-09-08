@@ -24,39 +24,43 @@ public final class InkStream {
 	public static final double GRAVITY = 0.06;
 	/** Share of the velocity kept per tick in the air. */
 	public static final double DRAG = 0.985;
-	/** Gaussian scatter of the nozzle direction, per axis, in blocks per tick per block of speed. */
-	public static final double SCATTER = 0.035;
 	/** Ticks a parcel flies before it is lost as mist. */
 	public static final int MAX_AGE_TICKS = 40;
 	/** How far off its centre a parcel still counts as hitting a body. */
 	public static final double PARCEL_RADIUS = 0.3;
 
-	/** Where a parcel came down: the point, the velocity it arrived with, the outward normal of what it hit, and the block or the body. */
-	public record Landing(Vector where, Vector velocity, Vector surfaceNormal, Block block, Entity body, double ink) {}
+	/** What one parcel carries: ink for the block it lands on, the radius of the splash it makes, and the sting it gives a body. Set at the nozzle. */
+	public record Load(double ink, double splashRadius, double sting) {}
+
+	/** Where a parcel came down: the point, the velocity it arrived with, the outward normal of what it hit, the block or the body, and what it carried. */
+	public record Landing(Vector where, Vector velocity, Vector surfaceNormal, Block block, Entity body, Load load) {}
 
 	private static final class Parcel {
 		final Vector position;
 		final Vector velocity;
-		final double ink;
+		final Load load;
 		int age = 0;
 
-		Parcel(Vector position, Vector velocity, double ink) {
+		Parcel(Vector position, Vector velocity, Load load) {
 			this.position = position;
 			this.velocity = velocity;
-			this.ink = ink;
+			this.load = load;
 		}
 	}
 
 	private final List<Parcel> parcels = new ArrayList<>();
 	private final Random random = new Random();
 
-	/** Throws parcels from the nozzle along a direction: each gets the speed give or take a few percent and its own small scatter. */
-	public void emit(Location nozzle, Vector direction, double speed, double ink, int count) {
+	/**
+	 * Throws parcels from the nozzle along a direction: each gets the speed give or take a few percent and its own scatter,
+	 * a gaussian of the given width per axis on the unit direction, so a wide nozzle sprays and a pinched one shoots a line.
+	 */
+	public void emit(Location nozzle, Vector direction, double speed, double scatter, Load load, int count) {
 		Vector aim = direction.clone().normalize();
 		for (int i = 0; i < count; i++) {
-			Vector velocity = aim.clone().add(new Vector(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).multiply(SCATTER)).normalize();
+			Vector velocity = aim.clone().add(new Vector(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).multiply(scatter)).normalize();
 			velocity.multiply(speed * (1 + 0.08 * random.nextGaussian()));
-			parcels.add(new Parcel(nozzle.toVector().add(velocity.clone().multiply(random.nextDouble())), velocity, ink));
+			parcels.add(new Parcel(nozzle.toVector().add(velocity.clone().multiply(random.nextDouble())), velocity, load));
 		}
 	}
 
@@ -91,7 +95,7 @@ public final class InkStream {
 				RayTraceResult hit = world.rayTrace(from, parcel.velocity, length, FluidCollisionMode.NEVER, true, PARCEL_RADIUS, bodies);
 				if (hit != null) {
 					Vector normal = hit.getHitBlockFace() != null ? hit.getHitBlockFace().getDirection() : parcel.velocity.clone().normalize().multiply(-1);
-					landings.add(new Landing(hit.getHitPosition(), parcel.velocity.clone(), normal, hit.getHitBlock(), hit.getHitEntity(), parcel.ink));
+					landings.add(new Landing(hit.getHitPosition(), parcel.velocity.clone(), normal, hit.getHitBlock(), hit.getHitEntity(), parcel.load));
 					iterator.remove();
 					continue;
 				}
