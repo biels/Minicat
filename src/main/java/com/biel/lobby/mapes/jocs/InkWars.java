@@ -626,14 +626,14 @@ public class InkWars extends JocEquips {
 			reloadTick();
 			if(wetInkTicks % 20 == 0)restoreTools();
 		}
-		/** The hose is the torch in the main hand and its jet leaves the torch's tip: a little right of the eyes, a hand's length forward, just below eye height; it throws along the look. Quiet, the jet is the show. */
+		/** The hose is the torch in the main hand and its jet leaves the hand: well to the right of the eyes, a little forward, at chest height; it throws along the look. */
 		void sprayHose(){
 			Player p = getPlayer();
 			Location eyes = p.getEyeLocation();
 			Vector look = eyes.getDirection();
 			Vector right = new Vector(-look.getZ(), 0, look.getX());
 			if(right.lengthSquared() > 1e-6)right.normalize();
-			Location nozzle = eyes.clone().add(look.clone().multiply(0.25)).add(right.multiply(0.32)).add(0, -0.12, 0);
+			Location nozzle = eyes.clone().add(look.clone().multiply(0.3)).add(right.multiply(0.5)).add(0, -0.5, 0);
 			double levelBonus = level() * 0.02;
 			InkStream.Load load = new InkStream.Load(blend(HOSE_PARCEL_INK, PINCHED_PARCEL_INK) + levelBonus, blend(HOSE_SPLASH_RADIUS + level() * 0.05, PINCHED_SPLASH_RADIUS + level() * 0.03), blend(HOSE_STING, PINCHED_STING), blend(HOSE_GRAVITY, PINCHED_GRAVITY));
 			parcelCarry += blend(HOSE_PARCELS_PER_TICK, PINCHED_PARCELS_PER_TICK);
