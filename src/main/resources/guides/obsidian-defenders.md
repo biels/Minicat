@@ -134,7 +134,7 @@ A la base, tres paradistes. Gerry, armes: 8 fletxes {PREU_FLETXES}, 2 estrelles 
 
 Seon, armadures: pitral de ferro {PREU_PITRAL_FERRO}, calces de diamant {PREU_CALCES_DIAMANT}.
 
-Karen: bloc d'or {PREU_BLOC_OR}, bola de neu {PREU_BOLA_DE_NEU}, quars {PREU_QUARS} (només un).
+Karen: bloc d'or {PREU_BLOC_OR}, bola de neu {PREU_BOLA_DE_NEU}, quars {PREU_QUARS} (només un), perla d'Ender {PREU_PERLA_D_ENDER}.
 
 ## pàgina Encanteris
 Les taules de la base venen els encanteris senzills per or, sense lapislàtzuli: Retrocés i Empenta {ENCANT_RETROCÉS}, Flama i Eficiència {ENCANT_FLAMA} per nivell.

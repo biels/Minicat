@@ -445,7 +445,7 @@ public class ObsidianDefenders extends JocEquips {
 	private enum Parada {
 		GERRY("weapons", "Gerry", "armes", Mercaderia.FLETXES, Mercaderia.ESTRELLES, Mercaderia.ESPASA_FERRO, Mercaderia.ARC, Mercaderia.PIC_FERRO, Mercaderia.ESPASA_DIAMANT),
 		SEON("armors", "Seon", "armadures", Mercaderia.PITRAL_FERRO, Mercaderia.CALCES_DIAMANT),
-		KAREN("potions", "Karen", "altres coses", Mercaderia.BLOC_OR, Mercaderia.BOLA_DE_NEU, Mercaderia.QUARS);
+		KAREN("potions", "Karen", "altres coses", Mercaderia.BLOC_OR, Mercaderia.BOLA_DE_NEU, Mercaderia.QUARS, Mercaderia.PERLA_D_ENDER);
 
 		final String rètolOriginal;
 		final String nom;
@@ -470,6 +470,7 @@ public class ObsidianDefenders extends JocEquips {
 		BLOC_OR(Material.GOLD_BLOCK, 1, 20, "Bloc d'or", "+" + GOLD_BLOCK_PASSIVE_GOLD + " or cada " + (CICLE_COFRES_TICKS / 20) + " s: es paga sol en 3,5 min"),
 		BOLA_DE_NEU(Material.SNOWBALL, 1, 6, "Bola de neu", null),
 		QUARS(Material.QUARTZ, 1, 15, "Quars", "Mentre el portis, els teus nous ninots disparen un 50 % més ràpid"),
+		PERLA_D_ENDER(Material.ENDER_PEARL, 1, 15, "Perla d'Ender", null),
 		CALCES_DIAMANT(Material.DIAMOND_LEGGINGS, 1, 30, "Calces de diamant", null),
 		ESPASA_DIAMANT(Material.DIAMOND_SWORD, 1, 40, "Espasa de diamant", null);
 
