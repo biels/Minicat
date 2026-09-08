@@ -323,7 +323,7 @@ public class InkWars extends JocEquips {
 			blackoutAnnounced = true;
 			for(Player p : getPlayers()){
 				p.sendTitle(ChatColor.GOLD + "Last minute!", ChatColor.GRAY + "The count is hidden until the end", 5, 50, 15);
-				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 0.7F);
+				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.2F, 0.7F);
 			}
 		}
 		for(Equip e : Equips){
@@ -359,7 +359,7 @@ public class InkWars extends JocEquips {
 		}
 		for(Player p : getPlayers()){
 			p.sendTitle(ChatColor.AQUA + "Time!", shares.toString(), 5, 80, 20);
-			p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LARGE_BLAST, 1F, 1F);
+			p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.25F, 1.2F);
 		}
 	}
 	public void winAction(EquipInkWars eq) {
@@ -401,7 +401,7 @@ public class InkWars extends JocEquips {
 			equipKit(p);
 			if(i.getAlivePaintedBlocks() > i.getInkLevel() * getBlockCountToLevelUp()){
 				i.setInkLevel(i.getInkLevel() + 1);
-				p.playSound(p.getEyeLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 1.3F);
+				p.playSound(p.getEyeLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.15F, 1.3F);
 				getWorld().spawnParticle(Particle.HAPPY_VILLAGER, p.getLocation().add(0, 1, 0), 20, 0.6, 0.8, 0.6, 0);
 				sendPlayerMessage(p, ChatColor.AQUA + "Level Up! You are now level " + i.getInkLevel());
 				sendTeamMessage(e, ChatColor.GRAY + "The player " + ChatColor.YELLOW + p.getName() + ChatColor.GRAY + " is now level " + ChatColor.YELLOW + i.getInkLevel() + ChatColor.WHITE + "!");
@@ -576,8 +576,6 @@ public class InkWars extends JocEquips {
 		private int pinchTriggerTicks = 0;
 		/** Parcels owed but not yet thrown: the per-tick count blends between the modes, so fractions carry over. */
 		private double parcelCarry = 0;
-		private int hoseSoundTicks = 0;
-		private int landingsSinceSplat = 0;
 		/** True while this kit is dealing ink damage through the direct damage call, which the melee hook would otherwise cancel. */
 		private boolean dealingInkDamage = false;
 		private boolean valid = true;
@@ -621,8 +619,6 @@ public class InkWars extends JocEquips {
 			p.getInventory().setItem(ROLLER_SLOT, rollerItem());
 			p.getInventory().setItem(HOSE_SLOT, hoseItem());
 			p.getInventory().setHeldItemSlot(ROLLER_SLOT);
-			p.playSound(p.getEyeLocation(), Sound.BLOCK_CHEST_OPEN, 1F, 1F);
-			p.playSound(p.getEyeLocation(), Sound.BLOCK_PISTON_EXTEND, 1F, 1F);
 		}
 		public void tick(){
 			tickHose();
@@ -648,9 +644,6 @@ public class InkWars extends JocEquips {
 			int count = (int) parcelCarry;
 			parcelCarry -= count;
 			hose.emit(nozzle, look, blend(HOSE_SPEED, PINCHED_SPEED) + levelBonus, blend(HOSE_SCATTER, PINCHED_SCATTER), load, count);
-			hoseSoundTicks++; // the open jet bloops, the pinched jet hisses, crossfading with the squeeze
-			if(hoseSoundTicks % 3 == 0 && pinch < 0.99)getWorld().playSound(nozzle, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, (float) (0.22 * (1 - pinch)), (float) (1.4 + Math.random() * 0.4));
-			if(hoseSoundTicks % 5 == 0 && pinch > 0.01)getWorld().playSound(nozzle, Sound.BLOCK_LAVA_EXTINGUISH, (float) (0.12 * pinch), 1.9F);
 		}
 		/** A hose figure between its open and its pinched value, by how far the tip is squeezed. */
 		double blend(double open, double pinched){
@@ -666,15 +659,10 @@ public class InkWars extends JocEquips {
 				if(landing.body() instanceof Player hit){
 					if(load.sting() > 0)hurt(hit, load.sting());
 					splashDown(hit.getLocation(), load.splashRadius(), load.ink());
-					getWorld().playSound(hit.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.4F, 1.4F);
 					continue;
 				}
 				Location impact = landing.where().toLocation(getWorld()).add(landing.surfaceNormal().clone().multiply(0.3));
 				splash(impact, landing.velocity(), landing.surfaceNormal(), load.splashRadius(), load.ink());
-				if(++landingsSinceSplat >= 6){ // the impact zone crackles, not every parcel
-					landingsSinceSplat = 0;
-					getWorld().playSound(impact, Sound.ENTITY_SLIME_SQUISH_SMALL, 0.25F, (float) (1.1 + Math.random() * 0.4));
-				}
 			}
 			int parity = wetInkTicks % 2;
 			int index = 0;
@@ -756,7 +744,7 @@ public class InkWars extends JocEquips {
 				ItemStack refilled = inkBallItem();
 				refilled.setAmount(have + 1);
 				p.getInventory().setItem(BALL_SLOT, refilled);
-				p.playSound(p.getEyeLocation(), Sound.ENTITY_ITEM_PICKUP, 0.4F, 1F);
+				p.playSound(p.getEyeLocation(), Sound.ENTITY_ITEM_PICKUP, 0.12F, 1.4F);
 				reloadTicks = 0;
 			}else{
 				reloadTicks += reloadTickIncrement();
@@ -772,7 +760,6 @@ public class InkWars extends JocEquips {
 			if(p != getPlayer() || isSubmerged() || !movedFeet(evt))return;
 			if(p.getInventory().getItemInMainHand().getType() != Material.STICK)return;
 			rollerLinePaint(1 + Math.sqrt(level()), 0.4 + level() / 24.0, p, ROLLER_AHEAD);
-			if(wetInkTicks % 5 == 0)getWorld().playSound(p.getLocation(), Sound.BLOCK_SLIME_BLOCK_STEP, 0.35F, 0.9F);
 		}
 		@Override
 		protected void onPlayerInteract(PlayerInteractEvent evt, Player p) {
@@ -788,7 +775,6 @@ public class InkWars extends JocEquips {
 			if(inHand != Material.TORCH || !rightClick)return;
 			evt.setCancelled(true); // the torch is the hose, it is never placed
 			if(isSubmerged())return;
-			if(pinchTriggerTicks == 0)p.playSound(p.getEyeLocation(), Sound.ENTITY_SLIME_SQUISH_SMALL, 0.5F, 1.5F); // the squeeze starting
 			pinchTriggerTicks = PINCH_TRIGGER_TICKS;
 		}
 		/** A squid takes no damage: the ink is what it pays with. */
@@ -817,7 +803,7 @@ public class InkWars extends JocEquips {
 			if(!(shooter instanceof Player) || shooter != getPlayer())return;
 			if(isSubmerged()){ // Surface first: nothing is thrown from under the ink
 				evt.setCancelled(true);
-				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.6F, 0.8F);
+				getPlayerInfo(getPlayer()).squid.sound(InkWarsPlayerInfo.Squid.SwimSound.EMPTY, getPlayer().getEyeLocation(), 0);
 				return;
 			}
 			inkBalls.add(proj);
@@ -838,8 +824,7 @@ public class InkWars extends JocEquips {
 			Vector incoming = proj.getVelocity();
 			if (incoming.lengthSquared() < 1e-4) incoming = proj.getLocation().toVector().subtract(getPlayer().getEyeLocation().toVector());
 			Location impact = proj.getLocation().add(surfaceNormal.clone().multiply(0.3)); // a little off the surface, on the open side
-			getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_ATTACK, 1, 1.1F);
-			getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_JUMP, 1, 1.1F);
+			getWorld().playSound(hitBlock.getLocation(), Sound.ENTITY_SLIME_SQUISH_SMALL, 0.18F, 1.4F);
 			splash(impact, incoming, surfaceNormal, 1.9 + Math.sqrt(level() * 0.75), 1.3 + level() / 6.0);
 			for(Player p : Utils.getNearbyPlayers(impact, 1 + level())){
 				if(areEnemies(p, getPlayer())){
@@ -1090,13 +1075,12 @@ public class InkWars extends JocEquips {
 			final EnumMap<SwimSound, Long> lastSoundNanos = new EnumMap<>(SwimSound.class);
 
 			boolean allowSound(SwimSound cue, long now){
+				if(cue == SwimSound.CONTACT || cue == SwimSound.JUMP || cue == SwimSound.LAND
+						|| cue == SwimSound.PUSH || cue == SwimSound.TAIL || cue == SwimSound.RIPPLE)return false;
 				SwimSound group = cue == SwimSound.SURFACE ? SwimSound.DIVE : cue;
 				long cooldown = switch(group){
-					case DIVE -> 180_000_000L;
-					case CONTACT, LAND, JUMP -> 150_000_000L;
-					case READY -> 1_000_000_000L;
-					case EMPTY, RIPPLE -> 600_000_000L;
-					default -> 120_000_000L;
+					case READY, EMPTY -> 2_000_000_000L;
+					default -> 1_000_000_000L;
 				};
 				Long previous = lastSoundNanos.get(group);
 				if(previous != null && now - previous < cooldown)return false;
@@ -1107,26 +1091,12 @@ public class InkWars extends JocEquips {
 				if(!allowSound(cue, System.nanoTime()))return;
 				float variation = (float) (Math.random() * 0.12 - 0.06);
 				switch(cue){
-					case DIVE -> {
-						getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.28F, 1.3F + variation);
-						getWorld().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.12F, 1.5F + variation);
-					}
-					case SURFACE -> getWorld().playSound(at, Sound.ENTITY_GENERIC_SPLASH, 0.28F, 1.55F + variation);
-					case CONTACT -> getWorld().playSound(at, Sound.BLOCK_SLIME_BLOCK_STEP, 0.16F, 1.5F + variation);
-					case JUMP -> getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.24F, 1.65F + variation);
-					case LAND -> {
-						double weight = Math.min(1, Math.max(0, impact) / 0.8);
-						getWorld().playSound(at, Sound.ENTITY_GENERIC_SPLASH, (float) (0.12 + 0.38 * weight), (float) (1.65 - 0.45 * weight) + variation);
-					}
-					case TURBO -> {
-						getWorld().playSound(at, Sound.ENTITY_SQUID_SQUIRT, 0.55F, 1.35F + variation);
-						getWorld().playSound(at, Sound.ENTITY_BREEZE_SHOOT, 0.38F, 1.5F + variation);
-					}
-					case PUSH -> getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.16F, 1.1F + (float) (0.35 * impact) + variation);
-					case TAIL -> getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.22F, 1.15F + variation);
-					case READY -> player().playSound(at, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.22F, 1.8F);
-					case EMPTY -> player().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.22F, 1.05F);
-					case RIPPLE -> getWorld().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.10F, 1.3F + variation);
+					case DIVE -> player().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.09F, 1.5F + variation);
+					case SURFACE -> player().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.08F, 1.55F + variation);
+					case TURBO -> player().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.12F, 1.65F + variation);
+					case READY -> player().playSound(at, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.10F, 1.8F);
+					case EMPTY -> player().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.08F, 1.05F);
+					default -> { }
 				}
 			}
 			/** The carrier the player rides while a squid: an empty item display, nothing to see, no physics, placed by the engine every tick. */
@@ -1325,7 +1295,6 @@ public class InkWars extends JocEquips {
 				if(amount < 0.1)return; // an empty squid stands up with nothing to throw
 				double radius = 1.5 + 2.5 * amount;
 				kit.splash(feet.clone().add(0, 0.4, 0), incoming, new Vector(0, 1, 0), radius, 0.7 + 1.5 * amount);
-				getWorld().playSound(feet, Sound.ENTITY_SLIME_ATTACK, (float) (0.6 + amount), (float) (1.3 - 0.5 * amount));
 				getWorld().spawnParticle(Particle.SPLASH, feet.clone().add(0, 0.3, 0), (int) (30 + 80 * amount), radius * 0.4, 0.3, radius * 0.4, 0);
 				for(Player enemy : Utils.getNearbyPlayers(feet, radius)){
 					if(areEnemies(enemy, p))kit.hurt(enemy, 2 + 4 * amount);
@@ -2146,8 +2115,7 @@ public class InkWars extends JocEquips {
 		if (killerKit == null) return;
 		// The splat: a kill is painted where the body fell
 		killerKit.splashDown(killed.getLocation(), 3 + Math.sqrt(killerKit.level()), 2);
-		getWorld().playSound(killed.getLocation(), Sound.ENTITY_SLIME_DEATH, 1F, 0.8F);
-		getWorld().playSound(killed.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 1F, 0.9F);
+		getWorld().playSound(killed.getLocation(), Sound.ENTITY_SLIME_SQUISH_SMALL, 0.2F, 1.2F);
 	}
 	class EquipInkWars extends Equip{ //Special team class for this game mode
 		private DyeColor strongColor; 

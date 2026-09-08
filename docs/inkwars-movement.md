@@ -31,13 +31,13 @@ conversion to human form. Ordinary jumps do not generate this extra paint.
 Active thrust gives the droplets extra backward velocity; release reduces that
 velocity and increases their scatter without adding parcels or painting damage.
 
-Squid audio uses quiet liquid cues for actual form changes, jumps and new surface
-contacts. Form changes share a 180ms retrigger guard; contacts and jumps use 150ms.
-Movement bubbles require resolved travel on a surface and occur at most every
-16 ticks. Landing volume scales with incoming downward speed and caps at 0.5.
-Turbo keeps the stronger squirt/pressure release, two quiet liquid push cues and
-a watery tail when the powered phase ends. Reserve cues are private and
-rate-limited. Weapon/combat sounds are unchanged.
+Squid audio keeps single, private cues for form changes and turbo, with a
+one-second cooldown shared by entering and leaving ink. Reserve cues have a
+two-second cooldown; all retained squid cues use volume 0.08-0.12. Jumps,
+contacts, landings, movement bubbles and thrust follow-through are silent.
+Hose loops and impacts, roller steps, pinch and kit equip sounds are silent.
+Reloads retain a soft pickup; ink balls and eliminations use a single small
+splat. Level-ups and match announcements use quiet pickup or note cues.
 
 ## Playtest course
 

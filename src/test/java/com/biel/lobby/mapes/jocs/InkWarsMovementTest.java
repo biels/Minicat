@@ -65,26 +65,33 @@ public final class InkWarsMovementTest {
         Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.FLOOR);
         require(squid.allowSound(SwimSound.DIVE, 0), "first dive cue plays");
         require(!squid.allowSound(SwimSound.SURFACE, 100_000_000), "rapid form toggles share a cooldown");
-        require(squid.allowSound(SwimSound.SURFACE, 180_000_000), "form cue recovers at cooldown boundary");
-        require(squid.allowSound(SwimSound.CONTACT, 0), "first contact plays");
-        require(!squid.allowSound(SwimSound.CONTACT, 50_000_000), "contact chatter is suppressed");
+        require(!squid.allowSound(SwimSound.SURFACE, 999_999_999), "form chatter stays suppressed for a second");
+        require(squid.allowSound(SwimSound.SURFACE, 1_000_000_000), "form cue recovers at cooldown boundary");
         require(squid.allowSound(SwimSound.TURBO, 50_000_000), "contact cooldown does not suppress turbo");
         squid.lastSoundNanos.clear();
         squid.sound(SwimSound.DIVE, fixture.playerLocation, 0);
-        require(fixture.heardSounds.size() == 2, "dive consists of two quiet liquid layers");
-        require(fixture.heardSounds.get(0).sound() == Sound.ENTITY_PLAYER_SWIM
-                && fixture.heardSounds.get(1).sound() == Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP,
-                "dive contains no squid vocal or heavy slime fall");
-        for (HeardSound sound : fixture.heardSounds) require(sound.volume() <= 0.28F, "dive stays quiet");
+        require(fixture.heardSounds.size() == 1, "dive is a single soft bubble");
+        require(fixture.heardSounds.getFirst().sound() == Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP,
+                "dive keeps the gentle bubble cue");
         fixture.heardSounds.clear();
-        squid.sound(SwimSound.LAND, fixture.playerLocation, 0.1);
-        float softLanding = fixture.heardSounds.getLast().volume();
+        for (SwimSound cue : new SwimSound[]{SwimSound.CONTACT, SwimSound.JUMP, SwimSound.LAND,
+                SwimSound.PUSH, SwimSound.TAIL, SwimSound.RIPPLE}) {
+            squid.sound(cue, fixture.playerLocation, 0.8);
+        }
+        require(fixture.heardSounds.isEmpty(), "routine movement and thrust layers stay silent");
         squid.lastSoundNanos.clear();
-        squid.sound(SwimSound.LAND, fixture.playerLocation, 0.8);
-        require(fixture.heardSounds.getLast().volume() > softLanding, "harder landing produces a larger splash");
-        require(fixture.heardSounds.getLast().volume() <= 0.5F, "landing volume is capped");
-        squid.sound(SwimSound.READY, fixture.playerLocation, 0);
-        require(fixture.heardSounds.getLast().privateCue(), "reserve feedback is private to the player");
+        for (SwimSound cue : new SwimSound[]{SwimSound.DIVE, SwimSound.TURBO, SwimSound.READY, SwimSound.EMPTY}) {
+            squid.sound(cue, fixture.playerLocation, 0);
+        }
+        require(fixture.heardSounds.size() == 4, "retained cues each use one sound");
+        for (HeardSound sound : fixture.heardSounds) {
+            require(sound.volume() <= 0.12F, "retained movement cues stay subtle");
+            require(sound.privateCue(), "movement feedback is private to the player");
+        }
+        squid.lastSoundNanos.clear();
+        require(squid.allowSound(SwimSound.EMPTY, 0), "first empty cue plays");
+        require(!squid.allowSound(SwimSound.EMPTY, 1_999_999_999), "empty presses do not chatter");
+        require(squid.allowSound(SwimSound.EMPTY, 2_000_000_000L), "empty cue recovers after two seconds");
     }
 
     private record HeardSound(Sound sound, float volume, float pitch, boolean privateCue) {}
