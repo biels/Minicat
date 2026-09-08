@@ -1,0 +1,63 @@
+src/test/java/com/biel/lobby/minions/MinionRetreatTest.java
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 43-44
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_ba0431a86c7e22::t_3bf30536fca0d1 165,3246-3249
+  s_ba0431a86c7e22::t_fa81471cdd4295 2954,3436
+src/test/java/com/biel/lobby/guide/GameGuideTest.java
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 19-20
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkStreamTest.java
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 15-16
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_ba0431a86c7e22::t_c956e0e920357e 8,30,271-308,630-635,638-647,967,1234-1235,1295-1297,1305,1311,1313,1315,1326-1331
+  s_ba0431a86c7e22::t_958b4a9dff72c5 1074
+  s_ba0431a86c7e22::t_7e6eff449b2090 71,74-75,604,1025,1127,1141,1437
+  s_ba0431a86c7e22::t_13a7b60226fecf 858,1003,1205,1282,1445,1451,1455,1499
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianWatchtowersTest.java
+  s_ba0431a86c7e22::t_1db6085ce8e481 15,25-28,31,33-35,37-38,40-41
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 11-12
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/SquidCollisionTest.java
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 11-12
+src/test/java/com/biel/lobby/mapes/jocs/InkWarsLifecycleTest.java
+  s_ba0431a86c7e22::t_d6ba05114d283c 37,39
+  s_ba0431a86c7e22::t_958b4a9dff72c5 1-15,17-23,25-30,32-36,38,40-143,145-171,177-194,196-214
+  s_ba0431a86c7e22::t_2638beaaaefe42 16,24,31,144,172-176,195
+build.gradle
+  s_ba0431a86c7e22::t_75b1167b5b6ef3 51-52,55,58-60,65
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianTeamUpgradesTest.java
+  s_ba0431a86c7e22::t_fa81471cdd4295 37,42
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 6-7
+README.md
+  s_ba0431a86c7e22::t_2638beaaaefe42 19
+  s_ba0431a86c7e22::t_cb812204a697c1 9-18,20-24
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianGoldScoreTest.java
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 6-7
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianUpgradeController.java
+  s_ba0431a86c7e22::t_fa81471cdd4295 64,67
+src/test/java/com/biel/lobby/mapes/jocs/MinionOwnershipTest.java
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 20-21
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/SquidMotionTest.java
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 10-11
+src/test/java/com/biel/lobby/mapes/jocs/InkWarsMovementTest.java
+  s_ba0431a86c7e22::t_3bf30536fca0d1 73,78-79,83
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 37-38
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianInteractionsTest.java
+  s_ba0431a86c7e22::t_8edccb3d6ce0cc 6-7
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianTeamUpgrades.java
+  s_ba0431a86c7e22::t_fa81471cdd4295 25,29-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "a4dad381ce03628265f3d54498e1306f879fbf37",
+  "prompts": {},
+  "sessions": {
+    "s_ba0431a86c7e22": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0820e-0cd6-7cf0-a5ce-d84b0e97af45",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
