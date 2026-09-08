@@ -90,6 +90,8 @@ public final class SnowmanMinion extends Minion {
 	private final int cooldownTicks;
 	private final boolean hero;
 	private int ageSeconds;
+	private int nextShotTick;
+	private final Volley snowballVolley = Volley.thrown(Snowball.class, SNOWBALL_SPEED);
 	private int auraTaskId = -1;
 	private int auraFrames;
 	private final SnowballHit hitOnPlayer;
@@ -186,6 +188,7 @@ public final class SnowmanMinion extends Minion {
 			auraTaskId = game.scheduleGameplayRepeatingTask(this::drawAura, 0, HERO_AURA_PERIOD_TICKS);
 		}
 		showHead(golem, kind.headBlock);
+		nextShotTick = golem.getTicksLived() + currentCooldownTicks() / 2;
 		return golem;
 	}
 
@@ -220,7 +223,8 @@ public final class SnowmanMinion extends Minion {
 	@Override
 	protected void installGoals(Mob mob) {
 		installAttackGoals(mob);
-		Bukkit.getMobGoals().addGoal(mob, 4, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), MARCH_SPEED, ARRIVE_DISTANCE));
+		Bukkit.getMobGoals().addGoal(mob, 3, new MinionRetreatGoal(mob, this::mayTarget, this::shoot));
+		Bukkit.getMobGoals().addGoal(mob, 5, new WaypointWalkGoal(mob, lane.ahead(mob.getLocation()), MARCH_SPEED, ARRIVE_DISTANCE));
 	}
 
 	/** The target and shooting goals with the numbers of this moment: a hero's change once its surge ends. */
@@ -228,17 +232,22 @@ public final class SnowmanMinion extends Minion {
 		double range = range();
 		Bukkit.getMobGoals().addGoal(mob, 1, new NearestTargetGoal(mob, range + ACQUIRE_MARGIN, true, RESCAN_TICKS, this::isEnemy));
 		Bukkit.getMobGoals().addGoal(mob, 2, new NearestTargetGoal(mob, range + ACQUIRE_MARGIN, true, RESCAN_TICKS, this::isStrayHostile));
-		Bukkit.getMobGoals().addGoal(mob, 3, rangedGoal(mob));
+		Bukkit.getMobGoals().addGoal(mob, 4, rangedGoal(mob));
 	}
 
 	/** Aimed snowballs, with the golem's own shooting sound. */
 	private RangedAttackGoal rangedGoal(Mob mob) {
-		Volley thrown = Volley.thrown(Snowball.class, SNOWBALL_SPEED);
-		Volley aimed = (shooter, target) -> {
-			thrown.fire(shooter, target);
-			shooter.getWorld().playSound(shooter.getLocation(), Sound.ENTITY_SNOW_GOLEM_SHOOT, 1F, 1F);
-		};
-		return new RangedAttackGoal(mob, 0, range(), currentCooldownTicks(), false, MARCH_SPEED, aimed);
+		// The shared firing clock keeps retreat/approach transitions from resetting the fire rate.
+		return new RangedAttackGoal(mob, 0, range(), 1, false, MARCH_SPEED, this::shoot);
+	}
+
+	private void shoot(Mob shooter, LivingEntity target) {
+		if (shooter.getTicksLived() < nextShotTick || !mayTarget(target) || !shooter.hasLineOfSight(target)) return;
+		double attackRange = range();
+		if (shooter.getLocation().distanceSquared(target.getLocation()) > attackRange * attackRange) return;
+		snowballVolley.fire(shooter, target);
+		shooter.getWorld().playSound(shooter.getLocation(), Sound.ENTITY_SNOW_GOLEM_SHOOT, 1F, 1F);
+		nextShotTick = shooter.getTicksLived() + currentCooldownTicks();
 	}
 
 	@Override

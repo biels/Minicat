@@ -90,6 +90,14 @@ tasks.named('check') {
     dependsOn 'verifyGameGuide'
 }
 
+tasks.register('MinionRetreatTest', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath + configurations.testCompileClasspath + configurations.compileClasspath
+    mainClass = 'com.biel.lobby.minions.MinionRetreatTest'
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+}
+tasks.named('check') { dependsOn 'MinionRetreatTest' }
+
 tasks.register('calibrateObsidianLaunchers', JavaExec) {
     dependsOn testClasses
     classpath = sourceSets.test.runtimeClasspath + configurations.testCompileClasspath
