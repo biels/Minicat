@@ -84,14 +84,18 @@ public class InkWars extends JocEquips {
 	/** Keys further than this from the heading (cosine) are a reverse: the squid brakes to a crawl first, then sets off the new way; anything closer turns it on the spot. */
 	static final double SQUID_REVERSE_COS = Math.cos(Math.toRadians(120));
 	static final double SQUID_CRAWL_SPEED = 0.06;
-	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. */
+	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. A squid in the air feels far less. */
 	static final double INK_GRAVITY = 0.05;
+	static final double SQUID_GRAVITY = 0.018;
+	/** A squid idle on a wall sinks this much per tick, the little gravity it does feel there; pressing toward a wall climbs at no less than this speed, from a standstill. */
+	static final double SQUID_WALL_SAG = 0.006;
+	static final double SQUID_CLIMB_MIN_SPEED = 0.2;
 	/**
-	 * The squid's ink reserve, 0 to 1: refilled per tick on its own colour, more the faster it swims; drained on neutral ground by a share per tick plus a share
+	 * The squid's ink reserve, 0 to 1: refilled by a fixed share per tick on its own colour, fast or still alike; drained on neutral ground by a share per tick plus a share
 	 * per block swum, faster on enemy ink; at zero the squid is forced out. The ground is judged by what it was before this dive's own strip, so the strip feeds nobody.
-	 * A full reserve buys about seventeen blocks of neutral ground at full speed, ten of enemy ink; twenty blocks of own ink refill it.
+	 * About a second and a half on own ink fills it; a full reserve buys about twenty blocks of neutral ground at full speed, twelve of enemy ink.
 	 */
-	static final double RESERVE_REFILL = 0.012;
+	static final double RESERVE_REFILL = 0.03;
 	static final double RESERVE_DRAIN_NEUTRAL = 0.015;
 	static final double RESERVE_DRAIN_NEUTRAL_PER_BLOCK = 0.028;
 	static final double RESERVE_DRAIN_ENEMY = 0.024;
@@ -1083,8 +1087,8 @@ public class InkWars extends JocEquips {
 				mount();
 				p.getInventory().setArmorContents(null);
 				kit.showInkSacs(reserve);
-				getWorld().playSound(feet, Sound.ITEM_BUCKET_EMPTY, 0.8F, 0.8F); // the glug of sinking into the ink
-				getWorld().playSound(feet, Sound.ENTITY_GENERIC_SPLASH, 0.5F, 0.7F);
+				getWorld().playSound(feet, Sound.ENTITY_SQUID_SQUIRT, 0.9F, 0.6F); // the squid's own voice, low: going under
+				getWorld().playSound(feet, Sound.BLOCK_SLIME_BLOCK_FALL, 0.7F, 0.8F);
 				getWorld().spawnParticle(Particle.SPLASH, feet.clone().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 			}
 			void mount(){
@@ -1131,7 +1135,7 @@ public class InkWars extends JocEquips {
 				boolean onFloor = surface == Surface.FLOOR;
 				surfaceQuietly();
 				Player p = player();
-				getWorld().playSound(p.getLocation(), Sound.ITEM_BUCKET_FILL, 0.8F, 1.1F); // the glug of coming out
+				getWorld().playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.9F, 1.4F); // the squid's voice, high: coming out
 				getWorld().playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.5F, 1.3F);
 				getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 				if(onFloor){
@@ -1237,11 +1241,11 @@ public class InkWars extends JocEquips {
 			void tickReserve(EquipInkWars team, EquipInkWars ground, Vector moved){
 				double blocksSwum = moved.length();
 				boolean wasFull = reserve >= 1;
-				if(ground == team)reserve = Math.min(1, reserve + RESERVE_REFILL * (0.3 + blocksSwum * 4));
-				if(!wasFull && reserve >= 1)player().playSound(player().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6F, 1.6F); // full
+				if(ground == team)reserve = Math.min(1, reserve + RESERVE_REFILL);
 				else if(ground == null)reserve -= RESERVE_DRAIN_NEUTRAL + RESERVE_DRAIN_NEUTRAL_PER_BLOCK * blocksSwum;
 				else reserve -= RESERVE_DRAIN_ENEMY + RESERVE_DRAIN_ENEMY_PER_BLOCK * blocksSwum;
 				reserve = Math.max(0, reserve);
+				if(!wasFull && reserve >= 1)player().playSound(player().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6F, 1.6F); // full
 			}
 			/** Ten sacs of ink out the back: the speed jumps by the thrust, past the top speed, and settles back on its own; the surface point gets the burst. */
 			void thrust(){
@@ -1555,7 +1559,17 @@ public class InkWars extends JocEquips {
 					leapOff(normal);
 					return;
 				}
-				steer(bendOntoWall(keys.flat(), normal), 1, true);
+				Vector bent = bendOntoWall(keys.flat(), normal);
+				steer(bent, 1, true);
+				if(bent.getY() > 0.5 && speed < SQUID_CLIMB_MIN_SPEED)speed = SQUID_CLIMB_MIN_SPEED; // climbing needs no run-up
+				if(speed < SQUID_CRAWL_SPEED){
+					Contact below = probe(new Vector(0, -1, 0), SQUID_WALL_SAG);
+					if(below != null && below.face() == BlockFace.UP){
+						landOnFloor(normal, below.block(), below.block().getY() + 1);
+						return;
+					}
+					centre.setY(centre.getY() - SQUID_WALL_SAG); // idle on a wall: the little gravity a squid feels
+				}
 				double travel = speed;
 				if(travel > 1e-4){
 					Contact ahead = probe(heading, travel);
@@ -1657,7 +1671,7 @@ public class InkWars extends JocEquips {
 				flattenHeading(new Vector(1, 0, 0));
 				steer(keys.flat(), SQUID_AIR_THROTTLE, false);
 				speed *= SQUID_AIR_DRAG;
-				verticalSpeed = (verticalSpeed - INK_GRAVITY) * 0.98;
+				verticalSpeed = (verticalSpeed - SQUID_GRAVITY) * 0.98;
 				Vector velocity = heading.clone().multiply(speed).add(new Vector(0, verticalSpeed, 0));
 				double length = velocity.length();
 				if(length < 1e-6)return;
