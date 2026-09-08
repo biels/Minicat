@@ -1,0 +1,33 @@
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkStream.java
+  s_3f83bb5d8b06f6::t_dfa5d646da5d2d 1-105
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_3f83bb5d8b06f6::t_a9577faefedee5 1022-1023,1141-1184,1196-1198,1202-1203,1213,1217-1218,1223-1225,1241-1243,1249,1253-1281,1295,1298,1315,1318-1326,1329,1332,1340,1346-1349,1354-1355
+  s_3f83bb5d8b06f6::t_9ca849e49e92f5 84-100
+  s_3f83bb5d8b06f6::t_27dce1a88498ba 585-593,597-636
+  s_3f83bb5d8b06f6::t_8ab06b50115850 131
+  s_3f83bb5d8b06f6::t_8ce641f5bca252 579,642,648
+  s_3f83bb5d8b06f6::t_9acec3590584da 14,45,715,1054,1127
+  s_3f83bb5d8b06f6::t_621082ee316b7c 526-527,532,535-539
+  s_3f83bb5d8b06f6::t_ebfe42f87ae39a 728-730,735
+  s_3f83bb5d8b06f6::t_1068176df812ce 773
+  s_3f83bb5d8b06f6::t_152aa216e1eb7a 637,778-785,787,790-796,798-804,806
+  s_3f83bb5d8b06f6::t_495272349b74fc 968-971
+  s_3f83bb5d8b06f6::t_dd24c724848a79 1088
+  s_3f83bb5d8b06f6::t_8c248e87e10651 569-570
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "c7c30696f3c946006b62b5c6d57caeb11c273195",
+  "prompts": {},
+  "sessions": {
+    "s_3f83bb5d8b06f6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85a8438a-b458-48dc-8b71-722d22344801",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
