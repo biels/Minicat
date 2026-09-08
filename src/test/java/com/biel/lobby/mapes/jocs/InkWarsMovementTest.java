@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.Input;
 import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.Sound;
@@ -27,6 +28,7 @@ import org.bukkit.util.VoxelShape;
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid;
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.Keys;
 import com.biel.lobby.mapes.jocs.inkwars.SquidCollision;
+import com.biel.lobby.mapes.jocs.inkwars.InkStream;
 
 /** Runs the real movement controller against deterministic collision shapes without a server. */
 public final class InkWarsMovementTest {
@@ -46,7 +48,126 @@ public final class InkWarsMovementTest {
         ceilingControlFrame();
         carrierDoesNotRotateView();
         cameraFollowsResolvedMovement();
+        responsiveSteering();
+        aimedTurbo();
+        jumpForgiveness();
+        trailCoversSubsteps();
+        directCameraSteering();
         System.out.println("InkWars movement controller checks passed");
+    }
+
+    private static void responsiveSteering() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.FLOOR);
+        squid.speed = 0.65;
+        squid.steer(new Vector(-1, 0, 0), 1, true);
+        require(squid.velocity().getX() < -0.35, "reverse must move in the requested direction immediately");
+        squid.heading = new Vector(1, 0, 0);
+        squid.speed = 0.65;
+        squid.steer(new Vector(0, 0, 1), 1, true);
+        require(squid.velocity().getX() > 0 && squid.velocity().getZ() > 0.5, "quarter turn retains brief sideways drift");
+        for (int tick = 0; tick < 3; tick++) squid.steer(new Vector(0, 0, 1), 1, true);
+        require(Math.abs(squid.velocity().getX()) < 0.005, "sideways drift settles within 200ms");
+        double coastingSpeed = squid.speed;
+        squid.steer(new Vector(), 1, true);
+        close(coastingSpeed * InkWars.SQUID_COAST, squid.speed, "release preserves coasting");
+    }
+
+    private static void directCameraSteering() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.FLOOR);
+        squid.readKeys();
+        fixture.playerLocation.setYaw(90);
+        Keys reversed = squid.readKeys();
+        require(squid.movementKeys(reversed).getX() < -0.99, "mouse half-turn updates floor controls immediately");
+        squid.cornerTicks = 10;
+        fixture.playerLocation.setYaw(0);
+        Keys afterCorner = squid.readKeys();
+        require(squid.movementKeys(afterCorner).getZ() > 0.99, "deliberate aim change overrides corner continuity");
+    }
+
+    private static void aimedTurbo() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.FLOOR);
+        squid.speed = 0.65;
+        squid.reserve = 1;
+        require(squid.tryThrust(new Vector(-1, 0, 0)), "opposite-facing turbo succeeds");
+        close(-1.15, squid.velocity().getX(), "turbo redirects existing momentum");
+        close(1 - InkWars.SQUID_THRUST_COST, squid.reserve, "successful turbo spends ink once");
+        require(squid.turboTrailTicks == InkWars.SQUID_TURBO_TRAIL_TICKS, "turbo starts bounded paint trail");
+        squid.steer(new Vector(1, 0, 0), 1, true);
+        require(squid.velocity().getX() < -1, "held opposite input cannot cancel the first boost tick");
+        squid.steer(new Vector(1, 0, 0), 1, true);
+        require(squid.velocity().getX() > 0, "steering returns immediately after launch tick");
+        squid.reserve = 1;
+        Vector aim = new Vector(1, 1, 0).normalize();
+        require(squid.tryThrust(aim), "upward turbo succeeds");
+        require(squid.surface == InkWars.Surface.AIR, "upward floor turbo detaches");
+        close(1, squid.velocity().normalize().dot(aim), "launch follows crosshair pitch and yaw");
+        require(squid.floorGraceTicks == 0, "boost cannot also claim an edge jump");
+
+        Fixture wall = new Fixture();
+        wall.add(1, 1, 0, Material.STONE, new BoundingBox(0, 0, 0, 1, 1, 1));
+        Squid wallSquid = wall.wallSquid(new Vector(0.698, 1.5, 0.5), new Vector(0, 1, 0));
+        wallSquid.reserve = 1;
+        require(wallSquid.tryThrust(new Vector(1, 0, 0)), "head-on wall aim maps to climbing");
+        require(wallSquid.surface == InkWars.Surface.WALL && wallSquid.velocity().getY() > 0.7, "wall boost remains tangent");
+        wallSquid.reserve = 1;
+        require(wallSquid.tryThrust(new Vector(-1, 0.4, 0)), "aiming away from wall launches");
+        require(wallSquid.surface == InkWars.Surface.AIR && wallSquid.velocity().getX() < 0,
+                "wall turbo departs outward instead of continuing climb");
+        require(wallSquid.detachTicks > 0, "wall boost has recapture protection");
+
+        Squid blocked = wall.squid(new Vector(0.698, 1.5, 0.5), InkWars.Surface.AIR);
+        blocked.reserve = 1;
+        require(!blocked.tryThrust(new Vector(1, 0, 0)), "blocked turbo rejected");
+        close(1, blocked.reserve, "blocked turbo spends no ink");
+        require(blocked.turboTrailTicks == 0, "blocked turbo emits no paint");
+    }
+
+    private static void trailCoversSubsteps() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.AIR);
+        squid.turboTrailTicks = InkWars.SQUID_TURBO_TRAIL_TICKS;
+        InkStream stream = new InkStream();
+        for (int step = 0; step < 14; step++) {
+            squid.emitTurboTrail(stream, new Vector(step * 0.1, 2, 0), new Vector((step + 1) * 0.1, 2, 0));
+        }
+        require(stream.flights().size() == 5, "spacing carries across tiny collision substeps");
+        require(stream.flights().getLast().position().getX() > 1.2, "fast tick trail reaches the final path section");
+        for (int step = 14; step < 50; step++) {
+            squid.emitTurboTrail(stream, new Vector(step * 0.1, 2, 0), new Vector((step + 1) * 0.1, 2, 0));
+        }
+        require(stream.flights().size() == 8, "trail has a hard per-tick parcel budget");
+        squid.turboTrailTicks = 0;
+        squid.trailParcelsThisTick = 0;
+        squid.emitTurboTrail(stream, new Vector(5, 2, 0), new Vector(6, 2, 0));
+        require(stream.flights().size() == 8, "expired turbo emits no more paint");
+        close(0, InkWars.SQUID_TRAIL_LOAD.sting(), "turbo paint is not a new damage mechanic");
+    }
+
+    private static void jumpForgiveness() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.AIR);
+        Keys press = new Keys(new Vector(), true, 0, 0);
+        Keys release = new Keys(new Vector(), false, 0, 0);
+        squid.prepareJump(press);
+        squid.surface = InkWars.Surface.FLOOR;
+        squid.prepareJump(release);
+        squid.tickFloor(release);
+        close(InkWars.SQUID_HOP, squid.verticalSpeed, "pre-landing jump is buffered");
+        require(squid.floorGraceTicks == 0 && squid.jumpBufferedTicks == 0, "jump consumes buffer and grace");
+        squid.surface = InkWars.Surface.FLOOR;
+        squid.prepareJump(release);
+        squid.surface = InkWars.Surface.AIR;
+        squid.prepareJump(press);
+        squid.tickAir(press);
+        require(squid.verticalSpeed > 0.35, "just-off-edge jump still works");
+        squid.verticalSpeed = -0.1;
+        squid.floorGraceTicks = 0;
+        squid.prepareJump(press);
+        squid.tickAir(press);
+        require(squid.verticalSpeed < 0, "no unlimited mid-air jumps");
     }
 
     private static void carrierDoesNotRotateView() throws Exception {
@@ -342,6 +463,8 @@ public final class InkWarsMovementTest {
             playerLocation = new Location(world, 0, 2, 0, -90, 0);
             game.fixturePlayer = proxy(Player.class, (object, method, args) -> switch (method.getName()) {
                 case "getLocation" -> playerLocation.clone();
+                case "getCurrentInput" -> proxy(Input.class, (inputObject, inputMethod, inputArgs) ->
+                        inputMethod.getName().equals("isForward") ? true : defaultValue(inputObject, inputMethod, inputArgs));
                 case "getWorld" -> world;
                 case "playSound" -> null;
                 default -> defaultValue(object, method, args);

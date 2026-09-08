@@ -8,6 +8,19 @@ intervals.
 
 Run `./gradlew check --offline` for collision, momentum and controller checks.
 
+Steering responds on the next server tick, including reversals. Quarter turns
+retain 80% forward speed plus a short sideways slip; reversing retains 60% and
+discards opposing motion. Releasing input coasts. Turbo redirects total momentum
+toward the crosshair, projecting onto the attached surface unless aimed outward.
+It has one tick of launch priority before steering resumes. Blocked launches do
+not spend ink. Jump presses buffer for three ticks; floor edges allow two ticks
+of late input. The carrier remains upright with fixed rotation.
+
+Turbo sheds paint for 12 ticks, sampled every 0.25 blocks along resolved movement
+segments with a maximum of eight parcels per tick. Parcels share hose gravity,
+drag, impact splashes and painting, but deal no damage. They keep flying after
+conversion to human form. Ordinary jumps do not generate this extra paint.
+
 ## Playtest course
 
 Use a disposable Ink Wars instance, not a map template. Build the following
@@ -16,6 +29,10 @@ stations from paintable blocks and start each approach on friendly ink:
 | Station | Geometry | Acceptance |
 | --- | --- | --- |
 | Runway | 20-block flat lane | Acceleration and boost stay consistent; sideways controls agree with human form. |
+| Turns | Full-speed quarter turns and reversals | Immediate response, brief sideways slip, no backward braking phase. |
+| Aimed turbo | Boost opposite travel, upward from floor, away from wall | First displacement follows aim even with opposite keys held; control returns the next tick. |
+| Paint arc | Boost over a neutral landing area | Team-coloured droplets mark the flight and paint where they land, without damage. |
+| Jump timing | Press just before landing or just after a ledge | One buffered/late jump, no repeat or unlimited air jumps. |
 | Steps | Bottom slab, full block, alternating stair trim | Body follows actual shape heights without clipping or becoming stuck. |
 | Climb | Six-block wall, approached head-on and obliquely | Intentional contact climbs from rest; a brush slides along the wall. |
 | Corners | Inside and outside 90-degree bends | Held input and speed continue around the bend. |

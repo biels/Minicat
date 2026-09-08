@@ -9,6 +9,32 @@ public final class SquidMotion {
     private SquidMotion() {
     }
 
+    /** Responds to steering immediately, retaining only a short sideways drift on turns. */
+    public static Vector steer(Vector velocity, Vector input, double acceleration, double topSpeed) {
+        double inputLength = input.length();
+        double previousSpeed = velocity.length();
+        if (!Double.isFinite(inputLength) || !Double.isFinite(previousSpeed)
+                || !Double.isFinite(acceleration) || acceleration < 0
+                || !Double.isFinite(topSpeed) || topSpeed < 0) {
+            throw new IllegalArgumentException("Steering requires finite motion and nonnegative speed settings");
+        }
+        if (inputLength < EPSILON) return velocity.clone();
+        Vector direction = input.clone().multiply(1 / inputLength);
+        double alignment = previousSpeed < EPSILON ? 1
+                : Math.max(-1, Math.min(1, velocity.dot(direction) / previousSpeed));
+        double forwardSpeed = previousSpeed * (0.8 + 0.2 * alignment) + acceleration;
+        if (previousSpeed <= topSpeed) forwardSpeed = Math.min(topSpeed, forwardSpeed);
+        Vector steered = direction.clone().multiply(forwardSpeed);
+        if (alignment >= 0) {
+            Vector sidewaysDrift = velocity.clone().subtract(direction.clone().multiply(velocity.dot(direction)));
+            steered.add(sidewaysDrift.multiply(0.25));
+        }
+        double speedLimit = Math.max(previousSpeed, topSpeed);
+        double steeredSpeed = steered.length();
+        if (steeredSpeed > speedLimit) steered.multiply(speedLimit / steeredSpeed);
+        return steered;
+    }
+
     /** Carries surface-tangent velocity around the shortest bend between outward normals. */
     public static Vector rotateTangent(Vector velocity, Vector fromNormal, Vector toNormal) {
         Vector sourceNormal = unitNormal(fromNormal);

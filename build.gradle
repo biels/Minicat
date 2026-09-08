@@ -53,7 +53,7 @@ dependencies {
 }
 configurations.testCompileOnly.extendsFrom(configurations.compileOnly)
 
-['SquidMotionTest', 'SquidCollisionTest', 'InkWarsMovementTest', 'ObsidianInteractionsTest'].each { testClass ->
+['SquidMotionTest', 'SquidCollisionTest', 'InkStreamTest', 'InkWarsMovementTest', 'ObsidianInteractionsTest'].each { testClass ->
     def packageName = testClass in ['InkWarsMovementTest', 'ObsidianInteractionsTest'] ? 'com.biel.lobby.mapes.jocs.' : 'com.biel.lobby.mapes.jocs.inkwars.'
     def regressionTask = tasks.register(testClass, JavaExec) {
         dependsOn testClasses

@@ -8,6 +8,7 @@ public final class SquidMotionTest {
     private static final double TOLERANCE = 1.0e-9;
 
     public static void main(String[] args) {
+        steering();
         Vector floor = new Vector(0, 1, 0);
         Vector wall = new Vector(-1, 0, 0);
         Vector ceiling = new Vector(0, -1, 0);
@@ -58,6 +59,33 @@ public final class SquidMotionTest {
             // A missing contact must be handled by the caller, not normalized here.
         }
         System.out.println("SquidMotionTest: all checks passed");
+    }
+
+    private static void steering() {
+        Vector previousVelocity = new Vector(1, 0, 0);
+        Vector reverseInput = new Vector(-3, 0, 0);
+        vectorEquals(new Vector(-0.6, 0, 0), SquidMotion.steer(previousVelocity, reverseInput, 0, 1),
+                "Full reversal immediately removes opposing momentum");
+        Vector rightAngle = SquidMotion.steer(previousVelocity, new Vector(0, 0, 1), 0, 1);
+        vectorEquals(new Vector(0.25, 0, 0.8), rightAngle, "Right-angle turn retains speed with modest sideways drift");
+        Vector nextTick = SquidMotion.steer(rightAngle, new Vector(0, 0, 1), 0, 1);
+        scalarEquals(0.0625, nextTick.getX(), "Sideways drift decays quickly under held input");
+        Vector hardTurn = SquidMotion.steer(previousVelocity, new Vector(-1, 0, 1), 0, 1);
+        scalarEquals(0, hardTurn.clone().crossProduct(new Vector(-1, 0, 1)).length(),
+                "Hard turn leaves no opposing residual drift");
+        vectorEquals(new Vector(0, 0.1, 0), SquidMotion.steer(new Vector(), new Vector(0, 5, 0), 0.1, 1),
+                "Stationary start accelerates immediately toward normalized input");
+        vectorEquals(new Vector(2, 0, 0), SquidMotion.steer(new Vector(2, 0, 0), previousVelocity, 0.1, 1),
+                "Straight boosted travel keeps overspeed without generating more");
+        vectorEquals(new Vector(-1.2, 0, 0), SquidMotion.steer(new Vector(2, 0, 0), reverseInput, 0, 1),
+                "Boosted reversal retains overspeed after turn cost");
+        Vector coasting = SquidMotion.steer(previousVelocity, new Vector(), 0.2, 0.5);
+        vectorEquals(previousVelocity, coasting, "No input leaves coasting to controller");
+        if (coasting == previousVelocity) throw new AssertionError("Coasting result must be independent");
+        Vector capped = SquidMotion.steer(previousVelocity, new Vector(0, 0, 1), 0.3, 1);
+        scalarEquals(1, capped.length(), "Drift does not create speed above cap");
+        vectorEquals(new Vector(1, 0, 0), previousVelocity, "Steering preserves input velocity");
+        vectorEquals(new Vector(-3, 0, 0), reverseInput, "Steering preserves input direction");
     }
 
     private static Vector randomVector(Random random) {

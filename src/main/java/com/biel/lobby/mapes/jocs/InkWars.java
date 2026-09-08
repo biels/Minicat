@@ -82,10 +82,11 @@ public class InkWars extends JocEquips {
 	static final double SQUID_THRUST = 0.5;
 	static final double SQUID_THRUST_CEILING = 1.4;
 	static final double SQUID_OVERSPEED_KEPT = 0.97;
-	static final double SQUID_BRAKE = 0.05;
 	static final double SQUID_COAST = 0.985;
-	/** Keys further than this from the heading (cosine) are a reverse: the squid brakes to a crawl first, then sets off the new way; anything closer turns it on the spot. */
-	static final double SQUID_REVERSE_COS = Math.cos(Math.toRadians(120));
+	static final int SQUID_JUMP_BUFFER_TICKS = 3;
+	static final int SQUID_EDGE_GRACE_TICKS = 2;
+	static final int SQUID_TURBO_TRAIL_TICKS = 12;
+	static final InkStream.Load SQUID_TRAIL_LOAD = new InkStream.Load(0.12, 0.65, 0, InkWars.HOSE_GRAVITY);
 	static final double SQUID_CRAWL_SPEED = 0.06;
 	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. A squid in the air feels far less. */
 	static final double INK_GRAVITY = 0.05;
@@ -663,7 +664,7 @@ public class InkWars extends JocEquips {
 			for(InkStream.Landing landing : hose.advance(getWorld(), body -> body instanceof Player hit && hit != shooter && areEnemies(hit, shooter))){
 				InkStream.Load load = landing.load();
 				if(landing.body() instanceof Player hit){
-					hurt(hit, load.sting());
+					if(load.sting() > 0)hurt(hit, load.sting());
 					splashDown(hit.getLocation(), load.splashRadius(), load.ink());
 					getWorld().playSound(hit.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.4F, 1.4F);
 					continue;
@@ -1077,6 +1078,13 @@ public class InkWars extends JocEquips {
 			double pendingSurge = -1;
 			Vector flight = new Vector();
 			boolean jumpHeld = false;
+			int jumpBufferedTicks = 0;
+			int floorGraceTicks = 0;
+			int turboTrailTicks = 0;
+			int trailParcelsThisTick = 0;
+			double trailDistanceSinceParcel = 0;
+			boolean thrustPending = false;
+			float lastControlYaw = Float.NaN;
 			/** The carrier the player rides while a squid: an empty item display, nothing to see, no physics, placed by the engine every tick. */
 			ItemDisplay carrier = null;
 			/** Where the player sits relative to the carrier, measured once riding; the carrier is placed so the camera lands on the centre. */
@@ -1103,6 +1111,11 @@ public class InkWars extends JocEquips {
 				reserve = 0;
 				groundUnderStrip.clear();
 				jumpHeld = true; // a jump held through the dive is not a hop
+				jumpBufferedTicks = 0;
+				floorGraceTicks = 0;
+				turboTrailTicks = 0;
+				thrustPending = false;
+				lastControlYaw = Float.NaN;
 				Location feet = p.getLocation();
 				centre = feet.toVector().add(new Vector(0, SQUID_RIDE_HEIGHT, 0));
 				cameraCentre = p.getEyeLocation().toVector();
@@ -1298,6 +1311,8 @@ public class InkWars extends JocEquips {
 				ripple(team, pushed);
 
 				Keys keys = readKeys();
+				prepareJump(keys);
+				trailParcelsThisTick = 0;
 				Vector before = centre.clone();
 				int steps = Math.max(1, (int) Math.ceil((speed + (surface == Surface.AIR ? Math.abs(verticalSpeed) : 0) + SQUID_ACCELERATION) / SQUID_MOVEMENT_STEP));
 				movementFraction = 1.0 / steps;
@@ -1318,6 +1333,7 @@ public class InkWars extends JocEquips {
 					}
 				}
 				pushed = centre.clone().subtract(before);
+				if(turboTrailTicks > 0)turboTrailTicks--;
 				Location standing = standingSpot();
 				if(standingClear(standing))lastClearStandingSpot = standing;
 				updateCamera();
@@ -1358,12 +1374,10 @@ public class InkWars extends JocEquips {
 			/** Ten sacs of ink out the back: the speed jumps by the thrust, past the top speed, and settles back on its own; the surface point gets the burst. */
 			void thrust(){
 				Player p = player();
-				if(reserve < SQUID_THRUST_COST){
+				if(!tryThrust(p.getEyeLocation().getDirection())){
 					p.playSound(p.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.6F, 0.7F);
 					return;
 				}
-				reserve -= SQUID_THRUST_COST;
-				speed = Math.min(SQUID_THRUST_CEILING, speed + SQUID_THRUST);
 				Location burst = surfacePoint();
 				getWorld().playSound(burst, Sound.ENTITY_SQUID_SQUIRT, 1F, 0.8F);
 				getWorld().playSound(burst, Sound.ENTITY_BREEZE_SHOOT, 0.5F, 1.3F);
@@ -1371,6 +1385,36 @@ public class InkWars extends JocEquips {
 				Vector back = heading.clone().multiply(-1);
 				getWorld().spawnParticle(Particle.DUST, burst.clone().add(back.multiply(0.6)), 24, 0.35, 0.25, 0.35, 0, dust);
 				showMeters();
+			}
+			boolean tryThrust(Vector aim){
+				if(reserve < SQUID_THRUST_COST || !Double.isFinite(aim.lengthSquared()) || aim.lengthSquared() < 1e-9)return false;
+				Vector direction = aim.clone().normalize();
+				Vector normal = surfaceNormal();
+				boolean launch = surface == Surface.AIR || direction.dot(normal) > 0.2;
+				if(!launch){
+					direction.subtract(normal.clone().multiply(direction.dot(normal)));
+					if(surface == Surface.WALL && direction.lengthSquared() < 1e-9)direction = new Vector(0, 1, 0);
+					if(direction.lengthSquared() < 1e-9)return false;
+					direction.normalize();
+				}
+				Contact blocked = sweep(centre, direction.clone().multiply(0.1));
+				if(blocked != null && blocked.gap() < 0.05)return false;
+				Vector boost = direction.multiply(Math.min(SQUID_THRUST_CEILING, velocity().length() + SQUID_THRUST));
+				if(launch){
+					if(surface != Surface.AIR){
+						detachedFace = faceOf(normal);
+						detachTicks = SQUID_DETACH_TICKS;
+					}
+					takeOff(boost.getY());
+					setMomentum(boost.clone().setY(0));
+				}else setMomentum(boost);
+				reserve -= SQUID_THRUST_COST;
+				thrustPending = true;
+				trailDistanceSinceParcel = 0;
+				jumpBufferedTicks = 0;
+				floorGraceTicks = 0;
+				turboTrailTicks = SQUID_TURBO_TRAIL_TICKS;
+				return true;
 			}
 			/** No ink left: the squid is forced back onto its feet with whatever momentum it had, and the surge goes off. */
 			void forcedOut(){
@@ -1477,17 +1521,26 @@ public class InkWars extends JocEquips {
 					Vector normal = surfaceNormal();
 					controlForward = surface == Surface.WALL ? bendOntoWall(forward, normal) : forward.clone();
 					controlRight = surface == Surface.WALL ? bendOntoWall(right, normal) : right.clone();
-				}else if(surface == Surface.FLOOR && cornerTicks == 0){
-					double angle = Math.atan2(controlForward.clone().crossProduct(forward).getY(), controlForward.dot(forward));
-					double turn = Math.max(-0.15, Math.min(0.15, angle));
-					controlForward.rotateAroundY(turn);
-					controlRight.rotateAroundY(turn);
+				}else if(surface == Surface.FLOOR && (cornerTicks <= CORNER_TICKS - 2 || p.getLocation().getYaw() != lastControlYaw)){
+					controlForward = forward.clone();
+					controlRight = right.clone();
 				}
 				Vector keys = forward.clone().multiply(forwardAmount).add(right.clone().multiply(sidewaysAmount));
 				if(keys.lengthSquared() > 1e-6)keys.normalize();
 				boolean jumpPressed = input.isJump() && !jumpHeld;
 				jumpHeld = input.isJump();
+				lastControlYaw = p.getLocation().getYaw();
 				return new Keys(keys, jumpPressed, forwardAmount, sidewaysAmount);
+			}
+			void prepareJump(Keys keys){
+				jumpBufferedTicks = keys.jumpPressed() ? SQUID_JUMP_BUFFER_TICKS : Math.max(0, jumpBufferedTicks - 1);
+				floorGraceTicks = surface == Surface.FLOOR ? SQUID_EDGE_GRACE_TICKS + 1 : Math.max(0, floorGraceTicks - 1);
+			}
+			boolean consumeJump(Keys keys){
+				if(!firstMovementStep || (!keys.jumpPressed() && jumpBufferedTicks == 0))return false;
+				jumpBufferedTicks = 0;
+				floorGraceTicks = 0;
+				return true;
 			}
 			Vector movementKeys(Keys keys){
 				if(surface == Surface.AIR)return keys.flat();
@@ -1589,6 +1642,7 @@ public class InkWars extends JocEquips {
 			}
 			void advance(Vector direction, double distance){
 				if(distance <= 0 || direction.lengthSquared() < 1e-9)return;
+				Vector start = centre.clone();
 				Vector displacement = direction.clone().normalize().multiply(distance);
 				Contact obstruction = sweep(centre, displacement);
 				if(obstruction != null){
@@ -1597,6 +1651,8 @@ public class InkWars extends JocEquips {
 						if(rise > 0 && rise <= SQUID_STEP){
 							Vector raised = centre.clone().add(new Vector(0, rise, 0));
 							if(sweep(centre, new Vector(0, rise, 0)) == null && sweep(raised, displacement) == null){
+								emitTurboTrail(start, raised);
+								emitTurboTrail(raised, raised.clone().add(displacement));
 								centre = raised.add(displacement);
 								return;
 							}
@@ -1605,6 +1661,24 @@ public class InkWars extends JocEquips {
 					distance = Math.max(0, obstruction.gap() - SQUID_CONTACT_SKIN);
 				}
 				centre.add(direction.clone().normalize().multiply(distance));
+				emitTurboTrail(start, centre);
+			}
+			void emitTurboTrail(Vector from, Vector to){
+				if(kit != null)emitTurboTrail(kit.hose, from, to);
+			}
+			void emitTurboTrail(InkStream stream, Vector from, Vector to){
+				if(turboTrailTicks <= 0 || from.distanceSquared(to) < 1e-8)return;
+				double distance = from.distance(to);
+				Vector direction = to.clone().subtract(from).multiply(1 / distance);
+				// Carry spacing across collision substeps without drawing a chord through a corner.
+				for(double offset = 0.25 - trailDistanceSinceParcel; offset <= distance; offset += 0.25){
+					if(trailParcelsThisTick >= 8)break;
+					Vector sample = from.clone().add(direction.clone().multiply(offset));
+					Vector sampleStart = sample.clone().subtract(direction.clone().multiply(Math.min(0.001, offset)));
+					stream.emitTrail(sampleStart.toLocation(getWorld()), sample.toLocation(getWorld()), velocity(), SQUID_TRAIL_LOAD);
+					trailParcelsThisTick++;
+				}
+				trailDistanceSinceParcel = (trailDistanceSinceParcel + distance) % 0.25;
 			}
 			/** A face the body cannot hold or pass: the heading loses what pointed into it and the body slides along, a little slower. */
 			void slideAlong(BlockFace face){
@@ -1724,7 +1798,7 @@ public class InkWars extends JocEquips {
 			void tickFloor(Keys keys){
 				flattenHeading(new Vector(1, 0, 0));
 				if(firstMovementStep)steer(movementKeys(keys), 1, true);
-				if(firstMovementStep && keys.jumpPressed()){
+				if(consumeJump(keys)){
 					takeOff(SQUID_HOP);
 					player().playSound(player().getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.6F, 1.3F);
 					return;
@@ -1776,7 +1850,7 @@ public class InkWars extends JocEquips {
 			 */
 			void tickWall(Keys keys){
 				Vector normal = wallSide.getDirection().multiply(-1);
-				if(firstMovementStep && keys.jumpPressed()){
+				if(consumeJump(keys)){
 					leapOff(normal);
 					return;
 				}
@@ -1853,7 +1927,7 @@ public class InkWars extends JocEquips {
 			 */
 			void tickCeiling(Keys keys){
 				Vector normal = new Vector(0, -1, 0);
-				if(firstMovementStep && keys.jumpPressed()){
+				if(consumeJump(keys)){
 					detachedFace = BlockFace.DOWN;
 					detachTicks = SQUID_DETACH_TICKS;
 					takeOff(0);
@@ -1902,6 +1976,7 @@ public class InkWars extends JocEquips {
 			void tickAir(Keys keys){
 				flattenHeading(new Vector(1, 0, 0));
 				if(firstMovementStep){
+					if(floorGraceTicks > 0 && consumeJump(keys))verticalSpeed = SQUID_HOP;
 					steer(keys.flat(), SQUID_AIR_THROTTLE, false);
 					speed *= SQUID_AIR_DRAG;
 					verticalSpeed = (verticalSpeed - SQUID_GRAVITY) * 0.98;
@@ -1944,28 +2019,16 @@ public class InkWars extends JocEquips {
 				advance(remainingVelocity, remainingVelocity.length() * remainingTime);
 			}
 
-			//--- the cart
-			/**
-			 * The keys against the heading, in whatever plane both lie: the heading goes where the keys point, at once, no turning circle, but the speed is kept only
-			 * by how much the new way agreed with the old, so a straight line gathers speed and a sharp turn bleeds it; a near reverse brakes to a crawl first and only
-			 * then sets off the new way. Resting, the speed coasts down when told to. The throttle stops at the top speed; above it, a thrust, the excess bleeds each tick.
-			 */
+			/** Intent redirects propulsion immediately; only a short sideways slip survives a turn. */
 			void steer(Vector keys, double throttle, boolean coast){
-				boolean pressing = keys.lengthSquared() > 1e-6;
-				if(!pressing){
+				if(thrustPending){
+					thrustPending = false;
+					return;
+				}
+				if(keys.lengthSquared() <= 1e-6){
 					if(coast)speed *= SQUID_COAST;
-				}else if(speed < SQUID_CRAWL_SPEED){
-					heading = keys.clone();
-					speed += SQUID_ACCELERATION * throttle;
 				}else{
-					double along = keys.dot(heading);
-					if(along < SQUID_REVERSE_COS){
-						speed -= SQUID_BRAKE;
-					}else{
-						heading = keys.clone();
-						speed *= 0.5 + 0.5 * along;
-						if(speed < SQUID_TOP_SPEED)speed = Math.min(SQUID_TOP_SPEED, speed + SQUID_ACCELERATION * throttle * Math.max(0, along) * (cornerTicks > 0 ? 0.5 : 1));
-					}
+					setMomentum(SquidMotion.steer(heading.clone().multiply(speed), keys, SQUID_ACCELERATION * throttle, SQUID_TOP_SPEED));
 				}
 				if(speed > SQUID_TOP_SPEED)speed = Math.max(SQUID_TOP_SPEED, speed * SQUID_OVERSPEED_KEPT);
 				speed = Math.max(0, speed);

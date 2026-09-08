@@ -62,6 +62,26 @@ public final class InkStream {
 		}
 	}
 
+	/** Sheds ink along a resolved movement segment, using the same flight and landing as hose ink. */
+	public void emitTrail(Location from, Location to, Vector bodyVelocity, Load load) {
+		Vector displacement = to.toVector().subtract(from.toVector());
+		double distance = displacement.length();
+		if (!Double.isFinite(distance) || !Double.isFinite(bodyVelocity.lengthSquared())) {
+			throw new IllegalArgumentException("Trail movement must be finite");
+		}
+		if (distance < 1e-6) return;
+		int count = Math.min(8, (int) Math.ceil(distance / 0.35));
+		Vector inheritedVelocity = bodyVelocity.clone().multiply(0.18);
+		if (inheritedVelocity.lengthSquared() > 0.45 * 0.45) inheritedVelocity.normalize().multiply(0.45);
+		Vector spillVelocity = inheritedVelocity.subtract(displacement.clone().multiply(0.10 / distance));
+		spillVelocity.setY(spillVelocity.getY() - 0.035);
+		// Midpoint samples cover the entire path without putting a nozzle offset through nearby walls.
+		for (int sample = 0; sample < count; sample++) {
+			Vector position = from.toVector().add(displacement.clone().multiply((sample + 0.5) / count));
+			parcels.add(new Parcel(position, spillVelocity.clone(), load));
+		}
+	}
+
 	public boolean isEmpty() {
 		return parcels.isEmpty();
 	}
