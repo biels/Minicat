@@ -280,7 +280,7 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<Integer, Block> killsSigns = new HashMap<>();
 	private HologramFacade.Handle lookoutSign;
 	private List<String> lastLookoutLines = List.of();
-	private final ObsidianGoldScore earnedGold = new ObsidianGoldScore();
+	private final ObsidianGoldScore goldScore = new ObsidianGoldScore();
 	/** Player → the task that will discharge the star they are charging. */
 	private final Map<UUID, Integer> starChargeTasks = new HashMap<>();
 	/** Player → deaths to a wither skeleton this match. */
@@ -713,8 +713,7 @@ public class ObsidianDefenders extends JocEquips {
 		scheduleGameplayTask(this::apareixerGolem, GOLEM_INICIAL_TICKS);
 		suddenDeath = false;
 		killsByTeam.clear();
-		earnedGold.clear();
-		markInitialGoldLoot();
+		goldScore.clear();
 		createLookoutSign();
 		scheduleGameplayRepeatingTask(this::updateLookoutSign, 20, 20);
 		witherDeaths.clear();
@@ -1031,7 +1030,6 @@ public class ObsidianDefenders extends JocEquips {
 		Inventory inv = cofre.getInventory();
 		inv.clear();
 		for (ItemStack loot : lootCofre()) {
-			loot = ObsidianGoldScore.freshLoot(loot);
 			int slot = Utils.NombreEntre(0, inv.getSize() - 1);
 			if (inv.getItem(slot) == null) inv.setItem(slot, loot); else inv.addItem(loot);
 		}
@@ -1382,7 +1380,7 @@ public class ObsidianDefenders extends JocEquips {
 	/** A player who leaves the match (/l, a teleport out) must not carry the Guardian's bar to the lobby. */
 	@Override
 	protected void customLeave(Player ply, List<String> attatchments) {
-		creditCollectedGold(ply);
+		goldScore.removePlayer(ply.getUniqueId());
 		super.customLeave(ply, attatchments);
 		if (barraGuardià != null) ply.hideBossBar(barraGuardià);
 		if (objectiveBar != null) ply.hideBossBar(objectiveBar);
@@ -1395,12 +1393,13 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected void onSeatDropped(Player ply) {
 		super.onSeatDropped(ply);
-		creditCollectedGold(ply);
+		updateGoldBalance(ply);
 		cancelStarCharge(ply);
 	}
 	/** Away past the grace: only what is keyed by them here needs forgetting; the bar re-shows itself each second to whoever is present. */
 	@Override
 	protected void onSeatAbandoned(Seat seat, List<String> attatchments) {
+		goldScore.removePlayer(seat.getUuid());
 		super.onSeatAbandoned(seat, attatchments);
 		shownPressedPlate.remove(seat.getUuid());
 	}
@@ -1655,6 +1654,16 @@ public class ObsidianDefenders extends JocEquips {
 			if (evt.getWhoClicked() instanceof Player p) refreshGoldSoon(p);
 		}
 
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+		public void onGoldDrop(org.bukkit.event.player.PlayerDropItemEvent evt) {
+			refreshGoldSoon(evt.getPlayer());
+		}
+
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+		public void onInventoryDrag(org.bukkit.event.inventory.InventoryDragEvent evt) {
+			if (evt.getWhoClicked() instanceof Player p) refreshGoldSoon(p);
+		}
+
 		@EventHandler
 		public void onInventoryClose(InventoryCloseEvent evt) {
 			if (!(evt.getPlayer() instanceof Player p)) return;
@@ -1860,14 +1869,20 @@ public class ObsidianDefenders extends JocEquips {
 		}
 		lookoutSign = HologramFacade.create(display);
 		updateLookoutSign();
-		plugin.getLogger().info("Lookout sign at " + display.toVector() + ": red vs blue, earned gold (0.01k nuggets) and team kills");
+		plugin.getLogger().info("Lookout sign at " + display.toVector() + ": red vs blue, held plus spent gold (0.01k nuggets) and team kills");
 	}
 
 	private void updateLookoutSign() {
 		if (!JocEnMarxa()) return;
-		for (Player player : getPlayers()) creditCollectedGold(player);
+		for (Seat seat : getSeats()) {
+			if (seat.getRole() != Seat.Role.PLAYER || (!seat.isOccupied() && !seat.isDropped())) {
+				goldScore.removePlayer(seat.getUuid());
+			} else if (seat.isOccupied() && seat.getPlayer() != null) {
+				updateGoldBalance(seat.getPlayer());
+			}
+		}
 		if (lookoutSign == null || Equips.size() != 2) return;
-		String[] lines = ObsidianInteractions.lookoutLines(earnedGold.total(0), earnedGold.total(1),
+		String[] lines = ObsidianInteractions.lookoutLines(goldScore.total(0), goldScore.total(1),
 				killsByTeam.getOrDefault(0, 0), killsByTeam.getOrDefault(1, 0));
 		List<String> next = List.of(lines);
 		if (!next.equals(lastLookoutLines)) {
@@ -1958,7 +1973,7 @@ public class ObsidianDefenders extends JocEquips {
 	public void clearExternals() {
 		HandlerList.unregisterAll(worldListener);
 		if (lookoutSign != null) { lookoutSign.delete(); lookoutSign = null; }
-		earnedGold.clear();
+		goldScore.clear();
 		lastLookoutLines = List.of();
 		for (FlyingLoot flight : flyingChestLoot) if (flight.item().isValid()) releaseChestLoot(flight.item());
 		flyingChestLoot.clear();
@@ -2084,8 +2099,17 @@ public class ObsidianDefenders extends JocEquips {
 
 	private boolean gastarOr(Player p, int preu) {
 		ajuntarOr(p);
-		if (orDisponible(p) < preu) return false;
+		int before = orDisponible(p);
+		if (preu <= 0 || before < preu) return false;
 		p.getInventory().removeItem(new ItemStack(Material.GOLD_NUGGET, preu));
+		int paid = before - orDisponible(p);
+		if (paid != preu) {
+			if (paid > 0) giveOrDrop(p, new ItemStack(Material.GOLD_NUGGET, paid));
+			updateGoldBalance(p);
+			return false;
+		}
+		Equip team = obtenirEquip(p);
+		if (team != null) goldScore.recordPurchase(p.getUniqueId(), team.getId(), heldGold(p), paid);
 		return true;
 	}
 
@@ -2678,8 +2702,6 @@ public class ObsidianDefenders extends JocEquips {
 	public void donarOr(Player plyr, int Or) {
 		if (Or <= 0) return;
 		giveOrDrop(plyr, new ItemStack(Material.GOLD_NUGGET, Or));
-		Equip team = obtenirEquip(plyr);
-		if (team != null) earnedGold.grant(team.getId(), Or);
 		pPlayer(plyr).IncrementarPropietat("Or", Or);
 		ajuntarOr(plyr);
 		updateScoreBoard(plyr);
@@ -2722,42 +2744,33 @@ public class ObsidianDefenders extends JocEquips {
 	 * into the inventory becomes ten nuggets, stacked to 64. It used to be the other way round.
 	 */
 	public void ajuntarOr(Player p) {
-		creditCollectedGold(p);
 		Inventory inv = p.getInventory();
 		int lingots = 0;
 		for (ItemStack d : inv.getContents()) if (d != null && d.getType() == Material.GOLD_INGOT) lingots += d.getAmount();
-		if (lingots == 0) return;
-		inv.remove(Material.GOLD_INGOT);
-		giveOrDrop(p, new ItemStack(Material.GOLD_NUGGET, lingots * 10));
+		if (lingots > 0) {
+			inv.remove(Material.GOLD_INGOT);
+			giveOrDrop(p, new ItemStack(Material.GOLD_NUGGET, lingots * 10));
+		}
+		updateGoldBalance(p);
 	}
 
-	private void creditCollectedGold(Player player) {
-		if (!JocEnMarxa() || player.getWorld() != world) return;
+	private void updateGoldBalance(Player player) {
+		if (!JocEnMarxa()) return;
 		Seat seat = seatOf(player);
 		Equip team = obtenirEquip(player);
-		if (team == null || seat == null || seat.getRole() != Seat.Role.PLAYER) return;
-		Inventory inventory = player.getInventory();
-		for (int slot = 0; slot < inventory.getSize(); slot++) {
-			ItemStack item = inventory.getItem(slot);
-			if (earnedGold.collect(team.getId(), item) > 0) inventory.setItem(slot, item);
+		if (player.getWorld() != world || team == null || seat == null || seat.getRole() != Seat.Role.PLAYER
+				|| (!seat.isOccupied() && !seat.isDropped())) {
+			goldScore.removePlayer(player.getUniqueId());
+			return;
 		}
-		ItemStack cursor = player.getItemOnCursor();
-		if (earnedGold.collect(team.getId(), cursor) > 0) player.setItemOnCursor(cursor);
+		goldScore.updateBalance(player.getUniqueId(), team.getId(), heldGold(player));
 	}
 
-	/** Template loot is new income too, including chests opened before the first jungle cycle. */
-	private void markInitialGoldLoot() {
-		for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
-			for (org.bukkit.block.BlockState state : chunk.getTileEntities()) {
-				if (!(state instanceof Chest chest)) continue;
-				Inventory inventory = chest.getBlockInventory();
-				for (int slot = 0; slot < inventory.getSize(); slot++) {
-					ItemStack item = inventory.getItem(slot);
-					if (item != null) inventory.setItem(slot, ObsidianGoldScore.freshLoot(item));
-				}
-			}
-		}
-		for (Item item : world.getEntitiesByClass(Item.class)) item.setItemStack(ObsidianGoldScore.freshLoot(item.getItemStack()));
+	private long heldGold(Player player) {
+		ItemStack cursor = player.getItemOnCursor();
+		long cursorGold = cursor.getType() == Material.GOLD_NUGGET ? cursor.getAmount()
+				: cursor.getType() == Material.GOLD_INGOT ? 10L * cursor.getAmount() : 0;
+		return orDisponible(player) + cursorGold;
 	}
 
 	//---------- Deaths ----------
@@ -2770,7 +2783,7 @@ public class ObsidianDefenders extends JocEquips {
 	 */
 	@Override
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
-		creditCollectedGold(killed);
+		updateGoldBalance(killed);
 		super.onPlayerDeath(evt, killed);
 		cancelStarCharge(killed);
 		boolean explotat = false;
@@ -3391,7 +3404,7 @@ public class ObsidianDefenders extends JocEquips {
 					player.sendMessage("Força de les fletxes explosives: " + Float.toString(explo));
 					pTemp().EstablirPropietat("ForçaExplo", Float.toString(explo));
 				}
-				world.dropItem(loc, ObsidianGoldScore.freshLoot(new ItemStack(Material.GOLD_NUGGET, 1))).setVelocity(new Vector(0, 0, 0));
+				world.dropItem(loc, new ItemStack(Material.GOLD_NUGGET, 1)).setVelocity(new Vector(0, 0, 0));
 				//Automal
 				double hp = player.getHealth();
 				if (hp == 20) {

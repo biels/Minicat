@@ -53,16 +53,24 @@ The optional `Lookout` map property specifies the supporting block, not the
 hologram's position; the display is centered four blocks above it.
 
 The title is followed by exactly two rows: `Or total: <red> vs <blue>` and
-`Kills: <red> vs <blue>`. Gold is cumulative match income, displayed in thousands
-of nuggets with two decimals (`1250` nuggets becomes `1.25k`). Exact integer
-earnings are retained internally; display rounding is to the nearest ten nuggets.
-Starting gold, passive income, kills, captures and Guardian rewards count when
-granted. Generated chest and ground gold count when collected, including manual
-chest transfers and cursor stacks. Spending, death, disconnect or leaving the
-match never subtracts from the team's score. True spectators do not contribute.
-New loot carries a temporary persistent-data marker, removed upon collection;
-dropping, transferring and collecting already-earned currency cannot count twice.
-Ingot conversion credits ten nuggets once, consistent with the game economy.
+`Kills: <red> vs <blue>`. Gold score is currency currently held by the team plus
+gold already spent on successful shop purchases and enchantments. It is displayed
+in thousands of nuggets with two decimals (`1250` nuggets becomes `1.25k`). Exact
+integer amounts are retained internally; display rounding is to the nearest ten
+nuggets. A single Q drop changes the exact score even when rounded text stays put.
+
+Spending preserves score. Dropping gold, depositing it in a chest, destruction,
+inventory overflow or any other loss removes that gold until collected again.
+The collecting player's team gets the recovered value, including enemy pickups;
+repeated drops, pickups or transfers cannot inflate the combined team score.
+Cursor stacks count as held, and ingots are worth ten nuggets, as in the shops.
+Only actually paid purchases are retained as spending; failed payments add none.
+
+Death with retained inventory and temporary disconnects retain the wallet balance.
+Leaving or exhausting reconnect grace removes carried gold but keeps historical
+purchases. True spectators do not contribute. Inventory changes are sampled after
+clicks, drags, drops and pickups, with a once-per-second reconciliation for other
+losses. No gold metadata or loot-generation markers are needed.
 Kills reuse the match's existing team counters, including credited minion kills.
 
 The display refreshes once per second, rewrites only changed text and is removed
@@ -75,8 +83,8 @@ the existing hologram system.
 spawn exclusion, radius and floor boundaries, finite radial push and loot
 velocity) and `verifyGameGuide` (19 authored pages, wrapping, includes and long
 text). Existing movement regressions also run unchanged.
-`ObsidianGoldScoreTest` checks cumulative rewards, partial loot collection,
-repeat pickups, transfers, ingot conversion and match reset.
+`ObsidianGoldScoreTest` checks retained spending, single/stack drops, partial and
+enemy pickups, deposits/losses, transfers, reconnect/abandonment and match reset.
 
 After deployment, run the operations repository's bot check:
 
