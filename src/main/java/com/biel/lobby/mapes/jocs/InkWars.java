@@ -73,9 +73,8 @@ public class InkWars extends JocEquips {
 	static final double SQUID_ACCELERATION = 0.035;
 	static final double SQUID_BRAKE = 0.05;
 	static final double SQUID_COAST = 0.985;
-	/** The heading turns this far per tick at a standstill and this far at full speed: a slow squid turns on the spot, a fast one takes a bend. */
-	static final double SQUID_TURN_RATE_SLOW = Math.toRadians(10);
-	static final double SQUID_TURN_RATE_FAST = Math.toRadians(5);
+	/** Keys further than this from the heading (cosine) are a reverse: the squid brakes to a crawl first, then sets off the new way; anything closer turns it on the spot. */
+	static final double SQUID_REVERSE_COS = Math.cos(Math.toRadians(120));
 	static final double SQUID_CRAWL_SPEED = 0.06;
 	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. */
 	static final double INK_GRAVITY = 0.05;
@@ -758,6 +757,12 @@ public class InkWars extends JocEquips {
 			if(inHand != Material.TORCH || !rightClick)return;
 			evt.setCancelled(true); // the torch is the hose, it is never placed
 			if(!isSubmerged())pinchTriggerTicks = PINCH_TRIGGER_TICKS;
+		}
+		/** A squid takes no damage: the ink is what it pays with. */
+		@Override
+		protected void onPlayerDamage(org.bukkit.event.entity.EntityDamageEvent evt, Player damaged) {
+			super.onPlayerDamage(evt, damaged);
+			if(damaged == getPlayer() && isSubmerged())evt.setCancelled(true);
 		}
 		/** A sneak would throw the squid off its carrier: while the engine still owns the body the client's dismount is refused; the engine's own eject is not. */
 		@Override
@@ -1612,8 +1617,9 @@ public class InkWars extends JocEquips {
 
 			//--- the cart
 			/**
-			 * The keys against the heading, in whatever plane both lie: along it they are throttle or brake, across it they steer by a fixed angle per tick;
-			 * resting, the speed coasts down when told to. Below crawling speed the heading simply snaps to the keys, so a standing squid sets off in any direction.
+			 * The keys against the heading, in whatever plane both lie: the heading goes where the keys point, at once, no turning circle; along the old heading
+			 * they were throttle, so the speed grows by how much they agreed with it; a near reverse brakes to a crawl first and only then sets off the new way.
+			 * Resting, the speed coasts down when told to.
 			 */
 			void steer(Vector keys, double throttle, boolean coast){
 				boolean pressing = keys.lengthSquared() > 1e-6;
@@ -1624,25 +1630,14 @@ public class InkWars extends JocEquips {
 					speed += SQUID_ACCELERATION * throttle;
 				}else{
 					double along = keys.dot(heading);
-					if(along >= 0)speed += SQUID_ACCELERATION * throttle * along * (cornerTicks > 0 ? 0.5 : 1);
-					else speed -= SQUID_BRAKE * -along;
-					turnHeadingToward(keys);
+					if(along < SQUID_REVERSE_COS){
+						speed -= SQUID_BRAKE;
+					}else{
+						heading = keys.clone();
+						speed += SQUID_ACCELERATION * throttle * Math.max(0, along) * (cornerTicks > 0 ? 0.5 : 1);
+					}
 				}
 				speed = Math.max(0, Math.min(SQUID_TOP_SPEED, speed));
-			}
-			/** Turns the heading toward a unit target by at most the turn rate for the current speed, in whatever plane the two span. */
-			void turnHeadingToward(Vector target){
-				double rate = SQUID_TURN_RATE_SLOW + (SQUID_TURN_RATE_FAST - SQUID_TURN_RATE_SLOW) * Math.min(1, speed / SQUID_TOP_SPEED);
-				double dot = Math.max(-1, Math.min(1, heading.dot(target)));
-				double wanted = Math.acos(dot);
-				if(wanted <= rate){
-					heading = target.clone();
-					return;
-				}
-				Vector perpendicular = target.clone().subtract(heading.clone().multiply(dot));
-				if(perpendicular.lengthSquared() < 1e-9)return; // straight behind: no side to turn to yet
-				perpendicular.normalize();
-				heading = heading.clone().multiply(Math.cos(rate)).add(perpendicular.multiply(Math.sin(rate))).normalize();
 			}
 			void setMomentum(Vector velocity){
 				speed = Math.min(SQUID_TOP_SPEED, velocity.length());
