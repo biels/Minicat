@@ -73,10 +73,16 @@ public class InkWars extends JocEquips {
 	static final double SQUID_CRAWL_SPEED = 0.06;
 	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. */
 	static final double INK_GRAVITY = 0.05;
-	/** The squid's ink reserve, 0 to 1: refilled per tick on its own colour, drained per tick on neutral ground and faster on enemy ink; at zero the squid is forced out. */
+	/**
+	 * The squid's ink reserve, 0 to 1: refilled per tick on its own colour, more the faster it swims; drained on neutral ground by a share per tick plus a share
+	 * per block swum, faster on enemy ink; at zero the squid is forced out. The ground is judged by what it was before this dive's own strip, so the strip feeds nobody.
+	 * A full reserve buys about seventeen blocks of neutral ground at full speed, ten of enemy ink; twenty blocks of own ink refill it.
+	 */
 	static final double RESERVE_REFILL = 0.012;
-	static final double RESERVE_DRAIN_NEUTRAL = 0.012;
-	static final double RESERVE_DRAIN_ENEMY = 0.02;
+	static final double RESERVE_DRAIN_NEUTRAL = 0.02;
+	static final double RESERVE_DRAIN_NEUTRAL_PER_BLOCK = 0.035;
+	static final double RESERVE_DRAIN_ENEMY = 0.03;
+	static final double RESERVE_DRAIN_ENEMY_PER_BLOCK = 0.06;
 	/** Ink sacs shown in the squid's hand for a full reserve. */
 	static final int INK_SACS_FOR_FULL_RESERVE = 32;
 	/** Looking within this angle of straight away from a wall lets go of it into a jump. */
@@ -130,7 +136,7 @@ public class InkWars extends JocEquips {
 		i.add("The ink won't dry instantly, use it to your advantage");
 		i.add("One kit: the Roller paints the floor ahead of you while you walk with it, the Hose throws a jet of ink that flies in an arc (hold right-click), ink balls splash at range");
 		i.add("Press sneak once for squid form: invisible, fast, healing, with momentum; press again to stand up");
-		i.add("The squid lives on ink (the green bar): it refills on your colour, drains on neutral ground, faster on enemy ink, and at zero you are thrown back on your feet");
+		i.add("The squid lives on ink (the green bar): it refills on your colour, drains on neutral ground, faster on enemy ink, and at zero you are thrown back on your feet; the strip you lay as you go does not count as yours until you stand up");
 		i.add("A squid runs up any wall it hits and round corners as if the floor continued; on a wall you go where you look, look straight out to jump off");
 		i.add("Swimming fast charges a surge (the meter): surfacing or landing releases it as a splash that hurts");
 		i.add("Ink balls reload x5 faster on your own colour, x8 while submerged");
@@ -781,20 +787,26 @@ public class InkWars extends JocEquips {
 		 * Looking straight up or down has no across, so the stroke is the block underfoot.
 		 */
 		public void rollerLinePaint(double halfWidth, double ink, Player p, double ahead){
+			for(Block floor : rollerStrokeBlocks(halfWidth, p, ahead))paintBlock(floor, ink);
+		}
+		/** The floor blocks a stroke covers, in order across, each once. */
+		public ArrayList<Block> rollerStrokeBlocks(double halfWidth, Player p, double ahead){
+			ArrayList<Block> stroke = new ArrayList<>();
 			Location feet = p.getLocation();
 			Vector forward = feet.getDirection().setY(0);
 			if(forward.lengthSquared() < 1e-6){
-				paintBlock(floorUnder(feet), ink);
-				return;
+				Block underfoot = floorUnder(feet);
+				if(underfoot != null)stroke.add(underfoot);
+				return stroke;
 			}
 			forward.normalize();
 			Vector across = new Vector(0, 1, 0).crossProduct(forward).normalize();
 			Location centre = feet.clone().add(forward.multiply(ahead));
-			HashSet<Block> stroked = new HashSet<>();
 			for(double offset = -halfWidth; offset <= halfWidth + 1e-9; offset += 0.5){
 				Block floor = floorUnder(centre.clone().add(across.clone().multiply(offset)));
-				if(floor != null && stroked.add(floor))paintBlock(floor, ink);
+				if(floor != null && !stroke.contains(floor))stroke.add(floor);
 			}
+			return stroke;
 		}
 		/** The floor a roller's head rests on at a point: the first solid block from the point down two, or the block itself when it is solid, a riser. */
 		Block floorUnder(Location point){
@@ -969,6 +981,8 @@ public class InkWars extends JocEquips {
 			double snapIntoWall = 0;
 			/** The wall block the body holds, from the last probe toward the wall. */
 			Block gripped = null;
+			/** What the ground was before this dive's own strip painted it, by block: the reserve judges the ground by this, so the squid cannot live on the ink it lays. */
+			final HashMap<Block, EquipInkWars> groundUnderStrip = new HashMap<>();
 			/** The ink: gathered swimming on the team's colour, spent swimming elsewhere, and what the surge throws. Zero on every dive. */
 			double reserve = 0;
 			double pendingSurge = -1;
@@ -987,6 +1001,7 @@ public class InkWars extends JocEquips {
 				submergedTicks = 0;
 				cornerTicks = 0;
 				reserve = 0;
+				groundUnderStrip.clear();
 				surface = Surface.FLOOR;
 				wallSide = null;
 				setMomentum(new Vector(moved.getX(), 0, moved.getZ()));
@@ -1030,6 +1045,7 @@ public class InkWars extends JocEquips {
 			void reset(){
 				surfaceQuietly();
 				reserve = 0;
+				groundUnderStrip.clear();
 				pendingSurge = -1;
 				setMomentum(new Vector());
 			}
@@ -1065,9 +1081,9 @@ public class InkWars extends JocEquips {
 				if(cornerTicks > 0)cornerTicks--;
 
 				Block touched = touchedBlock();
-				EquipInkWars colourTouched = getTeamOwningBlock(touched);
-				if(surface != Surface.AIR)tickReserve(team, colourTouched, moved);
-				if(reserve <= 0 && colourTouched != team && surface != Surface.AIR){
+				EquipInkWars ground = groundColour(touched);
+				if(surface != Surface.AIR)tickReserve(team, ground, moved);
+				if(reserve <= 0 && ground != team && surface != Surface.AIR){
 					forcedOut();
 					return;
 				}
@@ -1089,11 +1105,17 @@ public class InkWars extends JocEquips {
 				if(surface == Surface.FLOOR)return getBlockWherePlayerStands();
 				return null;
 			}
-			/** Gathered per block swum on the team's colour, spent per tick elsewhere: a long run on own ink is what pays for a crossing. */
-			void tickReserve(EquipInkWars team, EquipInkWars colourTouched, Vector moved){
-				if(colourTouched == team)reserve = Math.min(1, reserve + RESERVE_REFILL * (0.3 + moved.length() * 4));
-				else if(colourTouched == null)reserve -= RESERVE_DRAIN_NEUTRAL;
-				else reserve -= RESERVE_DRAIN_ENEMY;
+			/** The colour the reserve judges the ground by: what was there before this dive's own strip, else what is there now. */
+			EquipInkWars groundColour(Block touched){
+				if(touched != null && groundUnderStrip.containsKey(touched))return groundUnderStrip.get(touched);
+				return getTeamOwningBlock(touched);
+			}
+			/** Gathered per block swum on the team's colour, spent per tick and per block elsewhere: a long run on own ink is what pays for a crossing. */
+			void tickReserve(EquipInkWars team, EquipInkWars ground, Vector moved){
+				double blocksSwum = moved.length();
+				if(ground == team)reserve = Math.min(1, reserve + RESERVE_REFILL * (0.3 + blocksSwum * 4));
+				else if(ground == null)reserve -= RESERVE_DRAIN_NEUTRAL + RESERVE_DRAIN_NEUTRAL_PER_BLOCK * blocksSwum;
+				else reserve -= RESERVE_DRAIN_ENEMY + RESERVE_DRAIN_ENEMY_PER_BLOCK * blocksSwum;
 				reserve = Math.max(0, reserve);
 			}
 			/** No ink left: the squid is forced back onto its feet with whatever momentum it had, and the surge goes off. */
@@ -1109,7 +1131,10 @@ public class InkWars extends JocEquips {
 				Particle.DustOptions dust = new Particle.DustOptions(team.getStrongColor().getColor(), 1.4F);
 				getWorld().spawnParticle(Particle.DUST, player().getLocation().add(0, 0.15, 0), (int) (3 + moved.length() * 12), 0.45, 0.05, 0.45, 0, dust);
 			}
-			/** The strip the squid lays: on its own colour a full re-wet, elsewhere a stroke that thins with the reserve down to the one block under the body. */
+			/**
+			 * The strip the squid lays: on its own colour a full re-wet, elsewhere a stroke that thins with the reserve down to the one block under the body.
+			 * What the ground was is remembered before the stroke covers it.
+			 */
 			void layStrip(EquipInkWars team, Block touched){
 				Player p = player();
 				if(getTeamOwningBlock(touched) == team){
@@ -1118,13 +1143,16 @@ public class InkWars extends JocEquips {
 					return;
 				}
 				if(kit == null)return;
-				if(surface == Surface.WALL){
-					kit.paintBlock(touched, 0.15 + 0.35 * reserve);
-					return;
-				}
+				double ink = 0.15 + 0.35 * reserve;
 				double halfWidth = 0.5 + 1.5 * reserve;
-				if(halfWidth < 0.9)kit.paintBlock(touched, 0.15 + 0.35 * reserve);
-				else kit.rollerLinePaint(halfWidth, 0.15 + 0.35 * reserve, p, 0);
+				ArrayList<Block> stroke = new ArrayList<>();
+				if(surface == Surface.WALL || halfWidth < 0.9)stroke.add(touched);
+				else stroke = kit.rollerStrokeBlocks(halfWidth, p, 0);
+				for(Block b : stroke){
+					EquipInkWars owner = getTeamOwningBlock(b);
+					if(owner != team)groundUnderStrip.putIfAbsent(b, owner);
+					kit.paintBlock(b, ink);
+				}
 			}
 			/** The ink on the experience bar and as the stack of sacs in hand. */
 			void showMeters(){
