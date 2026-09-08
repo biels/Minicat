@@ -1,0 +1,26 @@
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianGoldScore.java
+  s_3c4d38f3809c52::t_928d921016f759 3-6,8,10-12,15-16,19-22,25-30,33-34,37-40
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianGoldScoreTest.java
+  s_3c4d38f3809c52::t_c06869d4e556ac 3,8-21,23-32,34-50,52-57,60-62
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_3c4d38f3809c52::t_928d921016f759 283,716,1383,1396,1402,1657-1666,1872,1877-1883,1885,1976,2102-2103,2105-2112,2750-2754,2757,2766-2769,2771-2773,2786,3407
+  s_3c4d38f3809c52::t_bb63adb76aafbd 2758,2761-2764
+docs/obsidian-interactions.md
+  s_3c4d38f3809c52::t_bb63adb76aafbd 56-73,86-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "04c033184b58e756553429f44ea0b29d63adb572",
+  "prompts": {},
+  "sessions": {
+    "s_3c4d38f3809c52": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08094-9a37-7ae2-9d4f-3b28b8208de4",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
