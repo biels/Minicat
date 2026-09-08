@@ -729,7 +729,7 @@ public class ObsidianDefenders extends JocEquips {
 		items.add(new ItemStack(Material.CHAINMAIL_LEGGINGS, 1));
 		items.add(new ItemStack(Material.CHAINMAIL_BOOTS, 1));
 		items.add(new ItemStack(Material.ARROW, 1));
-		items.add(new ItemStack(Material.COOKED_BEEF, 40));
+		items.add(new ItemStack(Material.COOKED_BEEF, 8));
 		return items;
 	}
 
