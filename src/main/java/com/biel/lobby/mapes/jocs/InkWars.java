@@ -1066,6 +1066,7 @@ public class InkWars extends JocEquips {
 			Vector controlForward = null;
 			Vector controlRight = null;
 			Vector cameraCentre = null;
+			float carrierYaw = 0;
 			Location lastClearStandingSpot = null;
 			int blockedSurfaceTicks = 0;
 			int lastSurfaceAttemptTick = -1;
@@ -1128,6 +1129,7 @@ public class InkWars extends JocEquips {
 			}
 			void mount(){
 				Player p = player();
+				carrierYaw = p.getLocation().getYaw();
 				carrier = getWorld().spawn(seatLocation(), ItemDisplay.class, display -> {
 					display.setPersistent(false);
 					display.setInvulnerable(true);
@@ -1140,7 +1142,8 @@ public class InkWars extends JocEquips {
 			Location seatLocation(){
 				Vector seat = (cameraCentre == null ? centre : cameraCentre).clone().subtract(new Vector(0, SQUID_CAMERA_HEIGHT, 0)).subtract(seatOffset);
 				Location at = seat.toLocation(getWorld());
-				at.setYaw(player().getLocation().getYaw());
+				// Vehicle teleport rotation is also applied to the rider. Only move this carrier.
+				at.setYaw(carrierYaw);
 				return at;
 			}
 			/** The seat measured from where the player actually sits on the carrier: exact whatever the client's riding pose does. */
@@ -1317,9 +1320,18 @@ public class InkWars extends JocEquips {
 				pushed = centre.clone().subtract(before);
 				Location standing = standingSpot();
 				if(standingClear(standing))lastClearStandingSpot = standing;
-				if(cameraCentre == null)cameraCentre = centre.clone();
+				updateCamera();
+				carrier.teleport(seatLocation()); // a vehicle keeps its passengers through a teleport since 1.21.10
+				showMeters();
+			}
+			void updateCamera(){
+				if(cameraCentre == null){
+					cameraCentre = centre.clone();
+					return;
+				}
 				cameraCentre.setX(centre.getX()).setZ(centre.getZ());
-				cameraCentre.setY(cameraCentre.getY() + velocity().getY());
+				// Follow resolved travel; desired velocity can point into a blocked ceiling or wall.
+				if(surface != Surface.FLOOR)cameraCentre.setY(cameraCentre.getY() + pushed.getY());
 				cameraCentre.add(centre.clone().subtract(cameraCentre).multiply(0.45));
 				// Never smooth the camera through the surface the body has just rounded.
 				Vector cameraOffset = cameraCentre.clone().subtract(centre);
@@ -1327,8 +1339,6 @@ public class InkWars extends JocEquips {
 					RayTraceResult obstruction = getWorld().rayTraceBlocks(centre.toLocation(getWorld()), cameraOffset, cameraOffset.length() + 0.1, FluidCollisionMode.NEVER, true);
 					if(obstruction != null)cameraCentre = centre.clone();
 				}
-				carrier.teleport(seatLocation()); // a vehicle keeps its passengers through a teleport since 1.21.10
-				showMeters();
 			}
 			/** The colour the reserve judges the ground by: what was there before this dive's own strip, else what is there now. */
 			EquipInkWars groundColour(Block touched){

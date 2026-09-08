@@ -44,7 +44,54 @@ public final class InkWarsMovementTest {
         ceilingAndRoof();
         wallGap();
         ceilingControlFrame();
+        carrierDoesNotRotateView();
+        cameraFollowsResolvedMovement();
         System.out.println("InkWars movement controller checks passed");
+    }
+
+    private static void carrierDoesNotRotateView() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0.5, 1.5, 0.5), InkWars.Surface.FLOOR);
+        squid.carrierYaw = -90;
+        float previousCarrierYaw = squid.carrierYaw;
+        for (float lookYaw : new float[]{-75, -30, 45, 179, -179, -90}) {
+            fixture.playerLocation.setYaw(lookYaw);
+            float targetCarrierYaw = squid.seatLocation().getYaw();
+            // Paper applies the vehicle's rotation delta to each passenger on teleport.
+            double nextPlayerYaw = targetCarrierYaw + lookYaw - previousCarrierYaw;
+            close(lookYaw, nextPlayerYaw, "carrier movement must not amplify mouse movement");
+            close(0, squid.seatLocation().getPitch(), "carrier pitch remains fixed");
+            previousCarrierYaw = targetCarrierYaw;
+        }
+    }
+
+    private static void cameraFollowsResolvedMovement() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0.5, 2, 0.5), InkWars.Surface.WALL);
+        squid.cameraCentre = squid.centre.clone();
+        squid.heading = new Vector(0, 1, 0);
+        squid.speed = 0.65;
+        squid.pushed = new Vector();
+        for (int tick = 0; tick < 10; tick++) {
+            squid.updateCamera();
+            close(squid.centre.getY(), squid.cameraCentre.getY(), "blocked climb must not move camera");
+        }
+        for (int tick = 0; tick < 10; tick++) {
+            squid.pushed = new Vector(0, 0.2, 0);
+            squid.centre.add(squid.pushed);
+            squid.updateCamera();
+            close(squid.centre.getY(), squid.cameraCentre.getY(), "constant climb follows actual displacement");
+        }
+        squid.surface = InkWars.Surface.FLOOR;
+        squid.centre.setY(squid.centre.getY() + 0.5);
+        double previousCameraHeight = squid.cameraCentre.getY();
+        for (int tick = 0; tick < 12; tick++) {
+            squid.updateCamera();
+            require(squid.cameraCentre.getY() >= previousCameraHeight, "step camera converges monotonically");
+            require(squid.cameraCentre.getY() <= squid.centre.getY(), "step camera does not overshoot");
+            previousCameraHeight = squid.cameraCentre.getY();
+        }
+        require(squid.centre.getY() - previousCameraHeight < 0.001, "step camera settles");
     }
 
     private static void installSoundRegistry() throws Exception {
@@ -270,6 +317,7 @@ public final class InkWarsMovementTest {
         private final UUID worldId = UUID.randomUUID();
         private final World world;
         private final TestGame game;
+        private final Location playerLocation;
 
         Fixture() throws Exception {
             world = proxy(World.class, (object, method, args) -> switch (method.getName()) {
@@ -291,8 +339,9 @@ public final class InkWarsMovementTest {
             Object allocator = unsafeField.get(null);
             game = (TestGame) unsafeClass.getMethod("allocateInstance", Class.class).invoke(allocator, TestGame.class);
             game.fixtureWorld = world;
+            playerLocation = new Location(world, 0, 2, 0, -90, 0);
             game.fixturePlayer = proxy(Player.class, (object, method, args) -> switch (method.getName()) {
-                case "getLocation" -> new Location(world, 0, 2, 0, -90, 0);
+                case "getLocation" -> playerLocation.clone();
                 case "getWorld" -> world;
                 case "playSound" -> null;
                 default -> defaultValue(object, method, args);
