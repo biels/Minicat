@@ -1,0 +1,47 @@
+src/test/java/com/biel/lobby/guide/GameGuideTest.java
+  s_3c4d38f3809c52::t_84f4d57f0a9333 73
+  s_3c4d38f3809c52::t_5a8495586c7600 1-72,74-93
+build.gradle
+  s_3c4d38f3809c52::t_e2681c40e80b80 56-57
+  s_3c4d38f3809c52::t_5a8495586c7600 81-91
+  s_3c4d38f3809c52::t_a9ec45c213a8a2 80
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianInteractionsTest.java
+  s_3c4d38f3809c52::t_e2681c40e80b80 1-74
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_3c4d38f3809c52::t_e2681c40e80b80 262,1685,1715,1759,1765
+  s_3c4d38f3809c52::t_9551df52f135fe 62,104,266-271,698-700,1189-1205,1212-1241,1632-1636,1651-1653,1667,1669,1671,1675-1684,1686-1714,1716-1758,1760-1764,1766-1767,1922-1929,2830-2834
+src/main/java/com/biel/lobby/guide/GameGuide.java
+  s_3c4d38f3809c52::t_762a4033a5091f 29-30,53,94,165,168-174,177
+src/main/java/com/biel/lobby/guide/BookLayout.java
+  s_3c4d38f3809c52::t_fb859374c4857e 89-90
+  s_3c4d38f3809c52::t_762a4033a5091f 1-88,91-92
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianInteractions.java
+  s_3c4d38f3809c52::t_9551df52f135fe 1-35,43-44
+  s_3c4d38f3809c52::t_e2681c40e80b80 36-42
+src/main/resources/guides/obsidian-defenders.md
+  s_3c4d38f3809c52::t_e2681c40e80b80 18,133,140
+  s_3c4d38f3809c52::t_a9ec45c213a8a2 208
+  s_3c4d38f3809c52::t_fb859374c4857e 26,38,78,102
+  s_3c4d38f3809c52::t_5ce37c6c15d6fd 41,46,121,148,170,172,174,179,181,193,196,210,212,226
+  s_3c4d38f3809c52::t_c137d158788001 4-6,9,12,15,21,24-25,27-28,31-32,35,42-43,47-49,61-62,65-68,71-72,75,81,84,87,90,93,96,99,104-105,107,109,111,113-114,116,118,120,123,125-126,128-132,134-137,139,142-144,146,149-163,165,167,169,183-190,197,200-207,211,213-214,216,218-219,222-225,227,229
+  s_3c4d38f3809c52::t_5a8495586c7600 215,217
+  s_3c4d38f3809c52::t_e19fff67e0394d 209
+docs/obsidian-interactions.md
+  s_3c4d38f3809c52::t_c5cf5006965768 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "29d15b4bd47f82d058d84e05c1601ff750da70b4",
+  "prompts": {},
+  "sessions": {
+    "s_3c4d38f3809c52": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08094-9a37-7ae2-9d4f-3b28b8208de4",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
