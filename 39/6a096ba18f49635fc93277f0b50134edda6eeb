@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/JocEquips.java
+  s_6b5a2f54eee20a::t_0bfffe3ead921b 804-805
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "396a096ba18f49635fc93277f0b50134edda6eeb",
+  "prompts": {},
+  "sessions": {
+    "s_6b5a2f54eee20a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0817b-4c49-7a80-a6e4-989efc4606e5",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
