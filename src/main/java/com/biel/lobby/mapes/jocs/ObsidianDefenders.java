@@ -1719,7 +1719,6 @@ public class ObsidianDefenders extends JocEquips {
 				emptyChestInto(chest, p);
 			}
 			refreshGoldSoon(p);
-			tidySoon(p);
 		}
 	};
 
