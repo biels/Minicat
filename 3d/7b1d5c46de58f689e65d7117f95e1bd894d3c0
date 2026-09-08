@@ -1,0 +1,22 @@
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkStream.java
+  s_3f83bb5d8b06f6::t_7045358cdd9bdf 30-31,61,92
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_3f83bb5d8b06f6::t_c0bdfa3c425606 567-568,639-641,657,662-665,763,778-780,1086-1087,1134-1135,1239,1241,1256-1257,1267,1307-1309,1459,1511,1676
+  s_3f83bb5d8b06f6::t_7045358cdd9bdf 95-98,123-124,400,632,634,1227,1273-1276,1278-1281,1285-1305,1318,1335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "3d7b1d5c46de58f689e65d7117f95e1bd894d3c0",
+  "prompts": {},
+  "sessions": {
+    "s_3f83bb5d8b06f6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85a8438a-b458-48dc-8b71-722d22344801",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
