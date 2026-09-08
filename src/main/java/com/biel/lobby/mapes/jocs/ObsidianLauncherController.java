@@ -6,8 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiPredicate;
-import java.util.function.Consumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import org.bukkit.Bukkit;
@@ -18,11 +17,9 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.FaceAttachable;
 import org.bukkit.block.data.type.Switch;
-import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -42,13 +39,10 @@ final class ObsidianLauncherController implements Listener {
     private final Plugin plugin;
     private final Predicate<Player> participant;
     private final ToIntFunction<Player> teamOf;
-    private final BiPredicate<Player, Integer> pay;
-    private final Consumer<Player> refreshGold;
-    private final ObsidianWatchtowers upgrades = new ObsidianWatchtowers();
+    private final ObsidianWatchtowers upgrades;
     private final Map<Block, ObsidianWatchtowers.Tower> buttons = new HashMap<>();
     private final Map<Block, BlockData> originalBlocks = new LinkedHashMap<>();
     private final Map<Block, BlockData> installedBlocks = new HashMap<>();
-    private final Map<Block, Sign> originalSigns = new HashMap<>();
     private final Map<UUID, Occupant> occupants = new HashMap<>();
     private final Map<UUID, Flight> flights = new HashMap<>();
     private long tick;
@@ -67,12 +61,12 @@ final class ObsidianLauncherController implements Listener {
     }
 
     ObsidianLauncherController(World world, Plugin plugin, Predicate<Player> participant,
-            ToIntFunction<Player> teamOf, BiPredicate<Player, Integer> pay, Consumer<Player> refreshGold) {
+            ToIntFunction<Player> teamOf, ObsidianTeamUpgrades teamUpgrades) {
         this.world = world; this.plugin = plugin; this.participant = participant;
-        this.teamOf = teamOf; this.pay = pay; this.refreshGold = refreshGold;
+        this.teamOf = teamOf;
+        this.upgrades = new ObsidianWatchtowers(teamUpgrades);
         for (var tower : ObsidianWatchtowers.TOWERS) for (var position : tower.buttons()) buttons.put(block(position), tower);
         Bukkit.getPluginManager().registerEvents(this, plugin);
-        updateSigns();
     }
 
     private Block block(ObsidianWatchtowers.Position position) {
@@ -90,41 +84,23 @@ final class ObsidianLauncherController implements Listener {
     }
 
     boolean interact(Player player, Block clicked) {
-        for (int team = 0; team < 2; team++) {
-            if (block(ObsidianWatchtowers.purchaseButton(team)).equals(clicked)) {
-                if (eligible(player)) buy(player, team);
-                return true;
-            }
-        }
         var tower = buttons.get(clicked);
         if (tower == null) return false;
         if (eligible(player) && upgrades.unlocked(tower.team())) launch(player, tower);
         return true;
     }
 
-    private void buy(Player player, int team) {
+    boolean installAndPay(int team, BooleanSupplier pay) {
         Map<Block, BlockData> transaction = new LinkedHashMap<>();
+        boolean committed = false;
         try {
-            var result = upgrades.purchase(team, teamOf.applyAsInt(player), () -> install(team, transaction),
-                    () -> pay.test(player, ObsidianWatchtowers.Upgrade.LAUNCHERS.price),
-                    () -> transaction.forEach((block, data) -> block.setBlockData(data, false)));
-            switch (result) {
-                case BOUGHT -> {
-                    transaction.forEach(originalBlocks::putIfAbsent);
-                    transaction.keySet().forEach(block -> installedBlocks.put(block, block.getBlockData().clone()));
-                    updateSigns();
-                    refreshGold.accept(player);
-                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
-                    for (Player teammate : world.getPlayers()) if (teamOf.applyAsInt(teammate) == team)
-                        teammate.sendMessage(ChatColor.GOLD + "Llançadors de les torres activats!");
-                }
-                case ENEMY -> message(player, "Aquesta millora és de l'equip enemic");
-                case COMPLETE -> message(player, "Llançadors ja activats");
-                case FAILED -> message(player, "Calen 50 or i les torres han d'estar lliures");
-            }
-        } catch (RuntimeException exception) {
-            plugin.getLogger().log(java.util.logging.Level.WARNING, "Watchtower purchase failed", exception);
-            message(player, "No s'ha pogut activar la millora");
+            if (!install(team, transaction) || !pay.getAsBoolean()) return false;
+            transaction.forEach(originalBlocks::putIfAbsent);
+            transaction.keySet().forEach(block -> installedBlocks.put(block, block.getBlockData().clone()));
+            committed = true;
+            return true;
+        } finally {
+            if (!committed) transaction.forEach((block, data) -> block.setBlockData(data, false));
         }
     }
 
@@ -156,20 +132,6 @@ final class ObsidianLauncherController implements Listener {
             entry.getKey().setBlockData(entry.getValue(), false);
         }
         return true;
-    }
-
-    private void updateSigns() {
-        for (int team = 0; team < 2; team++) {
-            Block signBlock = block(ObsidianWatchtowers.purchaseButton(team)).getRelative(BlockFace.DOWN);
-            if (!(signBlock.getState() instanceof Sign sign)) continue;
-            originalSigns.putIfAbsent(signBlock, (Sign) signBlock.getState());
-            String[] lines = upgrades.unlocked(team)
-                    ? new String[]{"Llançadors", "activats", "Millora 1/1", ""}
-                    : new String[]{"Llançadors", "de les torres", "50g", "Prem per comprar"};
-            for (int line = 0; line < 4; line++) sign.getSide(Side.FRONT).line(line,
-                    PaperMessages.legacy((line == 2 ? ChatColor.GOLD : ChatColor.WHITE) + lines[line]));
-            sign.update(false, false);
-        }
     }
 
     private void sampleOccupants() {
@@ -212,7 +174,6 @@ final class ObsidianLauncherController implements Listener {
 
     void tick() {
         tick++;
-        if (originalSigns.size() < 2 && tick % 20 == 0) updateSigns();
         sampleOccupants();
         for (var entry : new ArrayList<>(flights.entrySet())) {
             Player player = Bukkit.getPlayer(entry.getKey());
@@ -284,7 +245,5 @@ final class ObsidianLauncherController implements Listener {
         });
         originalBlocks.clear();
         installedBlocks.clear();
-        originalSigns.values().forEach(sign -> sign.update(false, false));
-        originalSigns.clear();
     }
 }

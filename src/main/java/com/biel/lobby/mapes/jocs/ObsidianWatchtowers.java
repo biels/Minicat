@@ -3,19 +3,12 @@ package com.biel.lobby.mapes.jocs;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.BooleanSupplier;
 import org.bukkit.util.Vector;
 
 /** Match-local upgrades and the four surveyed watchtower layouts. */
 final class ObsidianWatchtowers {
     static final int RELOAD_TICKS = 100;
     static final int FLIGHT_TIMEOUT_TICKS = 200;
-
-    enum Upgrade {
-        LAUNCHERS(50);
-        final int price;
-        Upgrade(int price) { this.price = price; }
-    }
 
     record Position(int x, int y, int z) {
         Vector vector() { return new Vector(x, y, z); }
@@ -51,25 +44,10 @@ final class ObsidianWatchtowers {
         };
     }
 
-    enum Purchase { BOUGHT, ENEMY, COMPLETE, FAILED }
-    private final int[] levels = new int[2];
+    private final ObsidianTeamUpgrades upgrades;
     private final long[] reloadUntil = new long[4];
-
-    boolean unlocked(int team) { return levels[team] > 0; }
-
-    Purchase purchase(int team, int buyerTeam, BooleanSupplier install, BooleanSupplier pay, Runnable rollback) {
-        if (team != buyerTeam) return Purchase.ENEMY;
-        if (unlocked(team)) return Purchase.COMPLETE;
-        boolean committed = false;
-        try {
-            if (!install.getAsBoolean() || !pay.getAsBoolean()) return Purchase.FAILED;
-            levels[team]++;
-            committed = true;
-            return Purchase.BOUGHT;
-        } finally {
-            if (!committed) rollback.run();
-        }
-    }
+    ObsidianWatchtowers(ObsidianTeamUpgrades upgrades) { this.upgrades = upgrades; }
+    boolean unlocked(int team) { return upgrades.has(team, ObsidianTeamUpgrades.Upgrade.LAUNCHERS); }
 
     int reloadSeconds(int tower, long tick) {
         return (int) Math.max(0, (reloadUntil[tower] - tick + 19) / 20);

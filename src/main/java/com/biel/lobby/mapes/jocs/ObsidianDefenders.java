@@ -98,6 +98,7 @@ import com.biel.lobby.minions.Lane;
 import com.biel.lobby.minions.LaneMinion;
 import com.biel.lobby.minions.LaneMinionKind;
 import com.biel.lobby.minions.Minion;
+import com.biel.lobby.minions.SkeletonArcherMinion;
 import com.biel.lobby.minions.SnowmanKind;
 import com.biel.lobby.minions.SnowmanMinion;
 import com.biel.lobby.utilities.InventoryTidy;
@@ -357,6 +358,10 @@ public class ObsidianDefenders extends JocEquips {
 	/** Bridge button block → team id that owns it. */
 	private final Map<Block, Integer> botonsPont = new HashMap<>();
 	private ObsidianLauncherController watchtowerLaunchers;
+	private ObsidianTeamUpgrades teamUpgrades;
+	private ObsidianUpgradeController upgradeSigns;
+	private record CombatCredit(UUID ownerId, Minion minion, int second) {}
+	private final Map<UUID, CombatCredit> combatCredits = new HashMap<>();
 	/** Team id → the plank columns of the bridge over that team's moat, deploy order. */
 	private final Map<Integer, List<List<Block>>> pontsPerMoat = new HashMap<>();
 	private final Set<Integer> pontsDesplegats = new HashSet<>();
@@ -700,12 +705,21 @@ public class ObsidianDefenders extends JocEquips {
 		registerControlPointsAndLamps();
 		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
 		Bukkit.getPluginManager().registerEvents(worldListener, plugin);
+		teamUpgrades = new ObsidianTeamUpgrades();
 		watchtowerLaunchers = new ObsidianLauncherController(world, plugin,
 				player -> JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player)
 						&& player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR,
 				player -> obtenirEquip(player) == null ? -1 : obtenirEquip(player).getId(),
+				teamUpgrades);
+		upgradeSigns = new ObsidianUpgradeController(world, teamUpgrades, watchtowerLaunchers,
+				player -> JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player)
+						&& player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR,
+				player -> obtenirEquip(player) == null ? -1 : obtenirEquip(player).getId(),
 				this::gastarOr, this::updateScoreBoard);
-		scheduleGameplayRepeatingTask(() -> { if (watchtowerLaunchers != null) watchtowerLaunchers.tick(); }, 1, 1);
+		scheduleGameplayRepeatingTask(() -> {
+			if (watchtowerLaunchers != null) watchtowerLaunchers.tick();
+			if (upgradeSigns != null) upgradeSigns.tick();
+		}, 1, 1);
 		createShopPortals();
 		scheduleGameplayRepeatingTask(this::tickShopPortals, 2, 2);
 		scheduleGameplayRepeatingTask(this::tickChestLoot, 1, 1);
@@ -1388,6 +1402,8 @@ public class ObsidianDefenders extends JocEquips {
 	/** A player who leaves the match (/l, a teleport out) must not carry the Guardian's bar to the lobby. */
 	@Override
 	protected void customLeave(Player ply, List<String> attatchments) {
+		removeOwnedArchers(ply);
+		combatCredits.remove(ply.getUniqueId());
 		if (watchtowerLaunchers != null) watchtowerLaunchers.forget(ply.getUniqueId());
 		goldScore.removePlayer(ply.getUniqueId());
 		super.customLeave(ply, attatchments);
@@ -1401,6 +1417,7 @@ public class ObsidianDefenders extends JocEquips {
 	/** A lost connection mid-charge: the charge task must not fire on a player who is gone; the star drops at their feet as a death would. */
 	@Override
 	protected void onSeatDropped(Player ply) {
+		removeOwnedArchers(ply);
 		if (watchtowerLaunchers != null) watchtowerLaunchers.forget(ply.getUniqueId());
 		super.onSeatDropped(ply);
 		updateGoldBalance(ply);
@@ -1648,6 +1665,25 @@ public class ObsidianDefenders extends JocEquips {
 	 * "picking up gold from a chest should increase the gold immediately").
 	 */
 	private final Listener worldListener = new Listener() {
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+		public void onCreditedDamage(EntityDamageByEntityEvent event) {
+			if (!JocEnMarxa() || event.getEntity().getWorld() != world
+					|| !(event.getEntity() instanceof Player victim) || !getPlayers().contains(victim)
+					|| isSpectator(victim) || event.getFinalDamage() <= 0) return;
+			Minion minion = attackingMinion(event.getDamager());
+			Entity source = event.getDamager();
+			if (source instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) source = shooter;
+			Player owner = minion != null ? minion.owner() : source instanceof Player player ? player : null;
+			if (owner == null || !getPlayers().contains(owner) || areAllies(owner, victim)) return;
+			combatCredits.put(victim.getUniqueId(), new CombatCredit(owner.getUniqueId(), minion, segonsTranscorreguts()));
+			segonsÚltimCopRebut.put(victim.getUniqueId(), segonsTranscorreguts());
+			getPlayerInfo(victim).setLastDamager(owner);
+			if (minion != null) {
+				PlayerInfo info = getPlayerInfo(owner);
+				info.setDamageDealt(info.getDamageDealt() + event.getDamage());
+			}
+		}
+
 		@EventHandler(priority = EventPriority.HIGHEST)
 		public void onArrivalFireworkDamage(EntityDamageByEntityEvent evt) {
 			if (evt.getDamager() instanceof Firework firework && firework.getScoreboardTags().contains(PICKAXE_FIREWORK_TAG)) evt.setCancelled(true);
@@ -1991,6 +2027,10 @@ public class ObsidianDefenders extends JocEquips {
 
 	@Override
 	public void clearExternals() {
+		if (upgradeSigns != null) { upgradeSigns.close(); upgradeSigns = null; }
+		teamUpgrades = null;
+		combatCredits.clear();
+		segonsÚltimCopRebut.clear();
 		if (watchtowerLaunchers != null) { watchtowerLaunchers.close(); watchtowerLaunchers = null; }
 		HandlerList.unregisterAll(worldListener);
 		if (originalLookoutBlock != null) { originalLookoutBlock.update(true, false); originalLookoutBlock = null; }
@@ -2805,13 +2845,18 @@ public class ObsidianDefenders extends JocEquips {
 	 */
 	@Override
 	protected void onPlayerDeath(PlayerDeathEvent evt, Player killed) {
+		removeOwnedArchers(killed);
 		updateGoldBalance(killed);
 		super.onPlayerDeath(evt, killed);
 		cancelStarCharge(killed);
 		boolean explotat = false;
 		Player player = killed;
 		Location location = player.getLocation();
-		Player killer = player.getKiller();
+		CombatCredit credit = combatCredits.remove(player.getUniqueId());
+		Integer lastHitSecond = segonsÚltimCopRebut.remove(player.getUniqueId());
+		boolean recentCredit = credit != null && segonsTranscorreguts() - credit.second() <= SEGONS_CREDIT_ÚLTIM_COP;
+		Minion minionKiller = recentCredit ? credit.minion() : minionThatKilled(player);
+		Player killer = recentCredit && minionKiller != null ? Bukkit.getPlayer(credit.ownerId()) : player.getKiller();
 		if (killer == null) {
 			Long milliseconds = Calendar.getInstance().getTimeInMillis();
 			Long millisecondsAntics = Long.parseLong(pTemp().ObtenirPropietat("Explo"));
@@ -2826,7 +2871,7 @@ public class ObsidianDefenders extends JocEquips {
 		}
 		if (killer == null) {
 			Player lastDamager = getPlayerInfo(player).getLastDamager();
-			Integer segonsCop = segonsÚltimCopRebut.get(player.getUniqueId());
+			Integer segonsCop = lastHitSecond;
 			if (lastDamager != null && segonsCop != null && segonsTranscorreguts() - segonsCop <= SEGONS_CREDIT_ÚLTIM_COP) {
 				killer = lastDamager;
 			}
@@ -2865,7 +2910,7 @@ public class ObsidianDefenders extends JocEquips {
 		if (Or >= 25) {
 			Or = 25;
 		}
-		boolean picDOr = killer.getInventory().getItemInMainHand().getType() == Material.GOLDEN_PICKAXE;
+		boolean picDOr = minionKiller == null && killer.getInventory().getItemInMainHand().getType() == Material.GOLDEN_PICKAXE;
 		if (picDOr) {
 			Or = Or * 3;
 			if (Or >= 30) {
@@ -2889,7 +2934,6 @@ public class ObsidianDefenders extends JocEquips {
 		if (picDOr) {
 			evt.setDeathMessage(killer.getName() + " ha matat amb el pic d'or a " + player.getName() + "(" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")(" + ChatColor.GOLD + "x3" + ChatColor.WHITE + ")");
 		}
-		Minion minionKiller = explotat || picDOr ? null : minionThatKilled(player);
 		if (minionKiller instanceof SnowmanMinion ninot) {
 			evt.setDeathMessage(killer.getName() + " ha matat a " + player.getName() + " amb un " + ninot.noun() + " de " + ninot.kind().label + " (" + ChatColor.GOLD + "+" + Or + ChatColor.WHITE + ")");
 		} else if (minionKiller instanceof LaneMinion skeleton) {
@@ -2910,6 +2954,7 @@ public class ObsidianDefenders extends JocEquips {
 				writeKillsSigns();
 			}
 			if (suddenDeath) raiseWitherSkeleton(killer, location);
+			raiseSkeletonArcher(killer);
 		}
 		pPlayer(player).IncrementarPropietat("Morts");
 		if (player.getInventory().contains(Material.DIAMOND_PICKAXE)) {
@@ -2935,6 +2980,11 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected void onPlayerInteract(PlayerInteractEvent evt, Player plyr) {
 		super.onPlayerInteract(evt, plyr);
+		if (upgradeSigns != null && evt.getClickedBlock() != null && evt.getAction() == Action.RIGHT_CLICK_BLOCK
+				&& evt.getHand() == EquipmentSlot.HAND && upgradeSigns.interact(plyr, evt.getClickedBlock())) {
+			evt.setCancelled(true);
+			return;
+		}
 		if (watchtowerLaunchers != null && evt.getClickedBlock() != null) {
 			if (evt.getAction() == Action.PHYSICAL && watchtowerLaunchers.isPlate(evt.getClickedBlock())) {
 				evt.setCancelled(true);
@@ -3238,10 +3288,27 @@ public class ObsidianDefenders extends JocEquips {
 	/** The minion that landed the killing hit, by its body or by its projectile, if one did. */
 	private Minion minionThatKilled(Player victim) {
 		if (!(victim.getLastDamageCause() instanceof EntityDamageByEntityEvent cause)) return null;
-		Entity damager = cause.getDamager();
-		Minion minion = minionOf(damager);
-		if (minion == null && damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) minion = minionOf(shooter);
-		return minion;
+		return attackingMinion(cause.getDamager());
+	}
+
+	private void removeOwnedArchers(Player owner) {
+		for (Minion minion : minionsOf(owner)) if (minion instanceof SkeletonArcherMinion) discharge(minion);
+		removeMinionShots(owner, SkeletonArcherMinion.class);
+	}
+
+	private void raiseSkeletonArcher(Player owner) {
+		Equip team = obtenirEquip(owner);
+		if (team == null || teamUpgrades == null || !JocEnMarxa() || owner.isDead()
+				|| !owner.isOnline() || isSpectator(owner) || owner.getGameMode() == GameMode.SPECTATOR
+				|| !teamUpgrades.has(team.getId(), ObsidianTeamUpgrades.Upgrade.ARCHERS)) return;
+		long livingArchers = minionsOf(team).stream().filter(minion -> minion instanceof SkeletonArcherMinion && minion.isAlive()).count();
+		if (livingArchers >= SkeletonArcherMinion.TEAM_CAP) return;
+		Lane lane = snowmanLane(team);
+		Location spot = standingSpotNear(team.getTeamSpawnLocation());
+		if (spot == null) spot = team.getTeamSpawnLocation();
+		enlist(new SkeletonArcherMinion(this, team, owner, lane,
+				teamUpgrades.has(team.getId(), ObsidianTeamUpgrades.Upgrade.ARMOR)), spot);
+		world.spawnParticle(Particle.SOUL, spot.clone().add(0, 1, 0), 15, 0.3, 0.5, 0.3, 0.02);
 	}
 
 	//---------- The first minute: what a newcomer must know, on the screen and not in the chat ----------

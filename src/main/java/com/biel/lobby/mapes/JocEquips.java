@@ -33,6 +33,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.entity.AbstractArrow;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
@@ -58,6 +60,8 @@ public abstract class JocEquips extends Joc {
 	public TeamGenerationMode generationMode = TeamGenerationMode.DEFAULT;
 	/** The mobs enlisted by the teams this match; see com.biel.lobby.minions.Minion. */
 	private final List<Minion> minions = new ArrayList<>();
+	private record MinionShot(Projectile projectile, Minion minion) {}
+	private final Map<UUID, MinionShot> minionShots = new HashMap<>();
 	public JocEquips() {
 		super();
 	}
@@ -737,6 +741,8 @@ public abstract class JocEquips extends Joc {
 
 	/** The side of any entity: a player's team, a minion's team, a projectile's shooter's side, else null. */
 	public Equip teamOf(Entity entity) {
+		MinionShot shot = entity == null ? null : minionShots.get(entity.getUniqueId());
+		if (shot != null) return shot.minion().team();
 		if (entity instanceof Player player) return obtenirEquip(player);
 		Minion minion = minionOf(entity);
 		if (minion != null) return minion.team();
@@ -745,10 +751,29 @@ public abstract class JocEquips extends Joc {
 	}
 
 	/** The minion behind a damager: the mob itself or the shooter of its projectile. */
-	private Minion attackingMinion(Entity damager) {
+	protected Minion attackingMinion(Entity damager) {
+		MinionShot shot = minionShots.get(damager.getUniqueId());
+		if (shot != null) return shot.minion();
 		Minion minion = minionOf(damager);
 		if (minion == null && damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) minion = minionOf(shooter);
 		return minion;
+	}
+
+	@Override
+	protected void onProjectileLaunch(ProjectileLaunchEvent event, Projectile projectile) {
+		super.onProjectileLaunch(event, projectile);
+		Minion minion = attackingMinion(projectile);
+		if (minion == null || event.isCancelled()) return;
+		minionShots.put(projectile.getUniqueId(), new MinionShot(projectile, minion));
+		if (projectile instanceof AbstractArrow arrow) arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+	}
+
+	protected void removeMinionShots(Player owner, Class<? extends Minion> kind) {
+		minionShots.values().removeIf(shot -> {
+			if (!kind.isInstance(shot.minion()) || !shot.minion().isOwnedBy(owner)) return false;
+			shot.projectile().remove();
+			return true;
+		});
 	}
 
 	/**
@@ -776,6 +801,11 @@ public abstract class JocEquips extends Joc {
 			return;
 		}
 		if (attacker == null || !(damaged instanceof LivingEntity victim)) return;
+		if (victim instanceof Player player && (isSpectator(player) || getPlayerInfo(player).isImmune())) {
+			evt.setCancelled(true);
+			return;
+		}
+		if (evt.isCancelled()) return;
 		attacker.onHit(evt, victim);
 		Player owner = attacker.owner();
 		if (owner != null && victim instanceof Player player && !evt.isCancelled()) getPlayerInfo(player).setLastDamager(owner);
@@ -802,6 +832,12 @@ public abstract class JocEquips extends Joc {
 	@Override
 	public void heartbeat() {
 		super.heartbeat();
+		minionShots.values().removeIf(shot -> {
+			Projectile projectile = shot.projectile();
+			if (projectile.isValid() && projectile.getTicksLived() < 1200) return false;
+			projectile.remove();
+			return true;
+		});
 		minions.removeIf(minion -> !minion.isAlive());
 		for (Minion minion : new ArrayList<>(minions)) minion.tick();
 	}
@@ -882,6 +918,8 @@ public abstract class JocEquips extends Joc {
 		}
 		for (Minion minion : minions) minion.remove();
 		minions.clear();
+		minionShots.values().forEach(shot -> shot.projectile().remove());
+		minionShots.clear();
 		super.clearExternals();
 	}
 	@Override

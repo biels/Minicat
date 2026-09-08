@@ -166,6 +166,27 @@ Sobre la placa de ferro, prem el botó: saltaràs sense mal de caiguda.
 
 També des de baix. Recarrega: 5 s.
 
+## pàgina Reforços ossis
+Segona millora: 100 or.
+
+Cada baixa teva o d'un esbirro crea un arquer. Màxim: 10 per equip.
+
+No cremen al sol. Si mors, perds els teus.
+
+## pàgina Herència de guerra
+Tercera millora: 150 or.
+
+Els nous arquers copien la teva armadura, sense encantaments.
+
+Les baixes et donen els premis, però mai l'or x3 del pic.
+
+## pàgina Millores de la base
+Després de comprar: quatre quadrats grisos al rètol.
+
+En perd un cada 15 s.
+
+Quan s'acaben, apareixen partícules: ja pots comprar la següent millora.
+
 ## pàgina El Guardià
 És el golem de ferro que apareix sota el centre al minut {GUARDIA_MIN}.
 

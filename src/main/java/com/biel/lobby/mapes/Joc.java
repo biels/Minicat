@@ -971,7 +971,8 @@ public abstract class Joc extends MapaResetejable {
 			getWorld().playEffect(damager.getEyeLocation(), Effect.FIREWORK_SHOOT, DyeColor.RED.getDyeData());
 		}
 		if(!evt.isCancelled()){
-			i.setDamageDealt(i.getDamageDealt() + evt.getDamage());
+			PlayerInfo attackerInfo = getPlayerInfo(damager);
+			attackerInfo.setDamageDealt(attackerInfo.getDamageDealt() + evt.getDamage());
 		}
 	}
 	@Override

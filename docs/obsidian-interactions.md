@@ -111,6 +111,37 @@ Prismarine physics: all landed on lower leaves without a side collision.
 `calibrateObsidianLaunchers` accepts `-PlauncherSurvey=...` (NBT export with
 Prismarine collision shapes) and `-PlauncherReport=...` for reproducibility.
 
+## Skeleton Archer Upgrades
+
+Base purchases are sequential: launchers (50g), Reforços ossis (100g), then
+Herència de guerra (150g). Each successful purchase applies immediately; the
+next purchase unlocks after 1,200 server ticks. Failed purchases spend nothing
+and start no delay. During the delay, both sign faces retain the active upgrade
+title and `Millora n/3`. Four gray squares lose one square every 300 ticks, with
+no numeric timer. Once ready, the sign displays the next upgrade and price and
+emits particles above its title. Level 3 has no further delay or readiness cue.
+
+From level 2, each credited enemy-player kill, including minion kills, raises
+one owned skeleton archer at the team's base. Only living archers count toward
+the shared cap of 10. There is no summon cooldown or lifetime. Owner death,
+disconnect or departure removes that player's archers and outstanding arrows.
+An individual archer's death frees its slot but leaves in-flight arrows credited
+to its owner. Match cleanup removes all bodies and projectiles.
+
+Archers use the existing lane and target goals plus native skeleton shots.
+They approach obstructed or distant targets and seek reachable ground away from
+enemies within four blocks, shooting while retreating. Starting balance is 20
+health, 3 damage before armor, 14-block firing range and a 40-tick shot interval.
+Shots are staggered. They do not burn in sunlight, pick up items, or drop gear,
+arrows or XP. Level 3 snapshots the owner's armor materials onto new archers;
+enchantments and item metadata are not copied, and existing archers do not change.
+
+Archer damage and kills credit the owner through the normal reward flow,
+including gold, streaks, bridge charge, diamond-carrier pickaxe rewards and
+further reinforcements. Minion attacks never receive the held gold-pickaxe x3
+bonus or the wither-skeleton maximum-health penalty. Projectile attribution
+survives shooter death and retains the original team for friendly-fire checks.
+
 ## Verification
 
 `./gradlew build` includes `ObsidianInteractionsTest` (approved coordinates,
