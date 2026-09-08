@@ -83,6 +83,11 @@ public class InkWars extends JocEquips {
 	static final double BRUSH_REACH = 4.5;
 	final Predicate<Block> solid = block -> !block.isPassable();
 	int wetInkTicks = 0;
+	int paintableFloorBlocks = 0;
+	static final int BASE_PAINT_RADIUS = 6;
+	/** Seconds before the end during which the sidebar hides the shares. */
+	static final int BLACKOUT_SECONDS = 60;
+	boolean blackoutAnnounced = false;
 	@Override
 	public String getGameName() {
 		return "InkWars";
@@ -149,6 +154,50 @@ public class InkWars extends JocEquips {
 		super.customJocIniciat();
 		setGiveStartingItemsRespawn(false);
 		equipKits();
+		countPaintableFloor();
+		paintBases();
+	}
+	/** Every floor block that can take ink, counted once at the start: the sidebar shows each team's share of that, not of what has been painted so far. */
+	void countPaintableFloor(){
+		paintableFloorBlocks = 0;
+		for(org.bukkit.Chunk chunk : getWorld().getLoadedChunks()){
+			org.bukkit.ChunkSnapshot snapshot = chunk.getChunkSnapshot();
+			int floor = getWorld().getMinHeight();
+			int ceiling = getWorld().getMaxHeight() - 1;
+			for(int x = 0; x < 16; x++){
+				for(int z = 0; z < 16; z++){
+					int top = Math.min(ceiling, snapshot.getHighestBlockYAt(x, z) + 1);
+					for(int y = floor; y <= top; y++){
+						Material material = snapshot.getBlockType(x, y, z);
+						if(material.isAir())continue;
+						Block block = chunk.getBlock(x, y, z);
+						if(!(isPaintable(block) || isPaintableUnsafely(block)))continue;
+						if(y < ceiling && !snapshot.getBlockType(x, y + 1, z).isAir())continue;
+						paintableFloorBlocks++;
+					}
+				}
+			}
+		}
+		Bukkit.getLogger().info("[lobby] InkWars " + getWorld().getName() + ": " + paintableFloorBlocks + " paintable floor blocks");
+	}
+	/** A disc of the team's colour around each spawn: a runway for the first squid, and the place the reserve refills between sorties. */
+	void paintBases(){
+		for(Equip e : Equips){
+			EquipInkWars team = (EquipInkWars) e;
+			Location spawn = team.getTeamSpawnLocation();
+			if(spawn == null)continue;
+			for(int dx = -BASE_PAINT_RADIUS; dx <= BASE_PAINT_RADIUS; dx++){
+				for(int dz = -BASE_PAINT_RADIUS; dz <= BASE_PAINT_RADIUS; dz++){
+					if(dx * dx + dz * dz > BASE_PAINT_RADIUS * BASE_PAINT_RADIUS)continue;
+					for(int dy = 1; dy >= -4; dy--){
+						Block candidate = spawn.clone().add(dx, dy, dz).getBlock();
+						if(candidate.isPassable())continue;
+						paint(candidate, team, "", 1.0);
+						break;
+					}
+				}
+			}
+		}
 	}
 	public void equipKits() {
 		for(Player p : getPlayers()){
@@ -169,11 +218,12 @@ public class InkWars extends JocEquips {
 		if (JocIniciat && !JocFinalitzat){
 			ArrayList<String> list = new ArrayList<>();
 			ArrayList<Integer> values = new ArrayList<>();
+			boolean blackout = getRemainingSeconds() <= BLACKOUT_SECONDS;
 			for(Equip e : Equips){
 				try {
-					list.add(e.getAdjectiuColored());
 					EquipInkWars eq = (EquipInkWars)e;
-					values.add((int) Math.round(eq.getOwnedPercent()));
+					list.add(blackout ? e.getAdjectiuColored() + ChatColor.GRAY + " ??" : e.getAdjectiuColored());
+					values.add(blackout ? 0 : (int) Math.round(eq.getOwnedPercent()));
 				} catch (Exception ignored) {
 
 				}
@@ -214,6 +264,13 @@ public class InkWars extends JocEquips {
 		return r;
 	}
 	public void checkForWinner(){
+		if(!blackoutAnnounced && getRemainingSeconds() <= BLACKOUT_SECONDS && getRemainingSeconds() > 0){
+			blackoutAnnounced = true;
+			for(Player p : getPlayers()){
+				p.sendTitle(ChatColor.GOLD + "Last minute!", ChatColor.GRAY + "The count is hidden until the end", 5, 50, 15);
+				p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 0.7F);
+			}
+		}
 		for(Equip e : Equips){
 			EquipInkWars eq = (EquipInkWars)e;
 			if(segonsTranscorreguts() > 120 && (eq.getOwnedPercent() >= 80)){
@@ -232,9 +289,22 @@ public class InkWars extends JocEquips {
 				}
 			}
 			if (w != null) {
-				//winAction(w);
+				revealShares();
 				winGame(w);
 			}
+		}
+	}
+	/** The end of the blackout: every share on screen, and the winner's fireworks. */
+	void revealShares(){
+		StringBuilder shares = new StringBuilder();
+		for(Equip e : Equips){
+			EquipInkWars eq = (EquipInkWars) e;
+			if(shares.length() > 0)shares.append(ChatColor.GRAY + "  ");
+			shares.append(eq.getAdjectiuColored()).append(ChatColor.WHITE + " ").append(Math.round(eq.getOwnedPercent())).append("%");
+		}
+		for(Player p : getPlayers()){
+			p.sendTitle(ChatColor.AQUA + "Time!", shares.toString(), 5, 80, 20);
+			p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LARGE_BLAST, 1F, 1F);
 		}
 	}
 	public void winAction(EquipInkWars eq) {
@@ -348,6 +418,7 @@ public class InkWars extends JocEquips {
 	 * unless it outweighs what is left, and only then does the block flip. Returns whether the block ends up in the team's colour.
 	 */
 	boolean paint(Block b, EquipInkWars team, String painterName, double ink){
+		if(isShape(b))b = b.getRelative(BlockFace.DOWN); // ink on a stair or slab lands on the block beneath
 		boolean forcedly = isPaintableUnsafely(b);
 		if(!isPaintable(b) && !forcedly)return false;
 		EquipInkWars oldOwner = getTeamOwningBlock(b);
@@ -360,8 +431,7 @@ public class InkWars extends JocEquips {
 			ink -= wet.amount;
 		}
 		if(oldOwner != team)registerBlockPaint(painterName, team, oldOwner);
-		Material paintBase = forcedly ? Material.WHITE_TERRACOTTA : b.getType();
-		Material painted = getPaintMaterial(paintBase, team.getStrongColor());
+		Material painted = getPaintMaterial(b.getType(), team.getStrongColor());
 		if(b.getType() != painted)b.setType(painted, false);
 		double carried = (wet != null && oldOwner == team) ? wet.amount : 0;
 		wetInk.put(b, new WetInk(painterName, Math.min(MAX_INK_PER_BLOCK, carried + ink)));
@@ -388,6 +458,7 @@ public class InkWars extends JocEquips {
 	}
 	public EquipInkWars getTeamOwningBlock(Block b){
 		if(b == null)return null;
+		if(isShape(b))return getTeamOwningBlock(b.getRelative(BlockFace.DOWN)); // a stair or slab wears the colour beneath it
 		if(!isPaintable(b))return null;
 		DyeColor blockColor = getPaintColor(b.getType());
 		for(Equip e : Equips){
@@ -396,28 +467,43 @@ public class InkWars extends JocEquips {
 		}
 		return null;
 	}
+	/** The dyeable families, the ones with sixteen colours; the longer suffix first so glazed terracotta is not mistaken for terracotta. */
+	static final String[] DYED_SUFFIXES = {"_GLAZED_TERRACOTTA", "_STAINED_GLASS_PANE", "_STAINED_GLASS", "_CONCRETE_POWDER", "_CONCRETE", "_TERRACOTTA", "_WOOL", "_CARPET"};
+	/** Shapes with no dyed twin in vanilla: never painted or scored themselves, they carry the colour of the block beneath them. */
+	static final String[] SHAPE_SUFFIXES = {"_STAIRS", "_SLAB", "_FENCE", "_FENCE_GATE", "_WALL", "_TRAPDOOR", "_LEAVES"};
 	public boolean isPaintable(Block b){
 		return getPaintColor(b.getType()) != null;
 	}
 	private DyeColor getPaintColor(Material material){
 		String materialName = material.name();
 		for (DyeColor color : DyeColor.values()) {
-			for (String suffix : new String[]{"_WOOL", "_TERRACOTTA", "_STAINED_GLASS", "_STAINED_GLASS_PANE"}) {
+			for (String suffix : DYED_SUFFIXES) {
 				if (materialName.equals(color.name() + suffix)) return color;
 			}
 		}
 		return null;
 	}
+	/** The coloured block a block becomes: its own family in the colour; plain glass, panes and iron bars their stained twins; anything else coloured terracotta. */
 	private Material getPaintMaterial(Material currentMaterial, DyeColor color){
 		String materialName = currentMaterial.name();
-		for (String suffix : new String[]{"_WOOL", "_TERRACOTTA", "_STAINED_GLASS", "_STAINED_GLASS_PANE"}) {
+		for (String suffix : DYED_SUFFIXES) {
 			if (materialName.endsWith(suffix)) return Material.valueOf(color.name() + suffix);
 		}
+		if (currentMaterial == Material.GLASS) return Material.valueOf(color.name() + "_STAINED_GLASS");
+		if (currentMaterial == Material.GLASS_PANE || currentMaterial == Material.IRON_BARS) return Material.valueOf(color.name() + "_STAINED_GLASS_PANE");
 		return Material.valueOf(color.name() + "_TERRACOTTA");
 	}
-	public boolean isPaintableUnsafely(Block b){ 
+	/** Blocks with no colour yet that take one: plain glass, panes and bars keep their shape, plain terracotta its own family, and any full occluding block turns into terracotta. */
+	public boolean isPaintableUnsafely(Block b){
 		Material t = b.getType();
-		return (t.isBlock() && t.isOccluding() && t != Material.BARRIER) && !isPaintable(b);
+		if (t == Material.BARRIER || isPaintable(b)) return false;
+		if (t == Material.GLASS || t == Material.GLASS_PANE || t == Material.IRON_BARS || t == Material.TERRACOTTA) return true;
+		return t.isBlock() && t.isOccluding();
+	}
+	public boolean isShape(Block b){
+		String name = b.getType().name();
+		for (String suffix : SHAPE_SUFFIXES) if (name.endsWith(suffix)) return true;
+		return false;
 	}
 	/**
 	 * The one kit everybody carries. The held item decides what paints: the Roller stick paints the floor under a walking player,
@@ -1267,9 +1353,11 @@ public class InkWars extends JocEquips {
 		public void incrementOwnedBlocks(int increase){
 			setOwnedBlocks(Math.max(0, getOwnedBlocks() + increase));
 		}
+		/** Share of the map's paintable floor, or of what has been painted when the floor could not be counted. */
 		public double getOwnedPercent(){
-			if(getTotalPaintedBlocks() == 0)return 0;
-			return ((double)getOwnedBlocks() / getTotalPaintedBlocks()) * 100;
+			int total = paintableFloorBlocks > 0 ? paintableFloorBlocks : getTotalPaintedBlocks();
+			if(total == 0)return 0;
+			return Math.min(100, ((double)getOwnedBlocks() / total) * 100);
 		}
 	}
 }
