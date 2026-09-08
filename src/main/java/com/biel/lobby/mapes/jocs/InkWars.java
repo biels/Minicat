@@ -73,11 +73,11 @@ public class InkWars extends JocEquips {
 	/** Gravity in this world, vanilla is 0.08: jumps go higher, falls and leaps take longer, and nothing here hurts on landing. */
 	static final double INK_GRAVITY = 0.05;
 	/** The squid's ink reserve, 0 to 1: refilled per tick on its own colour, drained per tick on neutral ground and faster on enemy ink; at zero the squid is forced out. */
-	static final double RESERVE_REFILL = 0.05;
+	static final double RESERVE_REFILL = 0.012;
 	static final double RESERVE_DRAIN_NEUTRAL = 0.012;
 	static final double RESERVE_DRAIN_ENEMY = 0.02;
-	/** Ink charge gained per block swum; a full charge is one surge. */
-	static final double CHARGE_PER_BLOCK = 0.09;
+	/** Ink sacs shown in the squid's hand for a full reserve. */
+	static final int INK_SACS_FOR_FULL_RESERVE = 32;
 	/** Looking within this angle of straight away from a wall lets go of it into a jump. */
 	static final double DETACH_COS = Math.cos(Math.toRadians(30));
 	static final double BRUSH_REACH = 4.5;
@@ -427,6 +427,7 @@ public class InkWars extends JocEquips {
 	class InkKit extends PlayerWorldEventBus{
 		static final int ROLLER_SLOT = 0;
 		static final int BRUSH_SLOT = 1;
+		static final int BALL_SLOT = 2;
 		private int reloadTicks = 0;
 		private int brushCooldownTicks = 0;
 		private boolean valid = true;
@@ -475,6 +476,7 @@ public class InkWars extends JocEquips {
 		}
 		public void tick(){
 			if(brushCooldownTicks > 0)brushCooldownTicks--;
+			if(isSubmerged())return; // a squid has no tools in hand, only its ink
 			reloadTick();
 			if(wetInkTicks % 20 == 0)restoreTools();
 		}
@@ -484,27 +486,63 @@ public class InkWars extends JocEquips {
 			if(!p.getInventory().contains(Material.STICK))p.getInventory().setItem(ROLLER_SLOT, rollerItem());
 			if(!p.getInventory().contains(Material.TORCH))p.getInventory().setItem(BRUSH_SLOT, brushItem());
 		}
+		/** The squid's hand: the tools go away and a stack of ink sacs shows how much ink it carries. */
+		void showInkSacs(double reserve){
+			Player p = getPlayer();
+			p.getInventory().setItem(ROLLER_SLOT, null);
+			p.getInventory().setItem(BRUSH_SLOT, null);
+			p.getInventory().remove(Material.SNOWBALL);
+			int sacs = Math.max(1, (int) Math.ceil(reserve * INK_SACS_FOR_FULL_RESERVE));
+			p.getInventory().setItem(ROLLER_SLOT, Utils.setItemNameAndLore(new ItemStack(Material.INK_SAC, sacs), teamColour() + "Ink", ChatColor.WHITE + "Your ink: gathered on your colour, spent elsewhere.", ChatColor.WHITE + "Right-click: blow it around you and stand up."));
+			p.getInventory().setHeldItemSlot(ROLLER_SLOT);
+		}
+		void updateInkSacs(double reserve){
+			Player p = getPlayer();
+			int sacs = Math.max(1, (int) Math.ceil(reserve * INK_SACS_FOR_FULL_RESERVE));
+			ItemStack held = p.getInventory().getItem(ROLLER_SLOT);
+			if(held == null || held.getType() != Material.INK_SAC){
+				showInkSacs(reserve);
+				return;
+			}
+			if(held.getAmount() != sacs){
+				held.setAmount(sacs);
+				p.getInventory().setItem(ROLLER_SLOT, held);
+			}
+		}
+		/** Back on the feet: the ink goes, the tools return. */
+		void hideInkSacs(){
+			Player p = getPlayer();
+			p.getInventory().remove(Material.INK_SAC);
+			restoreTools();
+			p.getInventory().setHeldItemSlot(ROLLER_SLOT);
+		}
 		public int maxInkBalls(){
 			return 6 + Math.round(level() / 2f);
 		}
 		public int neededReloadTicks(){
 			return 50 - level() * 2;
 		}
-		/** Reloading runs five times faster on the team's colour or in the base, eight times under the ink. */
+		/** Reloading runs five times faster on the team's colour or in the base. */
 		public int reloadTickIncrement(){
 			InkWarsPlayerInfo info = getPlayerInfo(getPlayer());
-			if(info.isSubmerged())return 8;
 			EquipInkWars e = obtenirEquip(getPlayer());
 			boolean onOwnColour = info.getTeamColorWherePlayerStands() == e;
 			boolean inBase = getPlayer().getLocation().distance(e.getTeamSpawnLocation()) < 10;
 			return onOwnColour || inBase ? 5 : 1;
 		}
+		/** Ink balls reload only while their slot is the one in hand, into that slot. */
 		public void reloadTick(){
-			if(getPlayer().getInventory().contains(Material.SNOWBALL, maxInkBalls()))return;
+			Player p = getPlayer();
+			if(p.getInventory().getHeldItemSlot() != BALL_SLOT)return;
+			ItemStack balls = p.getInventory().getItem(BALL_SLOT);
+			if(balls != null && balls.getType() != Material.SNOWBALL)return; // something else sits in the slot
+			int have = balls == null ? 0 : balls.getAmount();
+			if(have >= maxInkBalls())return;
 			if(reloadTicks >= neededReloadTicks()){
-				Utils.giveItemStack(inkBallItem(), getPlayer());
-				getPlayer().updateInventory();
-				getPlayer().playSound(getPlayer().getEyeLocation(), Sound.ENTITY_ITEM_PICKUP, 0.4F, 1F);
+				ItemStack refilled = inkBallItem();
+				refilled.setAmount(have + 1);
+				p.getInventory().setItem(BALL_SLOT, refilled);
+				p.playSound(p.getEyeLocation(), Sound.ENTITY_ITEM_PICKUP, 0.4F, 1F);
 				reloadTicks = 0;
 			}else{
 				reloadTicks += reloadTickIncrement();
@@ -526,6 +564,11 @@ public class InkWars extends JocEquips {
 			super.onPlayerInteract(evt, p);
 			if(p != getPlayer() || evt.getHand() != EquipmentSlot.HAND)return;
 			if(evt.getAction() != Action.RIGHT_CLICK_BLOCK && evt.getAction() != Action.RIGHT_CLICK_AIR)return;
+			if(p.getInventory().getItemInMainHand().getType() == Material.INK_SAC && isSubmerged()){
+				evt.setCancelled(true);
+				getPlayerInfo(p).blowInk();
+				return;
+			}
 			if(p.getInventory().getItemInMainHand().getType() != Material.TORCH)return;
 			evt.setCancelled(true); // the torch is a brush, it is never placed
 			if(brushCooldownTicks > 0 || isSubmerged())return;
@@ -645,23 +688,29 @@ public class InkWars extends JocEquips {
 			boolean onOwnColour = colourUnderfoot == team;
 			boolean onEnemyColour = colourUnderfoot != null && !onOwnColour;
 
-			boolean wantsToSwim = swimForm && kit != null && squid.reserve > 0.05;
-			if(swimForm && !wantsToSwim && !squid.submerged && squid.reserve <= 0.05)swimForm = false; // no ink to dive with
+			if(now.getY() < getWorld().getMinHeight() + 4){ // off the map: back to base, on the feet
+				swimForm = false;
+				squid.reset();
+				team.teleportToTeamSpawn(p);
+				return;
+			}
+			boolean wantsToSwim = swimForm && kit != null;
 			if(wantsToSwim && !squid.submerged)squid.dive(moved);
 			if(!wantsToSwim && squid.submerged)squid.surface(moved);
-			if(squid.submerged){
-				squid.tick(team, moved);
-			}else{
-				squid.tickPendingSurge();
-				if(onOwnColour)squid.reserve = Math.min(1, squid.reserve + RESERVE_REFILL);
-				p.setExp((float) Math.min(0.999, Math.max(0, squid.reserve)));
-			}
+			if(squid.submerged)squid.tick(team, moved);
+			else squid.tickPendingSurge();
 
 			applyInkSpeed(onOwnColour, onEnemyColour);
 			tickEnemyInkDamage(onEnemyColour);
 		}
 		public boolean isSubmerged(){
 			return squid.submerged;
+		}
+		/** The ink sac in hand: the ink goes off around the body and the squid stands up, the same as a second press of sneak. */
+		public void blowInk(){
+			if(!squid.submerged)return;
+			swimForm = false;
+			getPlayer().playSound(getPlayer().getLocation(), Sound.ENTITY_SQUID_SQUIRT, 1F, 0.8F);
 		}
 		/** One press of sneak switches form: in squid form the body dives wherever it stands and stays a squid as long as its ink lasts; a second press stands it up. */
 		public void toggleSwimForm(){
@@ -750,8 +799,8 @@ public class InkWars extends JocEquips {
 			double speed = 0;
 			/** What was pushed last tick, so the client's own steering is read against it. */
 			Vector pushed = new Vector();
-			double reserve = 1;
-			double charge = 0;
+			/** The ink: gathered swimming on the team's colour, spent swimming elsewhere, and what the surge throws. Zero on every dive. */
+			double reserve = 0;
 			double pendingSurge = -1;
 			Vector flight = new Vector();
 			final HashSet<Location> fakeCeiling = new HashSet<>();
@@ -762,16 +811,18 @@ public class InkWars extends JocEquips {
 			EquipInkWars team(){
 				return obtenirEquip(player());
 			}
-			/** Diving: the body goes under the ink, the armour with it, only a ripple stays visible. The walking speed is carried into the swim; the reserve is whatever was left. */
+			/** Diving: the body goes under the ink, the armour and the tools with it, only a ripple and the ink in hand stay. The walking speed is carried into the swim; the ink starts at zero. */
 			void dive(Vector moved){
 				submerged = true;
 				submergedTicks = 0;
 				cornerTicks = 0;
+				reserve = 0;
 				surface = Surface.FLOOR;
 				wallSide = null;
 				setMomentum(new Vector(moved.getX(), 0, moved.getZ()));
 				Player p = player();
 				p.getInventory().setArmorContents(null);
+				kit.showInkSacs(reserve);
 				p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 0.7F);
 				getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 			}
@@ -786,12 +837,13 @@ public class InkWars extends JocEquips {
 				p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 1.3F);
 				getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 				if(p.isOnGround()){
-					releaseSurge(charge, p.getLocation(), new Vector(0, -1, 0));
+					releaseSurge(reserve, p.getLocation(), new Vector(0, -1, 0));
 				}else{
-					pendingSurge = charge;
+					pendingSurge = reserve;
 					flight = moved.clone();
 				}
-				charge = 0;
+				reserve = 0;
+				p.setExp(0);
 			}
 			void surfaceQuietly(){
 				submerged = false;
@@ -801,11 +853,11 @@ public class InkWars extends JocEquips {
 				p.removePotionEffect(PotionEffectType.INVISIBILITY);
 				dropFakeCeiling();
 				Utils.donarItemsPlayer(p, getStartingItems(p));
+				if(kit != null)kit.hideInkSacs();
 			}
 			void reset(){
 				surfaceQuietly();
-				charge = 0;
-				reserve = 1;
+				reserve = 0;
 				pendingSurge = -1;
 				setMomentum(new Vector());
 			}
@@ -838,13 +890,12 @@ public class InkWars extends JocEquips {
 				p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 40, 0, true, false));
 				p.setFallDistance(0);
 				if(submergedTicks % 20 == 0)Utils.healDamageable(p, 1.0);
-				charge = Math.min(1, charge + moved.length() * CHARGE_PER_BLOCK);
 				if(cornerTicks > 0)cornerTicks--;
 
 				Block touched = touchedBlock();
 				EquipInkWars colourTouched = getTeamOwningBlock(touched);
-				if(surface != Surface.AIR)tickReserve(team, colourTouched);
-				if(reserve <= 0){
+				if(surface != Surface.AIR)tickReserve(team, colourTouched, moved);
+				if(reserve <= 0 && colourTouched != team && surface != Surface.AIR){
 					forcedOut();
 					return;
 				}
@@ -870,10 +921,12 @@ public class InkWars extends JocEquips {
 				if(surface == Surface.FLOOR)return getBlockWherePlayerStands();
 				return null;
 			}
-			void tickReserve(EquipInkWars team, EquipInkWars colourTouched){
-				if(colourTouched == team)reserve = Math.min(1, reserve + RESERVE_REFILL);
+			/** Gathered per block swum on the team's colour, spent per tick elsewhere: a long run on own ink is what pays for a crossing. */
+			void tickReserve(EquipInkWars team, EquipInkWars colourTouched, Vector moved){
+				if(colourTouched == team)reserve = Math.min(1, reserve + RESERVE_REFILL * (0.3 + moved.length() * 4));
 				else if(colourTouched == null)reserve -= RESERVE_DRAIN_NEUTRAL;
 				else reserve -= RESERVE_DRAIN_ENEMY;
+				reserve = Math.max(0, reserve);
 			}
 			/** No ink left: the squid is forced back onto its feet with whatever momentum it had, and the surge goes off. */
 			void forcedOut(){
@@ -905,13 +958,11 @@ public class InkWars extends JocEquips {
 				if(halfWidth < 0.9)kit.paintBlock(touched, 0.15 + 0.35 * reserve);
 				else kit.rollerLinePaint(halfWidth, 0.15 + 0.35 * reserve, p);
 			}
-			/** Reserve on the experience bar, surge on the action bar. */
+			/** The ink on the experience bar and as the stack of sacs in hand. */
 			void showMeters(){
 				Player p = player();
 				p.setExp((float) Math.min(0.999, Math.max(0, reserve)));
-				if(submergedTicks % 4 != 0)return;
-				int filled = (int) Math.round(charge * 8);
-				p.sendActionBar(PaperMessages.legacy(ChatColor.GRAY + "Surge " + ChatColor.AQUA + "▮".repeat(filled) + ChatColor.DARK_GRAY + "▯".repeat(8 - filled)));
+				if(submergedTicks % 4 == 0 && kit != null)kit.updateInkSacs(reserve);
 			}
 
 			//--- surfaces
