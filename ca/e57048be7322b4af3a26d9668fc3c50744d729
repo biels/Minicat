@@ -1,0 +1,23 @@
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_25f98ea41c06bd::t_f2f7adbf060622 4,966,1087-1129,1161,1182,1258,1377,1414,1420,1424-1425,1465,1507-1508,1767,1782,1786,1794,1834,1848,1979,2024-2027,2050,2052
+docs/inkwars-movement.md
+  s_25f98ea41c06bd::t_953133c0f1af86 24-30
+src/test/java/com/biel/lobby/mapes/jocs/InkWarsMovementTest.java
+  s_25f98ea41c06bd::t_953133c0f1af86 30,57,61-89,473,485-488,504-507
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "cae57048be7322b4af3a26d9668fc3c50744d729",
+  "prompts": {},
+  "sessions": {
+    "s_25f98ea41c06bd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08093-c951-7303-babf-76a5a877d8b9",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
