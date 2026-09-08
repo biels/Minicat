@@ -20,11 +20,14 @@ import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDismountEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
@@ -93,14 +96,14 @@ public class InkWars extends JocEquips {
 	static final double SQUID_WALL_LEAP = 0.35;
 	static final double SQUID_AIR_THROTTLE = 0.3;
 	static final double SQUID_AIR_DRAG = 0.98;
-	/** Ticks the client must report the body off the ground before the floor is taken as gone, and the least ticks in the air before a landing is believed: the ground flag lags a packet. */
-	static final int OFF_GROUND_TICKS = 2;
-	static final int MIN_AIR_TICKS = 3;
 	/**
-	 * The squid feels a surface before its body touches it: the probe along the heading reaches this far beyond the next tick's travel,
-	 * and the attachment carries the body the rest of the way in one push, so a wall is never a collision, only a bend.
+	 * The squid's body is a point the camera sits on, kept this radius off every surface; over a floor it rides this high above the block,
+	 * steps this tall are taken in stride up or down, and the camera sits a standing player's eye height above the seat, which is how the carrier is placed.
 	 */
-	static final double PROBE_MARGIN = 0.2;
+	static final double SQUID_RADIUS = 0.3;
+	static final double SQUID_RIDE_HEIGHT = 0.5;
+	static final double SQUID_STEP = 0.6;
+	static final double SQUID_CAMERA_HEIGHT = 1.62;
 	/** The Roller's head sits this far ahead of the feet; the stroke is laid there. */
 	static final double ROLLER_AHEAD = 1.0;
 	/**
@@ -753,6 +756,14 @@ public class InkWars extends JocEquips {
 				togglePinch();
 			}
 		}
+		/** A sneak would throw the squid off its carrier: while the engine still owns the body the client's dismount is refused; the engine's own eject is not. */
+		@Override
+		protected void onEntityDismount(EntityDismountEvent evt, Entity rider, Entity dismounted) {
+			super.onEntityDismount(evt, rider, dismounted);
+			if(rider != getPlayer())return;
+			InkWarsPlayerInfo info = getPlayerInfo(getPlayer());
+			if(info.swimForm && info.squid.submerged && dismounted == info.squid.carrier && evt.isCancellable())evt.setCancelled(true);
+		}
 		@Override
 		protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt, Player damaged, Player damager, boolean ranged) {
 			super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
@@ -805,13 +816,12 @@ public class InkWars extends JocEquips {
 		 * Looking straight up or down has no across, so the stroke is the block underfoot.
 		 */
 		public void rollerLinePaint(double halfWidth, double ink, Player p, double ahead){
-			for(Block floor : rollerStrokeBlocks(halfWidth, p, ahead))paintBlock(floor, ink);
+			for(Block floor : rollerStrokeBlocks(halfWidth, p.getLocation(), p.getLocation().getDirection().setY(0), ahead))paintBlock(floor, ink);
 		}
-		/** The floor blocks a stroke covers, in order across, each once. */
-		public ArrayList<Block> rollerStrokeBlocks(double halfWidth, Player p, double ahead){
+		/** The floor blocks a stroke covers, in order across a forward direction from a point on the floor, each once. */
+		public ArrayList<Block> rollerStrokeBlocks(double halfWidth, Location feet, Vector forward, double ahead){
 			ArrayList<Block> stroke = new ArrayList<>();
-			Location feet = p.getLocation();
-			Vector forward = feet.getDirection().setY(0);
+			forward = forward.clone().setY(0);
 			if(forward.lengthSquared() < 1e-6){
 				Block underfoot = floorUnder(feet);
 				if(underfoot != null)stroke.add(underfoot);
@@ -892,8 +902,8 @@ public class InkWars extends JocEquips {
 			}
 			boolean wantsToSwim = swimForm && kit != null;
 			if(wantsToSwim && !squid.submerged)squid.dive(moved);
-			if(!wantsToSwim && squid.submerged)squid.surface(moved);
-			if(squid.submerged)squid.tick(team, moved);
+			if(!wantsToSwim && squid.submerged)squid.surface();
+			if(squid.submerged)squid.tick(team);
 			else squid.tickPendingSurge();
 
 			applyInkSpeed(onOwnColour, onEnemyColour);
@@ -985,7 +995,8 @@ public class InkWars extends JocEquips {
 
 		/**
 		 * The squid: a body that treats floor, walls, ceilings and corners as one continuous surface and never feels gravity while it touches one.
-		 * Its engine owns the speed: a heading and a scalar the client cannot reset, redirected at every change of surface so a 90-degree edge is just a bend in the road.
+		 * The client runs no physics for it at all: the player rides an invisible carrier that the engine places every tick, so the body is a point
+		 * the camera sits on, kept a small radius off every surface, and every collision, bend, hop and fall is the engine's own arithmetic against the block grid.
 		 * It lives on an ink reserve, refilled on its own colour and drained elsewhere; while the reserve lasts it stays a squid and lays a strip that thins with the reserve.
 		 */
 		class Squid {
@@ -995,19 +1006,16 @@ public class InkWars extends JocEquips {
 			Surface surface = Surface.AIR;
 			BlockFace wallSide = null;
 			int cornerTicks = 0;
+			/** The body's centre, the point the camera sits on. */
+			Vector centre = new Vector();
 			/** Unit vector in the plane of the surface, and the speed along it, blocks per tick. */
 			Vector heading = new Vector(1, 0, 0);
 			double speed = 0;
-			/** What was pushed last tick: the flight a forced exit carries. */
-			Vector pushed = new Vector();
-			/** The engine's own vertical speed in the air, blocks per tick; the client's gravity is overridden by the push every tick, so the arc is ours. */
+			/** The engine's own vertical speed in the air, blocks per tick. */
 			double verticalSpeed = 0;
-			int airTicks = 0;
-			int offGroundTicks = 0;
-			boolean jumpHeld = false;
-			/** The gap still open between the body and the wall or ceiling it just attached to: closed by the next push, so the body arrives on the surface the tick it bends onto it. */
-			double snapIntoSurface = 0;
-			/** The wall or ceiling block the body holds, from the last probe toward it. */
+			/** The last tick's displacement: what a forced exit carries as momentum. */
+			Vector pushed = new Vector();
+			/** The block the body rides on: the floor under it, the wall beside it, the ceiling over it. */
 			Block gripped = null;
 			/** What the ground was before this dive's own strip painted it, by block: the reserve judges the ground by this, so the squid cannot live on the ink it lays. */
 			final HashMap<Block, EquipInkWars> groundUnderStrip = new HashMap<>();
@@ -1015,7 +1023,11 @@ public class InkWars extends JocEquips {
 			double reserve = 0;
 			double pendingSurge = -1;
 			Vector flight = new Vector();
-			final HashSet<Location> fakeCeiling = new HashSet<>();
+			boolean jumpHeld = false;
+			/** The carrier the player rides while a squid: an empty item display, nothing to see, no physics, placed by the engine every tick. */
+			ItemDisplay carrier = null;
+			/** Where the player sits relative to the carrier, measured once riding; the carrier is placed so the camera lands on the centre. */
+			Vector seatOffset = new Vector(0, -0.6, 0);
 
 			Player player(){
 				return getPlayer();
@@ -1025,51 +1037,98 @@ public class InkWars extends JocEquips {
 			}
 			/** Diving: the body goes under the ink, the armour and the tools with it, only a ripple and the ink in hand stay. The walking speed is carried into the swim; the ink starts at zero. */
 			void dive(Vector moved){
+				Player p = player();
 				submerged = true;
 				submergedTicks = 0;
 				cornerTicks = 0;
 				reserve = 0;
 				groundUnderStrip.clear();
+				jumpHeld = true; // a jump held through the dive is not a hop
+				Location feet = p.getLocation();
+				centre = feet.toVector().add(new Vector(0, SQUID_RIDE_HEIGHT, 0));
 				surface = Surface.FLOOR;
 				wallSide = null;
-				jumpHeld = true; // a jump held through the dive is not a hop
+				gripped = getBlockWherePlayerStands();
+				verticalSpeed = 0;
 				setMomentum(new Vector(moved.getX(), 0, moved.getZ()));
-				Player p = player();
+				pushed = new Vector();
+				mount();
 				p.getInventory().setArmorContents(null);
 				kit.showInkSacs(reserve);
-				p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 0.7F);
-				getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
+				p.playSound(feet, Sound.ENTITY_GENERIC_SPLASH, 0.8F, 0.7F);
+				getWorld().spawnParticle(Particle.SPLASH, feet.clone().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
+			}
+			void mount(){
+				Player p = player();
+				carrier = getWorld().spawn(seatLocation(), ItemDisplay.class, display -> {
+					display.setPersistent(false);
+					display.setInvulnerable(true);
+					display.setGravity(false);
+					display.setTeleportDuration(1);
+				});
+				carrier.addPassenger(p);
+			}
+			/** Where the carrier goes so that the player's eyes land on the centre. */
+			Location seatLocation(){
+				Vector seat = centre.clone().subtract(new Vector(0, SQUID_CAMERA_HEIGHT, 0)).subtract(seatOffset);
+				Location at = seat.toLocation(getWorld());
+				at.setYaw(player().getLocation().getYaw());
+				return at;
+			}
+			/** The seat measured from where the player actually sits on the carrier: exact whatever the client's riding pose does. */
+			void measureSeat(){
+				Player p = player();
+				Vector measured = p.getLocation().toVector().subtract(carrier.getLocation().toVector());
+				if(Math.abs(measured.getX()) < 0.01 && Math.abs(measured.getZ()) < 0.01 && Math.abs(measured.getY()) < 2)seatOffset = measured;
+			}
+			boolean riding(){
+				return carrier != null && carrier.isValid() && player().getVehicle() == carrier;
+			}
+			/** Where the player stands when the body comes out: on the floor under a floor squid, else where the body was, the feet a little below the centre. */
+			Location standingSpot(){
+				Vector feet = surface == Surface.FLOOR ? centre.clone().subtract(new Vector(0, SQUID_RIDE_HEIGHT, 0)) : centre.clone().subtract(new Vector(0, 0.9, 0));
+				Location at = feet.toLocation(getWorld());
+				at.setYaw(player().getLocation().getYaw());
+				at.setPitch(player().getLocation().getPitch());
+				return at;
 			}
 			/**
-			 * Coming out: armour back, and the charge goes off as a surge, here and now on the ground, at the landing point along the flight when in the air.
-			 * The velocity is left alone, so letting go keeps the momentum, this time as a player.
+			 * Coming out: armour back, and the charge goes off as a surge, here and now on the floor, at the landing point along the flight otherwise.
+			 * The momentum is handed to the player, so letting go keeps it, this time on the feet.
 			 */
-			void surface(Vector moved){
+			void surface(){
 				if(!submerged)return;
+				Vector momentum = pushed.clone();
+				boolean onFloor = surface == Surface.FLOOR;
 				surfaceQuietly();
 				Player p = player();
 				p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.8F, 1.3F);
 				getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
-				if(p.isOnGround()){
+				if(onFloor){
 					releaseSurge(reserve, p.getLocation(), new Vector(0, -1, 0));
 				}else{
 					pendingSurge = reserve;
-					flight = moved.clone();
+					flight = momentum;
 				}
+				p.setVelocity(momentum);
 				reserve = 0;
 				p.setExp(0);
 			}
 			void surfaceQuietly(){
 				submerged = false;
+				Player p = player();
+				if(carrier != null){
+					if(riding()){
+						carrier.removePassenger(p);
+						p.teleport(standingSpot());
+					}
+					carrier.remove();
+					carrier = null;
+				}
 				surface = Surface.AIR;
 				wallSide = null;
 				gripped = null;
-				snapIntoSurface = 0;
-				airTicks = 0;
-				offGroundTicks = 0;
-				Player p = player();
 				p.removePotionEffect(PotionEffectType.INVISIBILITY);
-				dropFakeCeiling();
 				Utils.donarItemsPlayer(p, getStartingItems(p));
 				if(kit != null)kit.hideInkSacs();
 			}
@@ -1102,41 +1161,42 @@ public class InkWars extends JocEquips {
 				}
 			}
 
-			/** One tick under the ink: the body, the reserve, the strip, then the movement on whatever surface it holds. */
-			void tick(EquipInkWars team, Vector moved){
+			/** One tick under the ink: the body, the reserve, the strip, then the movement on whatever surface it holds, and the carrier placed where the body ended. */
+			void tick(EquipInkWars team){
 				Player p = player();
+				if(!riding()){ // thrown off by something else: a death, a teleport, a lost carrier
+					swimForm = false;
+					surface();
+					return;
+				}
+				measureSeat();
 				submergedTicks++;
 				p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 40, 0, true, false));
 				p.setFallDistance(0);
 				if(submergedTicks % 20 == 0)Utils.healDamageable(p, 1.0);
 				if(cornerTicks > 0)cornerTicks--;
 
-				Block touched = touchedBlock();
+				Block touched = gripped;
 				EquipInkWars ground = groundColour(touched);
-				if(surface != Surface.AIR)tickReserve(team, ground, moved);
+				if(surface != Surface.AIR)tickReserve(team, ground, pushed);
 				if(reserve <= 0 && ground != team && surface != Surface.AIR){
 					forcedOut();
 					return;
 				}
-				ripple(team, moved);
+				ripple(team, pushed);
 				if(touched != null)layStrip(team, touched);
 
 				Keys keys = readKeys();
+				Vector before = centre.clone();
 				switch(surface){
-					case FLOOR -> tickFloor(keys, moved);
+					case FLOOR -> tickFloor(keys);
 					case WALL -> tickWall(keys);
 					case CEILING -> tickCeiling(keys);
-					case AIR -> tickAir(keys, moved);
+					case AIR -> tickAir(keys);
 				}
-				if(surface == Surface.FLOOR)tickCrawlPose();
-				else dropFakeCeiling();
+				pushed = centre.clone().subtract(before);
+				carrier.teleport(seatLocation()); // a vehicle keeps its passengers through a teleport since 1.21.10
 				showMeters();
-			}
-			/** The block the body rides on: under the feet on a floor, the gripped block on a wall or a ceiling, none in the air. */
-			Block touchedBlock(){
-				if(surface == Surface.WALL || surface == Surface.CEILING)return gripped;
-				if(surface == Surface.FLOOR)return getBlockWherePlayerStands();
-				return null;
 			}
 			/** The colour the reserve judges the ground by: what was there before this dive's own strip, else what is there now. */
 			EquipInkWars groundColour(Block touched){
@@ -1157,15 +1217,25 @@ public class InkWars extends JocEquips {
 				swimForm = false;
 				p.playSound(p.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_UPWARDS_AMBIENT, 1F, 0.6F);
 				PaperMessages.sendActionBar(p, ChatColor.RED + "Out of ink", 30);
-				surface(pushed);
+				surface();
+			}
+			/** The point on the surface under the body, where the ink shows. */
+			Location surfacePoint(){
+				Vector at = switch(surface){
+					case FLOOR -> centre.clone().subtract(new Vector(0, SQUID_RIDE_HEIGHT - 0.15, 0));
+					case WALL -> centre.clone().add(wallSide.getDirection().multiply(SQUID_RADIUS - 0.1));
+					case CEILING -> centre.clone().add(new Vector(0, SQUID_RADIUS - 0.1, 0));
+					case AIR -> centre.clone();
+				};
+				return at.toLocation(getWorld());
 			}
 			void ripple(EquipInkWars team, Vector moved){
 				if(submergedTicks % 2 != 0)return;
 				Particle.DustOptions dust = new Particle.DustOptions(team.getStrongColor().getColor(), 1.4F);
-				getWorld().spawnParticle(Particle.DUST, player().getLocation().add(0, 0.15, 0), (int) (3 + moved.length() * 12), 0.45, 0.05, 0.45, 0, dust);
+				getWorld().spawnParticle(Particle.DUST, surfacePoint(), (int) (3 + moved.length() * 12), 0.45, 0.05, 0.45, 0, dust);
 			}
 			/**
-			 * The strip the squid lays: on its own colour a full re-wet, elsewhere a stroke that thins with the reserve down to the one block under the body.
+			 * The strip the squid lays: on its own colour a full re-wet, elsewhere a stroke across the heading that thins with the reserve down to the one block under the body.
 			 * What the ground was is remembered before the stroke covers it.
 			 */
 			void layStrip(EquipInkWars team, Block touched){
@@ -1182,8 +1252,11 @@ public class InkWars extends JocEquips {
 				if(surface == Surface.WALL){
 					stroke.add(touched);
 					if(gripable(touched.getRelative(BlockFace.UP)))stroke.add(touched.getRelative(BlockFace.UP)); // the body is two blocks tall on a wall
-				}else if(surface == Surface.CEILING || halfWidth < 0.9)stroke.add(touched);
-				else stroke = kit.rollerStrokeBlocks(halfWidth, p, 0);
+				}else if(surface != Surface.FLOOR || halfWidth < 0.9){
+					stroke.add(touched);
+				}else{
+					stroke = kit.rollerStrokeBlocks(halfWidth, surfacePoint(), new Vector(heading.getX(), 0, heading.getZ()), 0);
+				}
 				for(Block b : stroke){
 					EquipInkWars owner = getTeamOwningBlock(b);
 					if(owner != team)groundUnderStrip.putIfAbsent(b, owner);
@@ -1221,70 +1294,73 @@ public class InkWars extends JocEquips {
 				return bent.lengthSquared() < 1e-6 ? bent : bent.normalize();
 			}
 
-			//--- surfaces
+			//--- the grid
 			/** A block the squid can hold: anything paintable, and the plain solid blocks a splash would paint; never a barrier. */
 			boolean gripable(Block b){
 				return isPaintable(b) || isPaintableUnsafely(b);
 			}
 			/** A surface the probe found: the block, the face of it that faces the body, and how far the body's edge is from that face along the probe. */
 			record Contact(Block block, BlockFace face, double gap) {}
-			/**
-			 * Feels along a direction for the first block face within the next tick's travel plus the margin, with rays from the ankles, the middle and the crown of the body.
-			 * The reach and the gap are measured from the body's edge in that direction, not from its centre, so the answer is "will the body touch it", whatever the angle.
-			 * Null when nothing is that close.
-			 */
-			Contact probe(Vector direction, double travel){
-				double height = player().getHeight();
-				return probe(direction, travel, height <= 0.7 ? new double[]{0.15, height - 0.15} : new double[]{0.15, height / 2, height - 0.15});
-			}
-			Contact probe(Vector direction, double travel, double[] rayHeights){
-				if(direction.lengthSquared() < 1e-6)return null;
-				Player p = player();
+			/** Feels from a point along a direction for the first block face within the body's radius plus the reach; the gap is from the body's edge, not its centre. Null when nothing is that close. */
+			Contact probe(Vector from, Vector direction, double reach){
+				if(direction.lengthSquared() < 1e-9)return null;
 				Vector unit = direction.clone().normalize();
-				double height = p.getHeight();
-				Contact nearest = null;
-				for(double rayHeight : rayHeights){
-					double extent = 0.3 * (Math.abs(unit.getX()) + Math.abs(unit.getZ())) + (unit.getY() > 0 ? unit.getY() * (height - rayHeight) : -unit.getY() * rayHeight);
-					Location origin = p.getLocation().add(0, rayHeight, 0);
-					RayTraceResult hit = getWorld().rayTraceBlocks(origin, unit, extent + travel + PROBE_MARGIN, FluidCollisionMode.NEVER, true);
-					if(hit == null || hit.getHitBlock() == null || hit.getHitBlockFace() == null)continue;
-					double gap = hit.getHitPosition().subtract(origin.toVector()).dot(unit) - extent;
-					if(nearest == null || gap < nearest.gap())nearest = new Contact(hit.getHitBlock(), hit.getHitBlockFace(), gap);
-				}
-				return nearest;
+				RayTraceResult hit = getWorld().rayTraceBlocks(from.toLocation(getWorld()), unit, SQUID_RADIUS + reach, FluidCollisionMode.NEVER, true);
+				if(hit == null || hit.getHitBlock() == null || hit.getHitBlockFace() == null)return null;
+				double gap = hit.getHitPosition().subtract(from).dot(unit) - SQUID_RADIUS;
+				return new Contact(hit.getHitBlock(), hit.getHitBlockFace(), gap);
+			}
+			Contact probe(Vector direction, double reach){
+				return probe(centre, direction, reach);
 			}
 			/** Whether a contact is a wall the squid can hold: a side face of a gripable block. */
 			boolean holdableWall(Contact contact){
 				return contact != null && contact.face().getModY() == 0 && gripable(contact.block());
 			}
-			/** The wall the body holds, if it is still there within reach on the gripped side; one ray just above the crown, for the wall a ceiling's edge turns onto. */
-			Contact wallBeside(){
-				double height = player().getHeight();
-				Contact beside = probe(wallSide.getDirection(), 1.0, new double[]{0.15, height / 2, height - 0.15, height + 0.3});
-				return holdableWall(beside) && beside.face().getOppositeFace() == wallSide ? beside : null;
+			/** The plane of a block's face along its axis. */
+			double facePlane(Block block, BlockFace face){
+				if(face.getModX() != 0)return block.getX() + (face.getModX() > 0 ? 1 : 0);
+				if(face.getModY() != 0)return block.getY() + (face.getModY() > 0 ? 1 : 0);
+				return block.getZ() + (face.getModZ() > 0 ? 1 : 0);
 			}
-			/** The ceiling the body holds, if it is still there within reach overhead. */
-			Contact ceilingAbove(){
-				Contact above = probe(new Vector(0, 1, 0), 1.0);
-				return above != null && above.face() == BlockFace.DOWN && gripable(above.block()) ? above : null;
+			/** Puts the body's edge exactly on a face: the centre one radius off its plane, on the face's open side. */
+			void restOn(Block block, BlockFace face){
+				double plane = facePlane(block, face);
+				if(face.getModX() != 0)centre.setX(plane + face.getModX() * SQUID_RADIUS);
+				else if(face.getModY() != 0)centre.setY(plane + face.getModY() * SQUID_RADIUS);
+				else centre.setZ(plane + face.getModZ() * SQUID_RADIUS);
+			}
+			void advance(Vector direction, double distance){
+				if(distance <= 0 || direction.lengthSquared() < 1e-9)return;
+				centre.add(direction.clone().normalize().multiply(distance));
+			}
+			/** A face the body cannot hold or pass: the heading loses what pointed into it and the body slides along, a little slower. */
+			void slideAlong(BlockFace face){
+				Vector normal = face.getDirection();
+				heading.subtract(normal.multiply(heading.dot(normal)));
+				if(heading.lengthSquared() < 1e-6)speed = 0;
+				else heading.normalize();
+				speed *= 0.9;
 			}
 			/**
-			 * Past the end of the gripped face, round the outside corner: the new face belongs to the block just held, on the side the body came from.
-			 * Rays from the body cannot find it, the body sits outside the block's column, so it is taken from the block itself. Null when that face is not open.
+			 * Past the end of the gripped face, round the outside edge: the new face belongs to the block just held, on the side the body came from.
+			 * A ray from the body cannot find it, the body sits outside the block's column, so it is taken from the block itself. Null when that face is not open,
+			 * or when the body has not reached it by the given tolerance.
 			 */
-			Contact wallAroundCorner(double leastGap){
+			Contact aroundEdge(double leastGap){
 				BlockFace travelled = sideOf(new Vector(heading.getX(), 0, heading.getZ()));
 				if(gripped == null || travelled == null || (wallSide != null && (travelled == wallSide || travelled == wallSide.getOppositeFace())))return null;
-				if(!gripped.getRelative(travelled).isPassable())return null; // the wall goes on in that direction, this is not a corner
-				Location body = player().getLocation();
+				if(!gripped.getRelative(travelled).isPassable())return null; // the surface goes on in that direction, this is not its edge
 				boolean alongX = travelled.getModX() != 0;
 				boolean positive = travelled.getModX() + travelled.getModZ() > 0;
-				double bodyCentre = alongX ? body.getX() : body.getZ();
-				double facePlane = (alongX ? gripped.getX() : gripped.getZ()) + (positive ? 1 : 0);
-				double gap = positive ? (bodyCentre - 0.3) - facePlane : facePlane - (bodyCentre + 0.3);
-				if(gap < leastGap)return null; // the body has not reached that face: it is somewhere else along the surface, not at its edge
+				double bodyCentre = alongX ? centre.getX() : centre.getZ();
+				double plane = facePlane(gripped, travelled);
+				double gap = positive ? (bodyCentre - SQUID_RADIUS) - plane : plane - (bodyCentre + SQUID_RADIUS);
+				if(gap < leastGap)return null;
 				return new Contact(gripped, travelled, Math.max(0, gap));
 			}
+
+			//--- the bends
 			/**
 			 * The universal bend: passing from a surface with one normal onto a surface with another, the part of the heading that pointed into the new surface
 			 * is turned to run away from the old one. Floor into wall becomes up, wall down to floor becomes away, a corner either way turns onto the new wall.
@@ -1295,252 +1371,240 @@ public class InkWars extends JocEquips {
 				if(heading.lengthSquared() < 1e-6)heading = oldNormal.clone();
 				heading.normalize();
 			}
-			/** Onto a wall at whatever angle: the road bends, the speed is kept, and the gap still open to the wall is closed by the next push. */
+			/** Onto a wall at whatever angle: the road bends, the speed is kept, the body rests on the face. */
 			void attachToWall(Contact wall, Vector oldNormal){
 				BlockFace side = wall.face().getOppositeFace();
 				redirect(oldNormal, side.getDirection().multiply(-1));
 				surface = Surface.WALL;
 				wallSide = side;
 				gripped = wall.block();
-				snapIntoSurface = Math.max(0, wall.gap());
+				restOn(wall.block(), wall.face());
 			}
-			/** Onto a ceiling: the road bends to run along it, the speed is kept, and the gap still open overhead is closed by the next push. */
+			/** Onto a ceiling: the road bends to run along it, the speed is kept, the body rests under it. */
 			void attachToCeiling(Contact ceiling, Vector oldNormal){
 				redirect(oldNormal, new Vector(0, -1, 0));
-				heading.setY(0);
-				if(heading.lengthSquared() < 1e-6)heading = oldNormal.clone().setY(0);
-				if(heading.lengthSquared() < 1e-6)heading = new Vector(1, 0, 0);
-				heading.normalize();
+				flattenHeading(oldNormal);
 				surface = Surface.CEILING;
 				wallSide = null;
 				gripped = ceiling.block();
-				snapIntoSurface = Math.max(0, ceiling.gap());
+				restOn(ceiling.block(), BlockFace.DOWN);
 			}
-			void landOnFloor(Vector oldNormal){
+			/** Onto a floor: the road bends to run along it, the body rides at its height over the block. */
+			void landOnFloor(Vector oldNormal, Block floor, double top){
 				redirect(oldNormal, new Vector(0, 1, 0));
-				heading.setY(0);
-				if(heading.lengthSquared() < 1e-6)heading = oldNormal.clone().setY(0);
-				if(heading.lengthSquared() < 1e-6)heading = new Vector(1, 0, 0);
-				heading.normalize();
+				flattenHeading(oldNormal);
 				surface = Surface.FLOOR;
 				wallSide = null;
-				gripped = null;
-				offGroundTicks = 0;
+				gripped = floor;
+				centre.setY(top + SQUID_RIDE_HEIGHT);
 			}
-			/** Into the air with this much upward speed; the fake ceiling goes the same tick so the client's world lets the body rise. */
+			void flattenHeading(Vector fallback){
+				heading.setY(0);
+				if(heading.lengthSquared() < 1e-6)heading = fallback.clone().setY(0);
+				if(heading.lengthSquared() < 1e-6)heading = new Vector(1, 0, 0);
+				heading.normalize();
+			}
 			void takeOff(double upward){
 				surface = Surface.AIR;
 				wallSide = null;
 				gripped = null;
 				verticalSpeed = upward;
-				airTicks = 0;
-				dropFakeCeiling();
+			}
+			/** Off the wall into the air, away from it, still a squid. */
+			void leapOff(Vector normal){
+				Player p = player();
+				heading = normal.clone();
+				speed = Math.max(speed, 0.4);
+				takeOff(SQUID_WALL_LEAP);
+				p.playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.8F, 1.1F);
 			}
 
+			//--- the surfaces
 			/**
-			 * On a floor the cart is steered by the keys. A wall the body is about to touch, at any angle, bends the road up it with the speed kept:
-			 * the probe finds it a tick before the hitbox would, so the body never stops against it. Jump hops, momentum kept. Off an edge the squid is in the air.
+			 * On a floor the cart is steered by the keys. Ahead, a wall the body would touch bends the road up it at any angle, speed kept, the rest of the tick's
+			 * travel climbing; a lip no higher than a step is stepped over; anything else stops the body at its face and it slides along. The body then rides at its
+			 * height over whatever floor is under it, up or down a step; with none within a step down, it is in the air. Jump hops, momentum kept.
 			 */
-			void tickFloor(Keys keys, Vector moved){
-				Player p = player();
-				Vector flat = new Vector(heading.getX(), 0, heading.getZ());
-				heading = flat.lengthSquared() < 1e-6 ? new Vector(1, 0, 0) : flat.normalize();
+			void tickFloor(Keys keys){
+				flattenHeading(new Vector(1, 0, 0));
 				steer(keys.flat(), 1, true);
 				if(keys.jumpPressed()){
 					takeOff(SQUID_HOP);
-					pushAlongSurface();
 					return;
 				}
-				if(speed >= SQUID_CRAWL_SPEED){
-					Contact ahead = probe(heading, speed);
-					if(holdableWall(ahead)){
-						attachToWall(ahead, new Vector(0, 1, 0));
-						pushAlongSurface();
+				double travel = speed;
+				if(travel > 1e-4){
+					Vector low = centre.clone().add(new Vector(0, -SQUID_RIDE_HEIGHT + 0.15, 0));
+					Vector high = centre.clone().add(new Vector(0, -SQUID_RIDE_HEIGHT + SQUID_STEP + 0.1, 0));
+					Contact lowHit = probe(low, heading, travel);
+					Contact highHit = probe(high, heading, travel);
+					Contact wall = holdableWall(lowHit) ? lowHit : holdableWall(highHit) ? highHit : null;
+					if(wall != null){
+						double toFace = Math.max(0, Math.min(travel, wall.gap()));
+						advance(heading, toFace);
+						attachToWall(wall, new Vector(0, 1, 0));
+						advance(heading, travel - toFace);
 						return;
 					}
+					if(highHit != null){ // too tall to step, not a wall to hold
+						advance(heading, Math.max(0, Math.min(travel, highHit.gap())));
+						slideAlong(highHit.face());
+					}else{
+						advance(heading, travel);
+					}
 				}
-				offGroundTicks = p.isOnGround() ? 0 : offGroundTicks + 1;
-				if(offGroundTicks >= OFF_GROUND_TICKS)takeOff(Math.min(0, moved.getY()));
-				pushAlongSurface();
+				Vector castFrom = centre.clone().add(new Vector(0, SQUID_STEP, 0));
+				if(!castFrom.toLocation(getWorld()).getBlock().isPassable())castFrom = centre.clone();
+				double below = (castFrom.getY() - centre.getY()) + SQUID_RIDE_HEIGHT + SQUID_STEP;
+				RayTraceResult floor = getWorld().rayTraceBlocks(castFrom.toLocation(getWorld()), new Vector(0, -1, 0), below, FluidCollisionMode.NEVER, true);
+				if(floor == null || floor.getHitBlock() == null || floor.getHitBlockFace() != BlockFace.UP){
+					takeOff(0);
+					return;
+				}
+				gripped = floor.getHitBlock();
+				centre.setY(floor.getHitPosition().getY() + SQUID_RIDE_HEIGHT);
 			}
 			/**
 			 * On a wall the keys work as on the floor, bent onto the wall: toward it climbs, away from it descends, along it runs; the look is free. Jump leaps off.
-			 * Ahead along the road: another wall is a concave corner and the road bends onto it, a ceiling ends the climb and the rest of the heading runs along the seam,
-			 * a floor under a descent bends onto it. When the gripped face ends: above the block's top the road goes over onto the roof, round an outside corner it bends
-			 * onto the next face, otherwise the air.
+			 * Ahead along the road: another wall is a concave corner and the road bends onto it, a floor under a descent bends onto it, a ceiling over a climb bends onto it,
+			 * anything unholdable stops the body and it slides. Then the body rests on the wall beside it; when that face ends: above the block's top the road goes over
+			 * onto the roof, round an outside edge it bends onto the next face, otherwise the air.
 			 */
 			void tickWall(Keys keys){
-				Player p = player();
 				Vector normal = wallSide.getDirection().multiply(-1);
 				if(keys.jumpPressed()){
 					leapOff(normal);
 					return;
 				}
 				steer(bendOntoWall(keys.flat(), normal), 1, true);
-				Contact ahead = speed > 1e-3 ? probe(heading, speed) : null;
-				if(ahead != null){
-					if(holdableWall(ahead) && ahead.face().getOppositeFace() != wallSide){
-						attachToWall(ahead, normal);
-						cornerTicks = CORNER_TICKS;
-						pushAlongSurface();
-						return;
-					}
-					if(ahead.face() == BlockFace.UP && heading.getY() < 0){
-						landOnFloor(normal);
-						pushAlongSurface();
-						return;
-					}
-					if(ahead.face() == BlockFace.DOWN && heading.getY() > 0){
-						if(gripable(ahead.block())){
-							attachToCeiling(ahead, normal);
+				double travel = speed;
+				if(travel > 1e-4){
+					Contact ahead = probe(heading, travel);
+					if(ahead == null){
+						advance(heading, travel);
+					}else{
+						double toFace = Math.max(0, Math.min(travel, ahead.gap()));
+						advance(heading, toFace);
+						if(holdableWall(ahead) && ahead.face().getOppositeFace() != wallSide){
+							attachToWall(ahead, normal);
 							cornerTicks = CORNER_TICKS;
-							pushAlongSurface();
+							advance(heading, travel - toFace);
 							return;
 						}
-						heading.setY(0); // a ceiling that cannot be held ends the climb; the rest of the heading runs along the seam
-						if(heading.lengthSquared() < 1e-6){
-							heading = normal.clone();
-							speed = 0;
-						}else{
-							heading.normalize();
+						if(ahead.face() == BlockFace.UP && heading.getY() < 0){
+							landOnFloor(normal, ahead.block(), ahead.block().getY() + 1);
+							advance(heading, travel - toFace);
+							return;
 						}
+						if(ahead.face() == BlockFace.DOWN && heading.getY() > 0 && gripable(ahead.block())){
+							attachToCeiling(ahead, normal);
+							cornerTicks = CORNER_TICKS;
+							advance(heading, travel - toFace);
+							return;
+						}
+						slideAlong(ahead.face());
 					}
 				}
-				Contact beside = wallBeside();
-				if(beside == null){
-					if(gripped != null && p.getLocation().getY() >= gripped.getY() + 0.8 && heading.getY() >= 0){
-						landOnFloor(normal); // over the top: onto the roof, heading into the wall's block
-						pushAlongSurface();
-						return;
-					}
-					Contact corner = wallAroundCorner(-0.35);
-					if(corner != null){
-						attachToWall(corner, normal);
-						cornerTicks = CORNER_TICKS;
-						pushAlongSurface();
-						return;
-					}
-					takeOff(Math.min(0, heading.getY() * speed));
-					pushAlongSurface();
+				Contact beside = probe(wallSide.getDirection(), 1.0);
+				if(holdableWall(beside) && beside.face().getOppositeFace() == wallSide){
+					gripped = beside.block();
+					restOn(beside.block(), beside.face());
 					return;
 				}
-				gripped = beside.block();
-				if(p.isOnGround() && heading.getY() < -0.1){
-					landOnFloor(normal);
-					pushAlongSurface();
+				if(gripped != null && centre.getY() - SQUID_RADIUS >= gripped.getY() + 1 - 1e-6 && heading.getY() >= 0){
+					// over the top: onto the roof, the body carried into the block's column so the roof is under it
+					landOnFloor(normal, gripped, gripped.getY() + 1);
+					advance(heading, SQUID_RADIUS + 0.1);
 					return;
 				}
-				pushAlongSurface();
+				Contact edge = aroundEdge(-0.35);
+				if(edge != null){
+					attachToWall(edge, normal);
+					cornerTicks = CORNER_TICKS;
+					return;
+				}
+				takeOff(Math.min(0, heading.getY() * speed));
 			}
 			/**
-			 * In the air the squid keeps its form and flies its own arc: the engine owns the vertical speed and the momentum, the keys still turn it and push a little.
-			 * The first surface it meets becomes its road again, a wall a tick before the body would hit it, the floor when the client reports the ground.
-			 */
-			void tickAir(Keys keys, Vector moved){
-				Player p = player();
-				airTicks++;
-				Vector flat = new Vector(heading.getX(), 0, heading.getZ());
-				if(flat.lengthSquared() > 1e-6)heading = flat.normalize();
-				steer(keys.flat(), SQUID_AIR_THROTTLE, false);
-				speed *= SQUID_AIR_DRAG;
-				verticalSpeed = (verticalSpeed - INK_GRAVITY) * 0.98;
-				if(speed >= SQUID_CRAWL_SPEED){
-					Contact ahead = probe(heading, speed);
-					if(holdableWall(ahead)){
-						attachToWall(ahead, new Vector(0, 1, 0));
-						pushAlongSurface();
-						return;
-					}
-				}
-				if(verticalSpeed > 0){
-					Contact overhead = probe(new Vector(0, 1, 0), verticalSpeed);
-					if(overhead != null && overhead.face() == BlockFace.DOWN && gripable(overhead.block())){
-						attachToCeiling(overhead, new Vector(0, 1, 0));
-						pushAlongSurface();
-						return;
-					}
-				}
-				if(airTicks >= MIN_AIR_TICKS && p.isOnGround() && verticalSpeed <= 0){
-					Vector landed = new Vector(moved.getX(), 0, moved.getZ());
-					if(landed.lengthSquared() > 1e-4)setMomentum(landed);
-					landOnFloor(new Vector(0, 1, 0));
-					pushAlongSurface();
-					return;
-				}
-				pushAlongSurface();
-			}
-			/**
-			 * Under a ceiling the keys work as on the floor and the body is pressed up into it. Jump lets go into a fall. Ahead along the road: a wall is a concave corner and
-			 * the road bends down it. When the ceiling ends: the block's side face is the road up onto its roof, taken from the block just held once the body has cleared it;
+			 * Under a ceiling the keys work as on the floor and the body rests up against it. Jump lets go into a fall. Ahead: a wall is a concave corner and the road
+			 * bends down it. When the ceiling ends: the block's side face is the road up onto its roof, taken from the block just held once the body has cleared it;
 			 * before that the body holds on; with no face to turn onto, the air.
 			 */
 			void tickCeiling(Keys keys){
 				Vector normal = new Vector(0, -1, 0);
 				if(keys.jumpPressed()){
 					takeOff(0);
-					pushAlongSurface();
 					player().playSound(player().getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.8F, 0.9F);
 					return;
 				}
-				Vector flat = new Vector(heading.getX(), 0, heading.getZ());
-				heading = flat.lengthSquared() < 1e-6 ? new Vector(1, 0, 0) : flat.normalize();
+				flattenHeading(new Vector(1, 0, 0));
 				steer(keys.flat(), 1, true);
-				if(speed > 1e-3){
-					Contact ahead = probe(heading, speed);
-					if(holdableWall(ahead)){
-						attachToWall(ahead, normal);
-						cornerTicks = CORNER_TICKS;
-						pushAlongSurface();
-						return;
+				double travel = speed;
+				if(travel > 1e-4){
+					Contact ahead = probe(heading, travel);
+					if(ahead == null){
+						advance(heading, travel);
+					}else{
+						double toFace = Math.max(0, Math.min(travel, ahead.gap()));
+						advance(heading, toFace);
+						if(holdableWall(ahead)){
+							attachToWall(ahead, normal);
+							cornerTicks = CORNER_TICKS;
+							advance(heading, travel - toFace);
+							return;
+						}
+						slideAlong(ahead.face());
 					}
 				}
-				Contact above = ceilingAbove();
-				if(above == null){
-					Contact edge = wallAroundCorner(0);
-					if(edge != null){
-						attachToWall(edge, normal);
-						cornerTicks = CORNER_TICKS;
-						pushAlongSurface();
-						return;
-					}
-					if(wallAroundCorner(-0.35) == null)takeOff(0); // nothing to turn onto; otherwise the body still overlaps the edge and holds on until it clears
-					pushAlongSurface();
+				Contact above = probe(new Vector(0, 1, 0), 1.0);
+				if(above != null && above.face() == BlockFace.DOWN && gripable(above.block())){
+					gripped = above.block();
+					restOn(above.block(), BlockFace.DOWN);
 					return;
 				}
-				gripped = above.block();
-				pushAlongSurface();
-			}
-			/** Off the wall into the air, away from it, still a squid. */
-			void leapOff(Vector normal){
-				Player p = player();
-				double launch = Math.max(speed, 0.4);
-				heading = normal.clone();
-				speed = launch;
-				takeOff(SQUID_WALL_LEAP);
-				pushAlongSurface();
-				p.playSound(p.getLocation(), Sound.ENTITY_SQUID_SQUIRT, 0.8F, 1.1F);
+				Contact edge = aroundEdge(0);
+				if(edge != null){
+					attachToWall(edge, normal);
+					cornerTicks = CORNER_TICKS;
+					return;
+				}
+				if(aroundEdge(-0.35) == null)takeOff(0); // nothing to turn onto; otherwise the body still overlaps the edge and holds on until it clears
 			}
 			/**
-			 * The velocity for the current surface: along the heading at the speed. On a floor a small press into the ground; on a wall a small press into it, plus whatever
-			 * gap was still open when it attached, and the vertical part is the heading's; under a ceiling a small press up into it, plus the gap; in the air the engine's own
-			 * vertical speed. The client's gravity never decides here.
+			 * In the air the squid keeps its form and flies its own arc: the engine owns the vertical speed and the momentum, the keys still turn it and push a little.
+			 * The first surface on its path becomes its road again: a wall it would touch, the floor it falls onto, a ceiling it rises into.
 			 */
-			void pushAlongSurface(){
-				Player p = player();
-				pushed = heading.clone().multiply(speed);
-				switch(surface){
-					case WALL -> {
-						Vector into = wallSide.getDirection().multiply(0.1 + snapIntoSurface);
-						snapIntoSurface = 0;
-						p.setVelocity(new Vector(pushed.getX() + into.getX(), pushed.getY(), pushed.getZ() + into.getZ()));
-					}
-					case CEILING -> {
-						p.setVelocity(new Vector(pushed.getX(), 0.1 + snapIntoSurface, pushed.getZ()));
-						snapIntoSurface = 0;
-					}
-					case FLOOR -> p.setVelocity(new Vector(pushed.getX(), -INK_GRAVITY, pushed.getZ()));
-					case AIR -> p.setVelocity(new Vector(pushed.getX(), verticalSpeed, pushed.getZ()));
+			void tickAir(Keys keys){
+				flattenHeading(new Vector(1, 0, 0));
+				steer(keys.flat(), SQUID_AIR_THROTTLE, false);
+				speed *= SQUID_AIR_DRAG;
+				verticalSpeed = (verticalSpeed - INK_GRAVITY) * 0.98;
+				Vector velocity = heading.clone().multiply(speed).add(new Vector(0, verticalSpeed, 0));
+				double length = velocity.length();
+				if(length < 1e-6)return;
+				Contact hit = probe(velocity, length);
+				if(hit == null){
+					advance(velocity, length);
+					return;
 				}
+				advance(velocity, Math.max(0, Math.min(length, hit.gap())));
+				if(holdableWall(hit)){
+					attachToWall(hit, new Vector(0, 1, 0));
+					return;
+				}
+				if(hit.face() == BlockFace.UP){
+					landOnFloor(new Vector(0, 1, 0), hit.block(), hit.block().getY() + 1);
+					return;
+				}
+				if(hit.face() == BlockFace.DOWN){
+					if(verticalSpeed > 0 && gripable(hit.block())){
+						attachToCeiling(hit, new Vector(0, 1, 0));
+						return;
+					}
+					verticalSpeed = 0;
+					return;
+				}
+				slideAlong(hit.face());
 			}
 
 			//--- the cart
@@ -1578,7 +1642,6 @@ public class InkWars extends JocEquips {
 				heading = heading.clone().multiply(Math.cos(rate)).add(perpendicular.multiply(Math.sin(rate))).normalize();
 			}
 			void setMomentum(Vector velocity){
-				pushed = velocity.clone();
 				speed = Math.min(SQUID_TOP_SPEED, velocity.length());
 				if(speed > 1e-4)heading = velocity.clone().normalize();
 			}
@@ -1586,39 +1649,6 @@ public class InkWars extends JocEquips {
 				if(Math.abs(direction.getX()) < 0.05 && Math.abs(direction.getZ()) < 0.05)return null;
 				if(Math.abs(direction.getX()) > Math.abs(direction.getZ()))return direction.getX() > 0 ? BlockFace.EAST : BlockFace.WEST;
 				return direction.getZ() > 0 ? BlockFace.SOUTH : BlockFace.NORTH;
-			}
-
-			//--- the pose
-			/**
-			 * The crawl pose is the squid: the client is shown barriers at head height in a 3x3 patch around it, so it cannot stand and drops to the swimming pose,
-			 * camera and hitbox at squid height. Only this client sees them, and nobody else needs to since the body is invisible; the hop drops them the tick it is pushed.
-			 */
-			void tickCrawlPose(){
-				Player p = player();
-				Block head = p.getLocation().getBlock().getRelative(BlockFace.UP);
-				HashSet<Location> wanted = new HashSet<>();
-				for(int dx = -1; dx <= 1; dx++){
-					for(int dz = -1; dz <= 1; dz++){
-						Block cell = head.getRelative(dx, 0, dz);
-						if(cell.isPassable())wanted.add(cell.getLocation());
-					}
-				}
-				for(Location gone : new ArrayList<>(fakeCeiling)){
-					if(wanted.contains(gone))continue;
-					p.sendBlockChange(gone, gone.getBlock().getBlockData());
-					fakeCeiling.remove(gone);
-				}
-				for(Location fresh : wanted){
-					if(fakeCeiling.add(fresh))p.sendBlockChange(fresh, Material.BARRIER.createBlockData());
-				}
-			}
-			void dropFakeCeiling(){
-				if(fakeCeiling.isEmpty())return;
-				Player p = player();
-				for(Location fake : fakeCeiling){
-					if(p != null && fake.getWorld() == p.getWorld())p.sendBlockChange(fake, fake.getBlock().getBlockData());
-				}
-				fakeCeiling.clear();
 			}
 		}
 	}
