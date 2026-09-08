@@ -70,7 +70,15 @@ public class InkWars extends JocEquips {
 	 * and below this speed the heading simply snaps to the keys, so a standing squid sets off in any direction.
 	 */
 	static final double SQUID_TOP_SPEED = 0.65;
-	static final double SQUID_ACCELERATION = 0.035;
+	static final double SQUID_ACCELERATION = 0.02;
+	/**
+	 * The thrust: right-click on the ink sacs burns this share of the reserve (ten sacs of thirty-two) and adds this much speed at once, up to this ceiling,
+	 * past the top speed; above the top speed the squid keeps only this share per tick, so it settles back to the top on its own.
+	 */
+	static final double SQUID_THRUST_COST = 10.0 / 32;
+	static final double SQUID_THRUST = 0.5;
+	static final double SQUID_THRUST_CEILING = 1.4;
+	static final double SQUID_OVERSPEED_KEPT = 0.97;
 	static final double SQUID_BRAKE = 0.05;
 	static final double SQUID_COAST = 0.985;
 	/** Keys further than this from the heading (cosine) are a reverse: the squid brakes to a crawl first, then sets off the new way; anything closer turns it on the spot. */
@@ -150,7 +158,7 @@ public class InkWars extends JocEquips {
 		i.add("Press sneak on your own ink for squid form: invisible, fast, healing, with momentum; press again to stand up");
 		i.add("The squid lives on ink (the green bar): it refills on your colour, drains on neutral ground, faster on enemy ink, and at zero you are thrown back on your feet; the strip you lay as you go does not count as yours until you stand up");
 		i.add("A squid runs up any wall it touches, across ceilings and round every corner as if the floor continued; the keys work the same everywhere: on a wall, toward it climbs, away from it descends; look where you like; jump hops, leaps off a wall, drops off a ceiling");
-		i.add("Swimming fast charges a surge (the meter): surfacing or landing releases it as a splash that hurts");
+		i.add("A squid gathers speed on a straight line and bleeds it on sharp turns; right-click the ink sacs to burn ten of them for a thrust past the top speed; what is left when you stand up goes off as a splash that hurts");
 		i.add("Ink balls reload x5 faster on your own colour, x8 while submerged");
 		return i;
 	}
@@ -677,7 +685,7 @@ public class InkWars extends JocEquips {
 			p.getInventory().setItem(HOSE_SLOT, null);
 			p.getInventory().remove(Material.SNOWBALL);
 			int sacs = Math.max(1, (int) Math.ceil(reserve * INK_SACS_FOR_FULL_RESERVE));
-			p.getInventory().setItem(ROLLER_SLOT, Utils.setItemNameAndLore(new ItemStack(Material.INK_SAC, sacs), teamColour() + "Ink", ChatColor.WHITE + "Your ink: gathered on your colour, spent elsewhere.", ChatColor.WHITE + "Right-click: blow it around you and stand up."));
+			p.getInventory().setItem(ROLLER_SLOT, Utils.setItemNameAndLore(new ItemStack(Material.INK_SAC, sacs), teamColour() + "Ink", ChatColor.WHITE + "Your ink: gathered on your colour, spent elsewhere.", ChatColor.WHITE + "Right-click: burn ten sacs for a thrust forward, past the top speed."));
 			p.getInventory().setHeldItemSlot(ROLLER_SLOT);
 		}
 		void updateInkSacs(double reserve){
@@ -751,7 +759,7 @@ public class InkWars extends JocEquips {
 			boolean rightClick = evt.getAction() == Action.RIGHT_CLICK_BLOCK || evt.getAction() == Action.RIGHT_CLICK_AIR;
 			if(rightClick && inHand == Material.INK_SAC && isSubmerged()){
 				evt.setCancelled(true);
-				getPlayerInfo(p).blowInk();
+				getPlayerInfo(p).thrust();
 				return;
 			}
 			if(inHand != Material.TORCH || !rightClick)return;
@@ -920,11 +928,10 @@ public class InkWars extends JocEquips {
 		public boolean isSubmerged(){
 			return squid.submerged;
 		}
-		/** The ink sac in hand: the ink goes off around the body and the squid stands up, the same as a second press of sneak. */
-		public void blowInk(){
+		/** The ink sacs in hand: ten of them burn for a thrust forward, past the top speed; with fewer than ten, only a dry pop. */
+		public void thrust(){
 			if(!squid.submerged)return;
-			swimForm = false;
-			getPlayer().playSound(getPlayer().getLocation(), Sound.ENTITY_SQUID_SQUIRT, 1F, 0.8F);
+			squid.thrust();
 		}
 		/** One press of sneak switches form: in squid form the body dives wherever it stands and stays a squid as long as its ink lasts; a second press stands it up. */
 		public void toggleSwimForm(){
@@ -1218,6 +1225,22 @@ public class InkWars extends JocEquips {
 				else if(ground == null)reserve -= RESERVE_DRAIN_NEUTRAL + RESERVE_DRAIN_NEUTRAL_PER_BLOCK * blocksSwum;
 				else reserve -= RESERVE_DRAIN_ENEMY + RESERVE_DRAIN_ENEMY_PER_BLOCK * blocksSwum;
 				reserve = Math.max(0, reserve);
+			}
+			/** Ten sacs of ink out the back: the speed jumps by the thrust, past the top speed, and settles back on its own; the surface point gets the burst. */
+			void thrust(){
+				Player p = player();
+				if(reserve < SQUID_THRUST_COST){
+					p.playSound(p.getLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.6F, 0.7F);
+					return;
+				}
+				reserve -= SQUID_THRUST_COST;
+				speed = Math.min(SQUID_THRUST_CEILING, speed + SQUID_THRUST);
+				Location burst = surfacePoint();
+				p.playSound(burst, Sound.ENTITY_SQUID_SQUIRT, 1F, 0.8F);
+				Particle.DustOptions dust = new Particle.DustOptions(team().getStrongColor().getColor(), 1.6F);
+				Vector back = heading.clone().multiply(-1);
+				getWorld().spawnParticle(Particle.DUST, burst.clone().add(back.multiply(0.6)), 24, 0.35, 0.25, 0.35, 0, dust);
+				showMeters();
 			}
 			/** No ink left: the squid is forced back onto its feet with whatever momentum it had, and the surge goes off. */
 			void forcedOut(){
@@ -1617,9 +1640,9 @@ public class InkWars extends JocEquips {
 
 			//--- the cart
 			/**
-			 * The keys against the heading, in whatever plane both lie: the heading goes where the keys point, at once, no turning circle; along the old heading
-			 * they were throttle, so the speed grows by how much they agreed with it; a near reverse brakes to a crawl first and only then sets off the new way.
-			 * Resting, the speed coasts down when told to.
+			 * The keys against the heading, in whatever plane both lie: the heading goes where the keys point, at once, no turning circle, but the speed is kept only
+			 * by how much the new way agreed with the old, so a straight line gathers speed and a sharp turn bleeds it; a near reverse brakes to a crawl first and only
+			 * then sets off the new way. Resting, the speed coasts down when told to. The throttle stops at the top speed; above it, a thrust, the excess bleeds each tick.
 			 */
 			void steer(Vector keys, double throttle, boolean coast){
 				boolean pressing = keys.lengthSquared() > 1e-6;
@@ -1634,13 +1657,15 @@ public class InkWars extends JocEquips {
 						speed -= SQUID_BRAKE;
 					}else{
 						heading = keys.clone();
-						speed += SQUID_ACCELERATION * throttle * Math.max(0, along) * (cornerTicks > 0 ? 0.5 : 1);
+						speed *= 0.5 + 0.5 * along;
+						if(speed < SQUID_TOP_SPEED)speed = Math.min(SQUID_TOP_SPEED, speed + SQUID_ACCELERATION * throttle * Math.max(0, along) * (cornerTicks > 0 ? 0.5 : 1));
 					}
 				}
-				speed = Math.max(0, Math.min(SQUID_TOP_SPEED, speed));
+				if(speed > SQUID_TOP_SPEED)speed = Math.max(SQUID_TOP_SPEED, speed * SQUID_OVERSPEED_KEPT);
+				speed = Math.max(0, speed);
 			}
 			void setMomentum(Vector velocity){
-				speed = Math.min(SQUID_TOP_SPEED, velocity.length());
+				speed = Math.min(SQUID_THRUST_CEILING, velocity.length());
 				if(speed > 1e-4)heading = velocity.clone().normalize();
 			}
 			BlockFace sideOf(Vector direction){
