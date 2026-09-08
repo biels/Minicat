@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_f164ca70246f68::t_eca3e9e8469270 76,79-80,430,479,489-518,525,533,535-540,542-545,567-571,691-697,700-701,709-714,802-803,814,819,825,840,842,845-846,856,860,897-898,924-926,929,961,965
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "a1231ce565d17238298c2901690b4a699f2ebd9e",
+  "prompts": {},
+  "sessions": {
+    "s_f164ca70246f68": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "18242516-df62-42e6-9207-229554a58667",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
