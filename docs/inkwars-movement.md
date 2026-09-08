@@ -16,17 +16,28 @@ It has one tick of launch priority before steering resumes. Blocked launches do
 not spend ink. Jump presses buffer for three ticks; floor edges allow two ticks
 of late input. The carrier remains upright with fixed rotation.
 
+Turbo starts with a 0.12-block/tick kick, then eight powered ticks and a three-tick
+smoothstep release. Acceleration is 0.065 times the thrust envelope; opposing drag
+is 0.04 times speed squared. Steering redirects the jet after its first tick;
+airborne jets retain their launch pitch, while attached jets follow the surface.
+Gravity stays at 0.026. Blocked thrust ends instead of storing pressure against a
+wall; conversion cancels propulsion. The existing ink cost and 1.4 speed ceiling
+remain. A 40-tick runway regression compares range against the old instant boost.
+
 Turbo sheds paint for 12 ticks, sampled every 0.25 blocks along resolved movement
 segments with a maximum of eight parcels per tick. Parcels share hose gravity,
 drag, impact splashes and painting, but deal no damage. They keep flying after
 conversion to human form. Ordinary jumps do not generate this extra paint.
+Active thrust gives the droplets extra backward velocity; release reduces that
+velocity and increases their scatter without adding parcels or painting damage.
 
 Squid audio uses quiet liquid cues for actual form changes, jumps and new surface
 contacts. Form changes share a 180ms retrigger guard; contacts and jumps use 150ms.
 Movement bubbles require resolved travel on a surface and occur at most every
 16 ticks. Landing volume scales with incoming downward speed and caps at 0.5.
-Turbo keeps the stronger squirt/pressure release and a watery tail three ticks
-later. Reserve cues are private and rate-limited. Weapon/combat sounds are unchanged.
+Turbo keeps the stronger squirt/pressure release, two quiet liquid push cues and
+a watery tail when the powered phase ends. Reserve cues are private and
+rate-limited. Weapon/combat sounds are unchanged.
 
 ## Playtest course
 

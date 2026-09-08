@@ -5,6 +5,28 @@ import org.bukkit.util.Vector;
 /** Geometry operations shared by surface transitions and free-flight collisions. */
 public final class SquidMotion {
     private static final double EPSILON = 1.0e-12;
+    public static final int JET_PUSH_TICKS = 8;
+    public static final int JET_DURATION_TICKS = 11;
+    public static final double JET_KICK = 0.12;
+
+    public static double jetEnvelope(int tick) {
+        if (tick < 0 || tick >= JET_DURATION_TICKS) return 0;
+        if (tick == 0) return 0.7;
+        if (tick < JET_PUSH_TICKS) return 1;
+        double release = (tick - JET_PUSH_TICKS + 1) / 3.0;
+        return 1 - release * release * (3 - 2 * release);
+    }
+
+    /** Powered travel uses acceleration and speed-squared drag, not an imposed speed curve. */
+    public static Vector jetStep(Vector velocity, Vector direction, int tick, double speedLimit) {
+        double speed = velocity.length();
+        Vector next = velocity.clone().multiply(Math.max(0, 1 - 0.04 * speed));
+        if (direction.lengthSquared() > EPSILON) {
+            next.add(direction.clone().normalize().multiply(0.065 * jetEnvelope(tick)));
+        }
+        if (next.lengthSquared() > speedLimit * speedLimit) next.normalize().multiply(speedLimit);
+        return next;
+    }
 
     private SquidMotion() {
     }

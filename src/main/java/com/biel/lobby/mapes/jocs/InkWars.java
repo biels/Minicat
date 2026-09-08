@@ -76,11 +76,10 @@ public class InkWars extends JocEquips {
 	static final double SQUID_TOP_SPEED = 0.65;
 	static final double SQUID_ACCELERATION = 0.02;
 	/**
-	 * The thrust: right-click on the ink sacs burns this share of the reserve (ten sacs of thirty-two) and adds this much speed at once, up to this ceiling,
-	 * past the top speed; above the top speed the squid keeps only this share per tick, so it settles back to the top on its own.
+	 * A paid jet burst can exceed swimming speed up to this ceiling. After release,
+	 * overspeed decays back to ordinary swimming without taking control away.
 	 */
 	static final double SQUID_THRUST_COST = 10.0 / 32;
-	static final double SQUID_THRUST = 0.5;
 	static final double SQUID_THRUST_CEILING = 1.4;
 	static final double SQUID_OVERSPEED_KEPT = 0.97;
 	static final double SQUID_COAST = 0.985;
@@ -1083,10 +1082,12 @@ public class InkWars extends JocEquips {
 			int trailParcelsThisTick = 0;
 			double trailDistanceSinceParcel = 0;
 			boolean thrustPending = false;
+			int turboJetTick = SquidMotion.JET_DURATION_TICKS;
+			double turboJetPitch = 0;
+			double turboJetStrength = 0;
 			float lastControlYaw = Float.NaN;
-			enum SwimSound { DIVE, SURFACE, CONTACT, JUMP, LAND, TURBO, TAIL, READY, EMPTY, RIPPLE }
+			enum SwimSound { DIVE, SURFACE, CONTACT, JUMP, LAND, TURBO, PUSH, TAIL, READY, EMPTY, RIPPLE }
 			final EnumMap<SwimSound, Long> lastSoundNanos = new EnumMap<>(SwimSound.class);
-			int turboSoundTailTicks = 0;
 
 			boolean allowSound(SwimSound cue, long now){
 				SwimSound group = cue == SwimSound.SURFACE ? SwimSound.DIVE : cue;
@@ -1121,6 +1122,7 @@ public class InkWars extends JocEquips {
 						getWorld().playSound(at, Sound.ENTITY_SQUID_SQUIRT, 0.55F, 1.35F + variation);
 						getWorld().playSound(at, Sound.ENTITY_BREEZE_SHOOT, 0.38F, 1.5F + variation);
 					}
+					case PUSH -> getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.16F, 1.1F + (float) (0.35 * impact) + variation);
 					case TAIL -> getWorld().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.22F, 1.15F + variation);
 					case READY -> player().playSound(at, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.22F, 1.8F);
 					case EMPTY -> player().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.22F, 1.05F);
@@ -1158,7 +1160,8 @@ public class InkWars extends JocEquips {
 				turboTrailTicks = 0;
 				thrustPending = false;
 				lastControlYaw = Float.NaN;
-				turboSoundTailTicks = 0;
+				turboJetTick = SquidMotion.JET_DURATION_TICKS;
+				turboJetStrength = 0;
 				Location feet = p.getLocation();
 				centre = feet.toVector().add(new Vector(0, SQUID_RIDE_HEIGHT, 0));
 				cameraCentre = p.getEyeLocation().toVector();
@@ -1278,6 +1281,9 @@ public class InkWars extends JocEquips {
 			}
 			void surfaceQuietly(Location exit){
 				submerged = false;
+				turboJetTick = SquidMotion.JET_DURATION_TICKS;
+				turboJetStrength = 0;
+				turboTrailTicks = 0;
 				Player p = player();
 				if(carrier != null){
 					if(riding()){
@@ -1374,7 +1380,8 @@ public class InkWars extends JocEquips {
 					}
 				}
 				pushed = centre.clone().subtract(before);
-				if(turboSoundTailTicks > 0 && --turboSoundTailTicks == 0)sound(SwimSound.TAIL, surfacePoint(), 0);
+				if(turboJetTick == 3 || turboJetTick == 6)sound(SwimSound.PUSH, surfacePoint(), turboJetStrength);
+				if(turboJetTick == SquidMotion.JET_PUSH_TICKS)sound(SwimSound.TAIL, surfacePoint(), 0);
 				if(turboTrailTicks > 0)turboTrailTicks--;
 				Location standing = standingSpot();
 				if(standingClear(standing))lastClearStandingSpot = standing;
@@ -1413,7 +1420,7 @@ public class InkWars extends JocEquips {
 				reserve = Math.max(0, reserve);
 				if(!wasFull && reserve >= 1)sound(SwimSound.READY, player().getLocation(), 0);
 			}
-			/** Ten sacs of ink out the back: the speed jumps by the thrust, past the top speed, and settles back on its own; the surface point gets the burst. */
+			/** Start a paid jet with an immediate bite, a powered push and a short release. */
 			void thrust(){
 				Player p = player();
 				if(!tryThrust(p.getEyeLocation().getDirection())){
@@ -1422,7 +1429,6 @@ public class InkWars extends JocEquips {
 				}
 				Location burst = surfacePoint();
 				sound(SwimSound.TURBO, burst, 0);
-				turboSoundTailTicks = 3;
 				Particle.DustOptions dust = new Particle.DustOptions(team().getStrongColor().getColor(), 1.6F);
 				Vector back = heading.clone().multiply(-1);
 				getWorld().spawnParticle(Particle.DUST, burst.clone().add(back.multiply(0.6)), 24, 0.35, 0.25, 0.35, 0, dust);
@@ -1441,7 +1447,8 @@ public class InkWars extends JocEquips {
 				}
 				Contact blocked = sweep(centre, direction.clone().multiply(0.1));
 				if(blocked != null && blocked.gap() < 0.05)return false;
-				Vector boost = direction.multiply(Math.min(SQUID_THRUST_CEILING, velocity().length() + SQUID_THRUST));
+				double launchPitch = direction.getY();
+				Vector boost = direction.multiply(Math.min(SQUID_THRUST_CEILING, velocity().length() + SquidMotion.JET_KICK));
 				if(launch){
 					if(surface != Surface.AIR){
 						detachedFace = faceOf(normal);
@@ -1452,6 +1459,9 @@ public class InkWars extends JocEquips {
 				}else setMomentum(boost);
 				reserve -= SQUID_THRUST_COST;
 				thrustPending = true;
+				turboJetTick = 0;
+				turboJetPitch = launchPitch;
+				turboJetStrength = SquidMotion.jetEnvelope(0);
 				trailDistanceSinceParcel = 0;
 				jumpBufferedTicks = 0;
 				floorGraceTicks = 0;
@@ -1717,7 +1727,7 @@ public class InkWars extends JocEquips {
 					if(trailParcelsThisTick >= 8)break;
 					Vector sample = from.clone().add(direction.clone().multiply(offset));
 					Vector sampleStart = sample.clone().subtract(direction.clone().multiply(Math.min(0.001, offset)));
-					stream.emitTrail(sampleStart.toLocation(getWorld()), sample.toLocation(getWorld()), velocity(), SQUID_TRAIL_LOAD);
+					stream.emitTrail(sampleStart.toLocation(getWorld()), sample.toLocation(getWorld()), velocity(), SQUID_TRAIL_LOAD, Math.max(0.1, turboJetStrength));
 					trailParcelsThisTick++;
 				}
 				trailDistanceSinceParcel = (trailDistanceSinceParcel + distance) % 0.25;
@@ -1819,6 +1829,7 @@ public class InkWars extends JocEquips {
 				gripped = null;
 				verticalSpeed = upward;
 				setMomentum(momentum.setY(0));
+				if(turboJetTick < SquidMotion.JET_DURATION_TICKS && velocity().lengthSquared() > 1e-9)turboJetPitch = velocity().clone().normalize().getY();
 				cornerTicks = 0;
 				controlForward = new Vector(-Math.sin(Math.toRadians(player().getLocation().getYaw())), 0, Math.cos(Math.toRadians(player().getLocation().getYaw())));
 				controlRight = new Vector(-controlForward.getZ(), 0, controlForward.getX());
@@ -1896,6 +1907,7 @@ public class InkWars extends JocEquips {
 			void tickWall(Keys keys){
 				Vector normal = wallSide.getDirection().multiply(-1);
 				if(consumeJump(keys)){
+					if(turboJetTick < SquidMotion.JET_DURATION_TICKS)applyJet();
 					leapOff(normal);
 					return;
 				}
@@ -1973,6 +1985,7 @@ public class InkWars extends JocEquips {
 			void tickCeiling(Keys keys){
 				Vector normal = new Vector(0, -1, 0);
 				if(consumeJump(keys)){
+					if(turboJetTick < SquidMotion.JET_DURATION_TICKS)applyJet();
 					detachedFace = BlockFace.DOWN;
 					detachTicks = SQUID_DETACH_TICKS;
 					takeOff(0);
@@ -2072,6 +2085,7 @@ public class InkWars extends JocEquips {
 			void steer(Vector keys, double throttle, boolean coast){
 				if(thrustPending){
 					thrustPending = false;
+					applyJet();
 					return;
 				}
 				if(keys.lengthSquared() <= 1e-6){
@@ -2079,8 +2093,27 @@ public class InkWars extends JocEquips {
 				}else{
 					setMomentum(SquidMotion.steer(heading.clone().multiply(speed), keys, SQUID_ACCELERATION * throttle, SQUID_TOP_SPEED));
 				}
-				if(speed > SQUID_TOP_SPEED)speed = Math.max(SQUID_TOP_SPEED, speed * SQUID_OVERSPEED_KEPT);
+				if(turboJetTick < SquidMotion.JET_DURATION_TICKS)applyJet();
+				else if(speed > SQUID_TOP_SPEED)speed = Math.max(SQUID_TOP_SPEED, speed * SQUID_OVERSPEED_KEPT);
 				speed = Math.max(0, speed);
+			}
+			void applyJet(){
+				if(turboJetTick >= SquidMotion.JET_DURATION_TICKS){turboJetStrength = 0; return;}
+				thrustPending = false;
+				Vector direction = heading.clone();
+				if(surface == Surface.AIR)direction.multiply(Math.sqrt(Math.max(0, 1 - turboJetPitch * turboJetPitch))).setY(turboJetPitch);
+				Contact obstruction = sweep(centre, direction.clone().multiply(0.05));
+				if(obstruction != null && obstruction.gap() < 0.005){
+					turboJetTick = SquidMotion.JET_DURATION_TICKS;
+					turboJetStrength = 0;
+					return;
+				}
+				turboJetStrength = SquidMotion.jetEnvelope(turboJetTick);
+				Vector accelerated = SquidMotion.jetStep(velocity(), direction, turboJetTick++, SQUID_THRUST_CEILING);
+				if(surface == Surface.AIR){
+					verticalSpeed = accelerated.getY();
+					setMomentum(accelerated.setY(0));
+				}else setMomentum(accelerated);
 			}
 			void setMomentum(Vector velocity){
 				speed = Math.min(SQUID_THRUST_CEILING, velocity.length());

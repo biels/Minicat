@@ -29,6 +29,7 @@ import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid;
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.Keys;
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.SwimSound;
 import com.biel.lobby.mapes.jocs.inkwars.SquidCollision;
+import com.biel.lobby.mapes.jocs.inkwars.SquidMotion;
 import com.biel.lobby.mapes.jocs.inkwars.InkStream;
 
 /** Runs the real movement controller against deterministic collision shapes without a server. */
@@ -55,6 +56,7 @@ public final class InkWarsMovementTest {
         trailCoversSubsteps();
         directCameraSteering();
         squidSoundDesign();
+        poweredJet();
         System.out.println("InkWars movement controller checks passed");
     }
 
@@ -104,6 +106,77 @@ public final class InkWarsMovementTest {
         close(coastingSpeed * InkWars.SQUID_COAST, squid.speed, "release preserves coasting");
     }
 
+    private static void poweredJet() throws Exception {
+        Fixture fixture = new Fixture();
+        Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.FLOOR);
+        squid.speed = 0.65;
+        squid.reserve = 1;
+        require(squid.tryThrust(new Vector(1, 0, 0)), "powered jet starts");
+        double previousSpeed = squid.speed;
+        double distance = 0;
+        double oldSpeed = 1.15;
+        double oldDistance = 0;
+        for (int tick = 0; tick < 40; tick++) {
+            squid.steer(new Vector(1, 0, 0), 1, true);
+            if (tick < SquidMotion.JET_PUSH_TICKS) require(squid.speed > previousSpeed, "jet keeps accelerating through push phase");
+            if (tick == SquidMotion.JET_DURATION_TICKS - 1) require(squid.speed < previousSpeed, "release fades into drag");
+            require(squid.speed <= InkWars.SQUID_THRUST_CEILING, "jet respects existing speed ceiling");
+            previousSpeed = squid.speed;
+            distance += squid.speed;
+            if (tick > 0) oldSpeed = Math.max(0.65, oldSpeed * 0.97);
+            oldDistance += oldSpeed;
+        }
+        require(Math.abs(distance / oldDistance - 1) < 0.1, "two-second runway range stays within 10% of impulse turbo");
+        require(squid.turboJetTick == SquidMotion.JET_DURATION_TICKS, "jet expires without extending itself");
+        close(1 - InkWars.SQUID_THRUST_COST, squid.reserve, "entire burst charges once");
+        close(0, squid.turboJetStrength, "thrust ends after release");
+
+        Squid turn = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.AIR);
+        turn.speed = 0.65;
+        turn.reserve = 1;
+        turn.tryThrust(new Vector(1, 0.5, 0));
+        turn.steer(new Vector(1, 0, 0), 0.3, false);
+        turn.steer(new Vector(-1, 0, 0), 0.3, false);
+        require(turn.velocity().getX() < 0, "active jet follows reversal rather than fighting input");
+        require(turn.verticalSpeed > 0, "steering does not discard aimed upward propulsion");
+
+        Fixture blockedFixture = new Fixture();
+        Squid blocked = blockedFixture.squid(new Vector(0.698, 1.5, 0.5), InkWars.Surface.AIR);
+        blocked.reserve = 1;
+        blocked.tryThrust(new Vector(1, 0, 0));
+        blockedFixture.add(1, 1, 0, Material.STONE, new BoundingBox(0, 0, 0, 1, 1, 1));
+        blocked.steer(new Vector(1, 0, 0), 0.3, false);
+        require(blocked.turboJetTick == SquidMotion.JET_DURATION_TICKS, "blocked jet cannot build hidden acceleration");
+        close(0, blocked.turboJetStrength, "blocked jet stops powered particles");
+
+        Squid flight = fixture.squid(new Vector(0, 20, 0), InkWars.Surface.AIR);
+        flight.speed = 0.65;
+        flight.reserve = 1;
+        flight.tryThrust(new Vector(1, 1, 0));
+        double oldHorizontal = 1.15 / Math.sqrt(2);
+        double oldFlightDistance = 0;
+        for (int tick = 0; tick < 20; tick++) {
+            flight.tickAir(new Keys(new Vector(1, 0, 0), false, 1, 0));
+            if (tick > 0) oldHorizontal = oldHorizontal > 0.65 ? Math.max(0.65, oldHorizontal * 0.97) : Math.min(0.65, oldHorizontal + 0.006);
+            oldHorizontal *= 0.98;
+            oldFlightDistance += oldHorizontal;
+        }
+        require(Math.abs(flight.centre.getX() / oldFlightDistance - 1) < 0.15, "one-second aerial range stays near old turbo");
+        double beforeGravity = flight.verticalSpeed;
+        flight.tickAir(new Keys(new Vector(), false, 0, 0));
+        close((beforeGravity - InkWars.SQUID_GRAVITY) * 0.98, flight.verticalSpeed, "normal gravity resumes with no lingering thrust");
+
+        Vector slow = new Vector(0.5, 0, 0);
+        Vector fast = new Vector(1.2, 0, 0);
+        double slowGain = SquidMotion.jetStep(slow, new Vector(1, 0, 0), 3, 1.4).getX() - slow.getX();
+        double fastGain = SquidMotion.jetStep(fast, new Vector(1, 0, 0), 3, 1.4).getX() - fast.getX();
+        require(slowGain > fastGain, "drag increases with speed");
+        close(0.5, slow.getX(), "jet math does not mutate input velocity");
+        require(SquidMotion.jetEnvelope(8) > SquidMotion.jetEnvelope(9)
+                && SquidMotion.jetEnvelope(9) > SquidMotion.jetEnvelope(10), "release envelope fades smoothly");
+        System.out.println("Turbo runway distance: " + distance + " blocks; previous impulse: " + oldDistance);
+    }
+
     private static void directCameraSteering() throws Exception {
         Fixture fixture = new Fixture();
         Squid squid = fixture.squid(new Vector(0, 2, 0), InkWars.Surface.FLOOR);
@@ -123,11 +196,11 @@ public final class InkWarsMovementTest {
         squid.speed = 0.65;
         squid.reserve = 1;
         require(squid.tryThrust(new Vector(-1, 0, 0)), "opposite-facing turbo succeeds");
-        close(-1.15, squid.velocity().getX(), "turbo redirects existing momentum");
+        close(-0.77, squid.velocity().getX(), "turbo redirects momentum with a small immediate kick");
         close(1 - InkWars.SQUID_THRUST_COST, squid.reserve, "successful turbo spends ink once");
         require(squid.turboTrailTicks == InkWars.SQUID_TURBO_TRAIL_TICKS, "turbo starts bounded paint trail");
         squid.steer(new Vector(1, 0, 0), 1, true);
-        require(squid.velocity().getX() < -1, "held opposite input cannot cancel the first boost tick");
+        require(squid.velocity().getX() < -0.77, "held opposite input cannot cancel the first boost tick");
         squid.steer(new Vector(1, 0, 0), 1, true);
         require(squid.velocity().getX() > 0, "steering returns immediately after launch tick");
         squid.reserve = 1;
@@ -142,7 +215,7 @@ public final class InkWarsMovementTest {
         Squid wallSquid = wall.wallSquid(new Vector(0.698, 1.5, 0.5), new Vector(0, 1, 0));
         wallSquid.reserve = 1;
         require(wallSquid.tryThrust(new Vector(1, 0, 0)), "head-on wall aim maps to climbing");
-        require(wallSquid.surface == InkWars.Surface.WALL && wallSquid.velocity().getY() > 0.7, "wall boost remains tangent");
+        require(wallSquid.surface == InkWars.Surface.WALL && wallSquid.velocity().getY() > 0.4, "wall boost remains tangent");
         wallSquid.reserve = 1;
         require(wallSquid.tryThrust(new Vector(-1, 0.4, 0)), "aiming away from wall launches");
         require(wallSquid.surface == InkWars.Surface.AIR && wallSquid.velocity().getX() < 0,

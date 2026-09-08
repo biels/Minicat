@@ -64,6 +64,10 @@ public final class InkStream {
 
 	/** Sheds ink along a resolved movement segment, using the same flight and landing as hose ink. */
 	public void emitTrail(Location from, Location to, Vector bodyVelocity, Load load) {
+		emitTrail(from, to, bodyVelocity, load, 0);
+	}
+
+	public void emitTrail(Location from, Location to, Vector bodyVelocity, Load load, double thrust) {
 		Vector displacement = to.toVector().subtract(from.toVector());
 		double distance = displacement.length();
 		if (!Double.isFinite(distance) || !Double.isFinite(bodyVelocity.lengthSquared())) {
@@ -74,11 +78,17 @@ public final class InkStream {
 		Vector inheritedVelocity = bodyVelocity.clone().multiply(0.18);
 		if (inheritedVelocity.lengthSquared() > 0.45 * 0.45) inheritedVelocity.normalize().multiply(0.45);
 		Vector spillVelocity = inheritedVelocity.subtract(displacement.clone().multiply(0.10 / distance));
+		if(thrust > 0)spillVelocity.subtract(displacement.clone().multiply(0.3 * thrust / distance));
 		spillVelocity.setY(spillVelocity.getY() - 0.035);
 		// Midpoint samples cover the entire path without putting a nozzle offset through nearby walls.
 		for (int sample = 0; sample < count; sample++) {
 			Vector position = from.toVector().add(displacement.clone().multiply((sample + 0.5) / count));
-			parcels.add(new Parcel(position, spillVelocity.clone(), load));
+			Vector dropletVelocity = spillVelocity.clone();
+			if(thrust > 0){
+				double scatter = 0.015 + 0.035 * (1 - Math.min(1, thrust));
+				dropletVelocity.add(new Vector(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).multiply(scatter));
+			}
+			parcels.add(new Parcel(position, dropletVelocity, load));
 		}
 	}
 

@@ -12,7 +12,7 @@ import org.bukkit.util.Vector;
 
 /** Standalone checks for turbo trails sharing the hose's parcel physics. */
 public final class InkStreamTest {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         InkStream.Load load = new InkStream.Load(0.25, 0.4, 0, 0.05);
         InkStream stream = new InkStream();
         Location start = new Location(null, 2, 4, 6);
@@ -64,6 +64,22 @@ public final class InkStreamTest {
         stream.emitTrail(start, start.clone().add(0, 1, 0), new Vector(), load);
         for (InkStream.Flight flight : stream.flights()) {
             require(Double.isFinite(flight.velocity().lengthSquared()), "zero body velocity remains finite");
+        }
+        InkStream powered = new InkStream();
+        InkStream releasing = new InkStream();
+        var randomField = InkStream.class.getDeclaredField("random");
+        randomField.setAccessible(true);
+        ((java.util.Random) randomField.get(powered)).setSeed(42);
+        ((java.util.Random) randomField.get(releasing)).setSeed(42);
+        powered.emitTrail(start, start.clone().add(1, 0, 0), velocity, load, 1);
+        releasing.emitTrail(start, start.clone().add(1, 0, 0), velocity, load, 0.1);
+        require(powered.flights().size() == releasing.flights().size(), "thrust changes motion, not paint quantity");
+        for (int index = 0; index < powered.flights().size(); index++) {
+            Vector jet = powered.flights().get(index).velocity();
+            Vector tail = releasing.flights().get(index).velocity();
+            require(jet.getX() < tail.getX(), "powered droplets eject farther backward");
+            require(Math.abs(jet.getZ()) < Math.abs(tail.getZ()), "release droplets spread more widely");
+            close(0, powered.flights().get(index).position().distance(releasing.flights().get(index).position()), "thrust does not offset spawn through geometry");
         }
         System.out.println("InkStream trail checks passed");
     }
