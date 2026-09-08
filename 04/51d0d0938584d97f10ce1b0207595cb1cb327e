@@ -1,0 +1,41 @@
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/SquidMotionTest.java
+  s_25f98ea41c06bd::t_cadd6ab2d126c9 11,64-88
+  s_25f98ea41c06bd::t_3e98fd4fe6f385 89-90
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkStream.java
+  s_25f98ea41c06bd::t_11f176a5d1fd2d 65-84
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/SquidMotion.java
+  s_25f98ea41c06bd::t_cadd6ab2d126c9 12-37
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkStreamTest.java
+  s_25f98ea41c06bd::t_11f176a5d1fd2d 1-78
+src/test/java/com/biel/lobby/mapes/jocs/InkWarsMovementTest.java
+  s_25f98ea41c06bd::t_1f29837a7d5e23 51-53,59-75,89-97,102-111,115-125,147-171
+  s_25f98ea41c06bd::t_d8dca4e55bf15f 31,54,98-101,126-146
+  s_25f98ea41c06bd::t_02e0c18df515d5 15,55,76-88,112-114,466-467
+  s_25f98ea41c06bd::t_da19a56a807595 172
+build.gradle
+  s_25f98ea41c06bd::t_25dfda0b1a9cf0 56
+docs/inkwars-movement.md
+  s_25f98ea41c06bd::t_d8dca4e55bf15f 11-23,32-35
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_25f98ea41c06bd::t_d8dca4e55bf15f 1418,1544,1667-1670,1678
+  s_25f98ea41c06bd::t_34d5d33d8d9a6e 89,1645,1654-1655,1664-1666,1801,1853,1930,1979,2022,2028,2031
+  s_25f98ea41c06bd::t_25dfda0b1a9cf0 86-88,667,1081-1084,1114-1116,1314-1315,1336,1377,1389,1391-1395,1397-1411,1414-1417,1525-1526,1535-1536,1538-1543
+  s_25f98ea41c06bd::t_ee64897b897802 1085-1087,1117-1118,1412-1413,1524,1532,1537,1671-1677,1679-1681,2024-2027
+  s_25f98ea41c06bd::t_02e0c18df515d5 1390,1396
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "0451d0d0938584d97f10ce1b0207595cb1cb327e",
+  "prompts": {},
+  "sessions": {
+    "s_25f98ea41c06bd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08093-c951-7303-babf-76a5a877d8b9",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
