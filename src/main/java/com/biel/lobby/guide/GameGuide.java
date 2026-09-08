@@ -23,10 +23,11 @@ import org.bukkit.entity.Player;
 import com.biel.lobby.Com;
 import com.biel.lobby.GestorMapes.ContenidorJoc;
 import com.biel.lobby.Mapa;
-import com.biel.lobby.utilities.PaperMessages;
 
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 /**
  * A game's words, written once: {@code guides/<game>.md} in the jar (or the same path
@@ -44,15 +45,12 @@ public final class GameGuide {
 	private static final Map<String, GameGuide> LOADED = new HashMap<>();
 	private static final Pattern PLACEHOLDER = Pattern.compile("\\{([A-Za-z0-9_ÀÈÉÍÒÓÚÇàèéíòóúç]+)}");
 	private static final Pattern INCLUDE = Pattern.compile("^\\{\\{(.+)}}$");
-	/** A book page shows about this many rows of this many characters before the text runs off it. */
-	private static final int ROWS_PER_PAGE = 14;
-	private static final int CHARS_PER_ROW = 19;
 
 	private final String gameName;
 	private final Map<String, List<String>> sections = new LinkedHashMap<>();
 	private final Map<String, String> values = new HashMap<>();
 
-	private GameGuide(String gameName) {
+	GameGuide(String gameName) {
 		this.gameName = gameName;
 	}
 
@@ -93,7 +91,7 @@ public final class GameGuide {
 		return guide;
 	}
 
-	private void parse(List<String> lines) {
+	void parse(List<String> lines) {
 		String current = null;
 		for (String raw : lines) {
 			if (raw.startsWith("## ")) {
@@ -164,39 +162,19 @@ public final class GameGuide {
 			List<String> body = new ArrayList<>();
 			for (String line : lines(section)) {
 				Matcher include = INCLUDE.matcher(line.trim());
-				if (include.matches()) body.addAll(lines(include.group(1)));
+				if (include.matches()) body.add(String.join(" ", lines(include.group(1))));
 				else body.add(line);
 			}
-			paginate(title, body, pages);
+			for (BookLayout.Page page : BookLayout.paginate(title, body)) {
+				pages.add(Component.text()
+						.color(NamedTextColor.BLACK)
+						.append(Component.text(String.join("\n", page.heading()), NamedTextColor.DARK_RED)
+								.decorate(TextDecoration.BOLD))
+						.append(Component.text("\n\n" + String.join("\n", page.body())))
+						.build());
+			}
 		}
 		return Book.book(Component.text(gameName), Component.text("Minicat"), pages);
-	}
-
-	private static void paginate(String title, List<String> body, List<Component> pages) {
-		List<String> page = new ArrayList<>();
-		int rows = 0;
-		boolean first = true;
-		for (String line : body) {
-			int needed = Math.max(1, (line.length() + CHARS_PER_ROW - 1) / CHARS_PER_ROW);
-			int headerRows = page.isEmpty() ? 2 : 0;
-			if (rows + headerRows + needed > ROWS_PER_PAGE && !page.isEmpty()) {
-				pages.add(render(title, first, page));
-				first = false;
-				page = new ArrayList<>();
-				rows = 0;
-				if (line.isBlank()) continue;
-			}
-			page.add(line);
-			rows += needed;
-		}
-		if (!page.isEmpty()) pages.add(render(title, first, page));
-	}
-
-	private static Component render(String title, boolean first, List<String> body) {
-		StringBuilder text = new StringBuilder();
-		text.append(ChatColor.BOLD).append(ChatColor.DARK_BLUE).append(title).append(first ? "" : " (cont.)").append(ChatColor.RESET).append("\n\n");
-		text.append(String.join("\n", body));
-		return PaperMessages.legacy(text.toString());
 	}
 
 	private static final java.util.Set<String> OPENED_THIS_SESSION = new java.util.HashSet<>();

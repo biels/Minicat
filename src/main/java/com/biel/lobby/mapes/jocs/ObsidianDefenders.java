@@ -59,6 +59,7 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Villager;
 import org.bukkit.entity.WitherSkeleton;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -100,6 +101,7 @@ import com.biel.lobby.minions.Minion;
 import com.biel.lobby.minions.SnowmanKind;
 import com.biel.lobby.minions.SnowmanMinion;
 import com.biel.lobby.utilities.InventoryTidy;
+import com.biel.lobby.utilities.HologramFacade;
 import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
@@ -257,12 +259,16 @@ public class ObsidianDefenders extends JocEquips {
 	 * Prizes, the star and the enchanted snowball (Biel, 2026-09-08: "no two things at once,
 	 * a way to reduce noise"): at most one per chest cycle, rolled once for the whole map, and
 	 * a kind lands only while none of that kind is still lying unclaimed (a standing ball does
-	 * not stop a star); the star gets this share of the rolls. An emptied chest closes by
-	 * itself after this long.
+	 * not stop a star); the star gets this share of the rolls.
 	 */
 	private static final int PRIZE_CYCLE_CHANCE = 33;
 	private static final int PRIZE_STAR_SHARE = 60;
-	private static final long EMPTY_CHEST_CLOSE_TICKS = 5 * 20;
+	private static final String PICKAXE_FIREWORK_TAG = "minicat-pickaxe-burst";
+	private record ShopPortal(Location entrance, Location arrival, BlockData originalBlock, HologramFacade.Handle label) {}
+	private final Map<Integer, ShopPortal> shopPortals = new HashMap<>();
+	private final Map<UUID, Integer> portalCooldownUntil = new HashMap<>();
+	private record FlyingLoot(Item item, UUID collector) {}
+	private final List<FlyingLoot> flyingChestLoot = new ArrayList<>();
 	/** The team whose player last felled the Guardian throws magma snowmen until the other team fells it. */
 	private Equip guardianSlayerTeam;
 	/** Victim → game second until which snowballs neither charge nor spend a cage on them. */
@@ -689,6 +695,9 @@ public class ObsidianDefenders extends JocEquips {
 		registerControlPointsAndLamps();
 		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
 		Bukkit.getPluginManager().registerEvents(worldListener, plugin);
+		createShopPortals();
+		scheduleGameplayRepeatingTask(this::tickShopPortals, 2, 2);
+		scheduleGameplayRepeatingTask(this::tickChestLoot, 1, 1);
 		showObjective();
 		emptyDispensers();
 		scheduleGameplayRepeatingTask(this::cicleCofres, FIRST_CHEST_CYCLE_TICKS, CICLE_COFRES_TICKS);
@@ -1177,11 +1186,57 @@ public class ObsidianDefenders extends JocEquips {
 			meta.setDamage(Material.DIAMOND_PICKAXE.getMaxDurability() - 1);
 			pic.setItemMeta(meta);
 		}
-		world.dropItem(puntPicDiamant(), Objecte.descriure(pic)).setVelocity(new Vector(0, 0, 0));
+		Location spawn = puntPicDiamant();
+		clearPickaxeSpawn(spawn);
+		world.dropItem(spawn, Objecte.descriure(pic), item -> {
+			item.setVelocity(new Vector());
+			item.setPickupDelay(ObsidianInteractions.PICKAXE_PICKUP_DELAY);
+		});
+		Firework burst = world.spawn(spawn, Firework.class, firework -> {
+			firework.addScoreboardTag(PICKAXE_FIREWORK_TAG);
+			FireworkMeta meta = firework.getFireworkMeta();
+			meta.addEffect(FireworkEffect.builder().with(FireworkEffect.Type.BALL)
+					.withColor(Color.AQUA).trail(false).flicker(false).build());
+			meta.setPower(0);
+			firework.setFireworkMeta(meta);
+			firework.setVelocity(new Vector());
+			firework.setGravity(false);
+		});
+		burst.detonate();
 		if (!primerPicAnunciat) {
 			sendGlobalMessage(ChatColor.AQUA + "Ha aparegut el primer pic de diamant!");
 			primerPicAnunciat = true;
 		}
+	}
+
+	private void clearPickaxeSpawn(Location center) {
+		for (Player player : getPlayers()) {
+			if (player.isDead() || isSpectator(player) || player.getWorld() != world) continue;
+			Vector push = ObsidianInteractions.outwardPush(player.getLocation().toVector(), center.toVector(), player.getLocation().getDirection());
+			if (push.lengthSquared() == 0) continue;
+			// Keep the shove on walkable ground and away from walls and the island's drops.
+			Vector horizontal = push.clone().setY(0).normalize();
+			double clearDistance = 0;
+			for (double distance = 0.25; distance <= 2.5; distance += 0.25) {
+				Location step = player.getLocation().add(horizontal.clone().multiply(distance));
+				if (!safeStandingSpot(step)) break;
+				clearDistance = distance;
+			}
+			if (clearDistance < 0.5) continue;
+			push.setX(push.getX() * Math.min(1, clearDistance / 2.5));
+			push.setZ(push.getZ() * Math.min(1, clearDistance / 2.5));
+			player.setVelocity(push);
+		}
+	}
+
+	private boolean safeStandingSpot(Location location) {
+		for (double dx : new double[]{-0.3, 0.3}) for (double dz : new double[]{-0.3, 0.3}) {
+			Location corner = location.clone().add(dx, 0, dz);
+			if (!corner.getBlock().isPassable() || !corner.clone().add(0, 1, 0).getBlock().isPassable()) return false;
+			Block support = corner.clone().add(0, -0.1, 0).getBlock();
+			if (!support.getType().isSolid() || support.isLiquid()) return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -1574,6 +1629,11 @@ public class ObsidianDefenders extends JocEquips {
 	 * "picking up gold from a chest should increase the gold immediately").
 	 */
 	private final Listener worldListener = new Listener() {
+		@EventHandler(priority = EventPriority.HIGHEST)
+		public void onArrivalFireworkDamage(EntityDamageByEntityEvent evt) {
+			if (evt.getDamager() instanceof Firework firework && firework.getScoreboardTags().contains(PICKAXE_FIREWORK_TAG)) evt.setCancelled(true);
+		}
+
 		@EventHandler
 		public void onEntityInteract(EntityInteractEvent evt) {
 			if (world == null || evt.getBlock().getWorld() != world || minionOf(evt.getEntity()) == null) return;
@@ -1588,9 +1648,10 @@ public class ObsidianDefenders extends JocEquips {
 		@EventHandler
 		public void onInventoryClose(InventoryCloseEvent evt) {
 			if (!(evt.getPlayer() instanceof Player p)) return;
-			if (evt.getInventory().getHolder() instanceof Chest chest && isJungleChest(chest.getBlock())) {
+			if (!JocEnMarxa() || p.getWorld() != world || p.isDead() || isSpectator(p)) return;
+			if (evt.getReason() == InventoryCloseEvent.Reason.PLAYER
+					&& evt.getInventory().getHolder() instanceof Chest chest && isJungleChest(chest.getBlock())) {
 				emptyChestInto(chest, p);
-				closeWhenLeftEmpty(chest.getBlock());
 			}
 			refreshGoldSoon(p);
 			tidySoon(p);
@@ -1603,26 +1664,108 @@ public class ObsidianDefenders extends JocEquips {
 		return false;
 	}
 
-	/** A chest left empty turns back into leaves after a few seconds: the forest reads as collected. */
-	private void closeWhenLeftEmpty(Block block) {
-		scheduleGameplayTask(() -> {
-			if (!JocEnMarxa() || !(block.getState() instanceof Chest chest) || !chest.getInventory().isEmpty()) return;
-			tancarCofre(block);
-		}, EMPTY_CHEST_CLOSE_TICKS);
-	}
-
-	/** Closing a jungle chest takes everything still inside (Biel, 2026-09-08: "no need to click on each"). */
+	/** Claim the chest before creating entities, so simultaneous viewers cannot collect it twice. */
 	private void emptyChestInto(Chest chest, Player p) {
+		if (chest.getBlock().getType() != Material.CHEST || p.getLocation().distanceSquared(chest.getLocation()) > 64) return;
 		Inventory inv = chest.getInventory();
-		int taken = 0;
+		List<ItemStack> loot = new ArrayList<>();
 		for (int i = 0; i < inv.getSize(); i++) {
 			ItemStack item = inv.getItem(i);
 			if (item == null || item.getType() == Material.AIR) continue;
-			giveOrDrop(p, item);
-			inv.setItem(i, null);
-			taken++;
+			loot.add(item.clone());
 		}
-		if (taken > 0) p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8F, 1.1F);
+		inv.clear();
+		Location origin = chest.getLocation().add(0.5, 1.05, 0.5);
+		for (ItemStack stack : loot) {
+			Item item = world.dropItem(origin, stack, drop -> {
+				drop.setOwner(p.getUniqueId());
+				drop.setCanMobPickup(false);
+				drop.setPickupDelay(0);
+				drop.setGravity(false);
+			drop.setVelocity(ObsidianInteractions.lootVelocity(origin.toVector(), p.getLocation().add(0, 0.5, 0).toVector()));
+			});
+			flyingChestLoot.add(new FlyingLoot(item, p.getUniqueId()));
+		}
+		// Inventory-close handlers finish before changing the block under any other viewer.
+		Block block = chest.getBlock();
+		scheduleGameplayTask(() -> {
+			if (JocEnMarxa() && block.getState() instanceof Chest current && current.getInventory().isEmpty()) tancarCofre(block);
+		}, 1);
+	}
+
+	private void tickChestLoot() {
+		var iterator = flyingChestLoot.iterator();
+		while (iterator.hasNext()) {
+			FlyingLoot flight = iterator.next();
+			Item item = flight.item();
+			if (!item.isValid()) { iterator.remove(); continue; }
+			Player collector = Bukkit.getPlayer(flight.collector());
+			if (!JocEnMarxa() || collector == null || collector.getWorld() != world || collector.isDead() || isSpectator(collector)) {
+				releaseChestLoot(item);
+				iterator.remove();
+				continue;
+			}
+			Location target = collector.getLocation().add(0, 0.4, 0);
+			Vector toward = target.toVector().subtract(item.getLocation().toVector());
+			if (toward.lengthSquared() < 0.36 || item.getTicksLived() >= 20) {
+				item.teleport(target);
+				releaseChestLoot(item);
+				iterator.remove();
+			} else {
+				item.setVelocity(ObsidianInteractions.lootVelocity(item.getLocation().toVector(), target.toVector()));
+			}
+		}
+	}
+
+	private void releaseChestLoot(Item item) {
+		item.setGravity(true);
+		item.setVelocity(new Vector());
+		item.setOwner(null);
+		item.setCanMobPickup(true);
+	}
+
+	private void createShopPortals() {
+		for (Equip team : Equips) {
+			int id = team.getId();
+			ObsidianInteractions.PortalPosition approved = ObsidianInteractions.portal(id);
+			Location entrance = portalLocation("ShopPortal" + id, approved.entrance());
+			Location arrival = portalLocation("ShopArrival" + id, approved.arrival());
+			arrival.setYaw(approved.arrivalYaw());
+			if (pMapaActual().ExisteixPropietat("ShopArrivalYaw" + id)) arrival.setYaw(pMapaActual().ObtenirPropietatInt("ShopArrivalYaw" + id));
+			if (!safeStandingSpot(entrance) || !safeStandingSpot(arrival)) {
+				plugin.getLogger().warning("Shop portal " + id + " not created: entrance or arrival is obstructed");
+				continue;
+			}
+			BlockData previous = entrance.getBlock().getBlockData().clone();
+			entrance.getBlock().setType(Material.OAK_PRESSURE_PLATE, false);
+			HologramFacade.Handle label = HologramFacade.create(entrance.clone().add(0, 2.5, 0));
+			label.setLines(team.getChatColor() + "Shop");
+			shopPortals.put(id, new ShopPortal(entrance, arrival, previous, label));
+			plugin.getLogger().info("Shop portal " + id + ": " + entrance.toVector() + " -> " + arrival.toVector() + ", radius=2");
+		}
+	}
+
+	private Location portalLocation(String property, Vector fallback) {
+		return pMapaActual().ExisteixPropietat(property)
+				? pMapaActual().ObtenirLocation(property, world).add(0.5, 0, 0.5) : fallback.toLocation(world);
+	}
+
+	private void tickShopPortals() {
+		if (!JocEnMarxa()) return;
+		for (Player player : getPlayers()) {
+			if (player.isDead() || isSpectator(player) || player.getWorld() != world) continue;
+			Equip team = obtenirEquip(player);
+			ShopPortal portal = team == null ? null : shopPortals.get(team.getId());
+			if (portal == null || Bukkit.getCurrentTick() < portalCooldownUntil.getOrDefault(player.getUniqueId(), 0)) continue;
+			if (!ObsidianInteractions.inPortal(player.getLocation().toVector(), portal.entrance().toVector())) continue;
+			if (!safeStandingSpot(portal.arrival())) continue;
+			if (player.teleport(portal.arrival())) {
+				player.setVelocity(new Vector());
+				player.setFallDistance(0);
+				portalCooldownUntil.put(player.getUniqueId(), Bukkit.getCurrentTick() + 40);
+				player.playSound(portal.arrival(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.4F, 1.2F);
+			}
+		}
 	}
 
 	private void refreshGoldSoon(Player p) {
@@ -1776,6 +1919,14 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	public void clearExternals() {
 		HandlerList.unregisterAll(worldListener);
+		for (FlyingLoot flight : flyingChestLoot) if (flight.item().isValid()) releaseChestLoot(flight.item());
+		flyingChestLoot.clear();
+		for (ShopPortal portal : shopPortals.values()) {
+			portal.label().delete();
+			portal.entrance().getBlock().setBlockData(portal.originalBlock(), false);
+		}
+		shopPortals.clear();
+		portalCooldownUntil.clear();
 		hideObjective();
 		apagarAuraDelGuardià();
 		for (UUID id : botiguers.keySet()) {
@@ -2676,6 +2827,11 @@ public class ObsidianDefenders extends JocEquips {
 	@Override
 	protected void onPlayerInteract(PlayerInteractEvent evt, Player plyr) {
 		super.onPlayerInteract(evt, plyr);
+		if (evt.getAction() == Action.PHYSICAL && evt.getClickedBlock() != null
+				&& shopPortals.values().stream().anyMatch(portal -> portal.entrance().getBlock().equals(evt.getClickedBlock()))) {
+			evt.setCancelled(true);
+			return;
+		}
 		if (evt.getAction() == Action.PHYSICAL && evt.getClickedBlock() != null && controlPointOf(evt.getClickedBlock()) != null) {
 			// The plate never depresses, so the 2013 wiring behind it never runs; the press is shown and heard anyway.
 			evt.setCancelled(true);

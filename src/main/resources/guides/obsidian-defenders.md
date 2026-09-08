@@ -1,51 +1,52 @@
 # Obsidian Defenders
 
 ## inici
-- Objectiu: entra a la cambra d'obsidiana enemiga i trepitja el detonador. Utilitza el pic de diamant que apareix al mig del mapa.
-- Ara: tens {OR_INICIAL} d'or. Compra un arc o una espasa de ferro a la botiga de la base.
-- Després: al minut {GUARDIA_MIN} el Guardià es desperta al mig, i una bola de neu llançada es torna un ninot que lluita per tu.
+- Guanya fent explotar la base enemiga: trenca'n l'obsidiana i trepitja la placa daurada que hi apareix.
+- Comences amb {OR_INICIAL} d'or. A la teva base, compra un arc o una espasa de ferro.
+- El pic de diamant apareix al centre al minut {PIC_PRIMER_MIN}. Ves-hi amb el teu equip!
 
 ## títol inici
-- Trenca l'obsidiana enemiga i trepitja el detonador
+- Trenca l'obsidiana i trepitja la placa daurada
 
 ## barra objectiu
-- Objectiu: entra a la cambra d'obsidiana enemiga i trepitja el detonador
+- Fes explotar la base enemiga: obre l'obsidiana i trepitja la placa daurada
 
 ## pista paradista
-- Paradista: clic dret per veure què ven. Es paga amb or.
+- Botiga: fes clic dret al venedor. Tria un objecte i paga amb or.
 
 ## pista cofre
-- Cofre de la jungla: agafa l'or i el que hi hagi. Els cofres es tanquen i se n'obren d'altres cada {COFRES_S} s.
+- Tanca el cofre i l'or i els objectes vindran cap a tu. Cada {COFRES_S} s s'obren nous cofres a la jungla.
 
 ## pista bola
-- Bola de neu: llança-la i on caigui surt un ninot que lluita per tu.
+- Llança la bola de neu: es convertirà en un ninot que avança i ataca els enemics.
 
 ## objecte ESTRELLA_DEL_NETHER
-- Clic dret: es carrega {ESTRELLA_CARREGA_S} s i els enemics
-- a menys de {ESTRELLA_RADI} blocs queden a 1 cor i lents 20 s;
-- aliats ràpids 20 s. Es converteix en estrella de foc.
+- Clic dret: espera {ESTRELLA_CARREGA_S} s.
+- Els enemics a menys de {ESTRELLA_RADI} blocs
+- queden amb mig cor i lents durant 20 s.
+- Els aliats reben velocitat durant 20 s.
+- Després es torna una estrella de foc.
 
 ## objecte ESTRELLA_DE_FOC
-- Amb ella a l'inventari, una fletxa disparada
-- des de dalt explota en caure.
+- Guarda-la a l'inventari i dispara l'arc
+- des d'un lloc alt: la fletxa explotarà.
 
 ## objecte CREMA_DE_MAGMA
-- Clic dret: crema tot l'equip enemic 3 s.
+- Clic dret: tots els enemics cremen 3 s.
 
 ## objecte MARAGDA
-- Clic dret: +1 cor a tot el teu equip.
+- Clic dret: cura un cor i mig a cada aliat.
 
 ## objecte BOLA_DE_NEU
-- Llança-la: on caigui apareix un ninot de neu
-- que segueix el camí cap a la base enemiga.
-- Empeny; amb el cap de gel, el proper cop
-- tanca l'enemic en gel {GEL_S} s (màx. {MAX_NINOTS} ninots).
-- Si el teu equip ha matat el Guardià, crema.
+- Llança una bola de neu: crea un ninot.
+- Avança cap a la base enemiga i ataca.
+- Pots tenir-ne {MAX_NINOTS} alhora.
 
 ## objecte BOLA_DE_NEU_ENCANTADA
-- Llança-la: apareix un superninot, que fa
-- tot el que fa un ninot amb molt més abast
-- i dispara x3 el primer minut, x2 després.
+- Llança la bola encantada: crea un superninot.
+- Arriba més lluny amb les boles de neu.
+- Dispara el triple durant el primer minut
+- i el doble a partir de llavors.
 
 ## objecte POMA_DAURADA
 - Menja-la: 2 cors extra durant 2 min i curació ràpida uns segons.
@@ -57,114 +58,172 @@
 - Llança-la per teletransportar-te on caigui.
 
 ## objecte ESPASA_D_OR
-- A l'inventari: fletxes explosives un 20 % més fortes.
+- Guarda-la a l'inventari: les explosions
+- de les teves fletxes fan un 20 % més de dany.
 
 ## objecte PIC_DE_DIAMANT
-- Obre una bretxa a l'obsidiana de la base enemiga:
-- a la bretxa hi apareix el detonador.
-- Encanta'l a una taula: Eficiència.
-- Qui et mati es queda un pic d'or.
+- Trenca un bloc d'obsidiana enemiga.
+- Al forat apareix una placa daurada.
+- Trepitja-la per fer explotar la base!
+- El pic només serveix per a un bloc.
 
 ## objecte PIC_D_OR
-- A la mà en matar: or x3.
-- A l'inventari: +3 or cada cicle.
+- Mata un enemic amb el pic a la mà: or x3.
+- Guarda'l a l'inventari: +3 or cada {COFRES_S} s.
 
 ## anunci BOLA_DE_NEU_ENCANTADA
-- Bola de neu encantada: llança-la i en surt un superninot amb molt més abast, que dispara x3 el primer minut. Segueix el feix blau: és en un cofre de la jungla.
+- Segueix la columna de llum blava fins al cofre. Hi ha una bola encantada: llança-la per crear un ninot més fort!
 
 ## anunci ESTRELLA_DEL_NETHER
-- Estrella infernal: clic dret, es carrega {ESTRELLA_CARREGA_S} s, i els enemics a menys de {ESTRELLA_RADI} blocs queden a 1 cor. Segueix el feix vermell fins al cofre.
+- Segueix la columna de llum vermella fins al cofre. Hi ha una estrella infernal: deixa els enemics propers amb mig cor!
 
 ## pista taula
-- Taula d'encantar: clic dret amb l'eina a la mà. Es paga amb or.
+- Millora l'arma o l'eina: tingues-la a la mà i fes clic dret a la taula. Costa or.
 
 ## pista altar
-- Altar de la capçada: els encanteris forts. Clic dret amb l'eina a la mà.
+- Aquest altar ven millores més potents. Fes-hi clic dret amb l'arma o l'eina a la mà.
 
 ## pista placa
-- Punt de control: {CAPTURA_S} s sobre la placa del teu color per capturar-lo.
+- Queda't {CAPTURA_S} s sobre la placa del teu color. Capturaràs el punt i carregaràs el pont del teu equip.
 
 ## pista botó
-- Botó del pont: amb la barra plena, prem-lo per desplegar el pont sobre el fossat enemic.
+- Quan la barra del pont sigui plena, prem el botó. S'obrirà un camí per travessar el fossat enemic.
 
 ## pista detonador
-- Detonador: si un enemic el trepitja, la TNT de la base explota.
+- Aquesta placa fa explotar la base si la trepitja algú de l'equip contrari. Defensa la teva!
 
 ## pista cambra
-- La cambra enemiga: trenca un bloc de l'anell d'obsidiana amb el pic de diamant i trepitja el detonador que hi apareix.
+- Trenca l'obsidiana amb el pic de diamant. Trepitja la placa daurada que apareix al forat per guanyar.
 
 ## pista superninot
-- Bola de neu encantada: llança-la i en surt un superninot, més abast i més ràpid.
+- Llança aquesta bola encantada: crearàs un ninot que dispara més de pressa i arriba més lluny.
 
 ## pista estrella
-- Estrella infernal: clic dret, {ESTRELLA_CARREGA_S} s de càrrega, i els enemics a {ESTRELLA_RADI} blocs queden a 1 cor.
-
-## pàgina Per començar
-{{inici}}
-
-La resta d'aquest llibre explica cada cosa. Torna-hi amb /guia quan vulguis.
+- Amb enemics a prop, fes clic dret amb l'estrella. Al cap de {ESTRELLA_CARREGA_S} s, els que siguin a menys de {ESTRELLA_RADI} blocs quedaran amb mig cor.
 
 ## pàgina Com es guanya
-Sota cada sala d'aparició hi ha una cambra d'obsidiana amb TNT a dins.
+Fes explotar la base enemiga i defensa la teva.
 
-Trenca un bloc de l'anell amb el pic de diamant: a la bretxa hi apareix un detonador. Un enemic que el trepitja fa esclatar la base i guanya la partida.
+1. Agafa el pic de diamant del centre.
 
-El pic de diamant cau al mig als {PIC_PRIMER_MIN} min i cada {PIC_PERIODE_MIN} min. Només trenca un bloc.
+2. Trenca l'obsidiana de la base enemiga.
 
-## pàgina Morir
-Quan mors, esperes a la base com a espectador: {MORT_BASE_S} s al principi i un més cada {MORT_CADA_MIN} min, fins a {MORT_MAX_S} s.
+3. Trepitja la placa daurada del forat.
 
-Al rellotge de l'últim espai de la barra hi ha "Tornar a la base": clic dret, {RECALL_S} s quiet, i ets a casa.
+## pàgina Primer de tot
+Tens {OR_INICIAL} d'or. Fes clic dret a un venedor de la teva base.
 
-## pàgina El mig
-Dues sales amb una placa de cada color. {CAPTURA_S} s sobre la teva placa captura el punt: +{CAPTURA_OR} or i un quadre del pont.
+Compra un arc ({PREU_ARC} or) o una espasa de ferro ({PREU_ESPASA_FERRO} or).
 
-Cada punt que tens dona un quadre cada {PUNT_QUADRE_S} s. Amb {PONT_QUADRES} quadres, el botó del pont el desplega sobre el fossat enemic durant {PONT_S} s.
+Ves cap al centre amb els companys. Recull or dels cofres pel camí.
 
-Les torres de llums de les sales mostren les dues barres.
+## pàgina El pic de diamant
+Surt al centre al minut {PIC_PRIMER_MIN} i cada {PIC_PERIODE_MIN} min després.
+
+{{objecte PIC_DE_DIAMANT}}
+
+## pàgina Tornar a la base
+Fes clic dret amb el rellotge de l'últim espai de la barra.
+
+Queda't quiet {RECALL_S} s i tornaràs a casa.
+
+Si mors, reapareixes a la base. L'espera comença en {MORT_BASE_S} s i puja fins a {MORT_MAX_S} s.
+
+## pàgina Aconseguir or
+Obre i tanca els cofres: el botí vindrà cap a tu. Se n'obren de nous cada {COFRES_S} s.
+
+Matar un enemic dona 5 or, o més si portava una ratxa de baixes.
+
+També reps 1 or cada {COFRES_S} s sense fer res.
+
+## pàgina Les botigues
+Darrere d'on reapareixes, Shop et porta als venedors:
+
+Gerry: armes i fletxes.
+Seon: armadures.
+Karen: objectes especials.
+
+Fes-hi clic dret per veure els preus i comprar.
+
+## pàgina Els punts centrals
+Al centre hi ha dos punts de control, amb plaques de colors.
+
+Queda't {CAPTURA_S} s sobre la placa del teu color per capturar un punt.
+
+Guanyes {CAPTURA_OR} or i carregues el pont del teu equip.
+
+## pàgina Obrir el pont
+Els punts capturats omplen la barra del pont. Les torres de llums mostren la càrrega.
+
+Quan sigui plena, prem el botó del pont.
+
+Tens {PONT_S} s per travessar el fossat enemic. Aneu-hi junts!
 
 ## pàgina El Guardià
-Un golem de ferro que es desperta sota el mig al minut {GUARDIA_MIN}. Un pic de ferro li fa 30 de dany.
+És el golem de ferro que apareix sota el centre al minut {GUARDIA_MIN}.
 
-Qui el mata s'endú {GUARDIA_OR} or, Resistència i Velocitat 3 min, i el seu equip llança ninots de magma fins que l'altre equip el mati. Torna al cap de 3 min.
+Ataca'l amb un pic de ferro: li fa molt de mal.
 
-## pàgina Or
-Comences amb {OR_INICIAL} or. Els cofres de la jungla s'obren cada {COFRES_S} s; un cofre buit es tanca sol. Una estrella o una bola encantada s'anuncia amb un feix.
+Si el mates, reps {GUARDIA_OR} or, velocitat, resistència i curació.
 
-Cada kill val 5 or i més si la víctima portava ratxa. Cada {COFRES_S} s, 1 or passiu; +{BLOC_OR_PASSIU} amb un bloc d'or.
+## pàgina Premi del Guardià
+Mateu el Guardià i els vostres ninots seran de magma: cremen!
 
-L'equip que va {REMUNTADA_KILLS} kills per darrere cobra +{REMUNTADA_OR} or per persona i cicle.
+L'efecte dura fins que l'altre equip el mati.
 
-## pàgina Botigues
-A la base, tres paradistes. Gerry, armes: 8 fletxes {PREU_FLETXES}, 2 estrelles {PREU_ESTRELLES}, espasa de ferro {PREU_ESPASA_FERRO}, arc {PREU_ARC}, pic de ferro {PREU_PIC_FERRO}, espasa de diamant {PREU_ESPASA_DIAMANT}.
-
-Seon, armadures: pitral de ferro {PREU_PITRAL_FERRO}, calces de diamant {PREU_CALCES_DIAMANT}.
-
-Karen: bloc d'or {PREU_BLOC_OR}, bola de neu {PREU_BOLA_DE_NEU}, quars {PREU_QUARS} (només un), perla d'Ender {PREU_PERLA_D_ENDER}, poma daurada {PREU_POMA_DAURADA}, poció de velocitat {PREU_POCIO_DE_VELOCITAT}, maragda {PREU_MARAGDA}.
-
-## pàgina Encanteris
-Les taules de la base venen els encanteris senzills per or, sense lapislàtzuli: Retrocés i Empenta {ENCANT_RETROCÉS}, Flama i Eficiència {ENCANT_FLAMA} per nivell.
-
-Els dos altars de la capçada venen tots els encanteris fins a III: Esmolat i Potència {ENCANT_ESMOLAT}, Protecció {ENCANT_PROTECCIÓ}, Aspecte de foc {ENCANT_ASPECTE_DE_FOC} per nivell.
+El Guardià torna al cap de 2 o 3 minuts.
 
 ## pàgina Ninots de neu
 {{objecte BOLA_DE_NEU}}
 
-Cada bola fa un cor i empeny. Al {GEL_COPS_ARMAR}r cop el ninot es posa un cap de gel: el següent tanca l'enemic en gel {GEL_S} s.
+Les seves boles fan mal i empenyen.
 
-Els ninots de magma, del que ha matat el Guardià, cremen {FOC_S} s.
+Karen ven boles per {PREU_BOLA_DE_NEU} or.
 
-## pàgina Superninot
+## pàgina La trampa de gel
+Després de {GEL_COPS_ARMAR} cops, el ninot es posa un cap de gel.
+
+El següent cop atrapa l'enemic en gel durant {GEL_S} s. Aprofita-ho per atacar o fugir.
+
+Els ninots de magma també cremen durant {FOC_S} s.
+
+## pàgina El superninot
 {{objecte BOLA_DE_NEU_ENCANTADA}}
 
-Es troba als cofres de la jungla, mai a la botiga: com a molt un premi cada cicle de cofres, i cap bola nova mentre n'hi hagi una sense recollir. Brilla, va amb Velocitat i porta una aura del color de l'equip.
+La llum blava marca el cofre on trobaràs la bola.
 
 ## pàgina Estrella infernal
+La llum vermella marca el seu cofre.
+
 {{objecte ESTRELLA_DEL_NETHER}}
 
-Surt als cofres de la jungla, com a molt un premi per cicle i en un {PREMI_PERCENT} % dels cicles, i s'anuncia a tothom. Mentre es carrega, brilles i tot el mapa ho sent: qui s'allunya se n'escapa. Si mors carregant-la, cau a terra.
+## pàgina Esquivar l'estrella
+Si un enemic brilla i sents l'estrella carregant-se, allunya-te'n!
+
+Tens {ESTRELLA_CARREGA_S} s per sortir del radi de {ESTRELLA_RADI} blocs.
+
+Si qui la porta mor mentre la carrega, l'estrella cau a terra.
+
+## pàgina Millorar l'equip
+Amb l'arma o eina a la mà, fes clic dret a la taula d'encantar.
+
+Paga amb or per millorar-la.
+
+A la base hi ha millores bàsiques. Als altars sobre els arbres, de més potents.
+
+## pàgina Objectes útils
+Maragda: clic dret per curar un cor i mig a cada aliat.
+
+Perla d'Ender: llança-la per teletransportar-te.
+
+Bloc d'or: guarda'l per rebre {BLOC_OR_PASSIU} or extra cada {COFRES_S} s.
 
 ## pàgina Mort sobtada
-Al minut {MORT_SOBTADA_MIN} tothom queda a 1 cor. Des de llavors, cada kill aixeca un esquelet wither a la base del que ha matat, que marxa pel camí fins a la base enemiga.
+Al minut {MORT_SOBTADA_MIN}, tothom queda amb mig cor de vida.
 
-Morir per un esquelet et treu 1 cor de vida màxima, fins a un mínim de 2.
+Cada enemic que mates crea un esquelet wither a la teva base. Avança i lluita pel teu equip.
+
+## pàgina Els esquelets
+Si et mata un esquelet wither, perds 1 cor de vida màxima durant la resta de la partida.
+
+Com a mínim et quedaran 2 cors de vida màxima.
