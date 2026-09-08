@@ -43,12 +43,40 @@ suppress the push. This is a brief arrival pulse, not a persistent safe zone.
 Pickup is delayed ten ticks so a player standing on the spawn cannot collect
 the pickaxe on the same tick it appears.
 
+## Canopy Lookout
+
+The shared `Punt de Guaita` hologram is centered at `(662.5,77,-1391.5)`,
+above leaf block `(662,73,-1392)`. The current template's highest leaves are at
+Y=73; this broad crown offers more standing room than the narrow northern peak.
+Air above the crown is clear through Y=78, and no chest or block is replaced.
+The optional `Lookout` map property specifies the supporting block, not the
+hologram's position; the display is centered four blocks above it.
+
+The title is followed by exactly two rows: `Or total: <red> vs <blue>` and
+`Kills: <red> vs <blue>`. Gold is cumulative match income, displayed in thousands
+of nuggets with two decimals (`1250` nuggets becomes `1.25k`). Exact integer
+earnings are retained internally; display rounding is to the nearest ten nuggets.
+Starting gold, passive income, kills, captures and Guardian rewards count when
+granted. Generated chest and ground gold count when collected, including manual
+chest transfers and cursor stacks. Spending, death, disconnect or leaving the
+match never subtracts from the team's score. True spectators do not contribute.
+New loot carries a temporary persistent-data marker, removed upon collection;
+dropping, transferring and collecting already-earned currency cannot count twice.
+Ingot conversion credits ten nuggets once, consistent with the game economy.
+Kills reuse the match's existing team counters, including credited minion kills.
+
+The display refreshes once per second, rewrites only changed text and is removed
+on match cleanup. Its visibility is shared by both teams and spectators through
+the existing hologram system.
+
 ## Verification
 
 `./gradlew build` includes `ObsidianInteractionsTest` (approved coordinates,
 spawn exclusion, radius and floor boundaries, finite radial push and loot
 velocity) and `verifyGameGuide` (19 authored pages, wrapping, includes and long
 text). Existing movement regressions also run unchanged.
+`ObsidianGoldScoreTest` checks cumulative rewards, partial loot collection,
+repeat pickups, transfers, ingot conversion and match reset.
 
 After deployment, run the operations repository's bot check:
 

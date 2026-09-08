@@ -1,12 +1,29 @@
 package com.biel.lobby.mapes.jocs;
 
 import org.bukkit.util.Vector;
+import org.bukkit.ChatColor;
 
-/** Geometry shared by the spawn shortcuts and the pickaxe arrival effect. */
+/** Shared positions, display text and movement calculations for Obsidian interactions. */
 final class ObsidianInteractions {
     static final double PORTAL_RADIUS = 2;
     static final double PICKAXE_RADIUS = 4;
     static final int PICKAXE_PICKUP_DELAY = 10;
+
+    static Vector lookoutFloor() {
+        return new Vector(662, 73, -1392);
+    }
+
+    static String[] lookoutLines(long redGold, long blueGold, int redKills, int blueKills) {
+        return new String[]{
+            ChatColor.GOLD + "Punt de Guaita",
+            ChatColor.WHITE + "Or total: " + ChatColor.RED + formatGold(redGold) + ChatColor.GRAY + " vs " + ChatColor.BLUE + formatGold(blueGold),
+            ChatColor.WHITE + "Kills: " + ChatColor.RED + redKills + ChatColor.GRAY + " vs " + ChatColor.BLUE + blueKills
+        };
+    }
+
+    static String formatGold(long nuggets) {
+        return java.math.BigDecimal.valueOf(nuggets, 3).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + "k";
+    }
 
     record PortalPosition(Vector entrance, Vector arrival, float arrivalYaw) {}
 
