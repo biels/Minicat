@@ -1,0 +1,35 @@
+docs/inkwars-movement.md
+  s_25f98ea41c06bd::t_205c35dc90d280 19-26,31-32,38-40
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/SquidMotion.java
+  s_25f98ea41c06bd::t_356cb6388d93d2 8-29
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_25f98ea41c06bd::t_205c35dc90d280 79-80,1089,1125,1383,1423
+  s_25f98ea41c06bd::t_356cb6388d93d2 1085-1087,1163-1164,1284-1286,1384,1450-1451,1462-1464,1730,1832,2088,2096-2097,2100-2101,2103-2116
+  s_25f98ea41c06bd::t_2053478cae9935 1910,1988,2102
+  s_25f98ea41c06bd::t_96d27776e921e0 2117
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkStream.java
+  s_25f98ea41c06bd::t_356cb6388d93d2 67-70,81,86-91
+src/test/java/com/biel/lobby/mapes/jocs/InkWarsMovementTest.java
+  s_25f98ea41c06bd::t_2d096c936af71a 32,59,199,203,218
+  s_25f98ea41c06bd::t_663dab2d10f8bc 143-168
+  s_25f98ea41c06bd::t_f85d7555abbb67 109-142,169-179
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkStreamTest.java
+  s_25f98ea41c06bd::t_af6d5e071ea012 15,68-82
+  s_25f98ea41c06bd::t_5ec3ee7670922a 83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "059d8e9bf2cfffe7dd5533a29d133f8bcc336af5",
+  "prompts": {},
+  "sessions": {
+    "s_25f98ea41c06bd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08093-c951-7303-babf-76a5a877d8b9",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
