@@ -34,7 +34,8 @@ import com.biel.lobby.mapes.jocs.inkwars.InkStream;
 
 /** Runs the real movement controller against deterministic collision shapes without a server. */
 public final class InkWarsMovementTest {
-    public static void main(String[] args) throws Exception {
+    @org.junit.jupiter.api.Test
+    void movementAndSound() throws Exception {
         installSoundRegistry();
         slabLanding();
         wallClimbAndCrest();
@@ -69,19 +70,17 @@ public final class InkWarsMovementTest {
         require(squid.allowSound(SwimSound.SURFACE, 1_000_000_000), "form cue recovers at cooldown boundary");
         require(squid.allowSound(SwimSound.TURBO, 50_000_000), "contact cooldown does not suppress turbo");
         squid.lastSoundNanos.clear();
-        squid.sound(SwimSound.DIVE, fixture.playerLocation, 0);
+        squid.sound(SwimSound.DIVE, fixture.playerLocation);
         require(fixture.heardSounds.size() == 1, "dive is a single soft bubble");
         require(fixture.heardSounds.getFirst().sound() == Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP,
                 "dive keeps the gentle bubble cue");
         fixture.heardSounds.clear();
-        for (SwimSound cue : new SwimSound[]{SwimSound.CONTACT, SwimSound.JUMP, SwimSound.LAND,
-                SwimSound.PUSH, SwimSound.TAIL, SwimSound.RIPPLE}) {
-            squid.sound(cue, fixture.playerLocation, 0.8);
-        }
+        squid.leapOff(new Vector(-1, 0, 0));
+        squid.tickAir(keys(new Vector(1, 0, 0), false));
         require(fixture.heardSounds.isEmpty(), "routine movement and thrust layers stay silent");
         squid.lastSoundNanos.clear();
         for (SwimSound cue : new SwimSound[]{SwimSound.DIVE, SwimSound.TURBO, SwimSound.READY, SwimSound.EMPTY}) {
-            squid.sound(cue, fixture.playerLocation, 0);
+            squid.sound(cue, fixture.playerLocation);
         }
         require(fixture.heardSounds.size() == 4, "retained cues each use one sound");
         for (HeardSound sound : fixture.heardSounds) {

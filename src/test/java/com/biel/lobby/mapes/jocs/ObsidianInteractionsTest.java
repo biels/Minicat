@@ -3,7 +3,8 @@ package com.biel.lobby.mapes.jocs;
 import org.bukkit.util.Vector;
 
 public final class ObsidianInteractionsTest {
-    public static void main(String[] args) {
+    @org.junit.jupiter.api.Test
+    void interactionRules() {
         approvedPortals();
         portalBoundaries();
         pickaxePush();

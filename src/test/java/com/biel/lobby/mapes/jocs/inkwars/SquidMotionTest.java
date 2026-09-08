@@ -7,7 +7,8 @@ import org.bukkit.util.Vector;
 public final class SquidMotionTest {
     private static final double TOLERANCE = 1.0e-9;
 
-    public static void main(String[] args) {
+    @org.junit.jupiter.api.Test
+    void motionRules() {
         steering();
         Vector floor = new Vector(0, 1, 0);
         Vector wall = new Vector(-1, 0, 0);

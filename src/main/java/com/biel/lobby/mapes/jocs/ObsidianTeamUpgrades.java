@@ -22,19 +22,13 @@ final class ObsidianTeamUpgrades {
     }
     boolean ready(int team, long tick) { return next(team) != null && tick >= nextPurchaseTick[team]; }
 
-    Purchase purchase(int team, int buyerTeam, long tick, BooleanSupplier install, BooleanSupplier pay, Runnable rollback) {
+    Purchase purchase(int team, int buyerTeam, long tick, BooleanSupplier completePurchase) {
         if (team != buyerTeam) return Purchase.ENEMY;
         if (next(team) == null) return Purchase.COMPLETE;
         if (!ready(team, tick)) return Purchase.LOADING;
-        boolean committed = false;
-        try {
-            if (!install.getAsBoolean() || !pay.getAsBoolean()) return Purchase.FAILED;
-            levels[team]++;
-            nextPurchaseTick[team] = tick + PURCHASE_DELAY_TICKS;
-            committed = true;
-            return Purchase.BOUGHT;
-        } finally {
-            if (!committed) rollback.run();
-        }
+        if (!completePurchase.getAsBoolean()) return Purchase.FAILED;
+        levels[team]++;
+        nextPurchaseTick[team] = tick + PURCHASE_DELAY_TICKS;
+        return Purchase.BOUGHT;
     }
 }

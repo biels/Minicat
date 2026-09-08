@@ -162,7 +162,7 @@ public class ObsidianDefenders extends JocEquips {
 	/**
 	 * Closure (Biel, 2026-09-07 night: "after a certain minute, kills to the enemy team start
 	 * spawning wither skeletons, as minions, one per kill"): from this second on, every
-	 * kill raises a wither skeleton beside the victim, owned by the killer, marching the
+	 * kill raises a wither skeleton at the killer's base, owned by the killer, marching the
 	 * killer's lane to the enemy base; its kills are the owner's, so each raises another.
 	 */
 	private static final int SUDDEN_DEATH_SECOND = 15 * 60;
@@ -2137,7 +2137,6 @@ public class ObsidianDefenders extends JocEquips {
 		return nuggets;
 	}
 
-	/** Takes the price in nuggets, breaking ingots when needed and returning the change as nuggets. */
 	/** Arrows without a bow are gold thrown away (Biel, 2026-09-08): Gerry sells them only to a player who carries one. */
 	private static boolean hasBow(Player p) {
 		return p.getInventory().contains(Material.BOW);
@@ -2952,7 +2951,7 @@ public class ObsidianDefenders extends JocEquips {
 				killsByTeam.merge(killerTeam.getId(), 1, Integer::sum);
 				writeKillsSigns();
 			}
-			if (suddenDeath) raiseWitherSkeleton(killer, location);
+			if (suddenDeath) raiseWitherSkeleton(killer);
 			raiseSkeletonArcher(killer);
 		}
 		pPlayer(player).IncrementarPropietat("Morts");
@@ -3244,15 +3243,10 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	/**
-	 * What a snowman's snowball does to an enemy (Biel, 2026-09-07: "rather than pure
-	 * damage, slow them, or an ice cage after a few hits"): half a heart always. A snowman
-	 * with its cage armed (ice on its head, three hits landed) spends it: the victim is shut
-	 * in ice and the head goes back to the kind's. Otherwise the kind's effect, neu slows
-	 * and magma sets on fire, and one more hit toward the cage. A victim just out of a cage
-	 * is in grace: the kind's effect applies, but no cage charges or spends on them, so
-	 * three snowmen cannot hold one player in a loop of cages. The hit counts as the
-	 * owner's for kill credit (JocEquips records the last damager; the second is recorded
-	 * here).
+	 * Snowballs deal one heart of damage. An armed cage traps the victim and resets the
+	 * snowman's head; other hits shove, add fire for magma snowmen, and charge the cage.
+	 * Recently freed victims cannot charge or trigger another cage during their grace.
+	 * JocEquips credits the owner; this hook records when the hit occurred.
 	 */
 	private void snowballHit(SnowmanMinion snowman, EntityDamageByEntityEvent evt, Player victim) {
 		evt.setDamage(SNOWBALL_DAMAGE);
@@ -3439,7 +3433,7 @@ public class ObsidianDefenders extends JocEquips {
 	 * 2026-09-08: "només un per cada mort i a la meva base"), owned by the killer, and
 	 * walks the whole lane to the enemy base.
 	 */
-	private void raiseWitherSkeleton(Player killer, Location whereTheVictimFell) {
+	private void raiseWitherSkeleton(Player killer) {
 		Equip team = obtenirEquip(killer);
 		if (team == null) return;
 		Lane lane = snowmanLane(team);

@@ -61,10 +61,10 @@ final class ObsidianUpgradeController {
 
     private void buy(Player player, int team) {
         var next = upgrades.next(team);
-        var result = upgrades.purchase(team, teamOf.applyAsInt(player), tick, () -> true,
+        var result = upgrades.purchase(team, teamOf.applyAsInt(player), tick,
                 () -> next == ObsidianTeamUpgrades.Upgrade.LAUNCHERS
                         ? launchers.installAndPay(team, () -> pay.test(player, next.price))
-                        : pay.test(player, next.price), () -> {});
+                        : pay.test(player, next.price));
         switch (result) {
             case BOUGHT -> {
                 updateSigns();

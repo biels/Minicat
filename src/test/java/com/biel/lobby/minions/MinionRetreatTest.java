@@ -40,7 +40,8 @@ public final class MinionRetreatTest {
     private Mob mob;
     private LivingEntity target;
 
-    public static void main(String[] args) throws Exception {
+    @org.junit.jupiter.api.Test
+    void retreatAndFiring() throws Exception {
         installBlockRegistry();
         new MinionRetreatTest().run();
         System.out.println("Minion retreat thresholds, retry, side steps, hazards and firing callback passed");

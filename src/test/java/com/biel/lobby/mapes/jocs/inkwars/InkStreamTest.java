@@ -12,7 +12,8 @@ import org.bukkit.util.Vector;
 
 /** Standalone checks for turbo trails sharing the hose's parcel physics. */
 public final class InkStreamTest {
-    public static void main(String[] args) throws Exception {
+    @org.junit.jupiter.api.Test
+    void inkFlightAndTrails() throws Exception {
         InkStream.Load load = new InkStream.Load(0.25, 0.4, 0, 0.05);
         InkStream stream = new InkStream();
         Location start = new Location(null, 2, 4, 6);

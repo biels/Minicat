@@ -8,36 +8,37 @@ import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 public final class ObsidianWatchtowersTest {
-    public static void main(String[] args) {
+    @org.junit.jupiter.api.Test
+    void launchersAndTrajectories() {
         var purchases = new ObsidianTeamUpgrades();
         var upgrades = new ObsidianWatchtowers(purchases);
-        int[] gold = {49}, blocks = {0}, payments = {0};
+        int[] gold = {49}, payments = {0};
         var score = new ObsidianGoldScore();
         UUID buyer = new UUID(0, 1), friend = new UUID(0, 2), enemy = new UUID(0, 3);
         score.updateBalance(buyer, 0, 49);
-        java.util.function.BooleanSupplier install = () -> { blocks[0] = 12; return true; };
         java.util.function.BooleanSupplier pay = () -> {
             if (gold[0] < 50) return false;
             gold[0] -= 50; payments[0]++;
             score.recordPurchase(buyer, 0, gold[0], 50);
             return true;
         };
-        Runnable rollback = () -> blocks[0] = 0;
-        require(purchases.purchase(0, 1, 0, install, pay, rollback) == ObsidianTeamUpgrades.Purchase.ENEMY, "enemy cannot buy");
-        require(blocks[0] == 0 && payments[0] == 0, "enemy attempt has no side effects");
-        require(purchases.purchase(0, 0, 0, install, pay, rollback) == ObsidianTeamUpgrades.Purchase.FAILED, "49 gold fails");
-        require(blocks[0] == 0 && gold[0] == 49 && !upgrades.unlocked(0), "unpaid installation rolls back");
+        require(purchases.purchase(0, 1, 0, pay) == ObsidianTeamUpgrades.Purchase.ENEMY, "enemy cannot buy");
+        require(payments[0] == 0, "enemy attempt has no side effects");
+        require(purchases.purchase(0, 0, 0, pay) == ObsidianTeamUpgrades.Purchase.FAILED, "49 gold fails");
+        require(gold[0] == 49 && !upgrades.unlocked(0), "failed transaction does not unlock towers");
         require(score.total(0) == 49, "failed payment retains score");
         try {
-            purchases.purchase(0, 0, 0, () -> { blocks[0] = 3; throw new IllegalStateException("blocked"); }, pay, rollback);
+            purchases.purchase(0, 0, 0, () -> { throw new IllegalStateException("blocked"); });
             throw new AssertionError("exception expected");
-        } catch (IllegalStateException expected) { require(blocks[0] == 0, "partial build rolls back"); }
+        } catch (IllegalStateException expected) {
+            require(!upgrades.unlocked(0) && purchases.ready(0, 0), "exception does not advance upgrade or cooldown");
+        }
         gold[0] = 50; score.updateBalance(buyer, 0, 50);
-        require(purchases.purchase(0, 0, 0, install, pay, rollback) == ObsidianTeamUpgrades.Purchase.BOUGHT, "50 gold buys");
-        require(blocks[0] == 12 && gold[0] == 0 && upgrades.unlocked(0) && !upgrades.unlocked(1), "both own towers only");
+        require(purchases.purchase(0, 0, 0, pay) == ObsidianTeamUpgrades.Purchase.BOUGHT, "50 gold buys");
+        require(gold[0] == 0 && upgrades.unlocked(0) && !upgrades.unlocked(1), "both own towers only");
         require(score.total(0) == 50, "upgrade spending stays in score");
-        require(purchases.purchase(0, 0, 0, install, pay, rollback) == ObsidianTeamUpgrades.Purchase.LOADING, "second/offhand purchase cannot charge again");
-        require(payments[0] == 1 && blocks[0] == 12, "repeat purchase leaves installed blocks alone");
+        require(purchases.purchase(0, 0, 0, pay) == ObsidianTeamUpgrades.Purchase.LOADING, "second/offhand purchase cannot charge again");
+        require(payments[0] == 1, "repeat purchase leaves completed transaction alone");
         require(!upgrades.fire(2, 1), "locked tower cannot fire");
         require(upgrades.fire(0, 1) && !upgrades.fire(0, 1), "one launch per reload");
         require(upgrades.fire(1, 1), "other tower reload independent");

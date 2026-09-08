@@ -6,3 +6,19 @@ Public minigame minecraft server
 > Telegram: [https://telegram.me/servidorminicat](https://telegram.me/servidorminicat)
 
 Please, use the issues tab to report bugs or to suggest enchancements.
+
+## Development
+
+Use Java 25. Build the paired `../SpigotBielAPI` checkout with `mvn clean install`
+first, then run `./gradlew clean build` here. JUnit discovers tests under
+`src/test/java`; `./gradlew test --tests '*InkWarsLifecycleTest'` runs one suite.
+
+Game rules and server integration live in `src/main/java/com/biel/lobby/mapes/jocs`.
+Game-specific controllers stay beside their game; server-independent InkWars
+motion and ink calculations live in its `inkwars` subpackage. Shared minion
+behavior lives in `minions`.
+
+Deploy the paired plugins using the guarded procedure in
+[`../minicat-repo/docs/operations/paper-26.2-operations.md`](../minicat-repo/docs/operations/paper-26.2-operations.md).
+That repository owns deployment scripts and operational evidence; this one owns
+the plugin and its tests. Do not copy artifacts into the legacy server tree.

@@ -17,7 +17,8 @@ import com.biel.lobby.minions.Minion;
 
 /** Exercises the real registry when a projectile outlives its shooter. */
 public final class MinionOwnershipTest {
-    public static void main(String[] args) throws Exception {
+    @org.junit.jupiter.api.Test
+    void projectileOwnershipAndCleanup() throws Exception {
         TestGame game = allocate(TestGame.class);
         set(JocEquips.class, game, "minions", new ArrayList<Minion>());
         set(JocEquips.class, game, "minionShots", new HashMap<>());

@@ -16,7 +16,8 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 /** Run with ./gradlew verifyGameGuide; no running Minecraft server is needed. */
 public final class GameGuideTest {
-    public static void main(String[] args) throws Exception {
+    @org.junit.jupiter.api.Test
+    void guideLayoutAndIncludes() throws Exception {
         List<String> twelveRows = java.util.Collections.nCopies(12, "Una línia.");
         require(BookLayout.paginate("Títol", twelveRows).size() == 1, "Header must leave twelve body rows");
         List<String> thirteenRows = java.util.Collections.nCopies(13, "Una línia.");

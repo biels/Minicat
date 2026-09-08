@@ -8,7 +8,8 @@ import org.bukkit.util.Vector;
 public final class SquidCollisionTest {
     private static final Vector HALF_EXTENTS = new Vector(0.25, 0.15, 0.25);
 
-    public static void main(String[] args) {
+    @org.junit.jupiter.api.Test
+    void collisionShapes() {
         BoundingBox slab = new BoundingBox(0, 0, 0, 1, 0.5, 1);
         SquidCollision.Hit slabLanding = hit(new Vector(0.5, 2, 0.5), new Vector(0, -3, 0), slab);
         close(0.65, slabLanding.position.getY(), "slab surface plus body height");

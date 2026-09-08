@@ -3,7 +3,8 @@ package com.biel.lobby.mapes.jocs;
 import java.util.Arrays;
 
 public final class ObsidianTeamUpgradesTest {
-    public static void main(String[] args) {
+    @org.junit.jupiter.api.Test
+    void purchaseProgression() {
         var upgrades = new ObsidianTeamUpgrades();
         int[] wallet = {300}, payments = {0};
         require(upgrades.ready(0, 0) && upgrades.ready(1, 0), "first upgrade available immediately");
@@ -33,12 +34,12 @@ public final class ObsidianTeamUpgradesTest {
         System.out.println("Obsidian upgrade prices, transactions, countdown signs and team independence passed");
     }
     private static ObsidianTeamUpgrades.Purchase buy(ObsidianTeamUpgrades upgrades, int team, long tick, int[] wallet, int[] payments) {
-        return upgrades.purchase(team, team, tick, () -> true, () -> {
+        return upgrades.purchase(team, team, tick, () -> {
             int price = upgrades.next(team).price;
             if (wallet[0] < price) return false;
             wallet[0] -= price; payments[0]++;
             return true;
-        }, () -> {});
+        });
     }
     private static void require(boolean condition, String message) { if (!condition) throw new AssertionError(message); }
 }

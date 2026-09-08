@@ -48,59 +48,21 @@ dependencies {
     compileOnly('com.github.decentsoftware-eu.decentholograms:plugin:2.10.1') {
         transitive = false
     }
-    testCompileOnly 'io.papermc.paper:paper-api:26.2.build.92-stable'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 }
-configurations.testCompileOnly.extendsFrom(configurations.compileOnly)
-
-['SquidMotionTest', 'SquidCollisionTest', 'InkStreamTest', 'InkWarsMovementTest', 'ObsidianInteractionsTest', 'ObsidianGoldScoreTest', 'ObsidianWatchtowersTest', 'ObsidianTeamUpgradesTest', 'MinionOwnershipTest'].each { testClass ->
-    def packageName = testClass in ['InkWarsMovementTest', 'ObsidianInteractionsTest', 'ObsidianGoldScoreTest', 'ObsidianWatchtowersTest', 'ObsidianTeamUpgradesTest', 'MinionOwnershipTest'] ? 'com.biel.lobby.mapes.jocs.' : 'com.biel.lobby.mapes.jocs.inkwars.'
-    def regressionTask = tasks.register(testClass, JavaExec) {
-        dependsOn testClasses
-        javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
-        classpath = sourceSets.test.runtimeClasspath + configurations.testCompileClasspath + configurations.compileClasspath
-        mainClass = packageName + testClass
-    }
-    tasks.named('check') { dependsOn regressionTask }
-}
-
-task deploy(type: Copy){
-
-    from('build/libs') {
-        include '**/*.jar'
-    }
-    into 'F:\\Servers MC\\Lobby - 1.9\\plugins'
-}
-deploy.dependsOn assemble
+configurations.testImplementation.extendsFrom(configurations.compileOnly)
 
 tasks.named('test') {
-    // Standalone regression entrypoints are executed by check's JavaExec tasks.
-    failOnNoDiscoveredTests = false
+    useJUnitPlatform()
+    // Server-free fixtures install global Bukkit registries; isolate each suite.
+    forkEvery = 1
 }
-
-tasks.register('verifyGameGuide', JavaExec) {
-    dependsOn testClasses
-    classpath = sourceSets.test.runtimeClasspath + configurations.testCompileClasspath
-    mainClass = 'com.biel.lobby.guide.GameGuideTest'
-    javaLauncher = javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-}
-tasks.named('check') {
-    dependsOn 'verifyGameGuide'
-}
-
-tasks.register('MinionRetreatTest', JavaExec) {
-    dependsOn testClasses
-    classpath = sourceSets.test.runtimeClasspath + configurations.testCompileClasspath + configurations.compileClasspath
-    mainClass = 'com.biel.lobby.minions.MinionRetreatTest'
-    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
-}
-tasks.named('check') { dependsOn 'MinionRetreatTest' }
 
 tasks.register('calibrateObsidianLaunchers', JavaExec) {
     dependsOn testClasses
-    classpath = sourceSets.test.runtimeClasspath + configurations.testCompileClasspath
+    classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.biel.lobby.mapes.jocs.ObsidianLauncherCalibration'
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
     doFirst { args project.property('launcherSurvey'), project.property('launcherReport') }

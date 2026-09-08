@@ -5,6 +5,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
@@ -26,6 +27,7 @@ import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
+import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDismountEvent;
@@ -66,12 +68,11 @@ public class InkWars extends JocEquips {
 	static final int TICKS_BETWEEN_FLOW_STEPS = 3;
 	final HashMap<Block, WetInk> wetInk = new HashMap<>();
 	static final BlockFace[] SIDES = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
-	/** Ticks of slower swimming after the squid rounds a corner. */
+	/** Keeps the control frame continuous briefly after rounding a corner. */
 	static final int CORNER_TICKS = 10;
 	/**
-	 * The squid is a cart on whatever surface it touches: a heading and a speed. Blocks per tick at full speed (a sprint is 0.28); speed gained per tick with the keys
-	 * along the heading; speed lost per tick with the keys against it (the brake); the share of speed kept per tick when coasting; how far the heading turns per tick;
-	 * and below this speed the heading simply snaps to the keys, so a standing squid sets off in any direction.
+	 * Surface swimming speed and acceleration, in blocks per tick. Steering follows
+	 * the requested direction with a short sideways slip; releasing input coasts.
 	 */
 	static final double SQUID_TOP_SPEED = 0.65;
 	static final double SQUID_ACCELERATION = 0.02;
@@ -265,6 +266,44 @@ public class InkWars extends JocEquips {
 		InkWarsPlayerInfo info = getPlayerInfo(p);
 		if (info.getKit() != null) return;
 		info.setKit(new InkKit(p));
+	}
+
+	private void releaseSession(String playerName, boolean leaving) {
+		if (!(getPlayerInfo(playerName) instanceof InkWarsPlayerInfo info)) return;
+		info.swimForm = false;
+		info.squid.reset();
+		info.lastLocation = null;
+		if (info.kit != null) {
+			if (leaving) {
+				info.kit.destroy();
+				info.kit = null;
+			} else info.kit.clearProjectiles();
+		}
+	}
+
+	@Override
+	protected void onSeatDropped(Player player) {
+		releaseSession(player.getName(), false);
+		super.onSeatDropped(player);
+	}
+
+	@Override
+	protected void customLeave(Player player, List<String> attachments) {
+		releaseSession(player.getName(), true);
+		super.customLeave(player, attachments);
+	}
+
+	@Override
+	protected void onSeatAbandoned(Seat seat, List<String> attachments) {
+		releaseSession(seat.getName(), true);
+		super.onSeatAbandoned(seat, attachments);
+	}
+
+	@Override
+	public void clearExternals() {
+		for (Seat seat : getSeats()) releaseSession(seat.getName(), true);
+		wetInk.clear();
+		super.clearExternals();
 	}
 
 	@Override
@@ -562,7 +601,7 @@ public class InkWars extends JocEquips {
 	}
 	/**
 	 * The one kit everybody carries. The held item decides what paints: the Roller stick paints the floor a step ahead of a walking player,
-	 * the Hose torch throws a jet of ink that flies in an arc while right-click is held, ink balls splash where they land and hurt around the impact.
+	 * the Hose torch sprays while held and right-click pinches the jet; ink balls splash where they land and hurt around the impact.
 	 * Melee does nothing here; ink kills.
 	 */
 	class InkKit extends PlayerWorldEventBus{
@@ -578,7 +617,6 @@ public class InkWars extends JocEquips {
 		private double parcelCarry = 0;
 		/** True while this kit is dealing ink damage through the direct damage call, which the melee hook would otherwise cancel. */
 		private boolean dealingInkDamage = false;
-		private boolean valid = true;
 		private final ArrayList<Projectile> inkBalls = new ArrayList<>();
 
 		public InkKit(Player ply) {
@@ -589,10 +627,24 @@ public class InkWars extends JocEquips {
 		}
 		@Override
 		public boolean isValid() {
-			return valid;
+			return super.isValid() && JocEnMarxa();
+		}
+		@Override
+		protected Boolean verifyEvent(Event event) {
+			Player player = getPlayer();
+			return player != null && player.isOnline() && getPlayers().contains(player) && super.verifyEvent(event);
 		}
 		public void destroy() {
-			valid = false;
+			destroyEventBus();
+			clearProjectiles();
+		}
+		void clearProjectiles() {
+			hose.clear();
+			inkBalls.forEach(Projectile::remove);
+			inkBalls.clear();
+			pinch = 0;
+			pinchTriggerTicks = 0;
+			parcelCarry = 0;
 		}
 		@Override
 		protected boolean getPlayerSpecificEventFiltering() {
@@ -803,7 +855,7 @@ public class InkWars extends JocEquips {
 			if(!(shooter instanceof Player) || shooter != getPlayer())return;
 			if(isSubmerged()){ // Surface first: nothing is thrown from under the ink
 				evt.setCancelled(true);
-				getPlayerInfo(getPlayer()).squid.sound(InkWarsPlayerInfo.Squid.SwimSound.EMPTY, getPlayer().getEyeLocation(), 0);
+				getPlayerInfo(getPlayer()).squid.sound(InkWarsPlayerInfo.Squid.SwimSound.EMPTY, getPlayer().getEyeLocation());
 				return;
 			}
 			inkBalls.add(proj);
@@ -912,6 +964,7 @@ public class InkWars extends JocEquips {
 		public void ultraTick() {
 			super.ultraTick();
 			Player p = getPlayer();
+			if (!JocEnMarxa() || kit == null || !getPlayers().contains(p)) return;
 			Location now = p.getLocation();
 			Vector moved = lastLocation == null || lastLocation.getWorld() != now.getWorld() ? new Vector() : now.toVector().subtract(lastLocation.toVector());
 			lastLocation = now;
@@ -947,7 +1000,7 @@ public class InkWars extends JocEquips {
 		public void toggleSwimForm(){
 			Player p = getPlayer();
 			if(!swimForm && !squid.submerged && getTeamColorWherePlayerStands() != obtenirEquip(p)){ // no ink of yours here to dive into
-				squid.sound(Squid.SwimSound.EMPTY, p.getLocation(), 0);
+				squid.sound(Squid.SwimSound.EMPTY, p.getLocation());
 				PaperMessages.sendActionBar(p, ChatColor.RED + "Dive on your own ink", 30);
 				return;
 			}
@@ -969,7 +1022,7 @@ public class InkWars extends JocEquips {
 			if(slownessLevels > 0)p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 5, slownessLevels - 1, true, false));
 			else p.removePotionEffect(PotionEffectType.SLOWNESS);
 		}
-		/** Enemy ink stings, one heart a second; it does not execute. A squid pays in reserve instead. */
+		/** Enemy ink deals one damage per second. A squid pays in reserve instead. */
 		private void tickEnemyInkDamage(boolean onEnemyColour){
 			if(!onEnemyColour || squid.submerged){
 				dmgTicks = 0;
@@ -1018,7 +1071,7 @@ public class InkWars extends JocEquips {
 		}
 
 		/**
-		 * The squid: a body that treats floor, walls, ceilings and corners as one continuous surface and never feels gravity while it touches one.
+		 * The squid treats floor, walls, ceilings and corners as one continuous surface, with a slight downward drift while idle on walls.
 		 * The client runs no physics for it at all: the player rides an invisible carrier that the engine places every tick, so the body is a point
 		 * the camera sits on, kept a small radius off every surface, and every collision, bend, hop and fall is the engine's own arithmetic against the block grid.
 		 * It lives on an ink reserve, refilled on its own colour and drained elsewhere; while the reserve lasts it stays a squid and lays a strip that thins with the reserve.
@@ -1071,12 +1124,10 @@ public class InkWars extends JocEquips {
 			double turboJetPitch = 0;
 			double turboJetStrength = 0;
 			float lastControlYaw = Float.NaN;
-			enum SwimSound { DIVE, SURFACE, CONTACT, JUMP, LAND, TURBO, PUSH, TAIL, READY, EMPTY, RIPPLE }
+			enum SwimSound { DIVE, SURFACE, TURBO, READY, EMPTY }
 			final EnumMap<SwimSound, Long> lastSoundNanos = new EnumMap<>(SwimSound.class);
 
 			boolean allowSound(SwimSound cue, long now){
-				if(cue == SwimSound.CONTACT || cue == SwimSound.JUMP || cue == SwimSound.LAND
-						|| cue == SwimSound.PUSH || cue == SwimSound.TAIL || cue == SwimSound.RIPPLE)return false;
 				SwimSound group = cue == SwimSound.SURFACE ? SwimSound.DIVE : cue;
 				long cooldown = switch(group){
 					case READY, EMPTY -> 2_000_000_000L;
@@ -1087,7 +1138,7 @@ public class InkWars extends JocEquips {
 				lastSoundNanos.put(group, now);
 				return true;
 			}
-			void sound(SwimSound cue, Location at, double impact){
+			void sound(SwimSound cue, Location at){
 				if(!allowSound(cue, System.nanoTime()))return;
 				float variation = (float) (Math.random() * 0.12 - 0.06);
 				switch(cue){
@@ -1096,7 +1147,6 @@ public class InkWars extends JocEquips {
 					case TURBO -> player().playSound(at, Sound.ENTITY_PLAYER_SWIM, 0.12F, 1.65F + variation);
 					case READY -> player().playSound(at, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.10F, 1.8F);
 					case EMPTY -> player().playSound(at, Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.08F, 1.05F);
-					default -> { }
 				}
 			}
 			/** The carrier the player rides while a squid: an empty item display, nothing to see, no physics, placed by the engine every tick. */
@@ -1152,7 +1202,7 @@ public class InkWars extends JocEquips {
 				mount();
 				p.getInventory().setArmorContents(null);
 				kit.showInkSacs(reserve);
-				sound(SwimSound.DIVE, feet, 0);
+				sound(SwimSound.DIVE, feet);
 				getWorld().spawnParticle(Particle.SPLASH, feet.clone().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 			}
 			void mount(){
@@ -1181,7 +1231,8 @@ public class InkWars extends JocEquips {
 				if(Math.abs(measured.getX()) < 0.01 && Math.abs(measured.getZ()) < 0.01 && Math.abs(measured.getY()) < 2)seatOffset = measured;
 			}
 			boolean riding(){
-				return carrier != null && carrier.isValid() && player().getVehicle() == carrier;
+				Player player = player();
+				return carrier != null && carrier.isValid() && player != null && player.getVehicle() == carrier;
 			}
 			/** Where the player stands when the body comes out: on the floor under a floor squid, else where the body was, the feet a little below the centre. */
 			Location standingSpot(){
@@ -1228,7 +1279,7 @@ public class InkWars extends JocEquips {
 				boolean onFloor = surface == Surface.FLOOR;
 				surfaceQuietly(exit);
 				Player p = player();
-				sound(SwimSound.SURFACE, p.getLocation(), 0);
+				sound(SwimSound.SURFACE, p.getLocation());
 				getWorld().spawnParticle(Particle.SPLASH, p.getLocation().add(0, 0.2, 0), 25, 0.6, 0.1, 0.6, 0);
 				if(onFloor){
 					releaseSurge(reserve, p.getLocation(), new Vector(0, -1, 0));
@@ -1241,8 +1292,9 @@ public class InkWars extends JocEquips {
 				p.setExp(0);
 			}
 			void surfaceQuietly(){
-				if(!riding()){
-					surfaceQuietly(player().getLocation());
+				Player player = player();
+				if(player == null || player.getWorld() != getWorld() || !riding()){
+					surfaceQuietly(null);
 					return;
 				}
 				Location exit = standingSpot();
@@ -1250,15 +1302,17 @@ public class InkWars extends JocEquips {
 				surfaceQuietly(exit);
 			}
 			void surfaceQuietly(Location exit){
+				boolean restoreEquipment = submerged;
 				submerged = false;
 				turboJetTick = SquidMotion.JET_DURATION_TICKS;
 				turboJetStrength = 0;
 				turboTrailTicks = 0;
 				Player p = player();
+				boolean inGameWorld = p != null && p.isOnline() && p.getWorld() == getWorld();
 				if(carrier != null){
-					if(riding()){
+					if(inGameWorld && riding()){
 						carrier.removePassenger(p);
-						p.teleport(exit);
+						if (exit != null) p.teleport(exit);
 					}
 					carrier.remove();
 					carrier = null;
@@ -1269,9 +1323,12 @@ public class InkWars extends JocEquips {
 				gripContact = null;
 				cameraCentre = null;
 				blockedSurfaceTicks = 0;
-				p.removePotionEffect(PotionEffectType.INVISIBILITY);
-				Utils.donarItemsPlayer(p, getStartingItems(p));
-				if(kit != null)kit.hideInkSacs();
+				if (restoreEquipment && inGameWorld) {
+					p.removePotionEffect(PotionEffectType.INVISIBILITY);
+					Utils.donarItemsPlayer(p, getStartingItems(p));
+					if(kit != null)kit.hideInkSacs();
+					p.setExp(0);
+				}
 			}
 			void reset(){
 				surfaceQuietly();
@@ -1349,8 +1406,6 @@ public class InkWars extends JocEquips {
 					}
 				}
 				pushed = centre.clone().subtract(before);
-				if(turboJetTick == 3 || turboJetTick == 6)sound(SwimSound.PUSH, surfacePoint(), turboJetStrength);
-				if(turboJetTick == SquidMotion.JET_PUSH_TICKS)sound(SwimSound.TAIL, surfacePoint(), 0);
 				if(turboTrailTicks > 0)turboTrailTicks--;
 				Location standing = standingSpot();
 				if(standingClear(standing))lastClearStandingSpot = standing;
@@ -1379,7 +1434,7 @@ public class InkWars extends JocEquips {
 				if(touched != null && groundUnderStrip.containsKey(touched))return groundUnderStrip.get(touched);
 				return getTeamOwningBlock(touched);
 			}
-			/** Gathered per block swum on the team's colour, spent per tick and per block elsewhere: a long run on own ink is what pays for a crossing. */
+			/** Refills per tick on own ink; drains per tick and distance elsewhere. */
 			void tickReserve(EquipInkWars team, EquipInkWars ground, Vector moved){
 				double blocksSwum = moved.length();
 				boolean wasFull = reserve >= 1;
@@ -1387,17 +1442,17 @@ public class InkWars extends JocEquips {
 				else if(ground == null)reserve -= RESERVE_DRAIN_NEUTRAL + RESERVE_DRAIN_NEUTRAL_PER_BLOCK * blocksSwum;
 				else reserve -= RESERVE_DRAIN_ENEMY + RESERVE_DRAIN_ENEMY_PER_BLOCK * blocksSwum;
 				reserve = Math.max(0, reserve);
-				if(!wasFull && reserve >= 1)sound(SwimSound.READY, player().getLocation(), 0);
+				if(!wasFull && reserve >= 1)sound(SwimSound.READY, player().getLocation());
 			}
 			/** Start a paid jet with an immediate bite, a powered push and a short release. */
 			void thrust(){
 				Player p = player();
 				if(!tryThrust(p.getEyeLocation().getDirection())){
-					sound(SwimSound.EMPTY, p.getLocation(), 0);
+					sound(SwimSound.EMPTY, p.getLocation());
 					return;
 				}
 				Location burst = surfacePoint();
-				sound(SwimSound.TURBO, burst, 0);
+				sound(SwimSound.TURBO, burst);
 				Particle.DustOptions dust = new Particle.DustOptions(team().getStrongColor().getColor(), 1.6F);
 				Vector back = heading.clone().multiply(-1);
 				getWorld().spawnParticle(Particle.DUST, burst.clone().add(back.multiply(0.6)), 24, 0.35, 0.25, 0.35, 0, dust);
@@ -1441,7 +1496,7 @@ public class InkWars extends JocEquips {
 			void forcedOut(){
 				Player p = player();
 				if(swimForm){
-					sound(SwimSound.EMPTY, p.getLocation(), 0);
+					sound(SwimSound.EMPTY, p.getLocation());
 					PaperMessages.sendActionBar(p, ChatColor.RED + "Out of ink", 30);
 				}
 				swimForm = false;
@@ -1483,9 +1538,6 @@ public class InkWars extends JocEquips {
 				}
 			}
 			void ripple(EquipInkWars team, Vector moved){
-				if(surface != Surface.AIR && submergedTicks % 16 == 0 && moved.lengthSquared() > 0.01){
-					sound(SwimSound.RIPPLE, surfacePoint(), 0);
-				}
 				if(submergedTicks % 2 != 0)return;
 				Particle.DustOptions dust = new Particle.DustOptions(team.getStrongColor().getColor(), 1.4F);
 				getWorld().spawnParticle(Particle.DUST, surfacePoint(), (int) (3 + moved.length() * 12), 0.45, 0.05, 0.45, 0, dust);
@@ -1743,7 +1795,6 @@ public class InkWars extends JocEquips {
 			/** Onto a wall at whatever angle: the road bends, the speed is kept, the body rests on the face. */
 			void attachToWall(Contact wall, Vector oldNormal){
 				BlockFace side = wall.face().getOppositeFace();
-				boolean newContact = surface != Surface.WALL || wallSide != side;
 				if(surface == Surface.AIR){
 					Vector incoming = velocity();
 					Vector tangent = SquidMotion.slide(incoming, wall.face().getDirection());
@@ -1758,11 +1809,9 @@ public class InkWars extends JocEquips {
 				gripped = wall.block();
 				restOn(wall);
 				verticalSpeed = 0;
-				if(newContact)sound(SwimSound.CONTACT, surfacePoint(), 0);
 			}
 			/** Onto a ceiling: the road bends to run along it, the speed is kept, the body rests under it. */
 			void attachToCeiling(Contact ceiling, Vector oldNormal){
-				boolean newContact = surface != Surface.CEILING;
 				redirect(oldNormal, new Vector(0, -1, 0));
 				flattenHeading(oldNormal);
 				surface = Surface.CEILING;
@@ -1770,7 +1819,6 @@ public class InkWars extends JocEquips {
 				gripped = ceiling.block();
 				restOn(ceiling);
 				verticalSpeed = 0;
-				if(newContact)sound(SwimSound.CONTACT, surfacePoint(), 0);
 			}
 			/** Onto a floor: the road bends to run along it, the body rides at its height over the block. */
 			void landOnFloor(Vector oldNormal, Block floor, double top){
@@ -1805,13 +1853,11 @@ public class InkWars extends JocEquips {
 			}
 			/** Off the wall into the air, away from it, still a squid. */
 			void leapOff(Vector normal){
-				Player p = player();
 				Vector launch = SquidMotion.wallJump(velocity(), normal, 0.4, SQUID_WALL_LEAP);
 				detachedFace = faceOf(normal);
 				detachTicks = SQUID_DETACH_TICKS;
 				takeOff(launch.getY());
 				setMomentum(launch.setY(0));
-				sound(SwimSound.JUMP, p.getLocation(), 0);
 			}
 
 			//--- the surfaces
@@ -1825,7 +1871,6 @@ public class InkWars extends JocEquips {
 				if(firstMovementStep)steer(movementKeys(keys), 1, true);
 				if(consumeJump(keys)){
 					takeOff(SQUID_HOP);
-					sound(SwimSound.JUMP, player().getLocation(), 0);
 					return;
 				}
 				double travel = speed * movementFraction;
@@ -1958,7 +2003,6 @@ public class InkWars extends JocEquips {
 					detachedFace = BlockFace.DOWN;
 					detachTicks = SQUID_DETACH_TICKS;
 					takeOff(0);
-					sound(SwimSound.JUMP, player().getLocation(), 0);
 					return;
 				}
 				flattenHeading(new Vector(1, 0, 0));
@@ -2005,7 +2049,6 @@ public class InkWars extends JocEquips {
 				if(firstMovementStep){
 					if(floorGraceTicks > 0 && consumeJump(keys)){
 						verticalSpeed = SQUID_HOP;
-						sound(SwimSound.JUMP, player().getLocation(), 0);
 					}
 					steer(keys.flat(), SQUID_AIR_THROTTLE, false);
 					speed *= SQUID_AIR_DRAG;
@@ -2029,9 +2072,7 @@ public class InkWars extends JocEquips {
 					return;
 				}
 				if(hit.face() == BlockFace.UP){
-					double impactSpeed = Math.max(0, -verticalSpeed);
 					landOnFloor(new Vector(0, 1, 0), hit.block(), hit.point().getY());
-					sound(SwimSound.LAND, surfacePoint(), impactSpeed);
 					advance(heading, speed * remainingTime);
 					return;
 				}

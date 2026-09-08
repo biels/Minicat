@@ -3,7 +3,8 @@ package com.biel.lobby.mapes.jocs;
 import java.util.UUID;
 
 public final class ObsidianGoldScoreTest {
-    public static void main(String[] args) {
+    @org.junit.jupiter.api.Test
+    void ownedAndSpentGold() {
         ObsidianGoldScore score = new ObsidianGoldScore();
         UUID red = UUID.randomUUID(), teammate = UUID.randomUUID(), blue = UUID.randomUUID();
         score.updateBalance(red, 0, 100);
