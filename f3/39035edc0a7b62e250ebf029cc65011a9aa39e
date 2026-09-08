@@ -1,0 +1,21 @@
+src/main/resources/guides/obsidian-defenders.md
+  s_166f814544e045::t_068c5cd5c17c2f 114,116,118,121,123,126,128,131,133,135,138,144,147,149,151,156,158,160,167,174-175,177,179,181,184,187,189,191,198,201,203,205,208,212,215,227,229,231,233,239-241,243,253,255,258,260
+  s_166f814544e045::t_6861d2a848d8ec 217
+  s_166f814544e045::t_bec62735c202b7 154,161,163,165,168,170,172,182,194,196,210,220,222-224,234,236-238,246,248,250
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f339035edc0a7b62e250ebf029cc65011a9aa39e",
+  "prompts": {},
+  "sessions": {
+    "s_166f814544e045": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a081f9-97a8-7543-b351-f7229d7333df",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
