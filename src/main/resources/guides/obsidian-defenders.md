@@ -111,147 +111,150 @@ Fes explotar la base enemiga i defensa la teva.
 3. Trepitja la placa daurada del forat.
 
 ## pàgina Primer de tot
-Tens {OR_INICIAL} d'or. Fes clic dret a un venedor de la teva base.
+Comences amb {OR_INICIAL} d'or.
 
-Compra un arc ({PREU_ARC} or) o una espasa de ferro ({PREU_ESPASA_FERRO} or).
+Compra un arc ({PREU_ARC} d'or) o una espasa de ferro ({PREU_ESPASA_FERRO} d'or) als venedors de la base.
 
-Ves cap al centre amb els companys. Recull or dels cofres pel camí.
+Ves cap al centre amb l'equip i recull or dels cofres pel camí.
 
 ## pàgina El pic de diamant
-Surt al centre al minut {PIC_PRIMER_MIN} i cada {PIC_PERIODE_MIN} min després.
+El primer apareix al centre al minut {PIC_PRIMER_MIN}. Després, n'apareix un cada {PIC_PERIODE_MIN} minuts.
 
-{{objecte PIC_DE_DIAMANT}}
+Només pot trencar un bloc. Protegeix qui el porta: és la vostra oportunitat d'entrar a la base enemiga.
 
 ## pàgina Tornar a la base
-Fes clic dret amb el rellotge de l'últim espai de la barra.
+Fes clic dret amb el rellotge i queda't quiet {RECALL_S} segons per tornar a la base.
 
-Queda't quiet {RECALL_S} s i tornaràs a casa.
-
-Si mors, reapareixes a la base. L'espera comença en {MORT_BASE_S} s i puja fins a {MORT_MAX_S} s.
+Quan mors, trigues entre {MORT_BASE_S} i {MORT_MAX_S} segons a reaparèixer. Com més avança la partida, més has d'esperar.
 
 ## pàgina Aconseguir or
-Obre i tanca els cofres: el botí vindrà cap a tu. Se n'obren de nous cada {COFRES_S} s.
+Tanca els cofres per recollir-ne el botí. Se n'obren de nous cada {COFRES_S} segons.
 
-Matar un enemic dona 5 or, o més si portava una ratxa de baixes.
+Cada kill et dona 5 d'or; si trenques una ratxa, encara més.
 
-També reps 1 or cada {COFRES_S} s sense fer res.
+També guanyes 1 d'or cada {COFRES_S} segons.
 
 ## pàgina Les botigues
-Darrere d'on reapareixes, Shop et porta als venedors:
+Busca el portal Shop darrere del punt on reapareixes.
 
 Gerry: armes i fletxes.
 Seon: armadures.
 Karen: objectes especials.
 
-Fes-hi clic dret per veure els preus i comprar.
+Fes clic dret a un venedor per comprar.
 
 ## pàgina Els punts centrals
-Al centre hi ha dos punts de control, amb plaques de colors.
+Al centre hi ha dos punts de control.
 
-Queda't {CAPTURA_S} s sobre la placa del teu color per capturar un punt.
+Queda't {CAPTURA_S} segons sobre la placa del teu color per capturar-ne un.
 
-Guanyes {CAPTURA_OR} or i carregues el pont del teu equip.
+Cada punt us ajuda a carregar el pont. Capturar-ne un també et dona {CAPTURA_OR} d'or.
 
 ## pàgina Obrir el pont
-Els punts capturats omplen la barra del pont. Les torres de llums mostren la càrrega.
+Les llums de les torres mostren la càrrega del pont.
 
-Quan sigui plena, prem el botó del pont.
+Quan la barra sigui plena, prem el botó de la base: el pont s'obrirà durant {PONT_S} segons.
 
-Tens {PONT_S} s per travessar el fossat enemic. Aneu-hi junts!
-
-## pàgina Els llançadors
-50 or a la base activen les dues torres.
-
-Sobre la placa de ferro, prem el botó: saltaràs sense mal de caiguda.
-
-També des de baix. Recarrega: 5 s.
-
-## pàgina Reforços ossis
-Segona millora: 100 or.
-
-Cada baixa teva o d'un esbirro crea un arquer. Màxim: 10 per equip.
-
-No cremen al sol. Si mors, perds els teus.
-
-## pàgina Herència de guerra
-Tercera millora: 150 or.
-
-Els nous arquers copien la teva armadura, sense encantaments.
-
-Les baixes et donen els premis, però mai l'or x3 del pic.
+Prepareu l'atac abans d'obrir-lo!
 
 ## pàgina Millores de la base
-Després de comprar: quatre quadrats grisos al rètol.
+Millora les torres i recluta soldats per a tot l'equip.
 
-En perd un cada 15 s.
+Prem el botó damunt del rètol de millores de la base.
 
-Quan s'acaben, apareixen partícules: ja pots comprar la següent millora.
+Les millores es compren en ordre, amb un minut d'espera entre compres.
+
+## pàgina Els llançadors
+Activa les torres per 50 d'or.
+
+Puja a la placa de ferro i prem el botó per saltar a la jungla sense fer-te mal.
+
+Un company pot activar-lo des de baix. Espera 5 s entre salts.
+
+## pàgina Reforços ossis
+La segona millora costa 100 d'or.
+
+Cada kill teva o dels teus soldats fa aparèixer un arquer a la base. No cremen al sol.
+
+Podeu tenir-ne 10 per equip. Si mors, perds els teus.
+
+## pàgina Herència de guerra
+Per 150 d'or, els nous arquers porten la teva armadura, sense encanteris.
+
+Les seves kills compten com a teves, però no donen l'or x3 del pic.
 
 ## pàgina El Guardià
-És el golem de ferro que apareix sota el centre al minut {GUARDIA_MIN}.
+El Guardià apareix sota el centre al minut {GUARDIA_MIN}. És el golem de ferro.
 
-Ataca'l amb un pic de ferro: li fa molt de mal.
+Agafa un pic de ferro: li faràs molt de mal!
 
-Si el mates, reps {GUARDIA_OR} or, velocitat, resistència i curació.
+Si el mates, guanyes {GUARDIA_OR} d'or, velocitat, resistència i curació.
 
 ## pàgina Premi del Guardià
-Mateu el Guardià i els vostres ninots seran de magma: cremen!
+Mateu el Guardià i els vostres ninots seran de magma: calen foc!
 
-L'efecte dura fins que l'altre equip el mati.
+El poder és vostre fins que l'altre equip mati el Guardià.
 
-El Guardià torna al cap de 2 o 3 minuts.
+Torna al cap de 2 o 3 minuts. No els ho poseu fàcil!
 
 ## pàgina Ninots de neu
-{{objecte BOLA_DE_NEU}}
+Llança una bola de neu i tindràs un soldat que avança cap a la base enemiga.
 
-Les seves boles fan mal i empenyen.
+Les seves boles fan mal i empenyen els enemics. Pots tenir-ne {MAX_NINOTS} alhora.
 
-Karen ven boles per {PREU_BOLA_DE_NEU} or.
+Karen ven boles de neu per {PREU_BOLA_DE_NEU} d'or.
 
 ## pàgina La trampa de gel
-Després de {GEL_COPS_ARMAR} cops, el ninot es posa un cap de gel.
+Quan un ninot encerta {GEL_COPS_ARMAR} cops, el cap se li torna de gel.
 
-El següent cop atrapa l'enemic en gel durant {GEL_S} s. Aprofita-ho per atacar o fugir.
+El següent cop atrapa l'enemic en gel {GEL_S} segons. Ataca o fuig!
 
-Els ninots de magma també cremen durant {FOC_S} s.
+Els de magma també li calen foc durant {FOC_S} segons.
 
 ## pàgina El superninot
-{{objecte BOLA_DE_NEU_ENCANTADA}}
+Segueix la llum blava: al cofre hi ha una bola encantada.
 
-La llum blava marca el cofre on trobaràs la bola.
+Llança-la per crear un superninot. Arriba més lluny i dispara el triple de boles el primer minut; després, el doble.
 
 ## pàgina Estrella infernal
-La llum vermella marca el seu cofre.
+La llum vermella marca el cofre.
 
-{{objecte ESTRELLA_DEL_NETHER}}
+Fes clic dret: al cap de {ESTRELLA_CARREGA_S} s, els enemics a menys de {ESTRELLA_RADI} blocs queden amb mig cor.
+
+Alenteix els enemics i dona velocitat als aliats durant 20 s.
 
 ## pàgina Esquivar l'estrella
-Si un enemic brilla i sents l'estrella carregant-se, allunya-te'n!
+Si un enemic brilla i sents que carrega l'estrella, allunya-te'n!
 
-Tens {ESTRELLA_CARREGA_S} s per sortir del radi de {ESTRELLA_RADI} blocs.
+Tens {ESTRELLA_CARREGA_S} segons per posar-te a més de {ESTRELLA_RADI} blocs.
 
-Si qui la porta mor mentre la carrega, l'estrella cau a terra.
+També pots matar-lo abans que l'activi: deixarà caure l'estrella.
+
+## pàgina Fletxes explosives
+Un cop usada, l'estrella infernal es torna una estrella de foc.
+
+Porta-la i dispara l'arc des d'un lloc alt: la fletxa explotarà!
+
+Cada explosió et costa 1 cor i una estrella.
 
 ## pàgina Millorar l'equip
-Amb l'arma o eina a la mà, fes clic dret a la taula d'encantar.
+Fes clic dret a una taula d'encantar amb l'arma o l'eina a la mà. Les millores es paguen amb or.
 
-Paga amb or per millorar-la.
-
-A la base hi ha millores bàsiques. Als altars sobre els arbres, de més potents.
+A la base trobaràs els encanteris bàsics. Per als més potents, puja als altars dels arbres.
 
 ## pàgina Objectes útils
-Maragda: clic dret per curar un cor i mig a cada aliat.
+Fes clic dret amb la maragda per curar un cor i mig a tot l'equip.
 
-Perla d'Ender: llança-la per teletransportar-te.
+Llança la perla d'Ender per teletransportar-te.
 
-Bloc d'or: guarda'l per rebre {BLOC_OR_PASSIU} or extra cada {COFRES_S} s.
+Porta un bloc d'or per guanyar {BLOC_OR_PASSIU} d'or extra cada {COFRES_S} s.
 
 ## pàgina Mort sobtada
-Al minut {MORT_SOBTADA_MIN}, tothom queda amb mig cor de vida.
+Al minut {MORT_SOBTADA_MIN}, tothom queda amb mig cor. Un cop et pot matar!
 
-Cada enemic que mates crea un esquelet wither a la teva base. Avança i lluita pel teu equip.
+Cada kill fa aparèixer un esquelet wither a la teva base. Avança cap als enemics i lluita per tu.
 
 ## pàgina Els esquelets
-Si et mata un esquelet wither, perds 1 cor de vida màxima durant la resta de la partida.
+Vigila amb els esquelets wither: si un et mata, perds un cor de vida màxima fins al final de la partida.
 
-Com a mínim et quedaran 2 cors de vida màxima.
+No el recuperaràs quan reapareguis. Com a mínim, et quedaran dos cors de vida màxima.
