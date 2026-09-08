@@ -1,0 +1,61 @@
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/SquidCollisionTest.java
+  s_25f98ea41c06bd::t_3da96a0d410d33 1-69
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_25f98ea41c06bd::t_fb6844c1d3af3d 43,53-54,121-124,1060-1070,1096-1100,1107-1108,1112,1141
+  s_25f98ea41c06bd::t_93ae9c8e981d3a 1456,1464-1465,1467-1469,1475-1476,1480-1497,1513-1547,1555-1560,1563-1564,1571-1578,1582-1596,1601
+  s_25f98ea41c06bd::t_f9ca941c6cc034 1214-1217,1671
+  s_25f98ea41c06bd::t_d938df53b6e741 963,969
+  s_25f98ea41c06bd::t_1abb6c698527db 1158-1159,1165-1167,1171-1175,1182-1183,1188-1196,1198,1218-1222,1228,1236-1238,1286,1293,1300,1302-1310,1318-1320,1323-1329
+  s_25f98ea41c06bd::t_788d959b3be24b 1610,1615-1616,1619-1621,1630-1636,1641-1649,1653,1664,1678,1687,1692-1695,1700-1704
+  s_25f98ea41c06bd::t_eda06d23eeec85 1071,1101,1115-1120,1184-1187,1301,1311-1315,1321-1322,1554,1728-1729,1775
+  s_25f98ea41c06bd::t_5a5b93f8a9975e 1716-1717,1722,1730-1731,1759,1769,1773-1774,1779,1782,1784,1799,1813,1816,1819,1821-1827,1835-1837,1846-1848,1854-1855,1873,1876,1885-1886,1894-1898,1900,1910-1911,1917,1923
+  s_25f98ea41c06bd::t_1905984b0e3bd1 1740-1741,1743,1810,1870,1907-1909,1913,1919,1925,1929,1933-1934
+  s_25f98ea41c06bd::t_c90629b6cd3211 1168-1170,1299,1368-1371,1466,1470-1474,1654,1665,1675-1677,1757-1758
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/SquidMotion.java
+  s_25f98ea41c06bd::t_2f513a0a5cae22 1-66
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/SquidMotionTest.java
+  s_25f98ea41c06bd::t_2f513a0a5cae22 1-68,71-80
+  s_25f98ea41c06bd::t_3a20e212c26ee2 69-70
+build.gradle
+  s_25f98ea41c06bd::t_0e6e5f25fcb4a8 56-65
+  s_3c4d38f3809c52::t_a9ec45c213a8a2 76-79
+  s_3c4d38f3809c52::t_5a8495586c7600 75
+  s_25f98ea41c06bd::t_82d335a251e3ea 54
+  s_25f98ea41c06bd::t_f678e90e50e558 55
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/SquidCollision.java
+  s_25f98ea41c06bd::t_3da96a0d410d33 1-110
+src/test/java/com/biel/lobby/mapes/jocs/InkWarsMovementTest.java
+  s_25f98ea41c06bd::t_f083cdd92542e0 38,230-248
+  s_25f98ea41c06bd::t_c02abe842595d0 46,97-112
+  s_25f98ea41c06bd::t_a3c013e252c1b2 29,40,42-45,85-96,113-114,129-175,177-182,308-318,320-332,335-337
+  s_25f98ea41c06bd::t_99cb56fc2bbc06 176
+  s_25f98ea41c06bd::t_040479e9cd8445 41,115-128,333-334,340-341,347,350-352,354-355,365,367,380-381
+  s_25f98ea41c06bd::t_0ba54a3e24db3a 1-10,12-15,18-28,30-33,35-37,39,47,72-84,183-229,249-307,319,338-339,342-346,348-349,353,356-364,366,368-379,382-420
+  s_25f98ea41c06bd::t_bcce992f5f6192 11,16-17,34,48-71
+docs/inkwars-movement.md
+  s_25f98ea41c06bd::t_41396b186ddc8e 1-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "460b88a85fdce1df3320042f8f0d8a785342bdd1",
+  "prompts": {},
+  "sessions": {
+    "s_25f98ea41c06bd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08093-c951-7303-babf-76a5a877d8b9",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_3c4d38f3809c52": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08094-9a37-7ae2-9d4f-3b28b8208de4",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
