@@ -1376,9 +1376,9 @@ public class InkWars extends JocEquips {
 			}
 
 			//--- the grid
-			/** A block the squid can hold: anything paintable, and the plain solid blocks a splash would paint; never a barrier. */
+			/** A block the squid can hold: anything paintable, the plain solid blocks a splash would paint, and the shapes that wear the colour beneath them; never a barrier. */
 			boolean gripable(Block b){
-				return isPaintable(b) || isPaintableUnsafely(b);
+				return isPaintable(b) || isPaintableUnsafely(b) || (isShape(b) && !b.isPassable());
 			}
 			/** A surface the probe found: the block, the face of it that faces the body, and how far the body's edge is from that face along the probe. */
 			record Contact(Block block, BlockFace face, double gap) {}
@@ -1521,7 +1521,7 @@ public class InkWars extends JocEquips {
 					Vector high = centre.clone().add(new Vector(0, -SQUID_RIDE_HEIGHT + SQUID_STEP + 0.1, 0));
 					Contact lowHit = probe(low, heading, travel);
 					Contact highHit = probe(high, heading, travel);
-					Contact wall = holdableWall(lowHit) ? lowHit : holdableWall(highHit) ? highHit : null;
+					Contact wall = holdableWall(highHit) ? highHit : holdableWall(lowHit) && !isShape(lowHit.block()) ? lowHit : null; // a low stair or slab is a step, not a wall
 					if(wall != null){
 						double toFace = Math.max(0, Math.min(travel, wall.gap()));
 						advance(heading, toFace);
@@ -1604,7 +1604,7 @@ public class InkWars extends JocEquips {
 					restOn(beside.block(), beside.face());
 					return;
 				}
-				if(gripped != null && centre.getY() - SQUID_RADIUS >= gripped.getY() + 1 - 1e-6 && heading.getY() >= 0){
+				if(gripped != null && centre.getY() >= gripped.getY() + 1 - SQUID_RADIUS && heading.getY() >= 0){
 					// over the top: onto the roof, the body carried into the block's column so the roof is under it
 					landOnFloor(normal, gripped, gripped.getY() + 1);
 					advance(heading, SQUID_RADIUS + 0.1);
@@ -1616,7 +1616,11 @@ public class InkWars extends JocEquips {
 					cornerTicks = CORNER_TICKS;
 					return;
 				}
-				takeOff(Math.min(0, heading.getY() * speed));
+				// the wall is gone beside the body, a window or an overhang: into the air, drifting toward where the wall was so it is found again above or below
+				double sink = Math.min(0, heading.getY() * speed);
+				heading = wallSide.getDirection();
+				speed = Math.max(speed * 0.5, SQUID_CRAWL_SPEED);
+				takeOff(sink);
 			}
 			/**
 			 * Under a ceiling the keys work as on the floor and the body rests up against it. Jump lets go into a fall. Ahead: a wall is a concave corner and the road
