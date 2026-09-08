@@ -2248,7 +2248,7 @@ public class ObsidianDefenders extends JocEquips {
 			boolean resEncantable = item == null || item.getType() == Material.AIR || Arrays.stream(Encantament.values()).noneMatch(e -> e.encantament.canEnchantItem(item));
 			p.sendMessage(ChatColor.GRAY + (resEncantable
 					? "Agafa a la mà el que vols encantar: espasa, arc, pic o armadura."
-					: forja == Forja.BASE ? "La taula de la base no pot encantar més això: puja als altars de la capçada." : "L'altar ja ha donat tot el que pot a això."));
+					: forja == Forja.BASE ? "Per millorar més, puja als altars de la capçada." : "L'altar ja ha donat tot el que pot a això."));
 			return;
 		}
 		IconMenu menu = new IconMenu(forja.títol, 9, event -> {
@@ -3342,7 +3342,7 @@ public class ObsidianDefenders extends JocEquips {
 			PaperMessages.showTitle(p, 10, 70, 20, ChatColor.DARK_RED + "Mort sobtada", ChatColor.GRAY + "Tothom a 1 cor. Cada kill aixeca un esquelet wither");
 			p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, 0.5F, 1.2F);
 		}
-		sendGlobalMessage(ChatColor.DARK_RED + "Mort sobtada: " + ChatColor.WHITE + "tothom a 1 cor. A partir d'ara cada kill aixeca un esquelet wither al costat del mort, que marxa cap a la base enemiga i lluita per qui l'ha aixecat; morir per un esquelet costa 1 cor de vida màxima.");
+		sendGlobalMessage(ChatColor.DARK_RED + "Mort sobtada: " + ChatColor.WHITE + "cada baixa aixeca un esquelet wither.");
 		updateScoreBoards();
 	}
 
@@ -3441,7 +3441,7 @@ public class ObsidianDefenders extends JocEquips {
 				//Automal
 				double hp = player.getHealth();
 				if (hp == 20) {
-					player.sendMessage(ChatColor.GRAY + "Disparar fletxes explosives et treu 1 cor per explosió fins a mig cor. La força de les fletxes explosives varia amb la teva vida (20 hp - 100%, 1 hp 5%");
+					player.sendMessage(ChatColor.GRAY + "Les fletxes explosives et costen 1 cor.");
 				}
 				hp = hp - 2;
 				if (hp <= 0) {
