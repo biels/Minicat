@@ -1,0 +1,41 @@
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianInteractions.java
+  s_3c4d38f3809c52::t_3137d4d6cade55 19,22-25
+  s_3c4d38f3809c52::t_84b33f0fe1c8d2 4,12-18,20-21,26
+  s_3c4d38f3809c52::t_e1c9bfbea6f929 6
+  s_3c4d38f3809c52::t_afcf7917c5195d 27
+docs/obsidian-interactions.md
+  s_3c4d38f3809c52::t_e1c9bfbea6f929 46-55,66-71
+  s_3c4d38f3809c52::t_726ce0b01e4876 56-65,78-79
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianDefenders.java
+  s_3c4d38f3809c52::t_84b33f0fe1c8d2 281-282,718-719,1849-1862,1864-1866,1871-1876,1960,1962
+  s_3c4d38f3809c52::t_3137d4d6cade55 283,716-717,1034,1398,1863,1867-1870,1961,2679,2681-2682,2725,2734-2761,2847,3394
+  s_3c4d38f3809c52::t_726ce0b01e4876 1385,2773
+  s_3c4d38f3809c52::t_d839705f48e917 2762
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianInteractionsTest.java
+  s_3c4d38f3809c52::t_e1c9bfbea6f929 12
+  s_3c4d38f3809c52::t_726ce0b01e4876 77,79-83
+  s_3c4d38f3809c52::t_84b33f0fe1c8d2 11,72-76,78
+  s_3c4d38f3809c52::t_6858491436476f 84-85
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianGoldScore.java
+  s_3c4d38f3809c52::t_3137d4d6cade55 1-47
+src/test/java/com/biel/lobby/mapes/jocs/ObsidianGoldScoreTest.java
+  s_3c4d38f3809c52::t_726ce0b01e4876 1-81
+build.gradle
+  s_3c4d38f3809c52::t_726ce0b01e4876 56-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "aad5befe290161f6468f73dd74b4d4d47b0e656f",
+  "prompts": {},
+  "sessions": {
+    "s_3c4d38f3809c52": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08094-9a37-7ae2-9d4f-3b28b8208de4",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
