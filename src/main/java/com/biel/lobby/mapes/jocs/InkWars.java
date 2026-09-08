@@ -109,13 +109,14 @@ public class InkWars extends JocEquips {
 	/**
 	 * The Hose runs whenever it is in hand: a jet of ink parcels thrown at this speed in blocks per tick, this many a tick, scattered this much at the nozzle,
 	 * each carrying this much ink into a splash of this radius where it lands, stinging a body it hits this much.
-	 * Pinching the tip (a left click, another lets go) is the second row: faster, a line instead of a spray, one parcel a tick into a smaller spot, a harder sting:
-	 * about twice the reach for half the paint.
+	 * Pinching the tip, right-click held, is the second row: faster, a line instead of a spray, one parcel a tick into a smaller spot, a harder sting:
+	 * about twice the reach for half the paint. The two blend over half a second either way, so the jet tightens and relaxes rather than switching.
+	 * A press of right-click keeps the pinch this many ticks, longer than the client's repeat of a held click, so holding it is one steady pinch.
 	 */
-	static final double HOSE_SPEED = 0.9, HOSE_SCATTER = 0.035, HOSE_PARCEL_INK = 0.22, HOSE_SPLASH_RADIUS = 0.8, HOSE_STING = 1.0;
-	static final int HOSE_PARCELS_PER_TICK = 2;
-	static final double PINCHED_SPEED = 1.4, PINCHED_SCATTER = 0.008, PINCHED_PARCEL_INK = 0.3, PINCHED_SPLASH_RADIUS = 0.5, PINCHED_STING = 1.5;
-	static final int PINCHED_PARCELS_PER_TICK = 1;
+	static final double HOSE_SPEED = 0.9, HOSE_SCATTER = 0.035, HOSE_PARCEL_INK = 0.22, HOSE_SPLASH_RADIUS = 0.8, HOSE_STING = 1.0, HOSE_PARCELS_PER_TICK = 2;
+	static final double PINCHED_SPEED = 1.4, PINCHED_SCATTER = 0.008, PINCHED_PARCEL_INK = 0.3, PINCHED_SPLASH_RADIUS = 0.5, PINCHED_STING = 1.5, PINCHED_PARCELS_PER_TICK = 1;
+	static final int PINCH_BLEND_TICKS = 10;
+	static final int PINCH_TRIGGER_TICKS = 6;
 	final Predicate<Block> solid = block -> !block.isPassable();
 	int wetInkTicks = 0;
 	int paintableFloorBlocks = 0;
@@ -146,7 +147,7 @@ public class InkWars extends JocEquips {
 		i.add("You win by having more than 80% of the map painted");
 		i.add("In this map you level up every " + getBlockCountToLevelUp() + " effectively painted blocks");
 		i.add("The ink won't dry instantly, use it to your advantage");
-		i.add("One kit: the Roller paints the floor ahead of you while you walk with it, the Hose in hand throws a jet of ink that flies in an arc, left-click pinches the tip for a longer thinner shot, ink balls splash at range");
+		i.add("One kit: the Roller paints the floor ahead of you while you walk with it, the Hose in hand throws a jet of ink that flies in an arc, hold right-click to pinch the tip for a longer thinner shot, ink balls splash at range");
 		i.add("Press sneak on your own ink for squid form: invisible, fast, healing, with momentum; press again to stand up");
 		i.add("The squid lives on ink (the green bar): it refills on your colour, drains on neutral ground, faster on enemy ink, and at zero you are thrown back on your feet; the strip you lay as you go does not count as yours until you stand up");
 		i.add("A squid runs up any wall it touches, across ceilings and round every corner as if the floor continued; the keys work the same everywhere: on a wall, toward it climbs, away from it descends; look where you like; jump hops, leaps off a wall, drops off a ceiling");
@@ -551,8 +552,11 @@ public class InkWars extends JocEquips {
 		static final int BALL_SLOT = 2;
 		private int reloadTicks = 0;
 		private final InkStream hose = new InkStream();
-		/** The tip squeezed: a longer, thinner, harder jet. */
-		private boolean pinched = false;
+		/** How far the tip is squeezed, 0 open to 1 pinched, blending toward where the trigger says; the trigger holds for a few ticks past each press of right-click. */
+		private double pinch = 0;
+		private int pinchTriggerTicks = 0;
+		/** Parcels owed but not yet thrown: the per-tick count blends between the modes, so fractions carry over. */
+		private double parcelCarry = 0;
 		/** True while this kit is dealing ink damage through the direct damage call, which the melee hook would otherwise cancel. */
 		private boolean dealingInkDamage = false;
 		private boolean valid = true;
@@ -585,7 +589,7 @@ public class InkWars extends JocEquips {
 			return Utils.setItemNameAndLore(new ItemStack(Material.STICK, 1), teamColour() + "Roller", ChatColor.WHITE + "Hold it and walk: paints the floor under you.");
 		}
 		ItemStack hoseItem(){
-			return Utils.setItemNameAndLore(new ItemStack(Material.TORCH, 1), teamColour() + "Hose", ChatColor.WHITE + "In hand it runs: a jet of ink that flies in an arc and lands where it lands.", ChatColor.WHITE + "Left-click: pinch the tip for a longer, thinner shot; again to let go.");
+			return Utils.setItemNameAndLore(new ItemStack(Material.TORCH, 1), teamColour() + "Hose", ChatColor.WHITE + "In hand it runs: a jet of ink that flies in an arc and lands where it lands.", ChatColor.WHITE + "Hold right-click: pinch the tip for a longer, thinner shot.");
 		}
 		ItemStack inkBallItem(){
 			return Utils.setItemName(new ItemStack(Material.SNOWBALL, 1), teamColour() + "Ink ball");
@@ -602,6 +606,9 @@ public class InkWars extends JocEquips {
 		public void tick(){
 			tickHose();
 			if(isSubmerged())return; // a squid has no tools in hand, only its ink; a jet already in the air still comes down
+			if(pinchTriggerTicks > 0)pinchTriggerTicks--;
+			double pinchWanted = pinchTriggerTicks > 0 ? 1 : 0;
+			pinch += Math.max(-1.0 / PINCH_BLEND_TICKS, Math.min(1.0 / PINCH_BLEND_TICKS, pinchWanted - pinch));
 			if(getPlayer().getInventory().getItemInMainHand().getType() == Material.TORCH)sprayHose();
 			reloadTick();
 			if(wetInkTicks % 20 == 0)restoreTools();
@@ -615,15 +622,15 @@ public class InkWars extends JocEquips {
 			if(right.lengthSquared() > 1e-6)right.normalize();
 			Location nozzle = eyes.clone().add(look.clone().multiply(0.5)).add(right.multiply(0.32)).add(0, -0.12, 0);
 			double levelBonus = level() * 0.02;
-			if(pinched)hose.emit(nozzle, look, PINCHED_SPEED + levelBonus, PINCHED_SCATTER, new InkStream.Load(PINCHED_PARCEL_INK + levelBonus, PINCHED_SPLASH_RADIUS + level() * 0.03, PINCHED_STING), PINCHED_PARCELS_PER_TICK);
-			else hose.emit(nozzle, look, HOSE_SPEED + levelBonus, HOSE_SCATTER, new InkStream.Load(HOSE_PARCEL_INK + levelBonus, HOSE_SPLASH_RADIUS + level() * 0.05, HOSE_STING), HOSE_PARCELS_PER_TICK);
+			InkStream.Load load = new InkStream.Load(blend(HOSE_PARCEL_INK, PINCHED_PARCEL_INK) + levelBonus, blend(HOSE_SPLASH_RADIUS + level() * 0.05, PINCHED_SPLASH_RADIUS + level() * 0.03), blend(HOSE_STING, PINCHED_STING));
+			parcelCarry += blend(HOSE_PARCELS_PER_TICK, PINCHED_PARCELS_PER_TICK);
+			int count = (int) parcelCarry;
+			parcelCarry -= count;
+			hose.emit(nozzle, look, blend(HOSE_SPEED, PINCHED_SPEED) + levelBonus, blend(HOSE_SCATTER, PINCHED_SCATTER), load, count);
 		}
-		/** The tip squeezed or let go. */
-		void togglePinch(){
-			pinched = !pinched;
-			Player p = getPlayer();
-			p.playSound(p.getEyeLocation(), Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP, 0.8F, pinched ? 1.6F : 0.9F);
-			PaperMessages.sendActionBar(p, pinched ? teamColour() + "Pinched: long thin jet" : ChatColor.GRAY + "Open: wide jet", 30);
+		/** A hose figure between its open and its pinched value, by how far the tip is squeezed. */
+		double blend(double open, double pinched){
+			return open + (pinched - open) * pinch;
 		}
 		/** Every parcel in the air flies one tick; the ones that came down splash where they landed, and one that met an enemy stings them. */
 		void tickHose(){
@@ -743,18 +750,14 @@ public class InkWars extends JocEquips {
 			if(p != getPlayer() || evt.getHand() != EquipmentSlot.HAND)return;
 			Material inHand = p.getInventory().getItemInMainHand().getType();
 			boolean rightClick = evt.getAction() == Action.RIGHT_CLICK_BLOCK || evt.getAction() == Action.RIGHT_CLICK_AIR;
-			boolean leftClick = evt.getAction() == Action.LEFT_CLICK_BLOCK || evt.getAction() == Action.LEFT_CLICK_AIR;
 			if(rightClick && inHand == Material.INK_SAC && isSubmerged()){
 				evt.setCancelled(true);
 				getPlayerInfo(p).blowInk();
 				return;
 			}
-			if(inHand != Material.TORCH)return;
-			if(rightClick)evt.setCancelled(true); // the torch is the hose, it is never placed
-			if(leftClick && !isSubmerged()){
-				evt.setCancelled(true);
-				togglePinch();
-			}
+			if(inHand != Material.TORCH || !rightClick)return;
+			evt.setCancelled(true); // the torch is the hose, it is never placed
+			if(!isSubmerged())pinchTriggerTicks = PINCH_TRIGGER_TICKS;
 		}
 		/** A sneak would throw the squid off its carrier: while the engine still owns the body the client's dismount is refused; the engine's own eject is not. */
 		@Override
