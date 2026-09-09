@@ -1,0 +1,21 @@
+docs/game-package-layout.md
+  s_d4244df752681a::t_4e8cc86d3a3b97 29-39,67-77,80-85,94-97,108-109,125
+README.md
+  s_d4244df752681a::t_4e8cc86d3a3b97 17-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f6357f12768c89fd35366414b02768728067b0c6",
+  "prompts": {},
+  "sessions": {
+    "s_d4244df752681a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2612296-91f9-4559-b845-d33cba0ea04f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
