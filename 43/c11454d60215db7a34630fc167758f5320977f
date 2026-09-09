@@ -1,0 +1,29 @@
+src/main/java/com/biel/lobby/utilities/SweptBoxCollision.java
+  s_d4244df752681a::t_9df78ba59542cc 1-7,9-10,12-110
+  s_d4244df752681a::t_b920abe9a8b9a6 8,11
+src/test/java/com/biel/lobby/utilities/SweptBoxCollisionTest.java
+  s_d4244df752681a::t_9df78ba59542cc 1-7,9-13,15-18,20-34,36-40,43-46,48-49,51-52,55-59,61-70
+  s_d4244df752681a::t_b920abe9a8b9a6 8,14,19,35,41-42,47,50,53-54,60
+src/main/java/com/biel/lobby/mapes/jocs/InkWars.java
+  s_d4244df752681a::t_935084d10227d7 57,1254,1678
+src/main/java/com/biel/lobby/mapes/jocs/ObsidianLauncherTrajectory.java
+  s_d4244df752681a::t_b64ef3584dba4c 3,45
+src/test/java/com/biel/lobby/mapes/jocs/InkWarsMovementTest.java
+  s_d4244df752681a::t_4a9e6a18a65284 31,623
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "43c11454d60215db7a34630fc167758f5320977f",
+  "prompts": {},
+  "sessions": {
+    "s_d4244df752681a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2612296-91f9-4559-b845-d33cba0ea04f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
