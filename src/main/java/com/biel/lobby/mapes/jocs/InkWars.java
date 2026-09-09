@@ -54,7 +54,7 @@ import com.biel.lobby.mapes.jocs.inkwars.InkStream;
 import com.biel.lobby.mapes.jocs.inkwars.InkSurfaceFlow;
 import com.biel.lobby.mapes.jocs.inkwars.WetInk;
 import com.biel.lobby.mapes.jocs.inkwars.SquidMotion;
-import com.biel.lobby.mapes.jocs.inkwars.SquidCollision;
+import com.biel.lobby.utilities.SweptBoxCollision;
 import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
@@ -1251,7 +1251,7 @@ public class InkWars extends JocEquips {
 			}
 			boolean bodyClear(Vector body, Vector extent){
 				for(CollisionBlock obstacle : collisionBlocks(body, extent, new Vector())){
-					if(SquidCollision.overlaps(body, extent, obstacle.bounds()))return false;
+					if(SweptBoxCollision.overlaps(body, extent, obstacle.bounds()))return false;
 				}
 				return true;
 			}
@@ -1675,7 +1675,7 @@ public class InkWars extends JocEquips {
 				ArrayList<CollisionBlock> obstacles = collisionBlocks(from, extent, displacement);
 				ArrayList<BoundingBox> bounds = new ArrayList<>();
 				for(CollisionBlock obstacle : obstacles)bounds.add(obstacle.bounds());
-				SquidCollision.Hit hit = SquidCollision.sweep(from, extent, displacement, bounds);
+				SweptBoxCollision.Hit hit = SweptBoxCollision.sweep(from, extent, displacement, bounds);
 				if(hit == null)return null;
 				CollisionBlock obstacle = obstacles.get(hit.obstacleIndex);
 				Vector point = hit.position.clone().subtract(hit.normal.clone().multiply(SQUID_RADIUS));

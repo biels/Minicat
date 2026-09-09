@@ -1,6 +1,6 @@
 package com.biel.lobby.mapes.jocs;
 
-import com.biel.lobby.mapes.jocs.inkwars.SquidCollision;
+import com.biel.lobby.utilities.SweptBoxCollision;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +42,7 @@ final class ObsidianLauncherTrajectory {
             boolean landed = false;
             for (Vector movement : List.of(new Vector(0, velocity.getY(), 0),
                     new Vector(velocity.getX(), 0, 0), new Vector(0, 0, velocity.getZ()))) {
-                var hit = SquidCollision.sweep(feet.clone().add(new Vector(0, 0.9, 0)), HALF_BODY,
+                var hit = SweptBoxCollision.sweep(feet.clone().add(new Vector(0, 0.9, 0)), HALF_BODY,
                         movement, terrain.obstacles(feet, movement));
                 if (hit == null) feet.add(movement);
                 else {

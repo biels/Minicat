@@ -1,14 +1,14 @@
-package com.biel.lobby.mapes.jocs.inkwars;
+package com.biel.lobby.utilities;
 
 import java.util.List;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 /** Sweeps an axis-aligned body against actual world collision boxes. */
-public final class SquidCollision {
+public final class SweptBoxCollision {
     private static final double EPSILON = 1e-9;
 
-    private SquidCollision() {}
+    private SweptBoxCollision() {}
 
     public static final class Hit {
         public final double fraction;

@@ -28,7 +28,7 @@ import org.bukkit.util.VoxelShape;
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid;
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.Keys;
 import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.SwimSound;
-import com.biel.lobby.mapes.jocs.inkwars.SquidCollision;
+import com.biel.lobby.utilities.SweptBoxCollision;
 import com.biel.lobby.mapes.jocs.inkwars.SquidMotion;
 import com.biel.lobby.mapes.jocs.inkwars.InkStream;
 
@@ -620,7 +620,7 @@ public final class InkWarsMovementTest {
                     case AIR -> squid.tickAir(keys);
                 }
                 for (Block block : solids) for (BoundingBox local : block.getCollisionShape().getBoundingBoxes()) {
-                    require(!SquidCollision.overlaps(squid.centre, new Vector(InkWars.SQUID_RADIUS, InkWars.SQUID_RADIUS, InkWars.SQUID_RADIUS), local.clone().shift(block.getLocation())),
+                    require(!SweptBoxCollision.overlaps(squid.centre, new Vector(InkWars.SQUID_RADIUS, InkWars.SQUID_RADIUS, InkWars.SQUID_RADIUS), local.clone().shift(block.getLocation())),
                             "body overlaps " + block.getLocation() + " at " + squid.centre + " on " + squid.surface);
                 }
             }
