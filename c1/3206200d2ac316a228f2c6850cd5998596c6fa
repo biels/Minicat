@@ -1,0 +1,29 @@
+.gitignore
+  s_e9ae59e9697b9a::t_10188ae6fff3d8 29-32
+.idea/misc.xml
+  s_2ad96a5d10b444::t_d062b0684c09d0 6,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "c13206200d2ac316a228f2c6850cd5998596c6fa",
+  "prompts": {},
+  "sessions": {
+    "s_2ad96a5d10b444": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08591-f1b1-7051-8eb0-b1d2a642d913",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_e9ae59e9697b9a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7deaeea6-9215-46ff-9fc1-4317b649c196",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
