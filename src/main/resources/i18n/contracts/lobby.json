@@ -1,0 +1,137 @@
+{
+  "keys": {
+    "minicat.lobby.play": {
+      "constant": "LOBBY_PLAY",
+      "purpose": "Play",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.play.lore": {
+      "constant": "LOBBY_PLAY_LORE",
+      "purpose": "Choose a game with /m.",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.instances": {
+      "constant": "LOBBY_INSTANCES",
+      "purpose": "Active games",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.instances.lore": {
+      "constant": "LOBBY_INSTANCES_LORE",
+      "purpose": "Browse games already running.",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.return": {
+      "constant": "LOBBY_RETURN",
+      "purpose": "Return to lobby",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.return.lore": {
+      "constant": "LOBBY_RETURN_LORE",
+      "purpose": "Return with /l.",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.help.title": {
+      "constant": "LOBBY_HELP_TITLE",
+      "purpose": "Minicat help",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.welcome": {
+      "constant": "LOBBY_WELCOME",
+      "purpose": "Welcome to Minicat",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.welcome.subtitle": {
+      "constant": "LOBBY_WELCOME_SUBTITLE",
+      "purpose": "Choose a game with /m",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.returned": {
+      "constant": "LOBBY_RETURNED",
+      "purpose": "You are back in the lobby.",
+      "arguments": [],
+      "surfaces": [
+        "item",
+        "chat",
+        "title"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.help.page": {
+      "constant": "LOBBY_HELP_PAGE",
+      "purpose": "Welcome to Minicat\n\n/m — Choose a game\n/a — Active games\n/l — Return to lobby\n/lang — English / Català\n/top — Player rankings\n/info — Game guide",
+      "arguments": [],
+      "surfaces": [
+        "book"
+      ],
+      "maxTemplateCharacters": 400
+    },
+    "minicat.lobby.teleported": {
+      "constant": "LOBBY_TELEPORTED",
+      "purpose": "%1 returned you to the lobby.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    }
+  }
+}

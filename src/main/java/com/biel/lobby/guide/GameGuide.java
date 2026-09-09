@@ -23,6 +23,9 @@ import org.bukkit.entity.Player;
 import com.biel.lobby.Com;
 import com.biel.lobby.GestorMapes.ContenidorJoc;
 import com.biel.lobby.Mapa;
+import com.biel.lobby.localization.MessageArgument;
+import com.biel.lobby.localization.MessageKey;
+import com.biel.lobby.localization.Messages;
 
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
@@ -191,7 +194,7 @@ public final class GameGuide {
 
 	public void open(Player player) {
 		if (!exists()) {
-			player.sendMessage(ChatColor.GRAY + "Encara no hi ha informació " + com.biel.lobby.utilities.Catalan.de(gameName) + ".");
+			Messages.send(player, MessageKey.INFO_NO_GUIDE, MessageArgument.text("game", gameName));
 			return;
 		}
 		Book book = book();
@@ -209,7 +212,7 @@ public final class GameGuide {
 		if (gameNameOrNull == null || gameNameOrNull.isBlank()) {
 			Mapa map = Com.getGest().getMapWherePlayerIs(player);
 			if (map == null) {
-				player.sendMessage(ChatColor.GRAY + "Escriu /info <joc>, o fes clic al rètol Wiki d'un joc.");
+				Messages.send(player, MessageKey.INFO_CHOOSE_GAME);
 				return;
 			}
 			of(map.getGameName()).open(player);
@@ -217,7 +220,7 @@ public final class GameGuide {
 		}
 		ContenidorJoc game = findGame(gameNameOrNull);
 		if (game == null) {
-			player.sendMessage(ChatColor.GRAY + "No conec cap joc que es digui \"" + gameNameOrNull + "\".");
+			Messages.send(player, MessageKey.INFO_UNKNOWN_GAME, MessageArgument.text("game", gameNameOrNull));
 			return;
 		}
 		of(game.getNom()).open(player);

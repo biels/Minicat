@@ -1,0 +1,316 @@
+{
+  "items": [
+    {
+      "type": "text",
+      "key": "minicat.menu.maps.title",
+      "languages": {
+        "en_US": "[minimsg]<red>All maps</red>",
+        "ca_ES": "[minimsg]<red>Tots els mapes</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.menu.maps.ranking.name",
+      "languages": {
+        "en_US": "[minimsg]<light_purple>Ranking</light_purple>",
+        "ca_ES": "[minimsg]<light_purple>Rànquing</light_purple>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.menu.maps.ranking.lore",
+      "languages": {
+        "en_US": "[minimsg]<white>Which games count and their weight</white>",
+        "ca_ES": "[minimsg]<white>Quins jocs puntuen i amb quin pes</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.menu.maps.language.name",
+      "languages": {
+        "en_US": "[minimsg]<gold>English <gray>/</gray> Català</gold>",
+        "ca_ES": "[minimsg]<gold>English <gray>/</gray> Català</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.menu.maps.language.lore",
+      "languages": {
+        "en_US": "[minimsg]<white>Choose your language</white>",
+        "ca_ES": "[minimsg]<white>Tria l'idioma</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.join.missing",
+      "languages": {
+        "en_US": "[minimsg]<red>The instance name is missing.</red>",
+        "ca_ES": "[minimsg]<red>Falta el nom de la instància.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.join.not_found",
+      "languages": {
+        "en_US": "[minimsg]<red>This instance no longer exists.</red>",
+        "ca_ES": "[minimsg]<red>Aquesta instància ja no existeix.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.join.unavailable",
+      "languages": {
+        "en_US": "[minimsg]<red>This instance is no longer accepting players.</red>",
+        "ca_ES": "[minimsg]<red>Aquesta instància ja no admet jugadors.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.start.not_in_game",
+      "languages": {
+        "en_US": "[minimsg]<red>You must be in a match to start it.</red>",
+        "ca_ES": "[minimsg]<red>Has d'estar en una partida per iniciar-la.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.info.choose_game",
+      "languages": {
+        "en_US": "[minimsg]<gray>Use <white>/info \\<game></white>, or click a game's Wiki sign.</gray>",
+        "ca_ES": "[minimsg]<gray>Escriu <white>/info \\<joc></white>, o fes clic al rètol Wiki d'un joc.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.info.unknown_game",
+      "languages": {
+        "en_US": "[minimsg]<gray>I don't know a game called “%1”.</gray>",
+        "ca_ES": "[minimsg]<gray>No conec cap joc que es digui “%1”.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.info.no_guide",
+      "languages": {
+        "en_US": "[minimsg]<gray>There is no guide for %1 yet.</gray>",
+        "ca_ES": "[minimsg]<gray>Encara no hi ha informació de %1.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.language.usage",
+      "languages": {
+        "en_US": "[minimsg]<gray>Usage: <white>/lang [%1]</white></gray>",
+        "ca_ES": "[minimsg]<gray>Ús: <white>/lang [%1]</white></gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.language.unknown",
+      "languages": {
+        "en_US": "[minimsg]<red>Language “%1” is not available.</red>",
+        "ca_ES": "[minimsg]<red>L'idioma “%1” no està disponible.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.command.language.changed",
+      "languages": {
+        "en_US": "[minimsg]<green>Language changed to %1.</green>",
+        "ca_ES": "[minimsg]<green>Idioma canviat a %1.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.maps.empty",
+      "languages": {
+        "en_US": "[minimsg]<red>No maps available</red>",
+        "ca_ES": "[minimsg]<red>No hi ha mapes disponibles</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.instances.title",
+      "languages": {
+        "en_US": "[minimsg]Available instances",
+        "ca_ES": "[minimsg]Instàncies disponibles"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.all.games.title",
+      "languages": {
+        "en_US": "[minimsg]Active games",
+        "ca_ES": "[minimsg]Partides actives"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.instances.empty",
+      "languages": {
+        "en_US": "[minimsg]<gray>No active games. Open /m to create one.</gray>",
+        "ca_ES": "[minimsg]<gray>No hi ha partides actives. Obre /m per crear-ne una.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.instance.add",
+      "languages": {
+        "en_US": "[minimsg]<green>Create instance</green>",
+        "ca_ES": "[minimsg]<green>Crea una instància</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.instance.add.lore",
+      "languages": {
+        "en_US": "[minimsg]<white>Create a new instance</white>",
+        "ca_ES": "[minimsg]<white>Crea una instància nova</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.dev.in.development",
+      "languages": {
+        "en_US": "[minimsg]<green>[In development]</green>",
+        "ca_ES": "[minimsg]<green>[En desenvolupament]</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.dev.not.working",
+      "languages": {
+        "en_US": "[minimsg]<red>[Unavailable]</red>",
+        "ca_ES": "[minimsg]<red>[No disponible]</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.dev.known.issues",
+      "languages": {
+        "en_US": "[minimsg]<red>[Known issues]</red>",
+        "ca_ES": "[minimsg]<red>[Errors coneguts]</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.state.waiting",
+      "languages": {
+        "en_US": "[minimsg]Waiting for players",
+        "ca_ES": "[minimsg]Esperant jugadors"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.state.preparing",
+      "languages": {
+        "en_US": "[minimsg]Preparing",
+        "ca_ES": "[minimsg]Preparant"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.state.playing",
+      "languages": {
+        "en_US": "[minimsg]In progress",
+        "ca_ES": "[minimsg]En joc"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.state.complete",
+      "languages": {
+        "en_US": "[minimsg]Finished",
+        "ca_ES": "[minimsg]Finalitzada"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.state.resetting",
+      "languages": {
+        "en_US": "[minimsg]Resetting",
+        "ca_ES": "[minimsg]Reiniciant"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.state.editing",
+      "languages": {
+        "en_US": "[minimsg]Editing",
+        "ca_ES": "[minimsg]En edició"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.instance.join",
+      "languages": {
+        "en_US": "[minimsg]<green>Join: %1</green>",
+        "ca_ES": "[minimsg]<green>Entra: %1</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.players.count",
+      "languages": {
+        "en_US": "[minimsg]<green>Players: %1</green>",
+        "ca_ES": "[minimsg]<green>Jugadors: %1</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.spectators.count",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Spectators: %1</yellow>",
+        "ca_ES": "[minimsg]<yellow>Espectadors: %1</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.elapsed.time",
+      "languages": {
+        "en_US": "[minimsg]<white>Time: %1</white>",
+        "ca_ES": "[minimsg]<white>Temps: %1</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.game.progress",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Progress: %1%</aqua>",
+        "ca_ES": "[minimsg]<aqua>Progrés: %1%</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.instance.creating",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Creating an instance of %1…</yellow>",
+        "ca_ES": "[minimsg]<yellow>Creant una instància de %1…</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.instance.failed",
+      "languages": {
+        "en_US": "[minimsg]<red>Could not create an instance of %1.</red>",
+        "ca_ES": "[minimsg]<red>No s’ha pogut crear una instància de %1.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.player.not.found",
+      "languages": {
+        "en_US": "[minimsg]<red>Player not found: %1.</red>",
+        "ca_ES": "[minimsg]<red>No es troba el jugador: %1.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.navigation.instance.ready",
+      "languages": {
+        "en_US": "[minimsg]<gray>Instance %1 is ready. Join with %2.</gray>",
+        "ca_ES": "[minimsg]<gray>La instància %1 ja està llesta. Entra-hi amb %2.</gray>"
+      }
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -16,14 +17,21 @@ import com.biel.lobby.utilities.PaperMessages;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.BielAPI.Utils.Pair;
+import com.rexcantor64.triton.api.events.PlayerChangeLanguageSpigotEvent;
+import com.biel.lobby.localization.MessageKey;
+import com.biel.lobby.localization.Messages;
+import com.biel.lobby.localization.MessageArgument;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
 import com.biel.lobby.mapes.MapaResetejable.MapMode;
@@ -39,6 +47,8 @@ public class GestorMapes implements Listener{
 	public lobby plugin;
 	ArrayList<Pair<String, Double>> auto_ratings;
 	ArrayList<ContenidorMapa> Mapes = new ArrayList<>();
+	private record MenuSession(Inventory inventory, Runnable reopen) {}
+	private final Map<UUID, MenuSession> openMapMenus = new HashMap<>();
 	public GestorMapes() {
 
 		this.plugin = lobby.getPlugin();
@@ -98,12 +108,17 @@ public class GestorMapes implements Listener{
 	}
 	public void ObrirMenuMapes(Player ply){
 		queryAutoRatings();
-		int size = (int) (9 * (Math.ceil(Mapes.size() / 9) + 1));
-		int rankingBookSlot = size - 1;
-		IconMenu menu = new IconMenu(ChatColor.RED + "Tots els mapes", size, event -> {
+		int size = MapSelectionMenuLayout.sizeForGames(Mapes.size());
+		int languageSlot = MapSelectionMenuLayout.languageSlot(size);
+		int rankingBookSlot = MapSelectionMenuLayout.rankingSlot(size);
+		IconMenu menu = new IconMenu(Messages.menuTitleMarker(MessageKey.MAPS_TITLE), size, event -> {
 
 			event.setWillClose(false);
             int pos = event.getPosition();
+			if (pos == languageSlot) {
+				Messages.openLanguageSelector(event.getPlayer());
+				return;
+			}
             if (pos == rankingBookSlot) {
                 RankingBook.open(event.getPlayer());
                 return;
@@ -123,10 +138,37 @@ public class GestorMapes implements Listener{
 			menu.setOption(Mapes.indexOf(mapa), icon, mapa.getDisplayName(), mapa.getDescription());
 
 		}
+		menu.setOption(languageSlot, new ItemStack(Material.COMPASS),
+				Messages.sharedItemMarker(MessageKey.MAPS_LANGUAGE_NAME),
+				Messages.sharedItemMarker(MessageKey.MAPS_LANGUAGE_LORE));
 		menu.setOption(rankingBookSlot, new ItemStack(Material.WRITTEN_BOOK),
-				ChatColor.LIGHT_PURPLE + "Rànquing", ChatColor.WHITE + "Quins jocs puntuen i amb quin pes");
+				Messages.sharedItemMarker(MessageKey.MAPS_RANKING_NAME),
+				Messages.sharedItemMarker(MessageKey.MAPS_RANKING_LORE));
 
 		menu.open(ply);
+		Inventory openedInventory = ply.getOpenInventory().getTopInventory();
+		if (menu.isThisOne(openedInventory, ply)) openMapMenus.put(ply.getUniqueId(), new MenuSession(openedInventory, () -> ObrirMenuMapes(ply)));
+	}
+
+	@EventHandler
+	public void onMapMenuClosed(InventoryCloseEvent event) {
+		if (!(event.getPlayer() instanceof Player player)) return;
+		openMapMenus.computeIfPresent(player.getUniqueId(), (id, session) -> session.inventory() == event.getInventory() ? null : session);
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onLanguageChanged(PlayerChangeLanguageSpigotEvent event) {
+		Player player = Bukkit.getPlayer(event.getLanguagePlayer().getUUID());
+		if (player == null || !player.isOnline()) return;
+		MenuSession session = openMapMenus.get(player.getUniqueId());
+        Inventory expectedMenu = session == null ? null : session.inventory();
+		if (expectedMenu == null || player.getOpenInventory().getTopInventory() != expectedMenu) return;
+		Bukkit.getScheduler().runTask(plugin, () -> {
+			if (player.isOnline() && player.getOpenInventory().getTopInventory() == expectedMenu
+					&& openMapMenus.get(player.getUniqueId()) == session) {
+				session.reopen().run();
+			}
+		});
 	}
 	public ArrayList<Mapa> getAllInstances(){
 		ArrayList<Mapa> all = new ArrayList<>();
@@ -225,7 +267,7 @@ public class GestorMapes implements Listener{
 		public ArrayList<String> getDescription(){
 			ArrayList<String> l = new ArrayList<>();
 			int playerAmount = getPlayerAmount();
-			if(playerAmount > 0)l.add(ChatColor.GREEN + "" + playerAmount + " jugador" + (playerAmount > 1 ? "s" : ""));
+			if(playerAmount > 0)l.add(Messages.sharedNumberItemMarker(MessageKey.PLAYERS_COUNT, MessageArgument.number("count", playerAmount)));
 			return l;
 		}
 		public double getRating(){
@@ -293,15 +335,15 @@ public class GestorMapes implements Listener{
 		public String getDevelopmentString(){
 			switch(developmentState){
 			case InDevelopment:
-				return ChatColor.GREEN + "[En desenvolupament]";
+				return Messages.sharedItemMarker(MessageKey.DEV_IN_DEVELOPMENT);
 			case Alpha:
 				return ChatColor.DARK_RED + "[Alpha]";
 			case Beta:
 				return ChatColor.GOLD + "[Beta]";
 			case NotWorking:
-				return ChatColor.STRIKETHROUGH + "" + ChatColor.RED + "[No Funciona]";
+				return Messages.sharedItemMarker(MessageKey.DEV_NOT_WORKING);
 			case KnownIssues:
-				return ChatColor.RED + "[Errors coneguts]";
+				return Messages.sharedItemMarker(MessageKey.DEV_KNOWN_ISSUES);
 			case PreAlpha:
 				return ChatColor.RED + "[Pre-Alpha]";
 			case Release:
@@ -318,7 +360,7 @@ public class GestorMapes implements Listener{
 			l.add(0, getRatingString() + ChatColor.DARK_GRAY + " (" + Math.round(getRating() * 10D) / 10D + "%)");
 
 			if(this.getMapCount() == 0) {
-				l.add(1, ChatColor.RED + "No hi ha mapes disponibles");
+				l.add(1, Messages.sharedItemMarker(MessageKey.MAPS_EMPTY));
 			}
 
 			return l;
@@ -420,18 +462,18 @@ public class GestorMapes implements Listener{
 		}
 		/** Sends the player into an instance once it exists, and tells them if it never does. */
 		void joinWhenCreated(CompletableFuture<Joc> creation, Player ply){
-			PaperMessages.sendActionBar(ply, ChatColor.YELLOW + "Creant una instància " + Catalan.de(nom) + "...", 100);
+			PaperMessages.sendActionBar(ply, MessageKey.INSTANCE_CREATING, 100, MessageArgument.text("game", nom));
 			ply.playSound(ply.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.4F);
 			creation.whenComplete((game, failure) -> {
 				if (!ply.isOnline()) return;
 				if (failure != null) {
-					ply.sendMessage(ChatColor.RED + "No s'ha pogut crear la instància " + Catalan.de(nom) + ".");
+					Messages.send(ply, MessageKey.INSTANCE_FAILED, MessageArgument.text("game", nom));
 					return;
 				}
 				if (!lobby.isOnLobby(ply)) {
 					// They went somewhere else while the world was being copied; do not
 					// pull them out of it, just tell them where the new one is.
-					ply.sendMessage(ChatColor.GRAY + "La instància " + game.getMapName() + " ja està llesta: /minicatjoin " + game.getMapName());
+					Messages.send(ply, MessageKey.INSTANCE_READY, MessageArgument.text("instance", game.getMapName()), MessageArgument.text("command", "/minicatjoin " + game.getMapName()));
 					return;
 				}
 				game.Join(ply);
@@ -537,7 +579,7 @@ public class GestorMapes implements Listener{
 		}
 		public void ObrirMenu(Player ply){
 			Joc tempInstance = getTempInstance();
-			IconMenu menu = new IconMenu("Instàncies disponibles", 27, event -> {
+			IconMenu menu = new IconMenu(Messages.menuTitleMarker(MessageKey.INSTANCES_TITLE), 27, event -> {
 
                 event.setWillClose(false);
                 Joc tempInstance1 = getTempInstance();
@@ -557,8 +599,7 @@ public class GestorMapes implements Listener{
 
 			if(this.getMapCount() == 0) {
 
-				String msg = ChatColor.RED + "" + ChatColor.ITALIC + "No hi ha mapes disponibles";
-				PaperMessages.sendActionBar(ply, msg, 150);
+				PaperMessages.sendActionBar(ply, MessageKey.MAPS_EMPTY, 150);
 				ply.playSound(ply.getLocation(), Sound.ENTITY_VILLAGER_NO, 100.0F, 1.0F);
 				return;
 
@@ -569,30 +610,31 @@ public class GestorMapes implements Listener{
 				stack.setAmount(Math.max(1, mapa.getPlayers().size()));
 				String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
 				double gameProgressETA = mapa.getGameProgressETA();
-				String progressStr = ChatColor.AQUA + "Progrés: " + Math.round(gameProgressETA * 1000) / 10 + "% ETA";
+				String progressStr = Messages.sharedNumberItemMarker(MessageKey.GAME_PROGRESS, MessageArgument.number("percent", Math.round(gameProgressETA * 1000) / 10));
 				menu.setOption(Instàncies.indexOf(mapa), stack,
-						ChatColor.GREEN + "ENTRAR: " + mapa.NomWorld,
+						Messages.legacy(ply, MessageKey.INSTANCE_JOIN, MessageArgument.text("instance", mapa.NomWorld)),
 						ChatColor.WHITE + mapa.getGameName(),
-						ChatColor.WHITE + mapa.getGameState().name(),
-						ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()),
-						ChatColor.YELLOW + "Espectadors: " + mapa.getSpectators().size(),
-						"Temps: " + tStr, progressStr);
+						Messages.sharedItemMarker(stateKey(mapa)),
+						Messages.sharedNumberItemMarker(MessageKey.PLAYERS_COUNT, MessageArgument.number("count", mapa.getPlayers().size())),
+						Messages.sharedNumberItemMarker(MessageKey.SPECTATORS_COUNT, MessageArgument.number("count", mapa.getSpectators().size())),
+						Messages.legacy(ply, MessageKey.ELAPSED_TIME, MessageArgument.text("time", tStr)), progressStr);
 			}
 			MapMode mapMode = tempInstance.getMapMode();
 			if (!AlgunMapaDisponible() || mapMode == MapMode.MULTIPLE){
 				if(mapMode == MapMode.SINGLE)menu.setOption(26, new ItemStack(Material.EMERALD, 1),
-						ChatColor.GREEN + "Afegeix", ChatColor.WHITE + "Crea una nova instància");
+						Messages.sharedItemMarker(MessageKey.INSTANCE_ADD), Messages.sharedItemMarker(MessageKey.INSTANCE_ADD_LORE));
 				if(mapMode == MapMode.MULTIPLE){
 					ArrayList<String> multiWorldList = tempInstance.getMultiWorldList();
 					for (int i = 0; i < multiWorldList.size(); i++) {
 						String name = multiWorldList.get(i);
 						menu.setOption(26 - i, new ItemStack(Material.EMERALD, 1),
-								ChatColor.GREEN + name, ChatColor.WHITE + "Crear una nova instància");
+								ChatColor.GREEN + name, Messages.sharedItemMarker(MessageKey.INSTANCE_ADD_LORE));
 					}
 				}
 			}
 
 			menu.open(ply);
+            trackMenu(menu, ply, () -> ObrirMenu(ply));
 		}
 
 		public ArrayList<Joc> getInstàncies() {
@@ -605,24 +647,27 @@ public class GestorMapes implements Listener{
 	}
 
 	public void openAllGamesMenu(Player ply){
-		IconMenu menu = new IconMenu("Tots els jocs", 27, event -> {
+		IconMenu menu = new IconMenu(Messages.menuTitleMarker(MessageKey.ALL_GAMES_TITLE), 27, event -> {
 
             event.setWillClose(true);
             List<Joc> allInstances = getGames();
 
             int pos = event.getPosition();
+            if (pos >= allInstances.size()) return;
             Joc joc = allInstances.get(pos);
             joc.Join(event.getPlayer());
         });
 		List<Joc> games = getGames();
+        if (games.isEmpty()) menu.setOption(13, new ItemStack(Material.BARRIER), Messages.sharedItemMarker(MessageKey.INSTANCES_EMPTY));
 		for(Joc mapa : games){
 			ItemStack stack = new ItemStack(Material.BLACK_WOOL);
 			stack.setAmount(Math.max(1, mapa.getPlayers().size()));
 			String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
-			menu.setOption(games.indexOf(mapa), stack, mapa.getGameName(),ChatColor.WHITE + mapa.getGameName() + " (" + mapa.NomWorld + ")", ChatColor.WHITE + mapa.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(mapa.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + mapa.getSpectators().size(), "Temps: " + tStr);
+			menu.setOption(games.indexOf(mapa), stack, mapa.getGameName(),ChatColor.WHITE + mapa.getGameName() + " (" + mapa.NomWorld + ")", Messages.sharedItemMarker(stateKey(mapa)), Messages.sharedNumberItemMarker(MessageKey.PLAYERS_COUNT, MessageArgument.number("count", mapa.getPlayers().size())), Messages.sharedNumberItemMarker(MessageKey.SPECTATORS_COUNT, MessageArgument.number("count", mapa.getSpectators().size())), Messages.legacy(ply, MessageKey.ELAPSED_TIME, MessageArgument.text("time", tStr)));
 		}	
 
 		menu.open(ply);
+        trackMenu(menu, ply, () -> openAllGamesMenu(ply));
 	}
 	//	public ItemStack getIconForInstance(Mapa m){
 	//		ItemStack stack = new ItemStack(Material.OAK_PLANKS
@@ -632,10 +677,24 @@ public class GestorMapes implements Listener{
 	//			stack = wool.toItemStack();
 	//			stack.setAmount(mapa.getPlayers().size());
 	//			String tStr = new SimpleDateFormat("mm:ss").format(new Date(mapa.tempsTranscorregut()));//Integer.toString(mapa.segonsTranscorreguts());
-	//			menu.setOption(Instàncies.indexOf(j), stack, j.getMapName(),ChatColor.WHITE + j.NomWorld, ChatColor.WHITE + j.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(j.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + j.getSpectators().size(), "Temps: " + tStr);
+	//			menu.setOption(Instàncies.indexOf(j), stack, j.getMapName(),ChatColor.WHITE + j.NomWorld, ChatColor.WHITE + j.getGameState().name(), ChatColor.GREEN + "Jugadors: " + Integer.toString(j.getPlayers().size()), ChatColor.YELLOW + "Espectadors:" + j.getSpectators().size(), Messages.legacy(ply, MessageKey.ELAPSED_TIME, MessageArgument.text("time", tStr)));
 	//		
 	//		}
 	//	}
+    private void trackMenu(IconMenu menu, Player player, Runnable reopen) {
+        Inventory inventory = player.getOpenInventory().getTopInventory();
+        if (menu.isThisOne(inventory, player)) openMapMenus.put(player.getUniqueId(), new MenuSession(inventory, reopen));
+    }
+    private static MessageKey stateKey(Joc game) {
+        return switch (game.getGameState()) {
+            case WaitingForPlayers -> MessageKey.STATE_WAITING;
+            case Preparing -> MessageKey.STATE_PREPARING;
+            case InGame -> MessageKey.STATE_PLAYING;
+            case Complete -> MessageKey.STATE_COMPLETE;
+            case Resetejant -> MessageKey.STATE_RESETTING;
+            case Editant -> MessageKey.STATE_EDITING;
+        };
+    }
 	public List<Joc> getGames() {
 		return getAllInstances().stream().filter(m -> m instanceof Joc).map(m -> (Joc)m).collect(Collectors.toList());
 	}

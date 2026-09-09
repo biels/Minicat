@@ -1,4 +1,5 @@
 package com.biel.lobby;
+import com.biel.lobby.localization.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -51,9 +52,9 @@ public class LoginListener implements Listener {
 		if (previous != null) {
 			Joc.Seat seat = previous.seatOf(player.getUniqueId());
 			if (previous.getGameState() == Joc.GameState.Complete) {
-				player.sendMessage(ChatColor.GRAY + "La partida " + Catalan.de(previous.getGameName()) + " ha acabat mentre eres fora.");
+				Messages.send(player, MessageKey.MATCH_ENDED_AWAY, MessageArgument.text("game", previous.getGameName()));
 			} else if (seat.getState() == Joc.Seat.State.VACANT) {
-				player.sendMessage(ChatColor.GRAY + "Vas abandonar la partida " + Catalan.de(previous.getGameName()) + ".");
+				Messages.send(player, MessageKey.MATCH_LEFT_AWAY, MessageArgument.text("game", previous.getGameName()));
 			}
 		}
 		
@@ -113,7 +114,7 @@ public class LoginListener implements Listener {
 			evt.setMotd(lastMotd);
 		} catch (Exception e) {
 			plugin.getLogger().log(java.util.logging.Level.WARNING, "Error carregant el rànquing", e);
-			evt.setMotd(ChatColor.GREEN + "Carregant rànquing...");
+			evt.setMotd(ChatColor.GREEN + "Loading rankings...");
 		}
 
 	}

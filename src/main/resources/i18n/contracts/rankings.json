@@ -1,0 +1,238 @@
+{
+  "keys": {
+    "minicat.rankings.title": {
+      "constant": "RANKINGS_TITLE",
+      "purpose": "Minicat rankings",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "item",
+        "hologram",
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.lore": {
+      "constant": "RANKINGS_LORE",
+      "purpose": "View player rankings.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "item",
+        "hologram",
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.unavailable": {
+      "constant": "RANKINGS_UNAVAILABLE",
+      "purpose": "Rankings are unavailable right now.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "item",
+        "hologram",
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.unranked": {
+      "constant": "RANKINGS_UNRANKED",
+      "purpose": "Play matches to establish your rank.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "item",
+        "hologram",
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.ranked.on": {
+      "constant": "RANKED_ON",
+      "purpose": "Ranked scoring is enabled.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "item",
+        "hologram",
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.ranked.off": {
+      "constant": "RANKED_OFF",
+      "purpose": "Ranked scoring is disabled.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "item",
+        "hologram",
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.book.title": {
+      "constant": "RANK_BOOK_TITLE",
+      "purpose": "Minicat rankings",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "item",
+        "hologram",
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.position": {
+      "constant": "RANK_POSITION",
+      "purpose": "Rankings (#%1)",
+      "arguments": [
+        {
+          "name": "rank",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "item"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.value": {
+      "constant": "RANK_VALUE",
+      "purpose": "Elo: %1 #%2",
+      "arguments": [
+        {
+          "name": "elo",
+          "type": "NUMBER"
+        },
+        {
+          "name": "rank",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "chat",
+        "item",
+        "scoreboard"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.row": {
+      "constant": "RANK_ROW",
+      "purpose": "#%1 %2 — %3",
+      "arguments": [
+        {
+          "name": "rank",
+          "type": "NUMBER"
+        },
+        {
+          "name": "player",
+          "type": "TEXT"
+        },
+        {
+          "name": "elo",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "chat",
+        "hologram"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.book.intro": {
+      "constant": "RANK_BOOK_INTRO",
+      "purpose": "Minicat rankings\n\nEach match changes Elo using a weight, K. More mature games carry more weight.\n\nRelease: K %1\nBeta: K %2\nAlpha: K %3\nPre-Alpha: K %4\nKnown issues: K %5\n\nMaps can override K.",
+      "arguments": [
+        {
+          "name": "release",
+          "type": "NUMBER"
+        },
+        {
+          "name": "beta",
+          "type": "NUMBER"
+        },
+        {
+          "name": "alpha",
+          "type": "NUMBER"
+        },
+        {
+          "name": "preAlpha",
+          "type": "NUMBER"
+        },
+        {
+          "name": "issues",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "book"
+      ],
+      "maxTemplateCharacters": 600
+    },
+    "minicat.rankings.book.rules": {
+      "constant": "RANK_BOOK_RULES",
+      "purpose": "When a match counts\n\n- Lasts more than 20 seconds\n- Teams are balanced\n- Ranked scoring is on\n- No player has been penalized\n\nLeaving an advanced match costs Elo, except for network failures.\n\n/elo · /top",
+      "arguments": [],
+      "surfaces": [
+        "book"
+      ],
+      "maxTemplateCharacters": 600
+    },
+    "minicat.rankings.book.games": {
+      "constant": "RANK_BOOK_GAMES",
+      "purpose": "Games and weights",
+      "arguments": [],
+      "surfaces": [
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.book.row": {
+      "constant": "RANK_BOOK_ROW",
+      "purpose": "%1 K %2",
+      "arguments": [
+        {
+          "name": "game",
+          "type": "TEXT"
+        },
+        {
+          "name": "weight",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.book.map": {
+      "constant": "RANK_BOOK_MAP",
+      "purpose": "  %1: K %2",
+      "arguments": [
+        {
+          "name": "map",
+          "type": "TEXT"
+        },
+        {
+          "name": "weight",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.rankings.book.leaving": {
+      "constant": "RANK_BOOK_LEAVING",
+      "purpose": "Explains leaving penalties and ranking commands.",
+      "arguments": [],
+      "surfaces": [
+        "book"
+      ],
+      "maxTemplateCharacters": 220
+    }
+  }
+}
