@@ -1,0 +1,55 @@
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/Interactions.java
+  s_fc7dc4d4e66a07::t_a413133dce0c2d 6
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/ObsidianDefenders.java
+  s_fc7dc4d4e66a07::t_de898d08135672 98,740-781,800,805,810,1295,1883-1885,1989,2422,2430
+build.gradle
+  s_fc7dc4d4e66a07::t_0f8d43e3eb38d3 67
+.idea/misc.xml
+  s_667b83b1d0304d::t_e8b75ed48d975c 6-54
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/Watchtowers.java
+  s_fc7dc4d4e66a07::t_a413133dce0c2d 8,17,19-20,23-25,31,36-46,54
+src/test/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/InteractionsTest.java
+  s_fc7dc4d4e66a07::t_0f8d43e3eb38d3 16
+src/test/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/LauncherCalibration.java
+  s_fc7dc4d4e66a07::t_0f8d43e3eb38d3 6,11,24,60,77-97
+  s_fc7dc4d4e66a07::t_846cf5efc9ae0d 63-64
+src/test/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/WatchtowersTest.java
+  s_fc7dc4d4e66a07::t_0f8d43e3eb38d3 14-18,59-60,68,78
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/LauncherController.java
+  s_fc7dc4d4e66a07::t_a413133dce0c2d 67,70-71,85,112,144,146,211
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/package-info.java
+  s_fc7dc4d4e66a07::t_7f849e2b2b89f4 7,9
+docs/obsidian-interactions.md
+  s_fc7dc4d4e66a07::t_7f849e2b2b89f4 20,53,91-93,114-115,150-151
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/UpgradeController.java
+  s_fc7dc4d4e66a07::t_a413133dce0c2d 31,38,41,46-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ef74851df628fee3d1a223b39e5d50d943b82a36",
+  "prompts": {},
+  "humans": {
+    "h_c9701b0283fbf3": {
+      "author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_667b83b1d0304d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08591-a615-7f01-af4b-075363019da2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_fc7dc4d4e66a07": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08601-10ea-74f0-80f8-84037661d3a3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
