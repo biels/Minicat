@@ -5,13 +5,9 @@
  * {@link com.biel.lobby.mapes.jocs.obsidiandefenders.ObsidianDefenders} is the game and composes
  * the rest in {@code initialize()}:
  * <ul>
- * <li>{@link com.biel.lobby.mapes.jocs.obsidiandefenders.GoldScore}: each team's owned gold plus completed purchases, the number the lookout shows.</li>
- * <li>{@link com.biel.lobby.mapes.jocs.obsidiandefenders.TeamUpgrades}: what a team has bought this match (archers, armor, launchers), in server ticks.</li>
+ * <li>{@link com.biel.lobby.mapes.jocs.obsidiandefenders.LauncherController}: the watchtower launchers as a listener: who may use one, when it fires.</li>
  * <li>{@link com.biel.lobby.mapes.jocs.obsidiandefenders.UpgradeController}: the upgrade signs and the purchase flow behind them.</li>
- * <li>{@link com.biel.lobby.mapes.jocs.obsidiandefenders.Watchtowers}: the four surveyed watchtower layouts and their match-local state.</li>
- * <li>{@link com.biel.lobby.mapes.jocs.obsidiandefenders.LauncherController}: the watchtower launchers as a listener: who may use one, when it reloads.</li>
- * <li>{@link com.biel.lobby.mapes.jocs.obsidiandefenders.LauncherTrajectory}: the one airborne impulse a launcher gives, chosen so the landing is safe.</li>
- * <li>{@link com.biel.lobby.mapes.jocs.obsidiandefenders.Interactions}: the map's fixed positions, sign text and loot movement.</li>
+ * <li>{@code utils}: the calculations and match-state models these lean on, checked without a server.</li>
  * </ul>
  */
 package com.biel.lobby.mapes.jocs.obsidiandefenders;

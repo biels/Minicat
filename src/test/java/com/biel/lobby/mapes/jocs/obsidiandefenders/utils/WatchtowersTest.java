@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs.obsidiandefenders;
+package com.biel.lobby.mapes.jocs.obsidiandefenders.utils;
 
 import java.util.ArrayList;
 import java.util.HashSet;

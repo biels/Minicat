@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs.obsidiandefenders;
+package com.biel.lobby.mapes.jocs.obsidiandefenders.utils;
 
 import com.biel.lobby.utilities.SweptBoxCollision;
 import java.util.ArrayList;
@@ -12,19 +12,19 @@ import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 /** Chooses one natural airborne impulse; it never steers a player after launch. */
-final class LauncherTrajectory {
+public final class LauncherTrajectory {
     // Airborne recurrence and Y/X/Z collision order used by prismarine-physics.
-    static final double HORIZONTAL_DRAG = 0.91;
-    static final double VERTICAL_DRAG = (double) (float) 0.98;
-    static final double GRAVITY = 0.08;
+    public static final double HORIZONTAL_DRAG = 0.91;
+    public static final double VERTICAL_DRAG = (double) (float) 0.98;
+    public static final double GRAVITY = 0.08;
     private static final Vector HALF_BODY = new Vector(0.3, 0.9, 0.3);
 
-    interface Terrain {
+    public interface Terrain {
         List<BoundingBox> obstacles(Vector feet, Vector movement);
         boolean leaves(Vector feet);
     }
 
-    static Vector find(Watchtowers.Tower tower, Vector origin, Terrain terrain) {
+    public static Vector find(Watchtowers.Tower tower, Vector origin, Terrain terrain) {
         Vector heading = new Vector(tower.rearX() + 0.5 + tower.direction() * 14 - origin.getX(),
                 0, tower.middleZ() + 0.5 - origin.getZ()).normalize();
         for (int up = 8; up <= 18; up++) {
@@ -36,7 +36,7 @@ final class LauncherTrajectory {
         return null;
     }
 
-    static boolean safeLanding(Watchtowers.Tower tower, Vector origin, Vector impulse, Terrain terrain) {
+    public static boolean safeLanding(Watchtowers.Tower tower, Vector origin, Vector impulse, Terrain terrain) {
         Vector feet = origin.clone(), velocity = impulse.clone();
         for (int step = 0; step < 65; step++) {
             boolean landed = false;
@@ -67,7 +67,7 @@ final class LauncherTrajectory {
         return false;
     }
 
-    static Terrain terrain(World world) {
+    public static Terrain terrain(World world) {
         Map<Watchtowers.Position, List<BoundingBox>> cache = new HashMap<>();
         return new Terrain() {
             public List<BoundingBox> obstacles(Vector feet, Vector movement) {

@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs.obsidiandefenders;
+package com.biel.lobby.mapes.jocs.obsidiandefenders.utils;
 
 import com.google.gson.Gson;
 import java.nio.file.Files;

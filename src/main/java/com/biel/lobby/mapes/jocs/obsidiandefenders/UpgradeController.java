@@ -1,5 +1,7 @@
 package com.biel.lobby.mapes.jocs.obsidiandefenders;
 
+import com.biel.lobby.mapes.jocs.obsidiandefenders.utils.TeamUpgrades;
+import com.biel.lobby.mapes.jocs.obsidiandefenders.utils.Watchtowers;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

@@ -1,19 +1,19 @@
-package com.biel.lobby.mapes.jocs.obsidiandefenders;
+package com.biel.lobby.mapes.jocs.obsidiandefenders.utils;
 
 import org.bukkit.util.Vector;
 import org.bukkit.ChatColor;
 
 /** Shared positions, display text and movement calculations for Obsidian interactions. */
-final class Interactions {
-    static final double PORTAL_RADIUS = 2;
-    static final double PICKAXE_RADIUS = 4;
-    static final int PICKAXE_PICKUP_DELAY = 10;
+public final class Interactions {
+    public static final double PORTAL_RADIUS = 2;
+    public static final double PICKAXE_RADIUS = 4;
+    public static final int PICKAXE_PICKUP_DELAY = 10;
 
-    static Vector lookoutFloor() {
+    public static Vector lookoutFloor() {
         return new Vector(662, 73, -1392);
     }
 
-    static String[] lookoutLines(long redGold, long blueGold, int redKills, int blueKills) {
+    public static String[] lookoutLines(long redGold, long blueGold, int redKills, int blueKills) {
         return new String[]{
             ChatColor.GOLD + "Punt de Guaita",
             ChatColor.WHITE + "Or total",
@@ -22,13 +22,13 @@ final class Interactions {
         };
     }
 
-    static String formatGold(long nuggets) {
+    public static String formatGold(long nuggets) {
         return java.math.BigDecimal.valueOf(nuggets, 3).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + "k";
     }
 
-    record PortalPosition(Vector entrance, Vector arrival, float arrivalYaw) {}
+    public record PortalPosition(Vector entrance, Vector arrival, float arrivalYaw) {}
 
-    static PortalPosition portal(int team) {
+    public static PortalPosition portal(int team) {
         return switch (team) {
             case 0 -> new PortalPosition(new Vector(616.5, 41, -1422.5), new Vector(613.5, 41, -1371.5), 180);
             case 1 -> new PortalPosition(new Vector(712.5, 41, -1379.5), new Vector(713.5, 41, -1428.5), 0);
@@ -36,12 +36,12 @@ final class Interactions {
         };
     }
 
-    static boolean inPortal(Vector player, Vector entrance) {
+    public static boolean inPortal(Vector player, Vector entrance) {
         double dx = player.getX() - entrance.getX(), dz = player.getZ() - entrance.getZ();
         return Math.abs(player.getY() - entrance.getY()) < 1 && dx * dx + dz * dz <= PORTAL_RADIUS * PORTAL_RADIUS;
     }
 
-    static Vector outwardPush(Vector player, Vector center, Vector fallbackDirection) {
+    public static Vector outwardPush(Vector player, Vector center, Vector fallbackDirection) {
         Vector outward = player.clone().subtract(center);
         if (Math.abs(outward.getY()) > 2) return new Vector();
         outward.setY(0);
@@ -54,7 +54,7 @@ final class Interactions {
         return outward.normalize().multiply(0.4).setY(0.2);
     }
 
-    static Vector lootVelocity(Vector origin, Vector target) {
+    public static Vector lootVelocity(Vector origin, Vector target) {
         Vector toward = target.clone().subtract(origin);
         double distance = toward.length();
         return distance < 0.001 ? new Vector() : toward.multiply(Math.min(0.4, distance) / distance);
