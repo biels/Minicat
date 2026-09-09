@@ -28,6 +28,7 @@ import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
 import com.biel.lobby.mapes.MapaResetejable.MapMode;
 import com.biel.lobby.mapes.jocs.*;
+import com.biel.lobby.mapes.jocs.inkwars.InkWars;
 
 
 public class GestorMapes implements Listener{

@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.inkwars;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -49,11 +49,6 @@ import org.bukkit.util.Vector;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.jocs.inkwars.InkSplash;
-import com.biel.lobby.mapes.jocs.inkwars.InkStream;
-import com.biel.lobby.mapes.jocs.inkwars.InkSurfaceFlow;
-import com.biel.lobby.mapes.jocs.inkwars.WetInk;
-import com.biel.lobby.mapes.jocs.inkwars.SquidMotion;
 import com.biel.lobby.utilities.SweptBoxCollision;
 import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.ScoreBoardUpdater;

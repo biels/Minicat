@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.inkwars;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -25,12 +25,10 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.bukkit.util.VoxelShape;
 
-import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid;
-import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.Keys;
-import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid.SwimSound;
+import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo.Squid;
+import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo.Squid.Keys;
+import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo.Squid.SwimSound;
 import com.biel.lobby.utilities.SweptBoxCollision;
-import com.biel.lobby.mapes.jocs.inkwars.SquidMotion;
-import com.biel.lobby.mapes.jocs.inkwars.InkStream;
 
 /** Runs the real movement controller against deterministic collision shapes without a server. */
 public final class InkWarsMovementTest {

@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.inkwars;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,9 +26,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.biel.lobby.mapes.Joc;
-import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo;
-import com.biel.lobby.mapes.jocs.InkWars.InkWarsPlayerInfo.Squid;
-import com.biel.lobby.mapes.jocs.inkwars.InkStream;
+import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo;
+import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo.Squid;
 
 class InkWarsLifecycleTest {
     private static final Map<String, Player> onlinePlayers = new HashMap<>();
