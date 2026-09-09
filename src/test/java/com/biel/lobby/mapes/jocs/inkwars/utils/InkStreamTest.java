@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs.inkwars;
+package com.biel.lobby.mapes.jocs.inkwars.utils;
 
 import java.lang.reflect.Proxy;
 import java.util.List;

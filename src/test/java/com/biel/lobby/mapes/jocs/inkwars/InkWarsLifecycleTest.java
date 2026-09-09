@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo;
+import com.biel.lobby.mapes.jocs.inkwars.utils.InkStream;
 import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo.Squid;
 
 class InkWarsLifecycleTest {

@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs.inkwars;
+package com.biel.lobby.mapes.jocs.inkwars.utils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

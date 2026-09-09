@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs.inkwars;
+package com.biel.lobby.mapes.jocs.inkwars.utils;
 
 /** Ink still wet on a block: who laid it and how much is left. It dries by one per second and flows while it is above what the surface holds. */
 public final class WetInk {

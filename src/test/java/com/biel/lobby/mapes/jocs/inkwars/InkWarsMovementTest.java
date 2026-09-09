@@ -26,6 +26,8 @@ import org.bukkit.util.Vector;
 import org.bukkit.util.VoxelShape;
 
 import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo.Squid;
+import com.biel.lobby.mapes.jocs.inkwars.utils.InkStream;
+import com.biel.lobby.mapes.jocs.inkwars.utils.SquidMotion;
 import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo.Squid.Keys;
 import com.biel.lobby.mapes.jocs.inkwars.InkWars.InkWarsPlayerInfo.Squid.SwimSound;
 import com.biel.lobby.utilities.SweptBoxCollision;
