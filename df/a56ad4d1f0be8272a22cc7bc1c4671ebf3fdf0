@@ -1,0 +1,48 @@
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/package-info.java
+  s_d4244df752681a::t_bd77c7b17c0a31 6
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/utils/package-info.java
+  s_d4244df752681a::t_bd77c7b17c0a31 1-12
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/utils/InkStreamTest.java
+  s_d4244df752681a::t_23956a5163523e 1
+  s_d4244df752681a::t_da143ff5598512 2-95
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/utils/InkSplash.java
+  s_d4244df752681a::t_b800e514e3b824 1
+  s_d4244df752681a::t_7db98e295c80ef 2-185
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/utils/SquidMotionTest.java
+  s_d4244df752681a::t_da143ff5598512 2-109
+  s_d4244df752681a::t_e6ead47d72f017 1
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkWarsMovementTest.java
+  s_d4244df752681a::t_21a264a1c49df1 29-30
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/utils/InkSurfaceFlow.java
+  s_d4244df752681a::t_7db98e295c80ef 2-106
+  s_d4244df752681a::t_67dfccfc5b23e7 1
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/utils/WetInk.java
+  s_d4244df752681a::t_7db98e295c80ef 2-12
+  s_d4244df752681a::t_5eac62a0461927 1
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/utils/InkStream.java
+  s_d4244df752681a::t_7db98e295c80ef 2-140
+  s_d4244df752681a::t_01805dc5782bf4 1
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkWarsLifecycleTest.java
+  s_d4244df752681a::t_21a264a1c49df1 30
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkWars.java
+  s_d4244df752681a::t_85e53661a06eba 52-56
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/utils/SquidMotion.java
+  s_d4244df752681a::t_7db98e295c80ef 2-114
+  s_d4244df752681a::t_b6fbdfe5678a84 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "dfa56ad4d1f0be8272a22cc7bc1c4671ebf3fdf0",
+  "prompts": {},
+  "sessions": {
+    "s_d4244df752681a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2612296-91f9-4559-b845-d33cba0ea04f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
