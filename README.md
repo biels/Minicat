@@ -14,7 +14,8 @@ first, then run `./gradlew clean build` here. JUnit discovers tests under
 `src/test/java`; `./gradlew test --tests '*InkWarsLifecycleTest'` runs one suite.
 
 Game rules and server integration live in `src/main/java/com/biel/lobby/mapes/jocs`:
-a game is one class, or one package once it has a second type, per
+a game is one class, or one package once it has a second type, with its calculations
+under a `utils` subpackage, per
 [the game package layout](docs/game-package-layout.md). Shared minion behavior
 lives in `minions`.
 

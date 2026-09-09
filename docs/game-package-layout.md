@@ -26,9 +26,17 @@ A game has exactly one of two shapes, and the tree alone tells you which:
   collision: shared substrate lives outside `jocs`, even while only one game uses it yet.
 - **Promotion is triggered by the second top-level type**, never by line count. A long
   single class is allowed; a prefixed sibling is not. Demotion is never required.
-- **Only the entry class is public.** Every other type in a game package is
-  package-private. A game never imports another game's package; what two games share is
-  lifted to a shared home first (see `minions`, and the sweep below).
+- **A game package has two levels.** The game level holds the entry class and its
+  controllers: the types that register listeners, schedule tasks or hold the world. Its
+  `utils` subpackage holds the secondary things: the calculations and match-state models
+  those lean on, which register nothing, schedule nothing and never name the game class.
+  `utils` is required as soon as a game package has one such type; nothing deeper exists.
+- **Visibility follows the level.** At the game level only the entry class is public and
+  the controllers are package-private. Java package-private does not cross into a
+  subpackage, so `utils` types and the members the game uses are public; that is
+  harmless, because they hold no listener and no world. A game never imports another
+  game's package; what two games share is lifted to a shared home first (see `minions`,
+  and the sweep below).
 - **Inner classes stay inner.** Team classes (`EquipInkWars`, `EquipCaça`), player-info
   classes and the enums a game's rules read are part of the entry class, not the trigger
   for a package.
@@ -56,19 +64,25 @@ game is one package, and its features are files inside it.
 
 ```
 jocs/obsidiandefenders/
-  package-info.java        one paragraph: the game in a sentence, then each collaborator's role
-  ObsidianDefenders.java   public; the Joc subclass; composes the collaborators in initialize()
-  GoldScore.java           package-private collaborators, named without the game prefix
-  TeamUpgrades.java        (the package already says "obsidian")
-  Watchtowers.java
-  LauncherController.java
-  LauncherTrajectory.java
-  UpgradeController.java
-  ...
+  package-info.java        one paragraph: the game in a sentence, then each part's role
+  ObsidianDefenders.java   public; the Joc subclass; composes the controllers in initialize()
+  LauncherController.java  package-private controllers, named without the game prefix
+  UpgradeController.java   (the package already says "obsidian")
+  utils/
+    package-info.java      one line per type
+    GoldScore.java         public; the calculations and match-state models the game and
+    TeamUpgrades.java      its controllers lean on: no listener, no scheduler, no game class,
+    Watchtowers.java       every one of them checked without a server
+    LauncherTrajectory.java
+    Interactions.java
 ```
 
-- `package-info.java` is required. The tree is the map; the paragraph is what a cold
-  reader gets before opening 3700 lines.
+- `package-info.java` is required at both levels. The tree is the map; the paragraph is
+  what a cold reader gets before opening 3700 lines.
+- The name `utils` is a deliberate exception to the constitution's ban on `utils` and
+  `helpers`. The ban targets a grab-bag that hides what a thing is; here the word is a fixed
+  level in a fixed shape, every game's second tier under the same name, and each type
+  inside keeps a sharp name of its own. The ban still holds for class names.
 - Collaborators drop the game prefix. `ObsidianGoldScore` in `jocs` was a namespace
   workaround; `obsidiandefenders.GoldScore` says the same thing once.
 - **Collaborators are composed, not looked up.** The entry class constructs them in
@@ -77,10 +91,10 @@ jocs/obsidiandefenders/
   `ObsidianDefenders`, and that is why five of them have server-free unit tests. A
   collaborator that genuinely needs the game takes it as a constructor argument
   (`Turret(…, Torres joc, …)`, today), never through a static lookup.
-- Server-independent calculation (the `inkwars` physics, `GoldScore`, `LauncherTrajectory`)
-  and Bukkit-bound controllers (`LauncherController implements Listener`) live side by
-  side in the same package. The test says which is which; a second package level is not
-  needed.
+- The line between the levels is mechanical: a listener, a scheduled task or the world
+  puts a type at the game level; otherwise it is `utils`. Rainbow Clay's
+  `SnapshotPublisher` schedules and holds the game, so it stays at the game level and
+  that package has no `utils` yet.
 
 ## Promotion procedure
 
@@ -91,8 +105,8 @@ jocs/obsidiandefenders/
    name outside Java: today that is the `calibrateObsidianLaunchers` task in `build.gradle`.
 3. Search for what the moved files import from other games. Anything found is lifted to a
    shared home in a commit of its own, before the move.
-4. Second commit: drop the game prefix from the collaborators and their tests, and add
-   `package-info.java`.
+4. Second commit: drop the game prefix from the collaborators and their tests, put the
+   calculations and models under `utils`, and add both `package-info.java` files.
 5. `./gradlew build`. The game's name in the menu, the template folder, the guide slug
    and the bot scripts are unchanged by construction; a `git grep` for the old FQN must
    come back empty.
@@ -108,6 +122,7 @@ In dependency order. Each line is one or two commits.
 | 3 | Ink Wars: move `InkWars.java`, `InkWarsLifecycleTest`, `InkWarsMovementTest` into `inkwars/`. Package exists; nothing to rename. | done |
 | 4 | Obsidian Defenders: `ObsidianDefenders` + 7 siblings + 6 tests into `obsidiandefenders/`; `build.gradle` main class; then the prefix-drop commit. `ObsidianInteractions` (portal geometry + loot velocity + lookout sign text) is a grab-bag name; splitting it is rename debt, not part of the move. | done |
 | 5 | Rainbow Clay: `RainbowClay` + `RainbowClaySnapshotPublisher` → `rainbowclay/SnapshotPublisher`. `AgentSnapshotHttpServer` is generic and stays in `agent`. `lobby.java` keeps its public call. | done |
+| 6 | The `utils` level: Obsidian Defenders' five models and calculations and Ink Wars' five ink and squid calculations move under `utils`, with their suites; the controllers stay. | done |
 
 Torres stays a single class. `Turret` is shareable across game modes and stays in
 `utilities`; that it still takes a `Torres` in its constructor (for the turret list, the
