@@ -54,7 +54,8 @@ public final class RankingBook {
                 .append(Messages.component(player, MessageKey.RANK_BOOK_ROW, MessageArgument.text("game", weight.name()), MessageArgument.number("weight", weight.k())));
             pages.add(page);
             // Map overrides get their own page so the list cannot push the game weight off-screen.
-            for (String note : weight.mapNotes()) pages.add(Component.text(note).color(net.kyori.adventure.text.format.NamedTextColor.BLACK));
+            for (MapWeight note : weight.mapNotes()) pages.add(Messages.component(player, MessageKey.RANK_BOOK_MAP,
+                MessageArgument.text("map", note.name()), MessageArgument.number("weight", note.k())));
         }
         return Book.book(Messages.component(player, MessageKey.RANK_BOOK_TITLE), Component.text("Minicat"), pages);
     }
@@ -65,12 +66,12 @@ public final class RankingBook {
 		for (ContenidorJoc container : Com.getGest().getGameContainers()) {
 			int defaultK = container.getDevelopmentState().getDefaultEloK();
 			Joc template = container.getTempInstance();
-			List<String> mapNotes = new ArrayList<>();
+			List<MapWeight> mapNotes = new ArrayList<>();
 			double k = defaultK;
 			if (template != null && template.getMapMode() == MapMode.MULTIPLE) {
 				for (String mapName : template.getMultiWorldList()) {
 					double mapK = template.getTemplateEloBaseK(mapName);
-					if (mapK != defaultK) mapNotes.add(mapName + " K " + Math.round(mapK));
+					if (mapK != defaultK) mapNotes.add(new MapWeight(mapName, Math.round(mapK)));
 				}
 			} else if (template != null) {
 				k = template.getTemplateEloBaseK(null);
@@ -82,6 +83,7 @@ public final class RankingBook {
 	}
 
 
-	private record GameWeight(String name, int k, List<String> mapNotes) {
+	private record MapWeight(String name, long k) {}
+	private record GameWeight(String name, int k, List<MapWeight> mapNotes) {
 	}
 }

@@ -90,14 +90,6 @@
     },
     {
       "type": "text",
-      "key": "minicat.match.invite.hover",
-      "languages": {
-        "en_US": "[minimsg]Join %1",
-        "ca_ES": "[minimsg]Entra a %1"
-      }
-    },
-    {
-      "type": "text",
       "key": "minicat.match.player.left",
       "languages": {
         "en_US": "[minimsg]<gray>%1 left the lobby before the action completed.</gray>",
@@ -190,6 +182,14 @@
       "languages": {
         "en_US": "[minimsg]<green>Join a game to use this command.</green>",
         "ca_ES": "[minimsg]<green>Entra en una partida per fer servir aquesta ordre.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.resumed.self",
+      "languages": {
+        "en_US": "[minimsg]<green>You returned to %1 (%2).</green>",
+        "ca_ES": "[minimsg]<green>Has tornat a %1 (%2).</green>"
       }
     }
   ]

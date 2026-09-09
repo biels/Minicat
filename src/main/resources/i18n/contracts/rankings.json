@@ -84,20 +84,6 @@
       ],
       "maxTemplateCharacters": 220
     },
-    "minicat.rankings.position": {
-      "constant": "RANK_POSITION",
-      "purpose": "Rankings (#%1)",
-      "arguments": [
-        {
-          "name": "rank",
-          "type": "NUMBER"
-        }
-      ],
-      "surfaces": [
-        "item"
-      ],
-      "maxTemplateCharacters": 220
-    },
     "minicat.rankings.value": {
       "constant": "RANK_VALUE",
       "purpose": "Elo: %1 #%2",
@@ -115,29 +101,6 @@
         "chat",
         "item",
         "scoreboard"
-      ],
-      "maxTemplateCharacters": 220
-    },
-    "minicat.rankings.row": {
-      "constant": "RANK_ROW",
-      "purpose": "#%1 %2 — %3",
-      "arguments": [
-        {
-          "name": "rank",
-          "type": "NUMBER"
-        },
-        {
-          "name": "player",
-          "type": "TEXT"
-        },
-        {
-          "name": "elo",
-          "type": "NUMBER"
-        }
-      ],
-      "surfaces": [
-        "chat",
-        "hologram"
       ],
       "maxTemplateCharacters": 220
     },

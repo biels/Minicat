@@ -21,6 +21,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
@@ -49,6 +51,16 @@ public class GestorMapes implements Listener{
 	ArrayList<ContenidorMapa> Mapes = new ArrayList<>();
 	private record MenuSession(Inventory inventory, Runnable reopen) {}
 	private final Map<UUID, MenuSession> openMapMenus = new HashMap<>();
+    private static final class SelectorReturn {
+        final Inventory inventory;
+        final Runnable reopen;
+        final World world;
+        boolean selected;
+        SelectorReturn(Inventory inventory, Runnable reopen, World world) {
+            this.inventory = inventory; this.reopen = reopen; this.world = world;
+        }
+    }
+    private final Map<UUID, SelectorReturn> selectorReturns = new HashMap<>();
 	public GestorMapes() {
 
 		this.plugin = lobby.getPlugin();
@@ -116,7 +128,7 @@ public class GestorMapes implements Listener{
 			event.setWillClose(false);
             int pos = event.getPosition();
 			if (pos == languageSlot) {
-				Messages.openLanguageSelector(event.getPlayer());
+				openLanguageSelectorFromMenu(event.getPlayer());
 				return;
 			}
             if (pos == rankingBookSlot) {
@@ -150,16 +162,60 @@ public class GestorMapes implements Listener{
 		if (menu.isThisOne(openedInventory, ply)) openMapMenus.put(ply.getUniqueId(), new MenuSession(openedInventory, () -> ObrirMenuMapes(ply)));
 	}
 
+    private void openLanguageSelectorFromMenu(Player player) {
+        MenuSession origin = openMapMenus.get(player.getUniqueId());
+        if (origin == null || player.getOpenInventory().getTopInventory() != origin.inventory()) return;
+        Messages.openLanguageSelector(player);
+        Inventory selector = player.getOpenInventory().getTopInventory();
+        // A cancelled open must not turn the origin menu into a selector session.
+        if (selector != origin.inventory() && selector.getType() != InventoryType.CRAFTING) {
+            selectorReturns.put(player.getUniqueId(), new SelectorReturn(selector, origin.reopen(), player.getWorld()));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSelectorReplaced(InventoryOpenEvent event) {
+        // Opening another UI cancels even an already scheduled return.
+        selectorReturns.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onSelectorQuit(PlayerQuitEvent event) {
+        selectorReturns.remove(event.getPlayer().getUniqueId());
+        openMapMenus.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onSelectorWorldChanged(PlayerChangedWorldEvent event) {
+        selectorReturns.remove(event.getPlayer().getUniqueId());
+    }
+
 	@EventHandler
 	public void onMapMenuClosed(InventoryCloseEvent event) {
 		if (!(event.getPlayer() instanceof Player player)) return;
 		openMapMenus.computeIfPresent(player.getUniqueId(), (id, session) -> session.inventory() == event.getInventory() ? null : session);
+        selectorReturns.computeIfPresent(player.getUniqueId(), (id, session) ->
+            session.inventory == event.getInventory() && !session.selected ? null : session);
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onLanguageChanged(PlayerChangeLanguageSpigotEvent event) {
 		Player player = Bukkit.getPlayer(event.getLanguagePlayer().getUUID());
 		if (player == null || !player.isOnline()) return;
+        SelectorReturn returning = selectorReturns.get(player.getUniqueId());
+        if (returning != null && player.getOpenInventory().getTopInventory() == returning.inventory) {
+            returning.selected = true;
+            // Triton emits the change event before updating the locale and closing its GUI.
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (!selectorReturns.remove(player.getUniqueId(), returning)) return;
+                Inventory current = player.getOpenInventory().getTopInventory();
+                if (player.isOnline() && player.getWorld() == returning.world
+                        && (current == returning.inventory || current.getType() == InventoryType.CRAFTING)) {
+                    returning.reopen.run();
+                }
+            });
+            return;
+        }
 		MenuSession session = openMapMenus.get(player.getUniqueId());
         Inventory expectedMenu = session == null ? null : session.inventory();
 		if (expectedMenu == null || player.getOpenInventory().getTopInventory() != expectedMenu) return;

@@ -30,4 +30,15 @@ class LocalizationCatalogTest {
   var parser = net.kyori.adventure.text.minimessage.MiniMessage.builder().strict(true).build();
   LocalizationCatalog.bundledItems().values().forEach(item -> item.getAsJsonObject("languages").entrySet().forEach(text -> assertDoesNotThrow(() -> parser.deserialize(text.getValue().getAsString().substring("[minimsg]".length())))));
  }
+ @Test void everyKeyHasAProductionJavaReference() throws java.io.IOException {
+  StringBuilder source = new StringBuilder();
+  try (var files = java.nio.file.Files.walk(java.nio.file.Path.of("src/main/java"))) {
+   for (var path : files.filter(p -> p.toString().endsWith(".java")).toList()) source.append(java.nio.file.Files.readString(path)).append("\n");
+  }
+  var used = new java.util.HashSet<String>();
+  var matcher = java.util.regex.Pattern.compile("MessageKey\\.([A-Z][A-Z0-9_]*)").matcher(source);
+  while (matcher.find()) used.add(matcher.group(1));
+  var unused = java.util.Arrays.stream(MessageKey.values()).map(Enum::name).filter(name -> !used.contains(name)).toList();
+  assertTrue(unused.isEmpty(), "Unused catalog keys: " + unused);
+ }
 }
