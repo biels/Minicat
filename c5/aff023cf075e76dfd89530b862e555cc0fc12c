@@ -1,0 +1,23 @@
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkWarsMovementTest.java
+  s_d4244df752681a::t_3c7aa03e8cec16 1-707
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkWarsLifecycleTest.java
+  s_d4244df752681a::t_3c7aa03e8cec16 1-213
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkWars.java
+  s_d4244df752681a::t_3c7aa03e8cec16 1-2185
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "c5aff023cf075e76dfd89530b862e555cc0fc12c",
+  "prompts": {},
+  "sessions": {
+    "s_d4244df752681a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2612296-91f9-4559-b845-d33cba0ea04f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
