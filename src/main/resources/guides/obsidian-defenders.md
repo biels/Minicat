@@ -1,12 +1,12 @@
 # Obsidian Defenders
 
 ## inici
-- Guanya fent explotar la base enemiga: trenca'n l'obsidiana i trepitja la placa daurada que hi apareix.
+- Guanya fent explotar la base enemiga: trenca 2 blocs d'obsidiana i trepitja el detonador de la base.
 - Comences amb {OR_INICIAL} d'or. A la teva base, compra un arc o una espasa de ferro.
 - El pic de diamant apareix al centre al minut {PIC_PRIMER_MIN}. Ves-hi amb el teu equip!
 
 ## títol inici
-- Trenca l'obsidiana i trepitja la placa daurada
+- Trenca l'obsidiana i trepitja el detonador
 
 ## barra objectiu
 - Fes explotar la base enemiga: obre l'obsidiana i trepitja la placa daurada
@@ -23,9 +23,9 @@
 ## objecte ESTRELLA_DEL_NETHER
 - Clic dret: espera {ESTRELLA_CARREGA_S} s.
 - Els enemics a menys de {ESTRELLA_RADI} blocs
-- queden amb mig cor i lents durant 20 s.
+- queden a mig cor i alentits durant 20 s.
 - Els aliats reben velocitat durant 20 s.
-- Després es torna una estrella de foc.
+- Després es converteix en una estrella de foc.
 
 ## objecte ESTRELLA_DE_FOC
 - Guarda-la a l'inventari i dispara l'arc

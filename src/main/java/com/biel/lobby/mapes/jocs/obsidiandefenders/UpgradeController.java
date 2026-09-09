@@ -74,7 +74,7 @@ final class UpgradeController {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 1, 1);
                 String explanation = switch (next) {
                     case LAUNCHERS -> "Llançadors activats! Les dues torres ja us poden impulsar cap a la jungla.";
-                    case ARCHERS -> "Reforços ossis! Cada baixa crea un arquer a la base, fins a 10 per equip. Si mors, perds els teus.";
+                    case ARCHERS -> "Reforços ossis! Cada kill crea un arquer a la teva base que t'ajuda a la batalla.";
                     case ARMOR -> "Herència de guerra! Els nous arquers porten la teva armadura, sense encantaments.";
                 };
                 for (Player teammate : world.getPlayers()) if (teamOf.applyAsInt(teammate) == team)
