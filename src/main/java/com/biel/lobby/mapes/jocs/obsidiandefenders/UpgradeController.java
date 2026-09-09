@@ -18,10 +18,10 @@ import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
 import com.biel.lobby.utilities.PaperMessages;
 
-final class ObsidianUpgradeController {
+final class UpgradeController {
     private final World world;
-    private final ObsidianTeamUpgrades upgrades;
-    private final ObsidianLauncherController launchers;
+    private final TeamUpgrades upgrades;
+    private final LauncherController launchers;
     private final Predicate<Player> participant;
     private final ToIntFunction<Player> teamOf;
     private final BiPredicate<Player, Integer> pay;
@@ -30,7 +30,7 @@ final class ObsidianUpgradeController {
     private final Map<Integer, String[]> displayed = new HashMap<>();
     private long tick;
 
-    ObsidianUpgradeController(World world, ObsidianTeamUpgrades upgrades, ObsidianLauncherController launchers,
+    UpgradeController(World world, TeamUpgrades upgrades, LauncherController launchers,
             Predicate<Player> participant, ToIntFunction<Player> teamOf, BiPredicate<Player, Integer> pay,
             Consumer<Player> refreshGold) {
         this.world = world; this.upgrades = upgrades; this.launchers = launchers;
@@ -39,7 +39,7 @@ final class ObsidianUpgradeController {
     }
 
     private Block button(int team) {
-        var position = ObsidianWatchtowers.purchaseButton(team);
+        var position = Watchtowers.purchaseButton(team);
         return world.getBlockAt(position.x(), position.y(), position.z());
     }
 
@@ -62,7 +62,7 @@ final class ObsidianUpgradeController {
     private void buy(Player player, int team) {
         var next = upgrades.next(team);
         var result = upgrades.purchase(team, teamOf.applyAsInt(player), tick,
-                () -> next == ObsidianTeamUpgrades.Upgrade.LAUNCHERS
+                () -> next == TeamUpgrades.Upgrade.LAUNCHERS
                         ? launchers.installAndPay(team, () -> pay.test(player, next.price))
                         : pay.test(player, next.price));
         switch (result) {
@@ -85,7 +85,7 @@ final class ObsidianUpgradeController {
         }
     }
 
-    static String[] lines(ObsidianTeamUpgrades upgrades, int team, long tick) {
+    static String[] lines(TeamUpgrades upgrades, int team, long tick) {
         int level = upgrades.level(team);
         if (upgrades.ready(team, tick)) {
             String[] title = switch (upgrades.next(team)) {

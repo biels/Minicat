@@ -88,7 +88,7 @@ successful purchases use the same held-plus-spent gold accounting as shops.
 Tower rear rows are X=617 (red) / 709 (blue), Y=52, centered on Z=-1409/-1391.
 Upper buttons are two blocks forward, lower buttons two blocks backward at
 Y=42 and two blocks either side of the middle Z. Purchase buttons are
-`611,42,-1369` and `715,42,-1431`. Exact layouts live in `ObsidianWatchtowers`.
+`611,42,-1369` and `715,42,-1431`. Exact layouts live in `Watchtowers`.
 
 Any living participant can operate an unlocked launcher, regardless of team.
 One standing plate occupant launches per press: the activator if eligible,
@@ -144,11 +144,11 @@ survives shooter death and retains the original team for friendly-fire checks.
 
 ## Verification
 
-`./gradlew build` includes `ObsidianInteractionsTest` (approved coordinates,
+`./gradlew build` includes `InteractionsTest` (approved coordinates,
 spawn exclusion, radius and floor boundaries, finite radial push and loot
 velocity) and `verifyGameGuide` (19 authored pages, wrapping, includes and long
 text). Existing movement regressions also run unchanged.
-`ObsidianGoldScoreTest` checks retained spending, single/stack drops, partial and
+`GoldScoreTest` checks retained spending, single/stack drops, partial and
 enemy pickups, deposits/losses, transfers, reconnect/abandonment and match reset.
 
 After deployment, run the operations repository's bot check:

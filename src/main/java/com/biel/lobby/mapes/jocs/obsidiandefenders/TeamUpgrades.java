@@ -3,7 +3,7 @@ package com.biel.lobby.mapes.jocs.obsidiandefenders;
 import java.util.function.BooleanSupplier;
 
 /** Purchase state belongs to a team for one match; all times are server ticks. */
-final class ObsidianTeamUpgrades {
+final class TeamUpgrades {
     static final int PURCHASE_DELAY_TICKS = 1200;
     enum Upgrade {
         LAUNCHERS(50), ARCHERS(100), ARMOR(150);

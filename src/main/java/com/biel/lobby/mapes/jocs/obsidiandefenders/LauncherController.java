@@ -34,13 +34,13 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import com.biel.lobby.utilities.PaperMessages;
 
-final class ObsidianLauncherController implements Listener {
+final class LauncherController implements Listener {
     private final World world;
     private final Plugin plugin;
     private final Predicate<Player> participant;
     private final ToIntFunction<Player> teamOf;
-    private final ObsidianWatchtowers upgrades;
-    private final Map<Block, ObsidianWatchtowers.Tower> buttons = new HashMap<>();
+    private final Watchtowers upgrades;
+    private final Map<Block, Watchtowers.Tower> buttons = new HashMap<>();
     private final Map<Block, BlockData> originalBlocks = new LinkedHashMap<>();
     private final Map<Block, BlockData> installedBlocks = new HashMap<>();
     private final Map<UUID, Occupant> occupants = new HashMap<>();
@@ -49,27 +49,27 @@ final class ObsidianLauncherController implements Listener {
 
     private record Occupant(int tower, long since) {}
     private static final class Flight {
-        final ObsidianWatchtowers.Tower tower;
+        final Watchtowers.Tower tower;
         final Location start;
         final long started;
         boolean propelled;
-        final ObsidianWatchtowers.FallProtection protection;
-        Flight(ObsidianWatchtowers.Tower tower, Location start, long started) {
+        final Watchtowers.FallProtection protection;
+        Flight(Watchtowers.Tower tower, Location start, long started) {
             this.tower = tower; this.start = start; this.started = started;
-            protection = new ObsidianWatchtowers.FallProtection(started);
+            protection = new Watchtowers.FallProtection(started);
         }
     }
 
-    ObsidianLauncherController(World world, Plugin plugin, Predicate<Player> participant,
-            ToIntFunction<Player> teamOf, ObsidianTeamUpgrades teamUpgrades) {
+    LauncherController(World world, Plugin plugin, Predicate<Player> participant,
+            ToIntFunction<Player> teamOf, TeamUpgrades teamUpgrades) {
         this.world = world; this.plugin = plugin; this.participant = participant;
         this.teamOf = teamOf;
-        this.upgrades = new ObsidianWatchtowers(teamUpgrades);
-        for (var tower : ObsidianWatchtowers.TOWERS) for (var position : tower.buttons()) buttons.put(block(position), tower);
+        this.upgrades = new Watchtowers(teamUpgrades);
+        for (var tower : Watchtowers.TOWERS) for (var position : tower.buttons()) buttons.put(block(position), tower);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    private Block block(ObsidianWatchtowers.Position position) {
+    private Block block(Watchtowers.Position position) {
         return world.getBlockAt(position.x(), position.y(), position.z());
     }
 
@@ -79,7 +79,7 @@ final class ObsidianLauncherController implements Listener {
     }
 
     boolean isPlate(Block block) {
-        return ObsidianWatchtowers.TOWERS.stream().filter(tower -> upgrades.unlocked(tower.team()))
+        return Watchtowers.TOWERS.stream().filter(tower -> upgrades.unlocked(tower.team()))
                 .flatMap(tower -> tower.plates().stream()).anyMatch(position -> block(position).equals(block));
     }
 
@@ -106,7 +106,7 @@ final class ObsidianLauncherController implements Listener {
 
     private boolean install(int team, Map<Block, BlockData> transaction) {
         Map<Block, BlockData> desired = new LinkedHashMap<>();
-        for (var tower : ObsidianWatchtowers.TOWERS) {
+        for (var tower : Watchtowers.TOWERS) {
             if (tower.team() != team) continue;
             for (var position : tower.plates()) {
                 Block plate = block(position);
@@ -138,9 +138,9 @@ final class ObsidianLauncherController implements Listener {
         Map<UUID, Occupant> current = new HashMap<>();
         for (Player player : world.getPlayers()) {
             if (!eligible(player) || flights.containsKey(player.getUniqueId()) || !player.isOnGround()) continue;
-            for (var tower : ObsidianWatchtowers.TOWERS) {
+            for (var tower : Watchtowers.TOWERS) {
                 if (!upgrades.unlocked(tower.team()) || !tower.onPlates(player.getLocation().toVector())) continue;
-                if (block(new ObsidianWatchtowers.Position(player.getLocation().getBlockX(), 52,
+                if (block(new Watchtowers.Position(player.getLocation().getBlockX(), 52,
                         player.getLocation().getBlockZ())).getType() != Material.HEAVY_WEIGHTED_PRESSURE_PLATE) continue;
                 Occupant previous = occupants.get(player.getUniqueId());
                 current.put(player.getUniqueId(), previous != null && previous.tower == tower.id()
@@ -151,13 +151,13 @@ final class ObsidianLauncherController implements Listener {
         occupants.putAll(current);
     }
 
-    private void launch(Player activator, ObsidianWatchtowers.Tower tower) {
+    private void launch(Player activator, Watchtowers.Tower tower) {
         sampleOccupants();
-        List<ObsidianWatchtowers.Waiting> waiting = new ArrayList<>();
+        List<Watchtowers.Waiting> waiting = new ArrayList<>();
         occupants.forEach((id, occupant) -> {
-            if (occupant.tower == tower.id()) waiting.add(new ObsidianWatchtowers.Waiting(id, occupant.since));
+            if (occupant.tower == tower.id()) waiting.add(new Watchtowers.Waiting(id, occupant.since));
         });
-        UUID selected = ObsidianWatchtowers.passenger(activator.getUniqueId(), waiting);
+        UUID selected = Watchtowers.passenger(activator.getUniqueId(), waiting);
         if (selected == null) { message(activator, "No hi ha ningú sobre les plaques"); return; }
         Player passenger = Bukkit.getPlayer(selected);
         if (!eligible(passenger)) return;
@@ -186,8 +186,8 @@ final class ObsidianLauncherController implements Listener {
                 Location at = player.getLocation();
                 if (at.distanceSquared(flight.start) > 9 || tick - flight.started > 8) { forget(entry.getKey()); continue; }
                 if (!player.isOnGround() && at.getY() >= flight.start.getY() + 0.3) {
-                    Vector impulse = ObsidianLauncherTrajectory.find(flight.tower, at.toVector(),
-                            ObsidianLauncherTrajectory.terrain(world));
+                    Vector impulse = LauncherTrajectory.find(flight.tower, at.toVector(),
+                            LauncherTrajectory.terrain(world));
                     if (impulse != null) player.setVelocity(impulse);
                     else message(player, "Trajecte bloquejat: torna-ho a provar");
                     flight.propelled = true;
@@ -204,7 +204,7 @@ final class ObsidianLauncherController implements Listener {
         });
     }
 
-    private void sound(ObsidianWatchtowers.Tower tower, Sound sound, float volume) {
+    private void sound(Watchtowers.Tower tower, Sound sound, float volume) {
         Location source = new Location(world, tower.rearX() + 0.5, 52.5, tower.middleZ() + 0.5);
         for (Player listener : world.getPlayers()) if (listener.getLocation().distanceSquared(source) <= 24 * 24)
             listener.playSound(source, sound, volume, 1);

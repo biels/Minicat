@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.bukkit.util.Vector;
 
 /** Match-local upgrades and the four surveyed watchtower layouts. */
-final class ObsidianWatchtowers {
+final class Watchtowers {
     static final int RELOAD_TICKS = 100;
     static final int FLIGHT_TIMEOUT_TICKS = 200;
 
@@ -44,10 +44,10 @@ final class ObsidianWatchtowers {
         };
     }
 
-    private final ObsidianTeamUpgrades upgrades;
+    private final TeamUpgrades upgrades;
     private final long[] reloadUntil = new long[4];
-    ObsidianWatchtowers(ObsidianTeamUpgrades upgrades) { this.upgrades = upgrades; }
-    boolean unlocked(int team) { return upgrades.has(team, ObsidianTeamUpgrades.Upgrade.LAUNCHERS); }
+    Watchtowers(TeamUpgrades upgrades) { this.upgrades = upgrades; }
+    boolean unlocked(int team) { return upgrades.has(team, TeamUpgrades.Upgrade.LAUNCHERS); }
 
     int reloadSeconds(int tower, long tick) {
         return (int) Math.max(0, (reloadUntil[tower] - tick + 19) / 20);

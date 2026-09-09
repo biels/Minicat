@@ -4,7 +4,7 @@ import org.bukkit.util.Vector;
 import org.bukkit.ChatColor;
 
 /** Shared positions, display text and movement calculations for Obsidian interactions. */
-final class ObsidianInteractions {
+final class Interactions {
     static final double PORTAL_RADIUS = 2;
     static final double PICKAXE_RADIUS = 4;
     static final int PICKAXE_PICKUP_DELAY = 10;

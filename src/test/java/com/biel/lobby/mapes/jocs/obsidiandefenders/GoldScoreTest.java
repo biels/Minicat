@@ -2,10 +2,10 @@ package com.biel.lobby.mapes.jocs.obsidiandefenders;
 
 import java.util.UUID;
 
-public final class ObsidianGoldScoreTest {
+public final class GoldScoreTest {
     @org.junit.jupiter.api.Test
     void ownedAndSpentGold() {
-        ObsidianGoldScore score = new ObsidianGoldScore();
+        GoldScore score = new GoldScore();
         UUID red = UUID.randomUUID(), teammate = UUID.randomUUID(), blue = UUID.randomUUID();
         score.updateBalance(red, 0, 100);
         score.updateBalance(teammate, 0, 20);
@@ -58,7 +58,7 @@ public final class ObsidianGoldScoreTest {
         System.out.println("Obsidian owned-plus-spent gold checks passed");
     }
 
-    private static void totals(ObsidianGoldScore score, long red, long blue, String message) {
+    private static void totals(GoldScore score, long red, long blue, String message) {
         require(score.total(0) == red && score.total(1) == blue,
                 message + ": actual " + score.total(0) + " vs " + score.total(1));
     }

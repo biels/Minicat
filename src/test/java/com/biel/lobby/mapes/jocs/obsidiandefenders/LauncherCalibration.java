@@ -11,7 +11,7 @@ import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 /** Offline calibration against a read-only NBT survey with Prismarine block shapes. */
-public final class ObsidianLauncherCalibration {
+public final class LauncherCalibration {
     record Palette(String Name) {}
     record Survey(int[] bounds, List<Palette> palette, int[] indices, double[][][] shapes) {}
     record Trial(int tower, double[] origin, double[] impulse) {}
@@ -21,7 +21,7 @@ public final class ObsidianLauncherCalibration {
         Survey survey = gson.fromJson(Files.readString(Path.of(args[0])), Survey.class);
         int[] bounds = survey.bounds;
         Map<String, List<BoundingBox>> cache = new HashMap<>();
-        var terrain = new ObsidianLauncherTrajectory.Terrain() {
+        var terrain = new LauncherTrajectory.Terrain() {
             private int index(int x, int y, int z) {
                 if (x < bounds[0] || y < bounds[1] || z < bounds[2] || x >= bounds[3] || y >= bounds[4] || z >= bounds[5])
                     throw new IllegalArgumentException("Outside surveyed terrain: " + x + "," + y + "," + z);
@@ -54,11 +54,11 @@ public final class ObsidianLauncherCalibration {
         List<Trial> trials = new ArrayList<>();
         int failed = 0;
         long started = System.nanoTime();
-        for (var tower : ObsidianWatchtowers.TOWERS) {
+        for (var tower : Watchtowers.TOWERS) {
             int accepted = 0;
             for (double x : new double[]{-0.19, 0, 0.19}) for (int z = -6; z <= 6; z++) {
                 Vector origin = new Vector(tower.rearX() + 0.5 + x, 52.5625, tower.middleZ() + 0.5 + z * 0.19);
-                Vector impulse = ObsidianLauncherTrajectory.find(tower, origin, terrain);
+                Vector impulse = LauncherTrajectory.find(tower, origin, terrain);
                 trials.add(new Trial(tower.id(), array(origin), impulse == null ? null : array(impulse)));
                 if (impulse == null) failed++; else accepted++;
             }

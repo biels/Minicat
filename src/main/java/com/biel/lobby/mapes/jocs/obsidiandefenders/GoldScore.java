@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /** Score is owned currency plus completed purchases, so losses and transfers cannot inflate it. */
-final class ObsidianGoldScore {
+final class GoldScore {
     private record Wallet(int team, long nuggets) {}
     private final Map<UUID, Wallet> wallets = new HashMap<>();
     private final long[] spent = new long[2];

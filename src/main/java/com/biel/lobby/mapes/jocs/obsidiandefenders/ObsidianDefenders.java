@@ -282,7 +282,7 @@ public class ObsidianDefenders extends JocEquips {
 	private Block lookoutSign;
 	private BlockState originalLookoutBlock;
 	private List<String> lastLookoutLines = List.of();
-	private final ObsidianGoldScore goldScore = new ObsidianGoldScore();
+	private final GoldScore goldScore = new GoldScore();
 	/** Player → the task that will discharge the star they are charging. */
 	private final Map<UUID, Integer> starChargeTasks = new HashMap<>();
 	/** Player → deaths to a wither skeleton this match. */
@@ -357,9 +357,9 @@ public class ObsidianDefenders extends JocEquips {
 	private final Map<Integer, Block> rètolsPont = new HashMap<>();
 	/** Bridge button block → team id that owns it. */
 	private final Map<Block, Integer> botonsPont = new HashMap<>();
-	private ObsidianLauncherController watchtowerLaunchers;
-	private ObsidianTeamUpgrades teamUpgrades;
-	private ObsidianUpgradeController upgradeSigns;
+	private LauncherController watchtowerLaunchers;
+	private TeamUpgrades teamUpgrades;
+	private UpgradeController upgradeSigns;
 	private record CombatCredit(UUID ownerId, Minion minion, int second) {}
 	private final Map<UUID, CombatCredit> combatCredits = new HashMap<>();
 	/** Team id → the plank columns of the bridge over that team's moat, deploy order. */
@@ -705,13 +705,13 @@ public class ObsidianDefenders extends JocEquips {
 		registerControlPointsAndLamps();
 		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
 		Bukkit.getPluginManager().registerEvents(worldListener, plugin);
-		teamUpgrades = new ObsidianTeamUpgrades();
-		watchtowerLaunchers = new ObsidianLauncherController(world, plugin,
+		teamUpgrades = new TeamUpgrades();
+		watchtowerLaunchers = new LauncherController(world, plugin,
 				player -> JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player)
 						&& player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR,
 				player -> obtenirEquip(player) == null ? -1 : obtenirEquip(player).getId(),
 				teamUpgrades);
-		upgradeSigns = new ObsidianUpgradeController(world, teamUpgrades, watchtowerLaunchers,
+		upgradeSigns = new UpgradeController(world, teamUpgrades, watchtowerLaunchers,
 				player -> JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player)
 						&& player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR,
 				player -> obtenirEquip(player) == null ? -1 : obtenirEquip(player).getId(),
@@ -1218,7 +1218,7 @@ public class ObsidianDefenders extends JocEquips {
 		clearPickaxeSpawn(spawn);
 		world.dropItem(spawn, Objecte.descriure(pic), item -> {
 			item.setVelocity(new Vector());
-			item.setPickupDelay(ObsidianInteractions.PICKAXE_PICKUP_DELAY);
+			item.setPickupDelay(Interactions.PICKAXE_PICKUP_DELAY);
 		});
 		Firework burst = world.spawn(spawn, Firework.class, firework -> {
 			firework.addScoreboardTag(PICKAXE_FIREWORK_TAG);
@@ -1240,7 +1240,7 @@ public class ObsidianDefenders extends JocEquips {
 	private void clearPickaxeSpawn(Location center) {
 		for (Player player : getPlayers()) {
 			if (player.isDead() || isSpectator(player) || player.getWorld() != world) continue;
-			Vector push = ObsidianInteractions.outwardPush(player.getLocation().toVector(), center.toVector(), player.getLocation().getDirection());
+			Vector push = Interactions.outwardPush(player.getLocation().toVector(), center.toVector(), player.getLocation().getDirection());
 			if (push.lengthSquared() == 0) continue;
 			// Keep the shove on walkable ground and away from walls and the island's drops.
 			Vector horizontal = push.clone().setY(0).normalize();
@@ -1746,7 +1746,7 @@ public class ObsidianDefenders extends JocEquips {
 				drop.setCanMobPickup(false);
 				drop.setPickupDelay(0);
 				drop.setGravity(false);
-			drop.setVelocity(ObsidianInteractions.lootVelocity(origin.toVector(), p.getLocation().add(0, 0.5, 0).toVector()));
+			drop.setVelocity(Interactions.lootVelocity(origin.toVector(), p.getLocation().add(0, 0.5, 0).toVector()));
 			});
 			flyingChestLoot.add(new FlyingLoot(item, p.getUniqueId()));
 		}
@@ -1776,7 +1776,7 @@ public class ObsidianDefenders extends JocEquips {
 				releaseChestLoot(item);
 				iterator.remove();
 			} else {
-				item.setVelocity(ObsidianInteractions.lootVelocity(item.getLocation().toVector(), target.toVector()));
+				item.setVelocity(Interactions.lootVelocity(item.getLocation().toVector(), target.toVector()));
 			}
 		}
 	}
@@ -1791,7 +1791,7 @@ public class ObsidianDefenders extends JocEquips {
 	private void createShopPortals() {
 		for (Equip team : Equips) {
 			int id = team.getId();
-			ObsidianInteractions.PortalPosition approved = ObsidianInteractions.portal(id);
+			Interactions.PortalPosition approved = Interactions.portal(id);
 			Location entrance = portalLocation("ShopPortal" + id, approved.entrance());
 			Location arrival = portalLocation("ShopArrival" + id, approved.arrival());
 			arrival.setYaw(approved.arrivalYaw());
@@ -1821,7 +1821,7 @@ public class ObsidianDefenders extends JocEquips {
 			Equip team = obtenirEquip(player);
 			ShopPortal portal = team == null ? null : shopPortals.get(team.getId());
 			if (portal == null || Bukkit.getCurrentTick() < portalCooldownUntil.getOrDefault(player.getUniqueId(), 0)) continue;
-			if (!ObsidianInteractions.inPortal(player.getLocation().toVector(), portal.entrance().toVector())) continue;
+			if (!Interactions.inPortal(player.getLocation().toVector(), portal.entrance().toVector())) continue;
 			if (!safeStandingSpot(portal.arrival())) continue;
 			if (player.teleport(portal.arrival())) {
 				player.setVelocity(new Vector());
@@ -1905,7 +1905,7 @@ public class ObsidianDefenders extends JocEquips {
 
 	private void createLookoutSign() {
 		Location floor = pMapaActual().ExisteixPropietat("Lookout")
-				? pMapaActual().ObtenirLocation("Lookout", world) : ObsidianInteractions.lookoutFloor().toLocation(world);
+				? pMapaActual().ObtenirLocation("Lookout", world) : Interactions.lookoutFloor().toLocation(world);
 		Location standing = floor.clone().add(0.5, 1, 0.5);
 		Block display = standing.getBlock();
 		if (!safeStandingSpot(standing) || !display.getType().isAir()) {
@@ -1931,7 +1931,7 @@ public class ObsidianDefenders extends JocEquips {
 			}
 		}
 		if (lookoutSign == null || Equips.size() != 2) return;
-		String[] lines = ObsidianInteractions.lookoutLines(goldScore.total(0), goldScore.total(1),
+		String[] lines = Interactions.lookoutLines(goldScore.total(0), goldScore.total(1),
 				killsByTeam.getOrDefault(0, 0), killsByTeam.getOrDefault(1, 0));
 		List<String> next = List.of(lines);
 		if (!next.equals(lastLookoutLines)) {
@@ -3293,14 +3293,14 @@ public class ObsidianDefenders extends JocEquips {
 		Equip team = obtenirEquip(owner);
 		if (team == null || teamUpgrades == null || !JocEnMarxa() || owner.isDead()
 				|| !owner.isOnline() || isSpectator(owner) || owner.getGameMode() == GameMode.SPECTATOR
-				|| !teamUpgrades.has(team.getId(), ObsidianTeamUpgrades.Upgrade.ARCHERS)) return;
+				|| !teamUpgrades.has(team.getId(), TeamUpgrades.Upgrade.ARCHERS)) return;
 		long livingArchers = minionsOf(team).stream().filter(minion -> minion instanceof SkeletonArcherMinion && minion.isAlive()).count();
 		if (livingArchers >= SkeletonArcherMinion.TEAM_CAP) return;
 		Lane lane = snowmanLane(team);
 		Location spot = standingSpotNear(team.getTeamSpawnLocation());
 		if (spot == null) spot = team.getTeamSpawnLocation();
 		enlist(new SkeletonArcherMinion(this, team, owner, lane,
-				teamUpgrades.has(team.getId(), ObsidianTeamUpgrades.Upgrade.ARMOR)), spot);
+				teamUpgrades.has(team.getId(), TeamUpgrades.Upgrade.ARMOR)), spot);
 		world.spawnParticle(Particle.SOUL, spot.clone().add(0, 1, 0), 15, 0.3, 0.5, 0.3, 0.02);
 	}
 

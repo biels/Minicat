@@ -12,7 +12,7 @@ import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 /** Chooses one natural airborne impulse; it never steers a player after launch. */
-final class ObsidianLauncherTrajectory {
+final class LauncherTrajectory {
     // Airborne recurrence and Y/X/Z collision order used by prismarine-physics.
     static final double HORIZONTAL_DRAG = 0.91;
     static final double VERTICAL_DRAG = (double) (float) 0.98;
@@ -24,7 +24,7 @@ final class ObsidianLauncherTrajectory {
         boolean leaves(Vector feet);
     }
 
-    static Vector find(ObsidianWatchtowers.Tower tower, Vector origin, Terrain terrain) {
+    static Vector find(Watchtowers.Tower tower, Vector origin, Terrain terrain) {
         Vector heading = new Vector(tower.rearX() + 0.5 + tower.direction() * 14 - origin.getX(),
                 0, tower.middleZ() + 0.5 - origin.getZ()).normalize();
         for (int up = 8; up <= 18; up++) {
@@ -36,7 +36,7 @@ final class ObsidianLauncherTrajectory {
         return null;
     }
 
-    static boolean safeLanding(ObsidianWatchtowers.Tower tower, Vector origin, Vector impulse, Terrain terrain) {
+    static boolean safeLanding(Watchtowers.Tower tower, Vector origin, Vector impulse, Terrain terrain) {
         Vector feet = origin.clone(), velocity = impulse.clone();
         for (int step = 0; step < 65; step++) {
             boolean landed = false;
@@ -68,7 +68,7 @@ final class ObsidianLauncherTrajectory {
     }
 
     static Terrain terrain(World world) {
-        Map<ObsidianWatchtowers.Position, List<BoundingBox>> cache = new HashMap<>();
+        Map<Watchtowers.Position, List<BoundingBox>> cache = new HashMap<>();
         return new Terrain() {
             public List<BoundingBox> obstacles(Vector feet, Vector movement) {
                 List<BoundingBox> result = new ArrayList<>();
@@ -80,7 +80,7 @@ final class ObsidianLauncherTrajectory {
                 int minZ = (int) Math.floor(Math.min(feet.getZ(), end.getZ()) - 0.3);
                 int maxZ = (int) Math.floor(Math.max(feet.getZ(), end.getZ()) + 0.3);
                 for (int x = minX; x <= maxX; x++) for (int y = minY; y <= maxY; y++) for (int z = minZ; z <= maxZ; z++) {
-                    var position = new ObsidianWatchtowers.Position(x, y, z);
+                    var position = new Watchtowers.Position(x, y, z);
                     result.addAll(cache.computeIfAbsent(position, at -> {
                         Block block = world.getBlockAt(at.x(), at.y(), at.z());
                         return block.getCollisionShape().getBoundingBoxes().stream()
