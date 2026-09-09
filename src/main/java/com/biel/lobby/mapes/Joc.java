@@ -253,7 +253,7 @@ public abstract class Joc extends MapaResetejable {
 		onSeatResumed(ply);
 		updateScoreBoard(ply);
 		sendGlobalMessage(MessageKey.MATCH_RETURNED, MessageArgument.text("player", ply.getName()));
-		Messages.send(ply, MessageKey.MATCH_JOINED, MessageArgument.text("player", ply.getName()), MessageArgument.text("game", getGameName()));
+		Messages.send(ply, MessageKey.MATCH_RESUMED_SELF, MessageArgument.text("game", getGameName()), MessageArgument.text("map", getMapName()));
 		sendGameInfo(ply);
 	}
 	/** Where a returning player goes when they are not in the world any more. */

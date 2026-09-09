@@ -156,20 +156,6 @@
       ],
       "maxTemplateCharacters": 220
     },
-    "minicat.match.invite.hover": {
-      "constant": "MATCH_INVITE_HOVER",
-      "purpose": "Join %1",
-      "arguments": [
-        {
-          "name": "game",
-          "type": "TEXT"
-        }
-      ],
-      "surfaces": [
-        "chat"
-      ],
-      "maxTemplateCharacters": 220
-    },
     "minicat.match.player.left": {
       "constant": "MATCH_PLAYER_LEFT",
       "purpose": "%1 left the lobby before the action completed.",
@@ -304,6 +290,24 @@
         "chat"
       ],
       "maxTemplateCharacters": 160
+    },
+    "minicat.match.resumed.self": {
+      "constant": "MATCH_RESUMED_SELF",
+      "purpose": "Private confirmation when a player resumes a saved game seat.",
+      "arguments": [
+        {
+          "name": "game",
+          "type": "TEXT"
+        },
+        {
+          "name": "map",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 180
     }
   }
 }

@@ -58,14 +58,6 @@
     },
     {
       "type": "text",
-      "key": "minicat.lobby.welcome",
-      "languages": {
-        "en_US": "[minimsg]<gold>Welcome to Minicat</gold>",
-        "ca_ES": "[minimsg]<gold>Benvingut a Minicat</gold>"
-      }
-    },
-    {
-      "type": "text",
       "key": "minicat.lobby.welcome.subtitle",
       "languages": {
         "en_US": "[minimsg]<yellow>Choose a game with /m</yellow>",

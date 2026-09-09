@@ -58,26 +58,10 @@
     },
     {
       "type": "text",
-      "key": "minicat.rankings.position",
-      "languages": {
-        "en_US": "[minimsg]<gold>Rankings <yellow>(#%1)</yellow></gold>",
-        "ca_ES": "[minimsg]<gold>Rànquing <yellow>(#%1)</yellow></gold>"
-      }
-    },
-    {
-      "type": "text",
       "key": "minicat.rankings.value",
       "languages": {
         "en_US": "[minimsg]<dark_aqua>Elo: <white>%1</white> <yellow>#%2</yellow></dark_aqua>",
         "ca_ES": "[minimsg]<dark_aqua>Elo: <white>%1</white> <yellow>#%2</yellow></dark_aqua>"
-      }
-    },
-    {
-      "type": "text",
-      "key": "minicat.rankings.row",
-      "languages": {
-        "en_US": "[minimsg]<yellow>#%1 <gold>%2</gold> — %3</yellow>",
-        "ca_ES": "[minimsg]<yellow>#%1 <gold>%2</gold> — %3</yellow>"
       }
     },
     {

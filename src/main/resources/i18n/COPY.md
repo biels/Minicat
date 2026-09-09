@@ -19,7 +19,9 @@ optional aliases. Admin/editor copy may remain English or Catalan.
   layout checks on their destination surface.
 - `gradle/localization.gradle` validates coverage, duplicate keys/constants,
   argument positions and budgets, then generates `MessageKey` and resource indexes.
-  Do not edit generated output or deployed collections as source copy.
+  Do not edit generated output or deployed collections as source copy. The tests
+  also check that each generated key has a production Java reference; remove
+  unused copy rather than keeping speculative messages installed.
 
 Write complete messages. Do not concatenate translated fragments, hand-roll
 plural rules or interpolate player input into MiniMessage. Use neutral count
@@ -56,7 +58,11 @@ only** through `sharedNumberItemMarker`. Never store one viewer's translated ite
 as the authoritative shared item. Recipient-specific menu values use direct
 rendering. Map/instance/active-game menus rebuild on language changes only when
 the exact tracked inventory is still open. Inventory contents are never cleared
-merely to change language.
+merely to change language. The map compass remembers its originating menu and
+returns there after a language choice, including choosing the current language.
+Escaping the selector cancels that intent; standalone `/lang` does not open a
+map menu afterward. Replacing the UI, leaving the world or disconnecting also
+cancels the pending return.
 
 Titles/actionbars resolve when sent; a repeated localized actionbar resolves each
 repeat. Help-book pages use native item translation; its fixed author/title are
