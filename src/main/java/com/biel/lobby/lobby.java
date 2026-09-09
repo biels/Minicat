@@ -21,6 +21,9 @@ import com.biel.lobby.mapes.MapaResetejable;
 import com.biel.lobby.mapes.TemplateImport;
 import com.biel.lobby.mapes.jocs.rainbowclay.RainbowClay;
 import com.biel.lobby.agent.AgentSnapshotHttpServer;
+import com.biel.lobby.localization.MessageArgument;
+import com.biel.lobby.localization.MessageKey;
+import com.biel.lobby.localization.Messages;
 import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.HologramFacade;
@@ -40,6 +43,7 @@ public final class lobby extends JavaPlugin {
 	@SuppressWarnings("unused")
 	@Override
 	public void onEnable(){
+		Messages.initialize(this);
 		dataAPI = new DataAPI();
 		dataAPI.requireReady();
 		// TODO Insert logic to be performed when the plugin is enabled
@@ -86,6 +90,14 @@ public final class lobby extends JavaPlugin {
 	private boolean isAgentEndpointRunning() {
 		return agentSnapshotHttpServer != null && agentSnapshotHttpServer.isRunning();
 	}
+	@Override
+	public java.util.List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+		if (!command.getName().equalsIgnoreCase("lang")) return super.onTabComplete(sender, command, alias, args);
+		if (args.length != 1) return java.util.List.of();
+		String prefix = args[0].toLowerCase(java.util.Locale.ROOT);
+		return com.biel.lobby.localization.LanguageCatalog.suggestions(prefix);
+	}
+
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 		if(cmd.getName().equalsIgnoreCase("info")){
 			if(!(sender instanceof Player reader)) return true;
@@ -192,9 +204,23 @@ public final class lobby extends JavaPlugin {
 			return true;
 		}
 		Player ply = (Player) sender;
+		if(cmd.getName().equalsIgnoreCase("lang")){
+			if(args.length == 0){
+				Messages.openLanguageSelector(ply);
+				return true;
+			}
+			if(args.length != 1){
+				Messages.send(ply, MessageKey.LANGUAGE_USAGE, MessageArgument.text("codes", String.join("|", com.biel.lobby.localization.LanguageCatalog.suggestions(""))));
+				return true;
+			}
+			if(!Messages.setLanguage(ply, args[0])){
+				Messages.send(ply, MessageKey.LANGUAGE_UNKNOWN, MessageArgument.text("language", args[0]));
+			}
+			return true;
+		}
 		if(cmd.getName().equalsIgnoreCase("minicatjoin")){
 			if(args.length == 0){
-				ply.sendMessage(ChatColor.RED + "Falta el nom de la instància.");
+				Messages.send(ply, MessageKey.JOIN_MISSING);
 				return true;
 			}
 			String worldName = String.join(" ", args);
@@ -203,10 +229,10 @@ public final class lobby extends JavaPlugin {
 				case JOINED:
 					break;
 				case NOT_FOUND:
-					ply.sendMessage(ChatColor.RED + "Aquesta instància ja no existeix.");
+					Messages.send(ply, MessageKey.JOIN_NOT_FOUND);
 					break;
 				case UNAVAILABLE:
-					ply.sendMessage(ChatColor.RED + "Aquesta instància ja no admet jugadors.");
+					Messages.send(ply, MessageKey.JOIN_UNAVAILABLE);
 					break;
 			}
 			return true;
@@ -214,7 +240,7 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("minicatstart")){
 			Mapa currentMap = gest.getMapWherePlayerIs(ply);
 			if (!(currentMap instanceof Joc)) {
-				ply.sendMessage(ChatColor.RED + "Has d'estar en una partida per iniciar-la.");
+				Messages.send(ply, MessageKey.START_NOT_IN_GAME);
 				return true;
 			}
 			((Joc) currentMap).iniciarCommand(ply);
@@ -229,7 +255,7 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("r")){
 
 			ranked = !ranked;
-			Bukkit.broadcastMessage("Transferència d'elo " + (ranked ? "activada" : "desactivada"));
+			for (Player recipient : Bukkit.getOnlinePlayers()) Messages.send(recipient, ranked ? MessageKey.RANKED_ON : MessageKey.RANKED_OFF);
 			return true;
 		}
 		if(cmd.getName().equalsIgnoreCase("a")){
@@ -249,13 +275,12 @@ public final class lobby extends JavaPlugin {
 				}
 				Player player = Bukkit.getPlayer(args[0]);
 				if (player == null) {
-					ply.sendMessage("No es troba el jugador.");
+					Messages.send(ply, MessageKey.PLAYER_NOT_FOUND, MessageArgument.text("player", args[0]));
 					return false;
 				}
 				if (ply.isOp()) {
 					Com.teleportPlayerToLobby(player);
-					player.sendMessage(ChatColor.GRAY + "Has estat transportat al lobby per "
-							+ ply.getName());
+					Messages.send(player, MessageKey.LOBBY_TELEPORTED, MessageArgument.text("player", ply.getName()));
 				}
 			}	
 			if (args.length == 0){
@@ -311,10 +336,10 @@ public final class lobby extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("elo")){
 			PlayerData playerData = new PlayerData(ply.getName());
 			if(playerData.getRank() == -1){
-				ply.sendMessage(ChatColor.GOLD + "Fes partides per determinar la teva posició");
+				Messages.send(ply, MessageKey.RANKINGS_UNRANKED);
 				return true;
 			}
-			ply.sendMessage(ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + ChatColor.YELLOW + " #" + playerData.getRank()); 
+			Messages.send(ply, MessageKey.RANK_VALUE, MessageArgument.number("elo", Math.round(playerData.getElo())), MessageArgument.number("rank", playerData.getRank()));
 			return true;
 		}
 		if(cmd.getName().equalsIgnoreCase("top") || cmd.getName().equalsIgnoreCase("ranking")){
@@ -327,12 +352,12 @@ public final class lobby extends JavaPlugin {
 			if(m != null){
 				if(m instanceof Joc){
 					Joc joc = (Joc) m;
-					ply.sendMessage("Progrés estimat: " + Math.round(joc.getGameProgressETA() * 10000) / 100 + "%");
+					Messages.send(ply, MessageKey.GAME_PROGRESS, MessageArgument.number("percent", Math.round(joc.getGameProgressETA() * 10000) / 100));
 				}else{
-					ply.sendMessage("Has d'estar en un joc per fer això");
+					Messages.send(ply, MessageKey.NOT_IN_GAME);
 				}
 			}else{
-				ply.sendMessage("Has d'estar en una partida per fer això");
+				Messages.send(ply, MessageKey.NOT_IN_GAME);
 			}
 			return true;
 		}

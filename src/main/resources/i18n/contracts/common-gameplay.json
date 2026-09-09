@@ -1,0 +1,309 @@
+{
+  "keys": {
+    "minicat.match.join.unavailable": {
+      "constant": "MATCH_JOIN_UNAVAILABLE",
+      "purpose": "You cannot join this instance in its current state.",
+      "arguments": [],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.start.wait": {
+      "constant": "MATCH_START_WAIT",
+      "purpose": "Wait %1 seconds before starting the match.",
+      "arguments": [
+        {
+          "name": "seconds",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.joined": {
+      "constant": "MATCH_JOINED",
+      "purpose": "%1 joined %2.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        },
+        {
+          "name": "game",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.spectating": {
+      "constant": "MATCH_SPECTATING",
+      "purpose": "%1 joined as a spectator.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.returned": {
+      "constant": "MATCH_RETURNED",
+      "purpose": "%1 returned to the match.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.admin": {
+      "constant": "MATCH_ADMIN",
+      "purpose": "%1 is the match administrator.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.disconnected": {
+      "constant": "MATCH_DISCONNECTED",
+      "purpose": "%1 disconnected. Reconnect time: %2.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        },
+        {
+          "name": "time",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.ended.away": {
+      "constant": "MATCH_ENDED_AWAY",
+      "purpose": "%1 ended while you were away.",
+      "arguments": [
+        {
+          "name": "game",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.left.away": {
+      "constant": "MATCH_LEFT_AWAY",
+      "purpose": "You left %1.",
+      "arguments": [
+        {
+          "name": "game",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.invite": {
+      "constant": "MATCH_INVITE",
+      "purpose": "%1 invited you to %2.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        },
+        {
+          "name": "game",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.invite.click": {
+      "constant": "MATCH_INVITE_CLICK",
+      "purpose": "Join match",
+      "arguments": [],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.invite.hover": {
+      "constant": "MATCH_INVITE_HOVER",
+      "purpose": "Join %1",
+      "arguments": [
+        {
+          "name": "game",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.player.left": {
+      "constant": "MATCH_PLAYER_LEFT",
+      "purpose": "%1 left the lobby before the action completed.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.match.start.button": {
+      "constant": "MATCH_START_BUTTON",
+      "purpose": "Start match.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.info.button": {
+      "constant": "MATCH_INFO_BUTTON",
+      "purpose": "Game guide.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.add.button": {
+      "constant": "MATCH_ADD_BUTTON",
+      "purpose": "Add players.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.invite.button": {
+      "constant": "MATCH_INVITE_BUTTON",
+      "purpose": "Invite players.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.add.all": {
+      "constant": "MATCH_ADD_ALL",
+      "purpose": "Add everyone.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.add.all.lore": {
+      "constant": "MATCH_ADD_ALL_LORE",
+      "purpose": "Move lobby players into this game..",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.invite.all": {
+      "constant": "MATCH_INVITE_ALL",
+      "purpose": "Invite everyone.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.invite.all.lore": {
+      "constant": "MATCH_INVITE_ALL_LORE",
+      "purpose": "Send an invitation to lobby players..",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.from.lobby": {
+      "constant": "MATCH_FROM_LOBBY",
+      "purpose": "In the lobby.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.camera": {
+      "constant": "MATCH_CAMERA",
+      "purpose": "Random player camera.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.match.not.in.game": {
+      "constant": "NOT_IN_GAME",
+      "purpose": "Join a game to use this command..",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "item",
+        "chat"
+      ],
+      "maxTemplateCharacters": 160
+    }
+  }
+}

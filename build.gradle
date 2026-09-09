@@ -17,6 +17,9 @@ repositories {
     maven {
         url = uri('https://jitpack.io')
     }
+    maven {
+        url = uri('https://repo.diogotc.com/releases/')
+    }
 }
 
 java {
@@ -38,6 +41,12 @@ dependencies {
     compileOnly 'commons-lang:commons-lang:2.6'
     compileOnly 'org.postgresql:postgresql:42.7.13'
     compileOnly 'BielAPI:BielAPI:0.0.10-SNAPSHOT'
+    compileOnly 'com.google.code.gson:gson:2.13.2'
+    if (providers.gradleProperty('tritonApiJar').isPresent()) {
+        compileOnly files(providers.gradleProperty('tritonApiJar').get())
+    } else {
+        compileOnly 'com.rexcantor64.triton:triton-api:4.1.0'
+    }
     compileOnly fileTree(dir: 'lib', include: '*.jar', exclude: [
             'BielAPI-*.jar',
             'NametagEdit*.jar',
@@ -79,3 +88,5 @@ tasks.register('postgresTest', Test) {
         }
     }
 }
+
+apply from: 'gradle/localization.gradle'

@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import com.biel.lobby.Com;
+import com.biel.lobby.localization.*;
 
 public final class PaperMessages {
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
@@ -35,6 +36,14 @@ public final class PaperMessages {
                 player.sendActionBar(Component.empty());
             }
         }, durationTicks);
+    }
+
+    public static void sendActionBar(Player player, MessageKey key, long durationTicks, MessageArgument... arguments) {
+        for (long delay = 0; delay < durationTicks; delay += 20) {
+            Bukkit.getScheduler().runTaskLater(Com.getPlugin(), () -> {
+                if (player.isOnline()) player.sendActionBar(Messages.component(player, key, arguments));
+            }, delay);
+        }
     }
 
     public static void showTitle(Player player, int fadeInTicks, int stayTicks, int fadeOutTicks,

@@ -1,4 +1,5 @@
 package com.biel.lobby.mapes;
+import com.biel.lobby.localization.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
@@ -219,7 +220,7 @@ public abstract class Joc extends MapaResetejable {
 		onSeatDropped(ply);
 		if (!JocIniciat && hasHostPrivilleges(seat.name)) passHostToAnotherThan(seat.name);
 		int graceSeconds = getRejoinGraceSeconds();
-		sendGlobalMessage(getGameDisplayName() + seat.name + " s'ha desconnectat. Té " + formatSeconds(graceSeconds) + " per tornar.");
+		sendGlobalMessage(MessageKey.MATCH_DISCONNECTED, MessageArgument.text("player", seat.name), MessageArgument.text("time", formatSeconds(graceSeconds)));
 		seat.abandonTaskId = Bukkit.getScheduler().scheduleSyncDelayedTask(Com.getPlugin(), () -> abandonSeat(seat), 20L * graceSeconds);
 		handleLifecycleTask(seat.abandonTaskId);
 	}
@@ -251,8 +252,8 @@ public abstract class Joc extends MapaResetejable {
 		if (getDisplayHealthBar() && getShowPlayerHealthBar()) updateHealthSuffix(ply); else Com.setSuffix(ply, "");
 		onSeatResumed(ply);
 		updateScoreBoard(ply);
-		sendGlobalMessage(getGameDisplayName() + ply.getName() + " ha tornat a la partida.");
-		sendPlayerMessage(ply, ChatColor.GREEN + "Has tornat a " + getGameName() + " (" + getMapName() + ").");
+		sendGlobalMessage(MessageKey.MATCH_RETURNED, MessageArgument.text("player", ply.getName()));
+		Messages.send(ply, MessageKey.MATCH_JOINED, MessageArgument.text("player", ply.getName()), MessageArgument.text("game", getGameName()));
 		sendGameInfo(ply);
 	}
 	/** Where a returning player goes when they are not in the world any more. */
@@ -696,7 +697,7 @@ public abstract class Joc extends MapaResetejable {
 		host = p.getName();
 		if(change){
 			donarItemsInicials(p);
-			sendGlobalMessage(p.getName() + " és administrador de la partida");
+			sendGlobalMessage(MessageKey.MATCH_ADMIN, MessageArgument.text("player", p.getName()));
 		}
 	}
 	public void setHost(String name){
@@ -711,7 +712,7 @@ public abstract class Joc extends MapaResetejable {
 	@Override
 	public void Join(Player ply) {
 		if (!canJoin(ply)) {
-			ply.sendMessage(ChatColor.RED + "No et pots unir a aquesta instància en el seu estat actual.");
+			Messages.send(ply, MessageKey.MATCH_JOIN_UNAVAILABLE);
 			return;
 		}
 		if(getPlayers().size() == 0)setHost(ply);
@@ -835,7 +836,7 @@ public abstract class Joc extends MapaResetejable {
 		ItemButton.clearButtons(ply);
 		PlayerInventory inventory = ply.getInventory();
 		inventory.clear();
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_BLOCK), ChatColor.AQUA + "Càmera aleatòria"), ply, event -> {
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_BLOCK), Messages.sharedItemMarker(MessageKey.MATCH_CAMERA)), ply, event -> {
             Player p = event.getPlayer();
             teleportCameraRandomly(p);
         });
@@ -851,7 +852,7 @@ public abstract class Joc extends MapaResetejable {
 	public void addSpectator(Player ply){
 		for (Player p : getPlayers()) {
 			
-			p.sendMessage(getGameDisplayName() + ply.getName() + " ha entrar com a espectador");
+			Messages.send(p, MessageKey.MATCH_SPECTATING, MessageArgument.text("player", ply.getName()));
 		}
 		occupySeat(ply).role = Seat.Role.SPECTATOR;
 		Utils.clearPlayer(ply);
@@ -1036,7 +1037,7 @@ public abstract class Joc extends MapaResetejable {
 			addSpectator(ply);
 			
 		} else {
-			sendGlobalMessage(getGameDisplayName() +  ply.getName() + " ha entrat al joc");
+			sendGlobalMessage(MessageKey.MATCH_JOINED, MessageArgument.text("player", ply.getName()), MessageArgument.text("game", getGameName()));
 			donarItemsPreparatiusGenerals(ply);
 			
 		}
@@ -1142,7 +1143,7 @@ public abstract class Joc extends MapaResetejable {
         if (r <= 0 || ply.isOp()){
             return true;
         }else{
-            if(message)ply.sendMessage("Cal esperar almenys " + ChatColor.YELLOW + Integer.toString(r) + ChatColor.WHITE + "s per iniciar la partida" );
+            if(message)Messages.send(ply, MessageKey.MATCH_START_WAIT, MessageArgument.number("seconds", r));
             return false;
         }
     }
@@ -1155,12 +1156,12 @@ public abstract class Joc extends MapaResetejable {
 		ItemButton.clearButtons(ply);
 		PlayerInventory inventory = ply.getInventory();
 
-		ItemButton btnStartGame = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_ROD), ChatColor.GREEN + "Inicia la partida"), ply, event -> iniciarCommand(event.getPlayer()));
+		ItemButton btnStartGame = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_ROD), Messages.sharedItemMarker(MessageKey.MATCH_START_BUTTON)), ply, event -> iniciarCommand(event.getPlayer()));
 		if(hasHostPrivilleges(ply))inventory.setItem(0, btnStartGame.getItemStack());
-		ItemButton infoButton = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), ChatColor.BOLD + "Info " + getGameName()), ply, event -> com.biel.lobby.guide.GameGuide.of(getGameName()).open(event.getPlayer()));
-		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.PLAYER_HEAD), ChatColor.GREEN + "Afegir jugadors"), ply, event -> {
+		ItemButton infoButton = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.POWERED_RAIL), Messages.sharedItemMarker(MessageKey.MATCH_INFO_BUTTON)), ply, event -> com.biel.lobby.guide.GameGuide.of(getGameName()).open(event.getPlayer()));
+		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.PLAYER_HEAD), Messages.sharedItemMarker(MessageKey.MATCH_ADD_BUTTON)), ply, event -> {
             final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
-            IconMenu menu = new IconMenu("Afegeix...", 27, event12 -> {
+            IconMenu menu = new IconMenu(Messages.menuTitleMarker(MessageKey.MATCH_ADD_BUTTON), 27, event12 -> {
 				event12.setWillClose(true);
 				//Obrir mapa
 				int pos = event12.getPosition();
@@ -1169,7 +1170,7 @@ public abstract class Joc extends MapaResetejable {
 				if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
 				Join(pl);
 				}else{
-				ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat.");
+				Messages.send(ply, MessageKey.MATCH_PLAYER_LEFT, MessageArgument.text("player", pl.getName()));
 				}
 				
 				}else{
@@ -1177,7 +1178,7 @@ public abstract class Joc extends MapaResetejable {
 						if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
 							Join(pl);
 						} else {
-							ply.sendMessage("El jugador ha marxat del lobby abans de ser teletransportat (" + pl.getName() + ")");
+							Messages.send(ply, MessageKey.MATCH_PLAYER_LEFT, MessageArgument.text("player", pl.getName()));
 						}
 					}
 				
@@ -1189,19 +1190,19 @@ public abstract class Joc extends MapaResetejable {
                 Material m = Com.getSkullIconMaterial(p);
                 ItemStack stack = new ItemStack(m, 1);
                 //stack.setAmount(eq.getPlayers().size());
-                menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),ChatColor.WHITE +  "Desde: lobby");
+                menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),Messages.sharedItemMarker(MessageKey.MATCH_FROM_LOBBY));
             }
             //if (AlgunMapaDisponible() == false){
-            menu.setOption(26, new ItemStack(Material.SPONGE, 1), ChatColor.YELLOW + "Afegir tots", ChatColor.WHITE + "Afegeix tots els jugadors del lobby a la partida actual");
+            menu.setOption(26, new ItemStack(Material.SPONGE, 1), Messages.sharedItemMarker(MessageKey.MATCH_ADD_ALL), Messages.sharedItemMarker(MessageKey.MATCH_ADD_ALL_LORE));
             //}
 
             menu.open(ply);
         });
 		//if(hasHostPrivilleges(ply))inventory.setItem(7, button2.getItemStack()); // AND isOp()
 		inventory.setItem(6, infoButton.getItemStack());
-		ItemButton btnInvitePlayers = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), ChatColor.GREEN + "Convidar jugadors"), ply, event -> {
+		ItemButton btnInvitePlayers = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.DETECTOR_RAIL), Messages.sharedItemMarker(MessageKey.MATCH_INVITE_BUTTON)), ply, event -> {
             final List<Player> lobbyPlayers = lobby.getLobbyWorld().getPlayers();
-            IconMenu menu = new IconMenu("Convida...", 27, event1 -> {
+            IconMenu menu = new IconMenu(Messages.menuTitleMarker(MessageKey.MATCH_INVITE_BUTTON), 27, event1 -> {
 			event1.setWillClose(true);
 			//Obrir mapa
 			int pos = event1.getPosition();
@@ -1212,7 +1213,7 @@ public abstract class Joc extends MapaResetejable {
 				if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
 					inviteToGame(pl);
 				} else {
-					ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat.");
+					Messages.send(ply, MessageKey.MATCH_PLAYER_LEFT, MessageArgument.text("player", pl.getName()));
 				}
 				
 			} else {
@@ -1220,7 +1221,7 @@ public abstract class Joc extends MapaResetejable {
 					if (lobby.isOnLobby(Bukkit.getPlayer(pl.getName()))){
 						inviteToGame(pl);
 					} else {
-						ply.sendMessage("El jugador ha marxat del lobby abans de ser convidat (" + pl.getName() + ")");
+						Messages.send(ply, MessageKey.MATCH_PLAYER_LEFT, MessageArgument.text("player", pl.getName()));
 					}
 					
 				}
@@ -1233,10 +1234,10 @@ public abstract class Joc extends MapaResetejable {
                 Material m = Com.getSkullIconMaterial(p);
                 ItemStack stack = new ItemStack(m, 1);
                 //stack.setAmount(eq.getPlayers().size());
-                menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),ChatColor.WHITE +  "Des de: lobby");
+                menu.setOption(lobbyPlayers.indexOf(p), stack, ChatColor.AQUA + p.getName(),Messages.sharedItemMarker(MessageKey.MATCH_FROM_LOBBY));
             }
 
-            menu.setOption(26, new ItemStack(Material.SPONGE, 1), ChatColor.YELLOW + "Convidar tothom", ChatColor.WHITE + "Afegeix tots els jugadors del lobby a la partida actual");
+            menu.setOption(26, new ItemStack(Material.SPONGE, 1), Messages.sharedItemMarker(MessageKey.MATCH_INVITE_ALL), Messages.sharedItemMarker(MessageKey.MATCH_INVITE_ALL_LORE));
 
 
             menu.open(ply);
@@ -1255,8 +1256,8 @@ public abstract class Joc extends MapaResetejable {
 		// String join = "\n\n    " + ChatColor.GREEN + ChatColor.UNDERLINE + host + ChatColor.RESET + ChatColor.GREEN + " t'ha convidat a " + getGameName();
 		// String join2 = "\n    " + ChatColor.GOLD + ChatColor.UNDERLINE + "Clica aquí per entrar al joc\n\n";
 		
-		player.sendMessage(ChatColor.GREEN  + "\n\n    " +  ChatColor.ITALIC + host + ChatColor.RESET + "" + ChatColor.GREEN + " t'ha convidat a " + getGameName() + "");
-		Component clickToJoinMsg = PaperMessages.legacy(ChatColor.GOLD + "    Fes clic aquí per a entrar a la partida")
+		Messages.send(player, MessageKey.MATCH_INVITE, MessageArgument.text("player", host), MessageArgument.text("game", getGameName()));
+		Component clickToJoinMsg = Messages.component(player, MessageKey.MATCH_INVITE_CLICK)
 				// RUN_COMMAND is handled by both vanilla clients and protocol bots. Paper's
 				// server-side callback click action can be acknowledged by a non-vanilla
 				// client without ever invoking the callback.

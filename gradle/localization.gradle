@@ -1,0 +1,79 @@
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+def copyRoot = file('src/main/resources/i18n')
+def generatedJava = layout.buildDirectory.dir('generated/sources/localization')
+def generatedResources = layout.buildDirectory.dir('generated/resources/localization')
+tasks.register('generateLocalization') {
+    inputs.dir(copyRoot)
+    outputs.dir(generatedJava)
+    outputs.dir(generatedResources)
+    doLast {
+        def parser = new JsonSlurper()
+        def languages = parser.parse(new File(copyRoot, 'languages.json'))
+        def ids = languages.languages.collect { it.id }
+        def codes = languages.languages.collect { it.code }
+        if (ids.size() != ids.toSet().size() || codes.size() != codes.toSet().size() || !ids.contains(languages.default)) throw new GradleException('Invalid language ids, codes or default')
+        def contracts = [:]
+        def catalog = [:]
+        def files = []
+        new File(copyRoot, 'contracts').listFiles().findAll { it.name.endsWith('.json') }.sort { it.name }.each { f ->
+            parser.parse(f).keys.each { key, value ->
+                if (contracts.put(key, value) != null) throw new GradleException("Duplicate contract ${key}")
+            }
+        }
+        new File(copyRoot, 'translations').listFiles().findAll { it.name.endsWith('.json') }.sort { it.name }.each { f ->
+            files.add("i18n/translations/${f.name}")
+            parser.parse(f).items.each { item ->
+                if (catalog.put(item.key, item) != null) throw new GradleException("Duplicate translation ${item.key}")
+            }
+        }
+        if (catalog.keySet() != contracts.keySet()) throw new GradleException('Catalog and contract keys differ')
+        def constants = []
+        contracts.each { key, contract ->
+            if (!(key ==~ /[a-z][a-z0-9._-]+/) || !(contract.constant ==~ /[A-Z][A-Z0-9_]+/)) throw new GradleException("Invalid key/constant ${key}")
+            if (constants.contains(contract.constant)) throw new GradleException("Duplicate constant ${contract.constant}")
+            constants.add(contract.constant)
+            if (!contract.purpose?.trim() || !contract.surfaces || !(contract.maxTemplateCharacters instanceof Number)) throw new GradleException("Incomplete contract ${key}")
+            def names = contract.arguments.collect { it.name }
+            if (names.size() != names.toSet().size() || contract.arguments.any { !(it.type in ['TEXT','NUMBER']) || !(it.name ==~ /[a-zA-Z][a-zA-Z0-9]*/) }) throw new GradleException("Invalid arguments ${key}")
+            def item = catalog[key]
+            if (item.type != 'text' || item.languages.keySet() != ids.toSet()) throw new GradleException("Language coverage mismatch ${key}")
+            item.languages.each { language, text ->
+                if (!(text instanceof String) || !text.startsWith('[minimsg]')) throw new GradleException("Missing MiniMessage format ${key}/${language}")
+                def found = (text =~ /%(\d+)/).collect { it[1] as int }.toSet()
+                def expected = contract.arguments.isEmpty() ? [] as Set : (1..contract.arguments.size()).toSet()
+                if (found != expected) throw new GradleException("Placeholder mismatch ${key}/${language}: ${found} vs ${expected}")
+                if (text.replaceAll(/<[^>]*>/, '').length() > contract.maxTemplateCharacters) throw new GradleException("Copy exceeds template budget ${key}/${language}")
+            }
+        }
+        def target = new File(generatedJava.get().asFile, 'com/biel/lobby/localization/MessageKey.java')
+        target.parentFile.mkdirs()
+        def entries = contracts.collect { key, c ->
+            def args = c.arguments.collect { "new Argument(${JsonOutput.toJson(it.name)}, MessageArgument.Type.${it.type})" }.join(', ')
+            "    ${c.constant}(${JsonOutput.toJson(key)}, java.util.List.of(${args}))"
+        }.join(',\n')
+        target.text = """package com.biel.lobby.localization;
+// Generated from i18n/contracts/*.json. Edit contracts, not this file.
+public enum MessageKey {
+${entries};
+    public record Argument(String name, MessageArgument.Type type) {}
+    private final String key;
+    private final java.util.List<Argument> arguments;
+    MessageKey(String key, java.util.List<Argument> arguments) { this.key = key; this.arguments = arguments; }
+    public String key() { return key; }
+    public java.util.List<Argument> arguments() { return arguments; }
+    public java.util.List<String> argumentNames() { return arguments.stream().map(Argument::name).toList(); }
+}
+"""
+        def resourceRoot = generatedResources.get().asFile
+        new File(resourceRoot, 'i18n').mkdirs()
+        new File(resourceRoot, 'i18n/catalog-index.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(files)) + '\n'
+        // A build artifact for runtime validation; authored contracts remain grouped by feature.
+        new File(resourceRoot, 'i18n/contract-index.json').text = JsonOutput.prettyPrint(JsonOutput.toJson([keys:contracts])) + '\n'
+    }
+}
+sourceSets.main.java.srcDir(generatedJava)
+sourceSets.main.resources.srcDir(generatedResources)
+tasks.named('compileJava') { dependsOn 'generateLocalization' }
+tasks.named('processResources') { dependsOn 'generateLocalization' }

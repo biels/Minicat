@@ -11,6 +11,7 @@ import org.bukkit.inventory.meta.BookMeta;
 
 import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.lobby.Com;
+import com.biel.lobby.localization.*;
 import com.biel.lobby.lobby;
 import com.biel.lobby.utilities.data.PlayerData;
 
@@ -27,11 +28,11 @@ public class Options {
 		inventory.clear();
 		ItemStack dBlk = new ItemStack(Material.DIAMOND_BLOCK);
 		dBlk.addUnsafeEnchantment(Enchantment.FORTUNE, 10);
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, ChatColor.AQUA + "Teletransportador",  ChatColor.WHITE + "Obre l'inventari de teletransport."), ply, event -> lobby.getPlugin().gest.ObrirMenuMapes(Bukkit.getPlayer(ply.getName())));
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(dBlk, Messages.sharedItemMarker(MessageKey.LOBBY_PLAY), Messages.sharedItemMarker(MessageKey.LOBBY_PLAY_LORE)), ply, event -> lobby.getPlugin().gest.ObrirMenuMapes(Bukkit.getPlayer(ply.getName())));
 		inventory.setItem(1, button.getItemStack());
-		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_INGOT), ChatColor.GOLD + "Ranking " + ChatColor.YELLOW + "(" + "#" + playerData.getRank() + ")",  ChatColor.WHITE + "Mostra el rànquing de jugadors.", ChatColor.DARK_AQUA + "Elo: " + ChatColor.WHITE + Math.round(playerData.getElo()) + ChatColor.YELLOW + " #" + playerData.getRank()), ply, event -> Com.displayRanking(event.getPlayer()));
+		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.GOLD_INGOT), Messages.sharedItemMarker(MessageKey.RANKINGS_TITLE), Messages.sharedItemMarker(MessageKey.RANKINGS_LORE), Messages.sharedNumberItemMarker(MessageKey.RANK_VALUE, MessageArgument.number("elo", Math.round(playerData.getElo())), MessageArgument.number("rank", playerData.getRank()))), ply, event -> Com.displayRanking(event.getPlayer()));
 		inventory.setItem(3, button3.getItemStack());
-		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_POWDER), ChatColor.BLUE + "Instàncies [BETA]", ""), ply, event -> Com.getGest().openAllGamesMenu(event.getPlayer()));
+		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_POWDER), Messages.sharedItemMarker(MessageKey.LOBBY_INSTANCES), Messages.sharedItemMarker(MessageKey.LOBBY_INSTANCES_LORE)), ply, event -> Com.getGest().openAllGamesMenu(event.getPlayer()));
 		inventory.setItem(5, button4.getItemStack());
 //		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SAPLING), ChatColor.RED + "Fast" + ChatColor.GREEN + "Survival", "Servidor sense normes, mode de joc FastSurvival", "(Cercar FastSurvival al google)"), ply, new ItemButton.OptionClickEventHandler() {
 //			@Override
@@ -51,8 +52,9 @@ public class Options {
 		ItemStack itembook = new ItemStack(Material.WRITTEN_BOOK); 
 		BookMeta book = (BookMeta) itembook.getItemMeta();
 		book.setAuthor("Minicat");
-		book.setTitle(ChatColor.YELLOW + "Informació");
-		book.addPage("Fes /o per obtenir el menú d'opcions, /l per tornar al lobby en qualsevol moment i /m per accedir a l'inventari del teletransportador. Servidor fibra òptica.");
+		book.setTitle("Minicat");
+        book.displayName(Messages.sharedItemMarkerComponent(MessageKey.LOBBY_HELP_TITLE));
+		book.addPage(Messages.sharedItemMarker(MessageKey.LOBBY_HELP_PAGE));
 		//book.addPage("<Normes256.txt> craftbookEventHandler-Result;Line:142");
 		itembook.setItemMeta(book);
 		ply.getInventory().setItem(8, itembook);
@@ -61,7 +63,7 @@ public class Options {
 	public static void giveCommonOptionsMenu(final Player ply){
 		ItemButton.clearButtons(ply);
 		PlayerInventory inventory = ply.getInventory();
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOK), ChatColor.BLUE + "Opcions",  ChatColor.WHITE + "Opcions generals."), ply, event -> Com.teleportPlayerToLobby(ply));
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOK), Messages.sharedItemMarker(MessageKey.LOBBY_RETURN), Messages.sharedItemMarker(MessageKey.LOBBY_RETURN_LORE)), ply, event -> Com.teleportPlayerToLobby(ply));
 		inventory.setItem(8, button.getItemStack());
 	}
 

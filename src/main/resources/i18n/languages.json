@@ -1,0 +1,23 @@
+{
+  "default": "en_US",
+  "languages": [
+    {
+      "id": "en_US",
+      "code": "en",
+      "displayName": "English",
+      "minecraftCodes": [
+        "en_US",
+        "en_GB"
+      ]
+    },
+    {
+      "id": "ca_ES",
+      "code": "ca",
+      "displayName": "Català",
+      "minecraftCodes": [
+        "ca_ES",
+        "val_ES"
+      ]
+    }
+  ]
+}

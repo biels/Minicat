@@ -4,6 +4,7 @@ description: Main plugin for the minicat (1.0) server.
 depend:
 - BielAPI
 - DecentHolograms
+- Triton
 loadBefore:
 - AuthMe
 version: 1.4-dev
@@ -14,35 +15,39 @@ libraries:
 - org.postgresql:postgresql:42.7.13
 commands:
   info:
-    description: Obre el llibre d'informació del joc.
-    usage: /info [joc]
+    description: Open the game guide.
+    usage: /info [game]
     aliases: [i, guia]
   prova:
     description: Crea, llista o elimina instàncies de diagnòstic operatiu; importa plantilles antigues.
     usage: /prova <joc> [variant] | /prova llista | /prova elimina <món> | /prova importa
   mapes:
-    description: Mostra una llista dels mapes.
+    description: List maps.
     usage: /mapes
   o:
-    description: Mostra les opcions generals.
+    description: Show general options.
     usage: /o
   m:
-    description: Mostra l'inventari del teletransportador.
+    description: Choose a game.
     usage: /m
   minicatjoin:
-    description: Entra en una instància registrada des d'una invitació.
-    usage: /minicatjoin <món>
+    description: Join a game instance.
+    usage: /minicatjoin <world>
   minicatstart:
-    description: Inicia la instància on és el jugador, respectant les regles del joc.
+    description: Start your game when its rules allow it.
     usage: /minicatstart
+  lang:
+    description: Choose your Minicat language.
+    usage: /lang [code]
+    aliases: [language, llengua, idioma]
   minicatai:
     description: Activa o desactiva el mode IA (instantànies de RainbowClay per als jugadors IA). Desactivat a cada arrencada; només operadors o consola.
     usage: /minicatai on|off
   a:
-    description: Mostra totes les partides en curs.
+    description: Browse active games.
     usage: /a
   l:
-    description: Retorna el jugador al lobby.
+    description: Return to the lobby.
     usage: /l
   p:
     description: Estableix la propietat.
@@ -57,14 +62,14 @@ commands:
     description: (Des)Activa el mode ranked.
     usage: /s
   elo:
-    description: Mostra l'elo actual.
+    description: Show your Elo rating.
     usage: /elo
   top:
-    description: Mostra el top de jugadors.
+    description: Show player rankings.
     usage: /top
   ranking:
-    description: Mostra el top de jugadors.
+    description: Show player rankings.
     usage: /ranking
   prog:
-    description: Progres estimat de la partida (ETA).
+    description: Show estimated game progress.
     usage: /prog

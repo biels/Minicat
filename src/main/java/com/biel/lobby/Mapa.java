@@ -1,4 +1,5 @@
 package com.biel.lobby;
+import com.biel.lobby.localization.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +52,7 @@ public abstract class Mapa extends WorldEventBus{
 			
 			if (lobby.isOnLobby(p)) {
 				
-				p.sendMessage(ChatColor.GRAY + ply.getName() + " ha entrat a " + getGameName() + " (" + NomWorld + ")");
+				Messages.send(p, MessageKey.MATCH_JOINED, MessageArgument.text("player", ply.getName()), MessageArgument.text("game", getGameName() + " (" + NomWorld + ")"));
 			}
 			
 		}
@@ -98,7 +99,10 @@ public abstract class Mapa extends WorldEventBus{
 		return world;
 	}
 
-	public void sendGlobalMessage(String message){
+	public void sendGlobalMessage(MessageKey key, MessageArgument... arguments) {
+        for (Player recipient : world.getPlayers()) Messages.send(recipient, key, arguments);
+    }
+    public void sendGlobalMessage(String message){
 		for (Player p : world.getPlayers()){
 			p.sendMessage(message);
 		}

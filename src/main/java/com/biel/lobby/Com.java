@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import com.biel.lobby.localization.*;
 import com.biel.lobby.utilities.CBUtils;
 import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.HologramFacade;
@@ -66,6 +67,7 @@ public class Com {
             setSuffix(p, ColorConverter.chatToRaw(ChatColor.GRAY) + NBSP + ColorConverter.chatToRaw(ChatColor.YELLOW) + "#" + rank);
         }, 2);
 		playMinicatAnimation(p);
+        Messages.send(p, MessageKey.LOBBY_RETURNED);
 	}
 
 
@@ -84,11 +86,11 @@ public class Com {
 
 		hologram.showOnlyTo(player);
 
-		hologram.appendTextLine(ChatColor.AQUA + "MINICAT RANKING");
+		hologram.appendTextLine(Messages.sharedItemMarker(MessageKey.RANKINGS_TITLE));
 		hologram.appendTextLine("");
 
 		if(Com.getDataAPI().isInDatalessMode()) {
-			hologram.appendTextLine(ChatColor.RED + "✗ Ranking not available in dataless mode ✗");
+			hologram.appendTextLine(Messages.sharedItemMarker(MessageKey.RANKINGS_UNAVAILABLE));
 			return;
 		}
 
@@ -138,11 +140,11 @@ public class Com {
 	}
 	public static void displayRanking(Player p){
 		if(Com.getDataAPI().isInDatalessMode()){
-			p.sendMessage("El rànquing no es pot visualitzar en mode sense dades");
+			Messages.send(p, MessageKey.RANKINGS_UNAVAILABLE);
 			return;
 		}
 		ArrayList<Integer> pIDs = getDataAPI().getRanking();
-		p.sendMessage("-----Rànquing global-----");
+		Messages.send(p, MessageKey.RANKINGS_TITLE);
 		int max = 10;
 		for (Integer id : pIDs){
 			PlayerData data = new PlayerData(id);
@@ -169,7 +171,7 @@ public class Com {
 	}
 	public static String getRankingString(int num){
 		if(Com.getDataAPI().isInDatalessMode()){
-			return "[Not Avaliable]";
+			return "[Not available]";
 		}
 		ArrayList<String> positions = new ArrayList<>();
 		ArrayList<Integer> pIDs = getDataAPI().getRanking();
@@ -263,7 +265,7 @@ public class Com {
 		int i = 0;
 		for (String s : f){
 			Bukkit.getScheduler().runTaskLater(getPlugin(), () -> PaperMessages.showTitle(p, 0, 6, 0, s,
-					Integer.toString(Bukkit.getOnlinePlayers().size())), 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
+					Messages.legacy(p, MessageKey.LOBBY_WELCOME_SUBTITLE)), 4 * i + 14 + (CBUtils.getPing(p) * 20 / 1000));
 			i++;
 		}
 	}

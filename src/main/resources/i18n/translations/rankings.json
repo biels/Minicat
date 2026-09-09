@@ -1,0 +1,132 @@
+{
+  "items": [
+    {
+      "type": "text",
+      "key": "minicat.rankings.title",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Minicat rankings</aqua>",
+        "ca_ES": "[minimsg]<aqua>Rànquing de Minicat</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.lore",
+      "languages": {
+        "en_US": "[minimsg]<white>View player rankings.</white>",
+        "ca_ES": "[minimsg]<white>Consulta el rànquing de jugadors.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.unavailable",
+      "languages": {
+        "en_US": "[minimsg]<red>Rankings are unavailable right now.</red>",
+        "ca_ES": "[minimsg]<red>El rànquing no està disponible ara mateix.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.unranked",
+      "languages": {
+        "en_US": "[minimsg]<gold>Play matches to establish your rank.</gold>",
+        "ca_ES": "[minimsg]<gold>Juga partides per determinar la teva posició.</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.ranked.on",
+      "languages": {
+        "en_US": "[minimsg]<green>Ranked scoring is enabled.</green>",
+        "ca_ES": "[minimsg]<green>La puntuació de rànquing està activada.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.ranked.off",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Ranked scoring is disabled.</yellow>",
+        "ca_ES": "[minimsg]<yellow>La puntuació de rànquing està desactivada.</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.book.title",
+      "languages": {
+        "en_US": "[minimsg]Minicat rankings",
+        "ca_ES": "[minimsg]Rànquing de Minicat"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.position",
+      "languages": {
+        "en_US": "[minimsg]<gold>Rankings <yellow>(#%1)</yellow></gold>",
+        "ca_ES": "[minimsg]<gold>Rànquing <yellow>(#%1)</yellow></gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.value",
+      "languages": {
+        "en_US": "[minimsg]<dark_aqua>Elo: <white>%1</white> <yellow>#%2</yellow></dark_aqua>",
+        "ca_ES": "[minimsg]<dark_aqua>Elo: <white>%1</white> <yellow>#%2</yellow></dark_aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.row",
+      "languages": {
+        "en_US": "[minimsg]<yellow>#%1 <gold>%2</gold> — %3</yellow>",
+        "ca_ES": "[minimsg]<yellow>#%1 <gold>%2</gold> — %3</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.book.intro",
+      "languages": {
+        "en_US": "[minimsg]<black><bold>Rating weight (K)</bold>\nHigher K means larger Elo changes.\n\nRelease: %1\nBeta: %2\nAlpha: %3\nPre-Alpha: %4\nKnown issues: %5\n\nMaps may override K.</black>",
+        "ca_ES": "[minimsg]<black><bold>Pes de puntuació (K)</bold>\nMés K, més canvi d’elo.\n\nRelease: %1\nBeta: %2\nAlpha: %3\nPre-Alpha: %4\nErrors coneguts: %5\n\nEls mapes poden fixar K.</black>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.book.rules",
+      "languages": {
+        "en_US": "[minimsg]<black><bold>When matches count</bold>\n\n- More than 20 seconds\n- Balanced teams\n- Ranked scoring on\n- No player penalized</black>",
+        "ca_ES": "[minimsg]<black><bold>Quan puntuen</bold>\n\n- Més de 20 segons\n- Equips equilibrats\n- Rànquing activat\n- Cap jugador penalitzat</black>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.book.games",
+      "languages": {
+        "en_US": "[minimsg]<black><bold>Games and weights</bold></black>",
+        "ca_ES": "[minimsg]<black><bold>Jocs i pesos</bold></black>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.book.row",
+      "languages": {
+        "en_US": "[minimsg]<black>%1 <dark_green>K %2</dark_green></black>",
+        "ca_ES": "[minimsg]<black>%1 <dark_green>K %2</dark_green></black>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.book.map",
+      "languages": {
+        "en_US": "[minimsg]<dark_gray>  %1: K %2</dark_gray>",
+        "ca_ES": "[minimsg]<dark_gray>  %1: K %2</dark_gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.rankings.book.leaving",
+      "languages": {
+        "en_US": "[minimsg]<black>Leaving an advanced match costs Elo, except for network failures.\n\n/elo · /top</black>",
+        "ca_ES": "[minimsg]<black>Abandonar una partida avançada resta elo, tret d’errors de xarxa.\n\n/elo · /top</black>"
+      }
+    }
+  ]
+}

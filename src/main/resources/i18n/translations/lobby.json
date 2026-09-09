@@ -1,0 +1,100 @@
+{
+  "items": [
+    {
+      "type": "text",
+      "key": "minicat.lobby.play",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Play</aqua>",
+        "ca_ES": "[minimsg]<aqua>Juga</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.play.lore",
+      "languages": {
+        "en_US": "[minimsg]<white>Choose a game with /m.</white>",
+        "ca_ES": "[minimsg]<white>Tria una partida amb /m.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.instances",
+      "languages": {
+        "en_US": "[minimsg]<blue>Active games</blue>",
+        "ca_ES": "[minimsg]<blue>Partides actives</blue>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.instances.lore",
+      "languages": {
+        "en_US": "[minimsg]<white>Browse games already running.</white>",
+        "ca_ES": "[minimsg]<white>Consulta les partides en curs.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.return",
+      "languages": {
+        "en_US": "[minimsg]<blue>Return to lobby</blue>",
+        "ca_ES": "[minimsg]<blue>Torna al lobby</blue>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.return.lore",
+      "languages": {
+        "en_US": "[minimsg]<white>Return with /l.</white>",
+        "ca_ES": "[minimsg]<white>Torna amb /l.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.help.title",
+      "languages": {
+        "en_US": "[minimsg]Minicat help",
+        "ca_ES": "[minimsg]Ajuda de Minicat"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.welcome",
+      "languages": {
+        "en_US": "[minimsg]<gold>Welcome to Minicat</gold>",
+        "ca_ES": "[minimsg]<gold>Benvingut a Minicat</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.welcome.subtitle",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Choose a game with /m</yellow>",
+        "ca_ES": "[minimsg]<yellow>Tria una partida amb /m</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.returned",
+      "languages": {
+        "en_US": "[minimsg]<gray>You are back in the lobby.</gray>",
+        "ca_ES": "[minimsg]<gray>Has tornat al lobby.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.help.page",
+      "languages": {
+        "en_US": "[minimsg]<black><bold>Welcome to Minicat</bold>\n\n/m — Choose a game\n/a — Active games\n/l — Return to lobby\n/lang — English / Català\n/top — Player rankings\n/info — Game guide</black>",
+        "ca_ES": "[minimsg]<black><bold>Benvingut a Minicat</bold>\n\n/m — Tria una partida\n/a — Partides actives\n/l — Torna al lobby\n/lang — English / Català\n/top — Rànquing de jugadors\n/info — Guia del joc</black>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.teleported",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 returned you to the lobby.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 t’ha tornat al lobby.</gray>"
+      }
+    }
+  ]
+}

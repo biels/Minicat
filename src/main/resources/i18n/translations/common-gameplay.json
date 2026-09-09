@@ -1,0 +1,196 @@
+{
+  "items": [
+    {
+      "type": "text",
+      "key": "minicat.match.join.unavailable",
+      "languages": {
+        "en_US": "[minimsg]<red>You cannot join this instance in its current state.</red>",
+        "ca_ES": "[minimsg]<red>No et pots unir a aquesta instància en el seu estat actual.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.start.wait",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Time before you can start: %1 s.</yellow>",
+        "ca_ES": "[minimsg]<yellow>Temps per poder iniciar: %1 s.</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.joined",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 joined %2.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 ha entrat a %2.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.spectating",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 joined as a spectator.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 ha entrat com a espectador.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.returned",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 returned to the match.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 ha tornat a la partida.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.admin",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 is the match administrator.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 és l’administrador de la partida.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.disconnected",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 disconnected. Reconnect time: %2.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 s’ha desconnectat. Temps per tornar: %2.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.ended.away",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 ended while you were away.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 ha acabat mentre eres fora.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.left.away",
+      "languages": {
+        "en_US": "[minimsg]<gray>You left %1.</gray>",
+        "ca_ES": "[minimsg]<gray>Has abandonat %1.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.invite",
+      "languages": {
+        "en_US": "[minimsg]<green>%1 invited you to %2.</green>",
+        "ca_ES": "[minimsg]<green>%1 t’ha convidat a %2.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.invite.click",
+      "languages": {
+        "en_US": "[minimsg]<green><bold>Join match</bold></green>",
+        "ca_ES": "[minimsg]<green><bold>Entra a la partida</bold></green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.invite.hover",
+      "languages": {
+        "en_US": "[minimsg]Join %1",
+        "ca_ES": "[minimsg]Entra a %1"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.player.left",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 left the lobby before the action completed.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 ha marxat del lobby abans de completar l’acció.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.start.button",
+      "languages": {
+        "en_US": "[minimsg]<green>Start match</green>",
+        "ca_ES": "[minimsg]<green>Inicia la partida</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.info.button",
+      "languages": {
+        "en_US": "[minimsg]<green>Game guide</green>",
+        "ca_ES": "[minimsg]<green>Guia del joc</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.add.button",
+      "languages": {
+        "en_US": "[minimsg]<green>Add players</green>",
+        "ca_ES": "[minimsg]<green>Afegeix jugadors</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.invite.button",
+      "languages": {
+        "en_US": "[minimsg]<green>Invite players</green>",
+        "ca_ES": "[minimsg]<green>Convida jugadors</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.add.all",
+      "languages": {
+        "en_US": "[minimsg]<green>Add everyone</green>",
+        "ca_ES": "[minimsg]<green>Afegeix tothom</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.add.all.lore",
+      "languages": {
+        "en_US": "[minimsg]<green>Move lobby players into this game.</green>",
+        "ca_ES": "[minimsg]<green>Porta els jugadors del lobby a aquesta partida.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.invite.all",
+      "languages": {
+        "en_US": "[minimsg]<green>Invite everyone</green>",
+        "ca_ES": "[minimsg]<green>Convida tothom</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.invite.all.lore",
+      "languages": {
+        "en_US": "[minimsg]<green>Send an invitation to lobby players.</green>",
+        "ca_ES": "[minimsg]<green>Envia una invitació als jugadors del lobby.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.from.lobby",
+      "languages": {
+        "en_US": "[minimsg]<green>In the lobby</green>",
+        "ca_ES": "[minimsg]<green>Al lobby</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.camera",
+      "languages": {
+        "en_US": "[minimsg]<green>Random player camera</green>",
+        "ca_ES": "[minimsg]<green>Càmera d’un jugador aleatori</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.match.not.in.game",
+      "languages": {
+        "en_US": "[minimsg]<green>Join a game to use this command.</green>",
+        "ca_ES": "[minimsg]<green>Entra en una partida per fer servir aquesta ordre.</green>"
+      }
+    }
+  ]
+}
