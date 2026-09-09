@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -42,7 +41,8 @@ public record DatabaseConfig(String url, String user, String password) {
         settings.setProperty("socketTimeout", "5");
         settings.setProperty("tcpKeepAlive", "true");
         settings.setProperty("options", "-c timezone=Europe/Madrid -c statement_timeout=4000 -c lock_timeout=2000");
-        return DriverManager.getConnection(url, settings);
+        // Paper loads JDBC libraries in the plugin classloader, outside DriverManager's discovery.
+        return new org.postgresql.Driver().connect(url, settings);
     }
 
     @Override public String toString() { return "DatabaseConfig[PostgreSQL, credentials redacted]"; }
