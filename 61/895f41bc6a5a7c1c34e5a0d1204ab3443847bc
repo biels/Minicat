@@ -1,0 +1,31 @@
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_667b83b1d0304d::t_914d80bde1d8fd 24-25,54-63,131,165-192,197-198,205-218
+src/main/java/com/biel/lobby/RankingBook.java
+  s_667b83b1d0304d::t_f3e9c9c84b1064 57-58,69,74,86-87
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_667b83b1d0304d::t_837e71055ba1e9 256
+src/main/resources/i18n/COPY.md
+  s_667b83b1d0304d::t_8f6790853c7ee9 22-24,61-65
+src/main/resources/i18n/contracts/common-gameplay.json
+  s_667b83b1d0304d::t_e2266597d75476 293-310
+src/main/resources/i18n/translations/common-gameplay.json
+  s_667b83b1d0304d::t_b91fb32bee34b9 186-193
+src/test/java/com/biel/lobby/localization/LocalizationCatalogTest.java
+  s_667b83b1d0304d::t_d766fbecb766ab 33-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "61895f41bc6a5a7c1c34e5a0d1204ab3443847bc",
+  "prompts": {},
+  "sessions": {
+    "s_667b83b1d0304d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08591-a615-7f01-af4b-075363019da2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}

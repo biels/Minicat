@@ -1,0 +1,99 @@
+src/test/java/com/biel/lobby/localization/LocalizationCatalogTest.java
+  s_667b83b1d0304d::t_b7334471724cbe 1-27,29,31-33
+  s_667b83b1d0304d::t_83eaef511d6171 28,30
+build.gradle
+  s_667b83b1d0304d::t_38631ccdbeda89 45-49
+  s_667b83b1d0304d::t_d878d2c3458367 20-22,44
+  s_667b83b1d0304d::t_60320d76ae24aa 91-92
+src/main/java/com/biel/lobby/MapSelectionMenuLayout.java
+  s_667b83b1d0304d::t_9044b6957f6fb4 1-9,11-22
+  s_667b83b1d0304d::t_781fb7b13b3c84 10
+src/test/java/com/biel/lobby/MapSelectionMenuLayoutTest.java
+  s_667b83b1d0304d::t_b7334471724cbe 1-25
+src/main/java/com/biel/lobby/guide/GameGuide.java
+  s_667b83b1d0304d::t_b78e85e8564d24 26-28,197,215,223
+src/main/java/com/biel/lobby/localization/MessageArgument.java
+  s_667b83b1d0304d::t_4ff9612c94a181 1-8
+  s_667b83b1d0304d::t_71695781e75943 9-15
+src/main/resources/plugin.yml
+  s_667b83b1d0304d::t_d878d2c3458367 7,18-19,25,28,31,34-35,37,39-42
+  s_667b83b1d0304d::t_42b22c136f48a4 47,50,65,68,71,74
+src/main/java/com/biel/lobby/localization/LocalizationCatalog.java
+  s_667b83b1d0304d::t_4ff9612c94a181 1-52
+src/main/java/com/biel/lobby/localization/Messages.java
+  s_667b83b1d0304d::t_10bfd4dfab5e34 1-3,5-11,13-51,55-65,70,73-147,155-172
+  s_667b83b1d0304d::t_8556acacd8b38a 4,12,52-54,66-69,71-72
+  s_667b83b1d0304d::t_b78e85e8564d24 148-154
+  s_667b83b1d0304d::t_c8e645d43ca4d0 173-228
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_667b83b1d0304d::t_8e10f660668078 20,23,26,31,149-166,169,680
+  s_667b83b1d0304d::t_cc832b9027124d 146
+  s_667b83b1d0304d::t_b2566cf87308cf 10
+  s_667b83b1d0304d::t_9044b6957f6fb4 32-34,50-51,111-114,118-121,141-143,602
+  s_667b83b1d0304d::t_b3472526c80e12 145,167-168,170-171,270,338,344,346,363,465,470,476,582,613,615,617-620,625,631,637,650,656,661,666,670,684-697
+src/main/java/com/biel/lobby/lobby.java
+  s_667b83b1d0304d::t_b78e85e8564d24 24-26,46,93-100,207-220,223,232,235,243,283,355
+  s_667b83b1d0304d::t_5df61a64045b8a 258,278,339,342,357,360
+AGENTS.md
+  s_667b83b1d0304d::t_bdee7c0cfeedc9 1-5
+src/main/resources/i18n/COPY.md
+  s_667b83b1d0304d::t_a4d13237872e48 1-2,33-42
+  s_667b83b1d0304d::t_bdee7c0cfeedc9 3-32
+  s_667b83b1d0304d::t_9e263414f53d58 43-106
+gradle/localization.gradle
+  s_667b83b1d0304d::t_59d0d5e250ea1f 1-79
+scripts/install-localization.py
+  s_667b83b1d0304d::t_f83052d8ec8ad5 1-86
+scripts/test_install_localization.py
+  s_667b83b1d0304d::t_ba31c11a7d1dd2 1-39
+src/main/java/com/biel/lobby/Com.java
+  s_667b83b1d0304d::t_c7304184f4e9ba 14,70,89,93,143,147,174,268
+src/main/java/com/biel/lobby/LoginListener.java
+  s_667b83b1d0304d::t_982a3a6dd3ee31 2,55,57,117
+src/main/java/com/biel/lobby/Mapa.java
+  s_667b83b1d0304d::t_748185ea3b5761 2,55,102-105
+src/main/java/com/biel/lobby/RankingBook.java
+  s_667b83b1d0304d::t_726428f9238ace 10,33-38,40-60
+src/main/java/com/biel/lobby/localization/LanguageCatalog.java
+  s_667b83b1d0304d::t_9a5a0cd3b17c0c 1-31
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_667b83b1d0304d::t_e7eb78868f3530 2,223,255-256,700,715,839,855,1040,1146,1159,1161-1162,1164,1173,1181,1193,1196,1203,1205,1216,1224,1237,1240,1259-1260
+src/main/java/com/biel/lobby/utilities/Options.java
+  s_667b83b1d0304d::t_554bac38179ff8 14,31,33,35,55-57,66
+src/main/java/com/biel/lobby/utilities/PaperMessages.java
+  s_667b83b1d0304d::t_b19cdd6ef680b6 12,41-48
+src/main/resources/i18n/contracts/common-gameplay.json
+  s_667b83b1d0304d::t_a9c268e53605d6 1-309
+src/main/resources/i18n/contracts/lobby.json
+  s_667b83b1d0304d::t_1d1df2a5d07287 1-137
+src/main/resources/i18n/contracts/navigation.json
+  s_667b83b1d0304d::t_c6800e2b5ea16c 1-480
+src/main/resources/i18n/contracts/rankings.json
+  s_667b83b1d0304d::t_23cf3b062975f0 1-238
+src/main/resources/i18n/languages.json
+  s_667b83b1d0304d::t_439ee47f126573 1-23
+src/main/resources/i18n/translations/common-gameplay.json
+  s_667b83b1d0304d::t_b3bcf1ac23adca 1-196
+src/main/resources/i18n/translations/lobby.json
+  s_667b83b1d0304d::t_131adfa22c39f1 1-100
+src/main/resources/i18n/translations/navigation.json
+  s_667b83b1d0304d::t_d05eb94a1a7bea 1-316
+src/main/resources/i18n/translations/rankings.json
+  s_667b83b1d0304d::t_a518ba7e10a9c2 1-132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "582b45d8d7d6fafcca29ef0525831e37e7a65125",
+  "prompts": {},
+  "sessions": {
+    "s_667b83b1d0304d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08591-a615-7f01-af4b-075363019da2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
