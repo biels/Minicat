@@ -101,13 +101,13 @@ jocs/obsidiandefenders/
 
 In dependency order. Each line is one or two commits.
 
-| Step | Change | Status |
+| Step | Change | Status (2026-09-09) |
 | --- | --- | --- |
-| 1 | This document; the layout paragraph in `README.md` points here. | written, uncommitted |
-| 2 | Lift `inkwars.SquidCollision` to `utilities.SweptBoxCollision` (+ its test). It is a generic swept-box sweep against world collision boxes, used by Ink Wars and by Obsidian Defenders' launcher trajectory; `utilities` is where `Vec`, `Matrix` and `Cuboid` already live. Removes the only game-to-game import. | pending |
-| 3 | Ink Wars: move `InkWars.java`, `InkWarsLifecycleTest`, `InkWarsMovementTest` into `inkwars/`. Package exists; nothing to rename. | pending |
-| 4 | Obsidian Defenders: `ObsidianDefenders` + 7 siblings + 6 tests into `obsidiandefenders/`; `build.gradle` main class; then the prefix-drop commit. `ObsidianInteractions` (portal geometry + loot velocity + lookout sign text) is a grab-bag name; splitting it is rename debt, not part of the move. | pending |
-| 5 | Rainbow Clay: `RainbowClay` + `RainbowClaySnapshotPublisher` → `rainbowclay/SnapshotPublisher`. `AgentSnapshotHttpServer` is generic and stays in `agent`. `lobby.java` keeps its public call. | pending |
+| 1 | This document; the layout paragraph in `README.md` points here. | done |
+| 2 | Lift `inkwars.SquidCollision` to `utilities.SweptBoxCollision` (+ its test). It is a generic swept-box sweep against world collision boxes, used by Ink Wars and by Obsidian Defenders' launcher trajectory; `utilities` is where `Vec`, `Matrix` and `Cuboid` already live. Removes the only game-to-game import. | done |
+| 3 | Ink Wars: move `InkWars.java`, `InkWarsLifecycleTest`, `InkWarsMovementTest` into `inkwars/`. Package exists; nothing to rename. | done |
+| 4 | Obsidian Defenders: `ObsidianDefenders` + 7 siblings + 6 tests into `obsidiandefenders/`; `build.gradle` main class; then the prefix-drop commit. `ObsidianInteractions` (portal geometry + loot velocity + lookout sign text) is a grab-bag name; splitting it is rename debt, not part of the move. | done |
+| 5 | Rainbow Clay: `RainbowClay` + `RainbowClaySnapshotPublisher` → `rainbowclay/SnapshotPublisher`. `AgentSnapshotHttpServer` is generic and stays in `agent`. `lobby.java` keeps its public call. | done |
 
 Torres stays a single class. `Turret` is shareable across game modes and stays in
 `utilities`; that it still takes a `Torres` in its constructor (for the turret list, the
