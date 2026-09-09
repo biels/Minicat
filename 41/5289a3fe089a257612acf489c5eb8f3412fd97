@@ -1,0 +1,44 @@
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkWarsLifecycleTest.java
+  s_ba0431a86c7e22::t_958b4a9dff72c5 1,29-30
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/package-info.java
+  s_d4244df752681a::t_95c5bf4085263e 1-15
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkWarsMovementTest.java
+  s_25f98ea41c06bd::t_0ba54a3e24db3a 1,28-29
+  s_25f98ea41c06bd::t_953133c0f1af86 30
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_d4244df752681a::t_3c7aa03e8cec16 31
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkWars.java
+  s_d4244df752681a::t_018ffcde06682c 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "415289a3fe089a257612acf489c5eb8f3412fd97",
+  "prompts": {},
+  "sessions": {
+    "s_25f98ea41c06bd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08093-c951-7303-babf-76a5a877d8b9",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_ba0431a86c7e22": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0820e-0cd6-7cf0-a5ce-d84b0e97af45",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_d4244df752681a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2612296-91f9-4559-b845-d33cba0ea04f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
