@@ -1,0 +1,29 @@
+README.md
+  s_d4244df752681a::t_a59899248a9364 16-19
+docs/game-package-layout.md
+  s_d4244df752681a::t_1e9fe32e1bb77e 1-22,27-38,49-78,80-111,117,119-121,126-129
+  s_d4244df752681a::t_a59899248a9364 39
+  s_d4244df752681a::t_ce925935d673c7 23-26,40-48,79,112-116,118,122-125
+src/test/java/com/biel/lobby/utilities/SweptBoxCollisionTest.java
+  s_d4244df752681a::t_b920abe9a8b9a6 8,14,19,35,41-42,47,50,53-54,60
+  s_d4244df752681a::t_9df78ba59542cc 1-7,9-13,15-18,20-34,36-40,43-46,48-49,51-52,55-59,61-70
+src/main/java/com/biel/lobby/utilities/SweptBoxCollision.java
+  s_d4244df752681a::t_9df78ba59542cc 1-7,9-10,12-110
+  s_d4244df752681a::t_b920abe9a8b9a6 8,11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "d1bf784065d09b05572619798809083550903429",
+  "prompts": {},
+  "sessions": {
+    "s_d4244df752681a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2612296-91f9-4559-b845-d33cba0ea04f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
