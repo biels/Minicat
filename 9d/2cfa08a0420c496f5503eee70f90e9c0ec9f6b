@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/utilities/data/DatabaseConfig.java
+  s_2ad96a5d10b444::t_7ae128d29b1987 44-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "9d2cfa08a0420c496f5503eee70f90e9c0ec9f6b",
+  "prompts": {},
+  "sessions": {
+    "s_2ad96a5d10b444": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08591-f1b1-7051-8eb0-b1d2a642d913",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
