@@ -1,0 +1,21 @@
+.idea/compiler.xml
+  s_e9ae59e9697b9a::t_b69d3139a3a88c 4,6
+.idea/misc.xml
+  s_e9ae59e9697b9a::t_032c4e39fdd989 6,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e832c9380b076c43943d98eaeae74b57f761be12",
+  "prompts": {},
+  "sessions": {
+    "s_e9ae59e9697b9a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7deaeea6-9215-46ff-9fc1-4317b649c196",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
