@@ -1,0 +1,23 @@
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_667b83b1d0304d::t_bbc2d7a362f7e1 167-170,696,729,743
+src/main/java/com/biel/lobby/mapes/JocEquips.java
+  s_667b83b1d0304d::t_79f6d355b17114 49-52,105,293-294,404,407,450,528,530,533-535,545,548,556,559,563-565,571,573,576,580,582,589,605,702,970-974
+src/main/java/com/biel/lobby/utilities/ScoreBoardUpdater.java
+  s_667b83b1d0304d::t_fb988d774f3947 142-158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "824b66b584533f884107be02beb35d55631fec38",
+  "prompts": {},
+  "sessions": {
+    "s_667b83b1d0304d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08591-a615-7f01-af4b-075363019da2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
