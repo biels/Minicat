@@ -36,7 +36,7 @@ dependencies {
     compileOnly 'com.google.guava:guava:33.6.0-jre'
     compileOnly 'commons-io:commons-io:2.21.0'
     compileOnly 'commons-lang:commons-lang:2.6'
-    compileOnly 'com.mysql:mysql-connector-j:9.6.0'
+    compileOnly 'org.postgresql:postgresql:42.7.13'
     compileOnly 'BielAPI:BielAPI:0.0.10-SNAPSHOT'
     compileOnly fileTree(dir: 'lib', include: '*.jar', exclude: [
             'BielAPI-*.jar',
@@ -65,4 +65,17 @@ tasks.register('calibrateObsidianLaunchers', JavaExec) {
     mainClass = 'com.biel.lobby.mapes.jocs.ObsidianLauncherCalibration'
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
     doFirst { args project.property('launcherSurvey'), project.property('launcherReport') }
+}
+
+tasks.register('postgresTest', Test) {
+    description = 'Run storage integration checks against disposable PostgreSQL.'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    filter { includeTestsMatching '*PostgresqlIntegrationTest' }
+    doFirst {
+        if (!System.getenv('MINICAT_TEST_DATABASE_CONFIG')) {
+            throw new GradleException('MINICAT_TEST_DATABASE_CONFIG is required; database must be minicat_test')
+        }
+    }
 }

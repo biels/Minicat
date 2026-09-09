@@ -57,13 +57,11 @@ public class PlayerData {
 	public void setElo(double value){
 		Com.getDataAPI().setElo(id, value);
 	}
-	/** Applies a change on top of the stored rating; false, and nothing written, when the rating could not be read. */
+	/** Atomically applies a change; success means PostgreSQL saved it. */
 	public boolean addElo(double amount){
-		OptionalDouble current = readElo();
-		if (current.isEmpty()) return false;
-		setElo(current.getAsDouble() + amount);
-		return true;
+		return Com.getDataAPI().addElo(id, amount);
 	}
+
 	public double getRelativeElo(){
 		return getElo() - Com.getDataAPI().getAvgElo();
 	}

@@ -22,3 +22,5 @@ Deploy the paired plugins using the guarded procedure in
 [`../minicat-repo/docs/operations/paper-26.2-operations.md`](../minicat-repo/docs/operations/paper-26.2-operations.md).
 That repository owns deployment scripts and operational evidence; this one owns
 the plugin and its tests. Do not copy artifacts into the legacy server tree.
+
+Persistence now uses PostgreSQL only; see [database setup and verification](docs/database/README.md).

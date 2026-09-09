@@ -40,6 +40,8 @@ public final class lobby extends JavaPlugin {
 	@SuppressWarnings("unused")
 	@Override
 	public void onEnable(){
+		dataAPI = new DataAPI();
+		dataAPI.requireReady();
 		// TODO Insert logic to be performed when the plugin is enabled
 		new LoginListener();
 
@@ -51,7 +53,6 @@ public final class lobby extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new com.biel.lobby.guide.GuideSigns(), this);
 		agentSnapshotHttpServer = new AgentSnapshotHttpServer(this);
 		agentSnapshotHttpServer.start();
-		dataAPI = new DataAPI();
 	}
 
 	@Override

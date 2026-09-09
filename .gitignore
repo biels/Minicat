@@ -30,3 +30,5 @@
 .idea/**/modules.xml
 .idea/**/modules/
 *.iml
+# Server-local database secrets
+**/database.properties

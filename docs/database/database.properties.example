@@ -1,0 +1,5 @@
+# Copy to plugins/lobby/database.properties on the server; restrict its filesystem permissions.
+# Override its path with -Dminicat.database.config=... or MINICAT_DATABASE_CONFIG.
+url=jdbc:postgresql://127.0.0.1:5432/minicat
+user=minicat_app
+password=REPLACE_WITH_SERVER_LOCAL_SECRET

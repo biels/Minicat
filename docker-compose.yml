@@ -1,16 +1,14 @@
-
-# Usage: See mysql/README.md
-
-version: '2'
+# Optional local PostgreSQL. Schema setup is described in docs/database/README.md.
 services:
-  mysqldb:
-    image: mysql
-    volumes:
-      - ./mysql:/docker-entrypoint-initdb.d
+  postgres:
+    image: postgres:18.4
     environment:
-      MYSQL_DATABASE: minicat
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: minicat_usr
-      MYSQL_PASSWORD: minicat
+      POSTGRES_DB: minicat
+      POSTGRES_USER: minicat_dev
+      POSTGRES_PASSWORD: ${MINICAT_DEV_DB_PASSWORD:?Set MINICAT_DEV_DB_PASSWORD}
     ports:
-    - "3306:3306"
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - minicat_postgres:/var/lib/postgresql
+volumes:
+  minicat_postgres:

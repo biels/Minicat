@@ -11,7 +11,7 @@ api-version: '26.2'
 libraries:
 - commons-io:commons-io:2.21.0
 - commons-lang:commons-lang:2.6
-- com.mysql:mysql-connector-j:9.6.0
+- org.postgresql:postgresql:42.7.13
 commands:
   info:
     description: Obre el llibre d'informació del joc.
