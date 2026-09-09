@@ -1,0 +1,54 @@
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/GoldScore.java
+  s_d4244df752681a::t_7db98e295c80ef 1-13,15-18,20-24,26-32,34-36,38-42
+  s_d4244df752681a::t_85e53661a06eba 14,19,25,33,37
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/ObsidianDefenders.java
+  s_d4244df752681a::t_7db98e295c80ef 95-97
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/Watchtowers.java
+  s_d4244df752681a::t_85e53661a06eba 10-11,14,18,22,27,50,52,56,65,67-69
+  s_d4244df752681a::t_7db98e295c80ef 1-9,12-13,15-17,19-21,23-26,28-49,51,53-55,57-64,66,70-79
+build.gradle
+  s_d4244df752681a::t_da143ff5598512 65
+src/test/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/WatchtowersTest.java
+  s_d4244df752681a::t_da143ff5598512 1-94
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/LauncherController.java
+  s_d4244df752681a::t_85e53661a06eba 3-5
+src/test/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/InteractionsTest.java
+  s_d4244df752681a::t_da143ff5598512 1-91
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/package-info.java
+  s_d4244df752681a::t_bd77c7b17c0a31 1-12
+src/test/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/LauncherCalibration.java
+  s_d4244df752681a::t_da143ff5598512 1-73
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/Interactions.java
+  s_d4244df752681a::t_7db98e295c80ef 1-7,11-38,40-62
+  s_d4244df752681a::t_85e53661a06eba 8-10,39
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/UpgradeController.java
+  s_d4244df752681a::t_85e53661a06eba 3-4
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/LauncherTrajectory.java
+  s_d4244df752681a::t_7db98e295c80ef 1-16,20-38,40-98
+  s_d4244df752681a::t_85e53661a06eba 17-19,39
+src/test/java/com/biel/lobby/mapes/jocs/obsidiandefenders/TeamUpgradesTest.java
+  s_d4244df752681a::t_da143ff5598512 3-4
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/package-info.java
+  s_d4244df752681a::t_bd77c7b17c0a31 8,10
+src/test/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/GoldScoreTest.java
+  s_d4244df752681a::t_da143ff5598512 1-69
+src/main/java/com/biel/lobby/mapes/jocs/obsidiandefenders/utils/TeamUpgrades.java
+  s_d4244df752681a::t_85e53661a06eba 7,10,17-18,20,23
+  s_d4244df752681a::t_7db98e295c80ef 1-6,8-9,11-16,19,21-22,24-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "4d604252e1458b78bfc29464acca49e4d8deee5a",
+  "prompts": {},
+  "sessions": {
+    "s_d4244df752681a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2612296-91f9-4559-b845-d33cba0ea04f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
