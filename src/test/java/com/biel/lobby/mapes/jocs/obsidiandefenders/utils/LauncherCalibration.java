@@ -3,10 +3,12 @@ package com.biel.lobby.mapes.jocs.obsidiandefenders.utils;
 import com.google.gson.Gson;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
@@ -19,6 +21,7 @@ public final class LauncherCalibration {
     public static void main(String[] args) throws Exception {
         Gson gson = new Gson();
         Survey survey = gson.fromJson(Files.readString(Path.of(args[0])), Survey.class);
+        List<Watchtowers.Tower> towers = configuredTowers(Path.of(args[2]));
         int[] bounds = survey.bounds;
         Map<String, List<BoundingBox>> cache = new HashMap<>();
         var terrain = new LauncherTrajectory.Terrain() {
@@ -54,10 +57,11 @@ public final class LauncherCalibration {
         List<Trial> trials = new ArrayList<>();
         int failed = 0;
         long started = System.nanoTime();
-        for (var tower : Watchtowers.TOWERS) {
+        for (var tower : towers) {
             int accepted = 0;
             for (double x : new double[]{-0.19, 0, 0.19}) for (int z = -6; z <= 6; z++) {
-                Vector origin = new Vector(tower.rearX() + 0.5 + x, 52.5625, tower.middleZ() + 0.5 + z * 0.19);
+                Vector origin = new Vector(tower.rearX() + 0.5 + x,
+                        tower.plateY() + 0.5625, tower.middleZ() + 0.5 + z * 0.19);
                 Vector impulse = LauncherTrajectory.find(tower, origin, terrain);
                 trials.add(new Trial(tower.id(), array(origin), impulse == null ? null : array(impulse)));
                 if (impulse == null) failed++; else accepted++;
@@ -70,4 +74,25 @@ public final class LauncherCalibration {
     }
 
     private static double[] array(Vector vector) { return new double[]{vector.getX(), vector.getY(), vector.getZ()}; }
+
+    private static List<Watchtowers.Tower> configuredTowers(Path propertiesPath) throws Exception {
+        Properties properties = new Properties();
+        try (var reader = Files.newBufferedReader(propertiesPath, StandardCharsets.ISO_8859_1)) {
+            properties.load(reader);
+        }
+        List<Watchtowers.Tower> towers = new ArrayList<>();
+        for (int team = 0; team < 2; team++) {
+            int direction = Integer.parseInt(properties.getProperty("LauncherDirection" + team));
+            int lowerButtonY = Integer.parseInt(properties.getProperty("LauncherLowerButtonY" + team));
+            for (int index = 0; ; index++) {
+                String value = properties.getProperty("LauncherTower" + team + "_" + index);
+                if (value == null) break;
+                String[] coordinates = value.split(",");
+                towers.add(new Watchtowers.Tower(towers.size(), team, Integer.parseInt(coordinates[0]),
+                        Integer.parseInt(coordinates[1]), Integer.parseInt(coordinates[2]), direction, lowerButtonY));
+            }
+        }
+        if (towers.isEmpty()) throw new IllegalArgumentException("No launcher towers in " + propertiesPath);
+        return towers;
+    }
 }

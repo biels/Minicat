@@ -3,15 +3,11 @@ package com.biel.lobby.mapes.jocs.obsidiandefenders.utils;
 import org.bukkit.util.Vector;
 import org.bukkit.ChatColor;
 
-/** Shared positions, display text and movement calculations for Obsidian interactions. */
+/** Display text and movement calculations for Obsidian interactions. */
 public final class Interactions {
     public static final double PORTAL_RADIUS = 2;
     public static final double PICKAXE_RADIUS = 4;
     public static final int PICKAXE_PICKUP_DELAY = 10;
-
-    public static Vector lookoutFloor() {
-        return new Vector(662, 73, -1392);
-    }
 
     public static String[] lookoutLines(long redGold, long blueGold, int redKills, int blueKills) {
         return new String[]{
@@ -24,16 +20,6 @@ public final class Interactions {
 
     public static String formatGold(long nuggets) {
         return java.math.BigDecimal.valueOf(nuggets, 3).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + "k";
-    }
-
-    public record PortalPosition(Vector entrance, Vector arrival, float arrivalYaw) {}
-
-    public static PortalPosition portal(int team) {
-        return switch (team) {
-            case 0 -> new PortalPosition(new Vector(616.5, 41, -1422.5), new Vector(613.5, 41, -1371.5), 180);
-            case 1 -> new PortalPosition(new Vector(712.5, 41, -1379.5), new Vector(713.5, 41, -1428.5), 0);
-            default -> throw new IllegalArgumentException("Unknown team: " + team);
-        };
     }
 
     public static boolean inPortal(Vector player, Vector entrance) {

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import org.bukkit.util.Vector;
 
-/** Match-local upgrades and the four surveyed watchtower layouts. */
+/** Match-local launcher state and calculations over a configured watchtower layout. */
 public final class Watchtowers {
     public static final int RELOAD_TICKS = 100;
     public static final int FLIGHT_TIMEOUT_TICKS = 200;
@@ -14,39 +14,36 @@ public final class Watchtowers {
         public Vector vector() { return new Vector(x, y, z); }
     }
 
-    public record Tower(int id, int team, int rearX, int middleZ, int direction) {
+    public record Tower(int id, int team, int rearX, int plateY, int middleZ, int direction, int lowerButtonY) {
         public List<Position> plates() {
-            return List.of(new Position(rearX, 52, middleZ - 1), new Position(rearX, 52, middleZ),
-                    new Position(rearX, 52, middleZ + 1));
+            return List.of(new Position(rearX, plateY, middleZ - 1), new Position(rearX, plateY, middleZ),
+                    new Position(rearX, plateY, middleZ + 1));
         }
         public List<Position> buttons() {
-            return List.of(new Position(rearX + 2 * direction, 52, middleZ),
-                    new Position(rearX - 2 * direction, 42, middleZ - 2),
-                    new Position(rearX - 2 * direction, 42, middleZ + 2));
+            return List.of(new Position(rearX + 2 * direction, plateY, middleZ),
+                    new Position(rearX - 2 * direction, lowerButtonY, middleZ - 2),
+                    new Position(rearX - 2 * direction, lowerButtonY, middleZ + 2));
         }
         public boolean onPlates(Vector feet) {
             return Double.isFinite(feet.getX()) && Double.isFinite(feet.getY()) && Double.isFinite(feet.getZ())
                     && feet.getX() >= rearX + 0.125 && feet.getX() <= rearX + 0.875
                     && feet.getZ() >= middleZ - 0.875 && feet.getZ() <= middleZ + 1.875
-                    && feet.getY() >= 52 && feet.getY() <= 52.15;
+                    && feet.getY() >= plateY && feet.getY() <= plateY + 0.15;
         }
     }
 
-    public static final List<Tower> TOWERS = List.of(new Tower(0, 0, 617, -1409, 1),
-            new Tower(1, 0, 617, -1391, 1), new Tower(2, 1, 709, -1409, -1),
-            new Tower(3, 1, 709, -1391, -1));
-
-    public static Position purchaseButton(int team) {
-        return switch (team) {
-            case 0 -> new Position(611, 42, -1369);
-            case 1 -> new Position(715, 42, -1431);
-            default -> throw new IllegalArgumentException("Unknown team " + team);
-        };
-    }
-
     private final TeamUpgrades upgrades;
-    private final long[] reloadUntil = new long[4];
-    public Watchtowers(TeamUpgrades upgrades) { this.upgrades = upgrades; }
+    private final List<Tower> towers;
+    private final long[] reloadUntil;
+    public Watchtowers(TeamUpgrades upgrades, List<Tower> towers) {
+        this.upgrades = upgrades;
+        this.towers = List.copyOf(towers);
+        for (int id = 0; id < towers.size(); id++) {
+            if (towers.get(id).id() != id) throw new IllegalArgumentException("Tower ids must be contiguous from zero");
+        }
+        reloadUntil = new long[towers.size()];
+    }
+    public List<Tower> towers() { return towers; }
     public boolean unlocked(int team) { return upgrades.has(team, TeamUpgrades.Upgrade.LAUNCHERS); }
 
     public int reloadSeconds(int tower, long tick) {
@@ -54,7 +51,7 @@ public final class Watchtowers {
     }
 
     public boolean fire(int tower, long tick) {
-        if (!unlocked(TOWERS.get(tower).team()) || tick < reloadUntil[tower]) return false;
+        if (!unlocked(towers.get(tower).team()) || tick < reloadUntil[tower]) return false;
         reloadUntil[tower] = tick + RELOAD_TICKS;
         return true;
     }

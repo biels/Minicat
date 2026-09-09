@@ -28,20 +28,23 @@ final class UpgradeController {
     private final ToIntFunction<Player> teamOf;
     private final BiPredicate<Player, Integer> pay;
     private final Consumer<Player> refreshGold;
+    private final Map<Integer, Watchtowers.Position> purchaseButtons;
     private final Map<Block, Sign> originals = new HashMap<>();
     private final Map<Integer, String[]> displayed = new HashMap<>();
     private long tick;
 
     UpgradeController(World world, TeamUpgrades upgrades, LauncherController launchers,
             Predicate<Player> participant, ToIntFunction<Player> teamOf, BiPredicate<Player, Integer> pay,
-            Consumer<Player> refreshGold) {
+            Consumer<Player> refreshGold, Map<Integer, Watchtowers.Position> purchaseButtons) {
         this.world = world; this.upgrades = upgrades; this.launchers = launchers;
         this.participant = participant; this.teamOf = teamOf; this.pay = pay; this.refreshGold = refreshGold;
+        this.purchaseButtons = Map.copyOf(purchaseButtons);
         updateSigns();
     }
 
     private Block button(int team) {
-        var position = Watchtowers.purchaseButton(team);
+        var position = purchaseButtons.get(team);
+        if (position == null) throw new IllegalArgumentException("No upgrade button configured for team " + team);
         return world.getBlockAt(position.x(), position.y(), position.z());
     }
 

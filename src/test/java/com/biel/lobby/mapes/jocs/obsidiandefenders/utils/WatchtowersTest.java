@@ -11,7 +11,11 @@ public final class WatchtowersTest {
     @org.junit.jupiter.api.Test
     void launchersAndTrajectories() {
         var purchases = new TeamUpgrades();
-        var upgrades = new Watchtowers(purchases);
+        List<Watchtowers.Tower> towers = List.of(new Watchtowers.Tower(0, 0, 617, 52, -1409, 1, 42),
+                new Watchtowers.Tower(1, 0, 617, 52, -1391, 1, 42),
+                new Watchtowers.Tower(2, 1, 709, 52, -1409, -1, 42),
+                new Watchtowers.Tower(3, 1, 709, 52, -1391, -1, 42));
+        var upgrades = new Watchtowers(purchases, towers);
         int[] gold = {49}, payments = {0};
         var score = new GoldScore();
         UUID buyer = new UUID(0, 1), friend = new UUID(0, 2), enemy = new UUID(0, 3);
@@ -52,8 +56,8 @@ public final class WatchtowersTest {
                 new Watchtowers.Waiting(buyer, 1))).equals(buyer), "deterministic tie break");
 
         var coordinates = new HashSet<Watchtowers.Position>();
-        for (var tower : Watchtowers.TOWERS) {
-            var center = new Vector(tower.rearX() + 0.5, 52.0625, tower.middleZ() + 0.5);
+        for (var tower : upgrades.towers()) {
+            var center = new Vector(tower.rearX() + 0.5, tower.plateY() + 0.0625, tower.middleZ() + 0.5);
             require(tower.plates().size() == 3 && tower.buttons().size() == 3, "three plates and three buttons");
             for (var position : tower.plates()) require(coordinates.add(position), "unique plate");
             for (var position : tower.buttons()) require(coordinates.add(position), "unique button");
@@ -61,19 +65,17 @@ public final class WatchtowersTest {
             require(tower.onPlates(center.clone().add(new Vector(0, 0, 1))), "side plate occupant");
             require(!tower.onPlates(center.clone().add(new Vector(tower.direction(), 0, 0))), "ladder not a passenger");
             require(!tower.onPlates(center.clone().add(new Vector(0, 1, 0))), "jumping above plate not armed");
-            require(!tower.onPlates(center.clone().setY(42)), "lower button operator not a passenger");
+            require(!tower.onPlates(center.clone().setY(tower.lowerButtonY())), "lower button operator not a passenger");
             require(!tower.onPlates(center.clone().setX(Double.NaN)), "nonfinite rejected");
         }
         require(coordinates.size() == 24, "exactly 24 hardware blocks");
-        require(Watchtowers.purchaseButton(0).equals(new Watchtowers.Position(611, 42, -1369)), "red purchase position");
-        require(Watchtowers.purchaseButton(1).equals(new Watchtowers.Position(715, 42, -1431)), "blue purchase position");
         var protection = new Watchtowers.FallProtection(10);
         require(!protection.expired(50), "airborne protection");
         protection.land(50); protection.land(51);
         require(!protection.expired(51) && protection.expired(52), "fall event ordering grace then protection consumed");
         require(new Watchtowers.FallProtection(0).expired(201), "abnormal flight expiry");
 
-        var tower = Watchtowers.TOWERS.getFirst();
+        var tower = upgrades.towers().getFirst();
         List<BoundingBox> boxes = new ArrayList<>(List.of(new BoundingBox(650, 40, -1413, 657, 51, -1404)));
         var terrain = new LauncherTrajectory.Terrain() {
             public List<BoundingBox> obstacles(Vector feet, Vector movement) { return boxes; }

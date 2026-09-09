@@ -17,7 +17,7 @@ vertical separation, checked every two ticks. Only living participants of the
 owning team can enter. Respawning does not trigger a portal. Successful travel
 clears velocity and fall distance and starts a two-second server-tick cooldown.
 
-Optional map properties: `ShopPortal0`, `ShopPortal1`, `ShopArrival0`,
+Required map properties: `ShopPortal0`, `ShopPortal1`, `ShopArrival0`,
 `ShopArrival1`, `ShopArrivalYaw0`, `ShopArrivalYaw1`. Location properties use
 block coordinates with feet Y; the code centers X/Z. Invalid or obstructed
 locations are skipped with a warning, and an obstructed arrival disables travel.
@@ -50,7 +50,7 @@ on leaf block `(662,73,-1392)`, facing east/west with glowing text on both sides
 The sign is waxed to prevent editing. The current template's highest leaves are at
 Y=73; this broad crown offers more standing room than the narrow northern peak.
 Only air is replaced, and the original block is restored on match cleanup.
-The optional `Lookout` map property specifies the supporting block, not the
+The required `Lookout` map property specifies the supporting block, not the
 sign's position; the sign stands one block above it.
 
 The four lines are the title, `Or total`, `<red> vs <blue>` gold values, and
@@ -88,7 +88,9 @@ successful purchases use the same held-plus-spent gold accounting as shops.
 Tower rear rows are X=617 (red) / 709 (blue), Y=52, centered on Z=-1409/-1391.
 Upper buttons are two blocks forward, lower buttons two blocks backward at
 Y=42 and two blocks either side of the middle Z. Purchase buttons are
-`611,42,-1369` and `715,42,-1431`. Exact layouts live in `Watchtowers`.
+`611,42,-1369` and `715,42,-1431`. Exact layouts live in `pMapaActual.txt` as
+`LauncherTower<team>_<index>`, `LauncherDirection<team>`,
+`LauncherLowerButtonY<team>`, and `UpgradeButton<team>`.
 
 Any living participant can operate an unlocked launcher, regardless of team.
 One standing plate occupant launches per press: the activator if eligible,
@@ -109,7 +111,8 @@ Offline calibration checked 39 starting positions per tower against a runtime
 world survey, then independently replayed all 156 selected impulses through
 Prismarine physics: all landed on lower leaves without a side collision.
 `calibrateObsidianLaunchers` accepts `-PlauncherSurvey=...` (NBT export with
-Prismarine collision shapes) and `-PlauncherReport=...` for reproducibility.
+Prismarine collision shapes), `-PlauncherReport=...`, and
+`-PlauncherProperties=...` (the template's `pMapaActual.txt`) for reproducibility.
 
 ## Skeleton Archer Upgrades
 
@@ -144,8 +147,8 @@ survives shooter death and retains the original team for friendly-fire checks.
 
 ## Verification
 
-`./gradlew build` includes `InteractionsTest` (approved coordinates,
-spawn exclusion, radius and floor boundaries, finite radial push and loot
+`./gradlew build` includes `InteractionsTest` (portal radius and floor
+boundaries, finite radial push and loot
 velocity) and `verifyGameGuide` (19 authored pages, wrapping, includes and long
 text). Existing movement regressions also run unchanged.
 `GoldScoreTest` checks retained spending, single/stack drops, partial and

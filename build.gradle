@@ -64,7 +64,7 @@ tasks.register('calibrateObsidianLaunchers', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.biel.lobby.mapes.jocs.obsidiandefenders.utils.LauncherCalibration'
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
-    doFirst { args project.property('launcherSurvey'), project.property('launcherReport') }
+    doFirst { args project.property('launcherSurvey'), project.property('launcherReport'), project.property('launcherProperties') }
 }
 
 tasks.register('postgresTest', Test) {

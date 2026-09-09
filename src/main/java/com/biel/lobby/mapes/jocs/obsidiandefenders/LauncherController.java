@@ -64,11 +64,11 @@ final class LauncherController implements Listener {
     }
 
     LauncherController(World world, Plugin plugin, Predicate<Player> participant,
-            ToIntFunction<Player> teamOf, TeamUpgrades teamUpgrades) {
+            ToIntFunction<Player> teamOf, TeamUpgrades teamUpgrades, List<Watchtowers.Tower> towers) {
         this.world = world; this.plugin = plugin; this.participant = participant;
         this.teamOf = teamOf;
-        this.upgrades = new Watchtowers(teamUpgrades);
-        for (var tower : Watchtowers.TOWERS) for (var position : tower.buttons()) buttons.put(block(position), tower);
+        this.upgrades = new Watchtowers(teamUpgrades, towers);
+        for (var tower : upgrades.towers()) for (var position : tower.buttons()) buttons.put(block(position), tower);
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -82,7 +82,7 @@ final class LauncherController implements Listener {
     }
 
     boolean isPlate(Block block) {
-        return Watchtowers.TOWERS.stream().filter(tower -> upgrades.unlocked(tower.team()))
+        return upgrades.towers().stream().filter(tower -> upgrades.unlocked(tower.team()))
                 .flatMap(tower -> tower.plates().stream()).anyMatch(position -> block(position).equals(block));
     }
 
@@ -109,7 +109,7 @@ final class LauncherController implements Listener {
 
     private boolean install(int team, Map<Block, BlockData> transaction) {
         Map<Block, BlockData> desired = new LinkedHashMap<>();
-        for (var tower : Watchtowers.TOWERS) {
+        for (var tower : upgrades.towers()) {
             if (tower.team() != team) continue;
             for (var position : tower.plates()) {
                 Block plate = block(position);
@@ -141,9 +141,9 @@ final class LauncherController implements Listener {
         Map<UUID, Occupant> current = new HashMap<>();
         for (Player player : world.getPlayers()) {
             if (!eligible(player) || flights.containsKey(player.getUniqueId()) || !player.isOnGround()) continue;
-            for (var tower : Watchtowers.TOWERS) {
+            for (var tower : upgrades.towers()) {
                 if (!upgrades.unlocked(tower.team()) || !tower.onPlates(player.getLocation().toVector())) continue;
-                if (block(new Watchtowers.Position(player.getLocation().getBlockX(), 52,
+                if (block(new Watchtowers.Position(player.getLocation().getBlockX(), tower.plateY(),
                         player.getLocation().getBlockZ())).getType() != Material.HEAVY_WEIGHTED_PRESSURE_PLATE) continue;
                 Occupant previous = occupants.get(player.getUniqueId());
                 current.put(player.getUniqueId(), previous != null && previous.tower == tower.id()
@@ -208,7 +208,7 @@ final class LauncherController implements Listener {
     }
 
     private void sound(Watchtowers.Tower tower, Sound sound, float volume) {
-        Location source = new Location(world, tower.rearX() + 0.5, 52.5, tower.middleZ() + 0.5);
+        Location source = new Location(world, tower.rearX() + 0.5, tower.plateY() + 0.5, tower.middleZ() + 0.5);
         for (Player listener : world.getPlayers()) if (listener.getLocation().distanceSquared(source) <= 24 * 24)
             listener.playSound(source, sound, volume, 1);
     }

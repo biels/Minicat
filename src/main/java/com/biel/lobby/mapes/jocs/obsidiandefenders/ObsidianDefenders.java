@@ -95,6 +95,7 @@ import com.biel.lobby.mapes.JocEquips.Equip;
 import com.biel.lobby.mapes.jocs.obsidiandefenders.utils.GoldScore;
 import com.biel.lobby.mapes.jocs.obsidiandefenders.utils.Interactions;
 import com.biel.lobby.mapes.jocs.obsidiandefenders.utils.TeamUpgrades;
+import com.biel.lobby.mapes.jocs.obsidiandefenders.utils.Watchtowers;
 import com.biel.lobby.mapes.jocs.obsidiandefenders.ObsidianDefenders.Ability.AbilityType;
 import com.biel.lobby.guide.GameGuide;
 import com.biel.lobby.minions.Lane;
@@ -127,8 +128,6 @@ import io.papermc.paper.registry.RegistryKey;
  * cycle, PicDiamantTask the pickaxe, ApareixerGolem the golem.
  */
 public class ObsidianDefenders extends JocEquips {
-	/** Where the pickaxe lands when the map has no PicDiamant property: the middle of the jungle, as in 2013. */
-	private static final Vector DIAMOND_PICKAXE_2013 = new Vector(661, 42, -1398);
 	private static final long CHEST_CYCLE_TICKS = 32 * 20;
 	/** The first chest cycle waits this long, so no prize is announced before anyone has left the spawn (Biel, 2026-09-08). */
 	private static final long FIRST_CHEST_CYCLE_TICKS = 15 * 20;
@@ -455,9 +454,6 @@ public class ObsidianDefenders extends JocEquips {
 	private static final double PLATE_VIEW_DISTANCE = 16;
 	private static final long BRIDGE_TICKS_PER_COLUMN = 10;
 	private static final long BRIDGE_DEPLOYED_TICKS = 45 * 20;
-	private static final int BRIDGE_HEIGHT = 37;
-	/** A block over the middle of each moat's gap on the 2013 map, red then blue; a PontMoat<n> property overrides it. */
-	private static final Vector[] BRIDGE_MOAT_2013 = { new Vector(644, 37, -1426), new Vector(682, 37, -1374) };
 	private static final String FULL_SQUARE = "\u25A0";
 	private static final String EMPTY_SQUARE = "\u25A1";
 	/** The control room is 50 blocks from the spawn on the 2013 map, the farthest booth 46. */
@@ -741,6 +737,48 @@ public class ObsidianDefenders extends JocEquips {
 	public ObsidianDefenders() {
 	}
 
+	private record WatchtowerLayout(List<Watchtowers.Tower> towers,
+			Map<Integer, Watchtowers.Position> upgradeButtons) {}
+
+	private Location requiredMapLocation(String property) {
+		if (!pMapaActual().ExisteixPropietat(property)) {
+			throw new IllegalStateException(getGameName() + " map is missing required property " + property);
+		}
+		return pMapaActual().ObtenirLocation(property, world);
+	}
+
+	private int requiredMapInteger(String property) {
+		if (!pMapaActual().ExisteixPropietat(property)) {
+			throw new IllegalStateException(getGameName() + " map is missing required property " + property);
+		}
+		return pMapaActual().ObtenirPropietatInt(property);
+	}
+
+	private WatchtowerLayout watchtowerLayout() {
+		List<Watchtowers.Tower> towers = new ArrayList<>();
+		Map<Integer, Watchtowers.Position> upgradeButtons = new HashMap<>();
+		for (Equip team : Equips) {
+			int teamId = team.getId();
+			int direction = requiredMapInteger("LauncherDirection" + teamId);
+			if (Math.abs(direction) != 1) {
+				throw new IllegalStateException("LauncherDirection" + teamId + " must be -1 or 1");
+			}
+			int lowerButtonY = requiredMapInteger("LauncherLowerButtonY" + teamId);
+			List<Location> anchors = pMapaActual().ObtenirLocations("LauncherTower" + teamId, world);
+			if (anchors.isEmpty()) {
+				throw new IllegalStateException(getGameName() + " map has no LauncherTower" + teamId + " entries");
+			}
+			for (Location anchor : anchors) {
+				towers.add(new Watchtowers.Tower(towers.size(), teamId, anchor.getBlockX(), anchor.getBlockY(),
+						anchor.getBlockZ(), direction, lowerButtonY));
+			}
+			Location upgradeButton = requiredMapLocation("UpgradeButton" + teamId);
+			upgradeButtons.put(teamId, new Watchtowers.Position(upgradeButton.getBlockX(),
+					upgradeButton.getBlockY(), upgradeButton.getBlockZ()));
+		}
+		return new WatchtowerLayout(towers, upgradeButtons);
+	}
+
 	@Override
 	public String getGameName() {
 		return "Obsidian Defenders";
@@ -759,16 +797,17 @@ public class ObsidianDefenders extends JocEquips {
 		scheduleGameplayTask(this::verifyRegistrations, REGISTRATION_CHECK_TICKS);
 		Bukkit.getPluginManager().registerEvents(worldListener, plugin);
 		teamUpgrades = new TeamUpgrades();
+		WatchtowerLayout watchtowerLayout = watchtowerLayout();
 		watchtowerLaunchers = new LauncherController(world, plugin,
 				player -> JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player)
 						&& player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR,
 				player -> obtenirEquip(player) == null ? -1 : obtenirEquip(player).getId(),
-				teamUpgrades);
+				teamUpgrades, watchtowerLayout.towers());
 		upgradeSigns = new UpgradeController(world, teamUpgrades, watchtowerLaunchers,
 				player -> JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player)
 						&& player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR,
 				player -> obtenirEquip(player) == null ? -1 : obtenirEquip(player).getId(),
-				this::spendGold, this::updateScoreBoard);
+				this::spendGold, this::updateScoreBoard, watchtowerLayout.upgradeButtons());
 		scheduleGameplayRepeatingTask(() -> {
 			if (watchtowerLaunchers != null) watchtowerLaunchers.tick();
 			if (upgradeSigns != null) upgradeSigns.tick();
@@ -1253,10 +1292,7 @@ public class ObsidianDefenders extends JocEquips {
 	//---------- Diamond pickaxe (PicDiamantTask, 2013) ----------
 
 	private Location diamondPickaxePoint() {
-		if (pMapaActual().ExisteixPropietat("PicDiamant")) {
-			return pMapaActual().ObtenirLocation("PicDiamant", world).add(0.5, 1, 0.5);
-		}
-		return DIAMOND_PICKAXE_2013.toLocation(world).add(0.5, 0, 0.5);
+		return requiredMapLocation("PicDiamant").add(0.5, 0, 0.5);
 	}
 
 	/** A pickaxe good for exactly one block of obsidian, dropped in the middle of the map. */
@@ -1844,11 +1880,9 @@ public class ObsidianDefenders extends JocEquips {
 	private void createShopPortals() {
 		for (Equip team : Equips) {
 			int id = team.getId();
-			Interactions.PortalPosition approved = Interactions.portal(id);
-			Location entrance = portalLocation("ShopPortal" + id, approved.entrance());
-			Location arrival = portalLocation("ShopArrival" + id, approved.arrival());
-			arrival.setYaw(approved.arrivalYaw());
-			if (pMapaActual().ExisteixPropietat("ShopArrivalYaw" + id)) arrival.setYaw(pMapaActual().ObtenirPropietatInt("ShopArrivalYaw" + id));
+			Location entrance = requiredMapLocation("ShopPortal" + id).add(0.5, 0, 0.5);
+			Location arrival = requiredMapLocation("ShopArrival" + id).add(0.5, 0, 0.5);
+			arrival.setYaw(requiredMapInteger("ShopArrivalYaw" + id));
 			if (!safeStandingSpot(entrance) || !safeStandingSpot(arrival)) {
 				plugin.getLogger().warning("Shop portal " + id + " not created: entrance or arrival is obstructed");
 				continue;
@@ -1860,11 +1894,6 @@ public class ObsidianDefenders extends JocEquips {
 			shopPortals.put(id, new ShopPortal(entrance, arrival, previous, label));
 			plugin.getLogger().info("Shop portal " + id + ": " + entrance.toVector() + " -> " + arrival.toVector() + ", radius=2");
 		}
-	}
-
-	private Location portalLocation(String property, Vector fallback) {
-		return pMapaActual().ExisteixPropietat(property)
-				? pMapaActual().ObtenirLocation(property, world).add(0.5, 0, 0.5) : fallback.toLocation(world);
 	}
 
 	private void tickShopPortals() {
@@ -1957,8 +1986,7 @@ public class ObsidianDefenders extends JocEquips {
 	}
 
 	private void createLookoutSign() {
-		Location floor = pMapaActual().ExisteixPropietat("Lookout")
-				? pMapaActual().ObtenirLocation("Lookout", world) : Interactions.lookoutFloor().toLocation(world);
+		Location floor = requiredMapLocation("Lookout");
 		Location standing = floor.clone().add(0.5, 1, 0.5);
 		Block display = standing.getBlock();
 		if (!safeStandingSpot(standing) || !display.getType().isAir()) {
@@ -2391,9 +2419,7 @@ public class ObsidianDefenders extends JocEquips {
 	 */
 	private void registerBridges() {
 		for (Equip e : Equips) {
-			Location seed = pMapaActual().ExisteixPropietat("PontMoat" + e.getId())
-					? pMapaActual().ObtenirLocation("PontMoat" + e.getId(), world)
-					: BRIDGE_MOAT_2013[Math.min(e.getId(), BRIDGE_MOAT_2013.length - 1)].toLocation(world);
+			Location seed = requiredMapLocation("PontMoat" + e.getId());
 			// Each of the three rows is walked on its own: the 2013 decks are not square,
 			// one row's planks start a block further out than its neighbours'.
 			Map<Integer, List<Block>> columnsByX = new java.util.TreeMap<>();
@@ -2401,7 +2427,7 @@ public class ObsidianDefenders extends JocEquips {
 				for (int direction : new int[] { -1, 1 }) {
 					for (int step = direction == 1 ? 1 : 0; step < 20; step++) {
 						int x = seed.getBlockX() + direction * step;
-						Block deck = world.getBlockAt(x, BRIDGE_HEIGHT, seed.getBlockZ() + dz);
+						Block deck = world.getBlockAt(x, seed.getBlockY(), seed.getBlockZ() + dz);
 						if (!isEmptyOverWater(deck)) break;
 						columnsByX.computeIfAbsent(x, k -> new ArrayList<>()).add(deck);
 					}
