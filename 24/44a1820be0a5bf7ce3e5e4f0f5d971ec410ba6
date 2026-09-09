@@ -1,0 +1,45 @@
+.gitignore
+  s_2ad96a5d10b444::t_e309cd0dd4deaa 29-31
+README.md
+  s_2ad96a5d10b444::t_2be35c0b240f6a 25-26
+build.gradle
+  s_2ad96a5d10b444::t_3b4a708c1ab43f 40,70-82
+docker-compose.yml
+  s_2ad96a5d10b444::t_26de22e8c6780a 1,3-4,6-8,10-14
+docs/database/README.md
+  s_2ad96a5d10b444::t_74cb8c011631b0 1-35
+docs/database/database.properties.example
+  s_2ad96a5d10b444::t_e120c7674c5c1d 1-5
+mysql/README.md
+  s_2ad96a5d10b444::t_2b722024a8f480 1,3-5
+src/main/java/com/biel/lobby/lobby.java
+  s_2ad96a5d10b444::t_05e5ef6aa4e1cf 43-44
+src/main/java/com/biel/lobby/utilities/data/DataAPI.java
+  s_2ad96a5d10b444::t_4b0e0333dc465d 3-4,16,18-58,60-76,78-81,83-102,104-126,128-136,138-145,147-179,181-189,191-201,203-222,224-241,243-272,274-302
+src/main/java/com/biel/lobby/utilities/data/DatabaseConfig.java
+  s_2ad96a5d10b444::t_1097ac4c967962 1-49
+src/main/java/com/biel/lobby/utilities/data/PlayerData.java
+  s_2ad96a5d10b444::t_a54534fd283ac2 60,62,64
+src/main/resources/db/migration/V001__postgresql_baseline.sql
+  s_2ad96a5d10b444::t_f7c18be9804a2b 1-68
+src/main/resources/plugin.yml
+  s_2ad96a5d10b444::t_0168bd3f3f29dc 14
+src/test/java/com/biel/lobby/utilities/data/PostgresqlIntegrationTest.java
+  s_2ad96a5d10b444::t_70f3f21e12f6d2 1-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "2444a1820be0a5bf7ce3e5e4f0f5d971ec410ba6",
+  "prompts": {},
+  "sessions": {
+    "s_2ad96a5d10b444": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08591-f1b1-7051-8eb0-b1d2a642d913",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
