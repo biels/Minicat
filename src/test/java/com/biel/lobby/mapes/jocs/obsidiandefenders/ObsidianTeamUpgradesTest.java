@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.obsidiandefenders;
 
 import java.util.Arrays;
 

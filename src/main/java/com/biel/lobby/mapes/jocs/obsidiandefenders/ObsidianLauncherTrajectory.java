@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.obsidiandefenders;
 
 import com.biel.lobby.utilities.SweptBoxCollision;
 import java.util.ArrayList;

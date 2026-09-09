@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.obsidiandefenders;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,7 +92,7 @@ import com.biel.BielAPI.Utils.IconMenu;
 import com.biel.lobby.lobby;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocEquips.Equip;
-import com.biel.lobby.mapes.jocs.ObsidianDefenders.Ability.AbilityType;
+import com.biel.lobby.mapes.jocs.obsidiandefenders.ObsidianDefenders.Ability.AbilityType;
 import com.biel.lobby.guide.GameGuide;
 import com.biel.lobby.minions.Lane;
 import com.biel.lobby.minions.LaneMinion;

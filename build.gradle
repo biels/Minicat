@@ -62,7 +62,7 @@ tasks.named('test') {
 tasks.register('calibrateObsidianLaunchers', JavaExec) {
     dependsOn testClasses
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'com.biel.lobby.mapes.jocs.ObsidianLauncherCalibration'
+    mainClass = 'com.biel.lobby.mapes.jocs.obsidiandefenders.ObsidianLauncherCalibration'
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
     doFirst { args project.property('launcherSurvey'), project.property('launcherReport') }
 }
