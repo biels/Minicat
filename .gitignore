@@ -27,3 +27,6 @@
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries
+.idea/**/modules.xml
+.idea/**/modules/
+*.iml
