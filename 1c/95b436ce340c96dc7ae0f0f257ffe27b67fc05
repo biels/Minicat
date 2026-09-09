@@ -1,0 +1,27 @@
+src/main/java/com/biel/lobby/mapes/jocs/rainbowclay/SnapshotPublisher.java
+  s_d4244df752681a::t_fc0f8c1bf73b76 1-285
+src/main/java/com/biel/lobby/mapes/jocs/rainbowclay/RainbowClay.java
+  s_d4244df752681a::t_fc0f8c1bf73b76 1-720
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_d4244df752681a::t_26ed55d2d8cda6 33
+src/main/java/com/biel/lobby/lobby.java
+  s_d4244df752681a::t_fec0cb3fcc06b5 22
+src/main/java/com/biel/lobby/mapes/jocs/rainbowclay/package-info.java
+  s_d4244df752681a::t_ff3168cbecb193 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "1c95b436ce340c96dc7ae0f0f257ffe27b67fc05",
+  "prompts": {},
+  "sessions": {
+    "s_d4244df752681a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a2612296-91f9-4559-b845-d33cba0ea04f",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
