@@ -139,6 +139,23 @@ public class ScoreBoardUpdater {
 
 		PlayerTagState.assignScoreboard(ply, board);
 	}
+    /** Triton refreshes team prefixes; score-holder identifiers themselves are not translated. */
+    public static void setTranslatedScoreBoard(Player player, String title, List<String> labels, List<Integer> values) {
+        if (labels.size() != values.size()) throw new IllegalArgumentException("Each scoreboard line needs a value");
+        Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
+        Objective objective = board.registerNewObjective("minicat_teams", "dummy", PaperMessages.legacy(title));
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        for (int index = 0; index < labels.size(); index++) {
+            StringBuilder entry = new StringBuilder();
+            for (char digit : Integer.toHexString(index).toCharArray()) entry.append(ChatColor.COLOR_CHAR).append(digit);
+            Team line = board.registerNewTeam("mc_line_" + index);
+            line.addEntry(entry.toString());
+            line.prefix(PaperMessages.legacy(labels.get(index)));
+            objective.getScore(entry.toString()).setScore(values.get(index));
+        }
+        PlayerTagState.assignScoreboard(player, board);
+    }
+
 	static public void clearScoreBoard(Player ply){
 		ScoreboardManager mng = Bukkit.getScoreboardManager();
 		PlayerTagState.assignScoreboard(ply, mng.getNewScoreboard());

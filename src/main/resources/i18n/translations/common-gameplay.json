@@ -140,8 +140,8 @@
       "type": "text",
       "key": "minicat.match.add.all.lore",
       "languages": {
-        "en_US": "[minimsg]<green>Move lobby players into this game.</green>",
-        "ca_ES": "[minimsg]<green>Porta els jugadors del lobby a aquesta partida.</green>"
+        "en_US": "[minimsg]<white><!italic>Move lobby players into this game.</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>Porta els jugadors del lobby a aquesta partida.</!italic></white>"
       }
     },
     {
@@ -156,16 +156,16 @@
       "type": "text",
       "key": "minicat.match.invite.all.lore",
       "languages": {
-        "en_US": "[minimsg]<green>Send an invitation to lobby players.</green>",
-        "ca_ES": "[minimsg]<green>Envia una invitació als jugadors del lobby.</green>"
+        "en_US": "[minimsg]<white><!italic>Send an invitation to lobby players.</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>Envia una invitació als jugadors del lobby.</!italic></white>"
       }
     },
     {
       "type": "text",
       "key": "minicat.match.from.lobby",
       "languages": {
-        "en_US": "[minimsg]<green>In the lobby</green>",
-        "ca_ES": "[minimsg]<green>Al lobby</green>"
+        "en_US": "[minimsg]<white><!italic>In the lobby</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>Al lobby</!italic></white>"
       }
     },
     {
@@ -180,8 +180,8 @@
       "type": "text",
       "key": "minicat.match.not.in.game",
       "languages": {
-        "en_US": "[minimsg]<green>Join a game to use this command.</green>",
-        "ca_ES": "[minimsg]<green>Entra en una partida per fer servir aquesta ordre.</green>"
+        "en_US": "[minimsg]<red><!italic>Join a game to use this command.</!italic></red>",
+        "ca_ES": "[minimsg]<red><!italic>Entra en una partida per fer servir aquesta ordre.</!italic></red>"
       }
     },
     {

@@ -2,7 +2,7 @@
   "keys": {
     "minicat.lobby.play": {
       "constant": "LOBBY_PLAY",
-      "purpose": "Play",
+      "purpose": "Play.",
       "arguments": [],
       "surfaces": [
         "item",
@@ -24,7 +24,7 @@
     },
     "minicat.lobby.instances": {
       "constant": "LOBBY_INSTANCES",
-      "purpose": "Active games",
+      "purpose": "Active games.",
       "arguments": [],
       "surfaces": [
         "item",
@@ -46,7 +46,7 @@
     },
     "minicat.lobby.return": {
       "constant": "LOBBY_RETURN",
-      "purpose": "Return to lobby",
+      "purpose": "Return to lobby.",
       "arguments": [],
       "surfaces": [
         "item",
@@ -68,7 +68,7 @@
     },
     "minicat.lobby.help.title": {
       "constant": "LOBBY_HELP_TITLE",
-      "purpose": "Minicat help",
+      "purpose": "Minicat help.",
       "arguments": [],
       "surfaces": [
         "item",
@@ -79,7 +79,7 @@
     },
     "minicat.lobby.welcome.subtitle": {
       "constant": "LOBBY_WELCOME_SUBTITLE",
-      "purpose": "Choose a game with /m",
+      "purpose": "Choose a game with /m.",
       "arguments": [],
       "surfaces": [
         "item",
@@ -101,7 +101,7 @@
     },
     "minicat.lobby.help.page": {
       "constant": "LOBBY_HELP_PAGE",
-      "purpose": "Welcome to Minicat\n\n/m — Choose a game\n/a — Active games\n/l — Return to lobby\n/lang — English / Català\n/top — Player rankings\n/info — Game guide",
+      "purpose": "Welcome to Minicat\n\n/m — Choose a game\n/a — Active games\n/l — Return to lobby\n/lang — English / Català\n/top — Player rankings\n/info — Game guide.",
       "arguments": [],
       "surfaces": [
         "book"

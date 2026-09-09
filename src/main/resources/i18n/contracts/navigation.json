@@ -2,7 +2,7 @@
   "keys": {
     "minicat.menu.maps.title": {
       "constant": "MAPS_TITLE",
-      "purpose": "[minimsg]All maps",
+      "purpose": "All maps.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -12,7 +12,7 @@
     },
     "minicat.menu.maps.ranking.name": {
       "constant": "MAPS_RANKING_NAME",
-      "purpose": "[minimsg]Ranking",
+      "purpose": "Ranking.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -22,7 +22,7 @@
     },
     "minicat.menu.maps.ranking.lore": {
       "constant": "MAPS_RANKING_LORE",
-      "purpose": "[minimsg]Which games count and their weight",
+      "purpose": "Which games count and their weight.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -32,7 +32,7 @@
     },
     "minicat.menu.maps.language.name": {
       "constant": "MAPS_LANGUAGE_NAME",
-      "purpose": "[minimsg]English / Català",
+      "purpose": "English / Català.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -42,7 +42,7 @@
     },
     "minicat.menu.maps.language.lore": {
       "constant": "MAPS_LANGUAGE_LORE",
-      "purpose": "[minimsg]Choose your language",
+      "purpose": "Choose your language.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -52,7 +52,7 @@
     },
     "minicat.command.join.missing": {
       "constant": "JOIN_MISSING",
-      "purpose": "[minimsg]The instance name is missing.",
+      "purpose": "The instance name is missing.",
       "arguments": [],
       "surfaces": [
         "chat"
@@ -61,7 +61,7 @@
     },
     "minicat.command.join.not_found": {
       "constant": "JOIN_NOT_FOUND",
-      "purpose": "[minimsg]This instance no longer exists.",
+      "purpose": "This instance no longer exists.",
       "arguments": [],
       "surfaces": [
         "chat"
@@ -70,7 +70,7 @@
     },
     "minicat.command.join.unavailable": {
       "constant": "JOIN_UNAVAILABLE",
-      "purpose": "[minimsg]This instance is no longer accepting players.",
+      "purpose": "This instance is no longer accepting players.",
       "arguments": [],
       "surfaces": [
         "chat"
@@ -79,7 +79,7 @@
     },
     "minicat.command.start.not_in_game": {
       "constant": "START_NOT_IN_GAME",
-      "purpose": "[minimsg]You must be in a match to start it.",
+      "purpose": "You must be in a match to start it.",
       "arguments": [],
       "surfaces": [
         "chat"
@@ -88,7 +88,7 @@
     },
     "minicat.command.info.choose_game": {
       "constant": "INFO_CHOOSE_GAME",
-      "purpose": "[minimsg]Use /info \\, or click a game's Wiki sign.",
+      "purpose": "Use /info \\, or click a game's Wiki sign.",
       "arguments": [],
       "surfaces": [
         "chat"
@@ -97,7 +97,7 @@
     },
     "minicat.command.info.unknown_game": {
       "constant": "INFO_UNKNOWN_GAME",
-      "purpose": "[minimsg]I don't know a game called “%1”.",
+      "purpose": "I don't know a game called “%1”.",
       "arguments": [
         {
           "name": "game",
@@ -111,7 +111,7 @@
     },
     "minicat.command.info.no_guide": {
       "constant": "INFO_NO_GUIDE",
-      "purpose": "[minimsg]There is no guide for %1 yet.",
+      "purpose": "There is no guide for %1 yet.",
       "arguments": [
         {
           "name": "game",
@@ -125,7 +125,7 @@
     },
     "minicat.command.language.usage": {
       "constant": "LANGUAGE_USAGE",
-      "purpose": "[minimsg]Usage: /lang [en|ca]",
+      "purpose": "Usage: /lang [en|ca].",
       "arguments": [
         {
           "name": "codes",
@@ -139,7 +139,7 @@
     },
     "minicat.command.language.unknown": {
       "constant": "LANGUAGE_UNKNOWN",
-      "purpose": "[minimsg]Language “%1” is not available.",
+      "purpose": "Language “%1” is not available.",
       "arguments": [
         {
           "name": "language",
@@ -153,7 +153,7 @@
     },
     "minicat.command.language.changed": {
       "constant": "LANGUAGE_CHANGED",
-      "purpose": "[minimsg]Language changed to %1.",
+      "purpose": "Language changed to %1.",
       "arguments": [
         {
           "name": "language",
@@ -167,7 +167,7 @@
     },
     "minicat.navigation.maps.empty": {
       "constant": "MAPS_EMPTY",
-      "purpose": "No maps available",
+      "purpose": "No maps available.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -178,7 +178,7 @@
     },
     "minicat.navigation.instances.title": {
       "constant": "INSTANCES_TITLE",
-      "purpose": "Available instances",
+      "purpose": "Available instances.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -189,7 +189,7 @@
     },
     "minicat.navigation.all.games.title": {
       "constant": "ALL_GAMES_TITLE",
-      "purpose": "Active games",
+      "purpose": "Active games.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -211,7 +211,7 @@
     },
     "minicat.navigation.instance.add": {
       "constant": "INSTANCE_ADD",
-      "purpose": "Create instance",
+      "purpose": "Create instance.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -222,7 +222,7 @@
     },
     "minicat.navigation.instance.add.lore": {
       "constant": "INSTANCE_ADD_LORE",
-      "purpose": "Create a new instance",
+      "purpose": "Create a new instance.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -233,7 +233,7 @@
     },
     "minicat.navigation.dev.in.development": {
       "constant": "DEV_IN_DEVELOPMENT",
-      "purpose": "[In development]",
+      "purpose": "[In development].",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -244,7 +244,7 @@
     },
     "minicat.navigation.dev.not.working": {
       "constant": "DEV_NOT_WORKING",
-      "purpose": "[Unavailable]",
+      "purpose": "[Unavailable].",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -255,7 +255,7 @@
     },
     "minicat.navigation.dev.known.issues": {
       "constant": "DEV_KNOWN_ISSUES",
-      "purpose": "[Known issues]",
+      "purpose": "[Known issues].",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -266,7 +266,7 @@
     },
     "minicat.navigation.state.waiting": {
       "constant": "STATE_WAITING",
-      "purpose": "Waiting for players",
+      "purpose": "Waiting for players.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -277,7 +277,7 @@
     },
     "minicat.navigation.state.preparing": {
       "constant": "STATE_PREPARING",
-      "purpose": "Preparing",
+      "purpose": "Preparing.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -288,7 +288,7 @@
     },
     "minicat.navigation.state.playing": {
       "constant": "STATE_PLAYING",
-      "purpose": "In progress",
+      "purpose": "In progress.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -299,7 +299,7 @@
     },
     "minicat.navigation.state.complete": {
       "constant": "STATE_COMPLETE",
-      "purpose": "Finished",
+      "purpose": "Finished.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -310,7 +310,7 @@
     },
     "minicat.navigation.state.resetting": {
       "constant": "STATE_RESETTING",
-      "purpose": "Resetting",
+      "purpose": "Resetting.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -321,7 +321,7 @@
     },
     "minicat.navigation.state.editing": {
       "constant": "STATE_EDITING",
-      "purpose": "Editing",
+      "purpose": "Editing.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -332,7 +332,7 @@
     },
     "minicat.navigation.instance.join": {
       "constant": "INSTANCE_JOIN",
-      "purpose": "Join: %1",
+      "purpose": "Join: %1.",
       "arguments": [
         {
           "name": "instance",
@@ -348,7 +348,7 @@
     },
     "minicat.navigation.players.count": {
       "constant": "PLAYERS_COUNT",
-      "purpose": "Players: %1",
+      "purpose": "Players: %1.",
       "arguments": [
         {
           "name": "count",
@@ -364,7 +364,7 @@
     },
     "minicat.navigation.spectators.count": {
       "constant": "SPECTATORS_COUNT",
-      "purpose": "Spectators: %1",
+      "purpose": "Spectators: %1.",
       "arguments": [
         {
           "name": "count",
@@ -380,7 +380,7 @@
     },
     "minicat.navigation.elapsed.time": {
       "constant": "ELAPSED_TIME",
-      "purpose": "Time: %1",
+      "purpose": "Time: %1.",
       "arguments": [
         {
           "name": "time",
@@ -396,7 +396,7 @@
     },
     "minicat.navigation.game.progress": {
       "constant": "GAME_PROGRESS",
-      "purpose": "Progress: %1%",
+      "purpose": "Progress: %1%.",
       "arguments": [
         {
           "name": "percent",
@@ -412,7 +412,7 @@
     },
     "minicat.navigation.instance.creating": {
       "constant": "INSTANCE_CREATING",
-      "purpose": "Creating an instance of %1…",
+      "purpose": "Creating an instance of %1….",
       "arguments": [
         {
           "name": "game",

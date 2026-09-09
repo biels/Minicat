@@ -2,7 +2,7 @@
   "keys": {
     "minicat.rankings.title": {
       "constant": "RANKINGS_TITLE",
-      "purpose": "Minicat rankings",
+      "purpose": "Minicat rankings.",
       "arguments": [],
       "surfaces": [
         "chat",
@@ -74,7 +74,7 @@
     },
     "minicat.rankings.book.title": {
       "constant": "RANK_BOOK_TITLE",
-      "purpose": "Minicat rankings",
+      "purpose": "Minicat rankings.",
       "arguments": [],
       "surfaces": [
         "chat",
@@ -86,7 +86,7 @@
     },
     "minicat.rankings.value": {
       "constant": "RANK_VALUE",
-      "purpose": "Elo: %1 #%2",
+      "purpose": "Elo: %1 #%2.",
       "arguments": [
         {
           "name": "elo",
@@ -136,7 +136,7 @@
     },
     "minicat.rankings.book.rules": {
       "constant": "RANK_BOOK_RULES",
-      "purpose": "When a match counts\n\n- Lasts more than 20 seconds\n- Teams are balanced\n- Ranked scoring is on\n- No player has been penalized\n\nLeaving an advanced match costs Elo, except for network failures.\n\n/elo · /top",
+      "purpose": "Explain the conditions under which a match counts toward rankings.",
       "arguments": [],
       "surfaces": [
         "book"
@@ -145,7 +145,7 @@
     },
     "minicat.rankings.book.games": {
       "constant": "RANK_BOOK_GAMES",
-      "purpose": "Games and weights",
+      "purpose": "Games and weights.",
       "arguments": [],
       "surfaces": [
         "book"
@@ -154,7 +154,7 @@
     },
     "minicat.rankings.book.row": {
       "constant": "RANK_BOOK_ROW",
-      "purpose": "%1 K %2",
+      "purpose": "%1 K %2.",
       "arguments": [
         {
           "name": "game",
@@ -172,7 +172,7 @@
     },
     "minicat.rankings.book.map": {
       "constant": "RANK_BOOK_MAP",
-      "purpose": "  %1: K %2",
+      "purpose": "  %1: K %2.",
       "arguments": [
         {
           "name": "map",

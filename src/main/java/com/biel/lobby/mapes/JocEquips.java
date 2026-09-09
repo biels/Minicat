@@ -46,6 +46,10 @@ import com.biel.BielAPI.Utils.ItemButton;
 import com.biel.BielAPI.Utils.RecallUtils;
 import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.Com;
+import com.biel.lobby.localization.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.biel.lobby.minions.Minion;
 import com.biel.lobby.utilities.ColorConverter;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
@@ -98,7 +102,7 @@ public abstract class JocEquips extends Joc {
 			String unassignedPlayers = getPlayersOutOfTeam().stream()
 					.map(Player::getName)
 					.collect(Collectors.joining(", "));
-			sendGlobalMessage(ChatColor.RED + "No es pot iniciar: selecciona un equip per a " + unassignedPlayers + ".");
+			sendGlobalMessage(MessageKey.TEAMS_UNASSIGNED, MessageArgument.text("players", unassignedPlayers));
 			return false;
 		}
 		return super.canStartGame();
@@ -286,7 +290,8 @@ public abstract class JocEquips extends Joc {
 				
 				
 			} else {
-				sendGlobalMessage(getGameDisplayName() + ply.getName() + " és a l'equip " + eq.getChatColor() + eq.getAdjectiu());
+				for (Player viewer : world.getPlayers()) Messages.send(viewer, MessageKey.TEAMS_ASSIGNED,
+                    MessageArgument.text("player", ply.getName()), new MessageArgument("team", eq.getLocalizedName(viewer)));
 			}
 			
 			
@@ -396,10 +401,10 @@ public abstract class JocEquips extends Joc {
 			ArrayList<String> list = new ArrayList<>();
 			ArrayList<Integer> values = new ArrayList<>();
 			for (Equip e : Equips){
-				list.add(e.getChatColor() + "Equip " + e.getAdjectiu());
+				list.add(e.getChatColor() + TeamNames.marker(e.getColor(), e.getAdjectiu()));
 				values.add(e.getPlayers().size());
 			}
-			ScoreBoardUpdater.setScoreBoard(ply, "Equips", list, values);
+			ScoreBoardUpdater.setTranslatedScoreBoard(ply, Messages.sharedItemMarker(MessageKey.TEAMS_BOARD), list, values);
 		}
 	}
 	public void anunciarEquips(Equip winner){
@@ -442,7 +447,7 @@ public abstract class JocEquips extends Joc {
 	}
 	public void resetTeams(){
 		initTeams();
-		sendGlobalMessage(ChatColor.DARK_BLUE + "Els equips han estat resetejats.");
+		sendGlobalMessage(MessageKey.TEAMS_RESET);
 		generationMode = TeamGenerationMode.DEFAULT;
 	}
 	public Double getTeamSize(){
@@ -520,12 +525,14 @@ public abstract class JocEquips extends Joc {
 	public void setEquipsBloquejats(boolean equipsBloquejats) {
 		this.equipsBloquejats = equipsBloquejats;
 		if (isEquipsBloquejats()){
-			sendGlobalMessage(ChatColor.RED + "Els equips han estat bloquejats");
+			sendGlobalMessage(MessageKey.TEAMS_LOCKED);
 		}else{
-			sendGlobalMessage(ChatColor.GREEN + "Els equips han estat desbloquejats");
+			sendGlobalMessage(MessageKey.TEAMS_UNLOCKED);
 		}
 	}
-	void openTemSelectionMenu(final Player ply, final Player objPly, String title){
+	public void openTeamSelectionMenu(final Player ply, final Player objPly){
+        String title = ply == objPly ? Messages.menuTitleMarker(MessageKey.TEAMS_SELECT)
+            : Messages.legacy(objPly, MessageKey.TEAMS_SELECT_FOR, MessageArgument.text("player", ply.getName()));
 		IconMenu menu = new IconMenu(title, 27, event -> {
             event.setWillClose(true);
             //Obrir mapa
@@ -535,10 +542,10 @@ public abstract class JocEquips extends Joc {
                 establirEquipJugador(ply, e);
                 if(generationMode != TeamGenerationMode.CUSTOM){
                     generationMode = TeamGenerationMode.CUSTOM;
-                    sendGlobalMessage(ChatColor.YELLOW + ply.getName() + " ha seleccionat un equip. Mode selecció d'equips personalitzats, seleccioneu els vostres equips.");
+                    sendGlobalMessage(MessageKey.TEAMS_CUSTOM, MessageArgument.text("player", ply.getName()));
                 }
             }else{
-                ply.sendMessage("El mode espectador no està disponible");
+                Messages.send(objPly, MessageKey.TEAMS_SPECTATOR_UNAVAILABLE);
                 event.setWillClose(false);
             }
 
@@ -546,40 +553,40 @@ public abstract class JocEquips extends Joc {
 		for(Equip eq : Equips){
 			ItemStack stack = new ItemStack(Material.valueOf(eq.getColor().name() + "_WOOL"));
 			//stack.setAmount(eq.getPlayers().size());
-			menu.setOption(Equips.indexOf(eq), stack, eq.getChatColor() + "Equip " + eq.getAdjectiu());
+			menu.setOption(Equips.indexOf(eq), stack, LegacyComponentSerializer.legacySection().serialize(eq.getLocalizedName(objPly)));
 		}
 		//if (AlgunMapaDisponible() == false){
-		menu.setOption(26, new ItemStack(Material.GLASS, 1), ChatColor.GREEN + "Espectador", ChatColor.WHITE + "Entra al grup dels espectadors");
+		menu.setOption(26, new ItemStack(Material.GLASS, 1), Messages.sharedItemMarker(MessageKey.TEAMS_SPECTATOR), Messages.sharedItemMarker(MessageKey.TEAMS_SPECTATOR_UNAVAILABLE));
 		//}
 
 		menu.open(objPly);
+        Com.getGest().trackLocalizedMenu(menu, objPly, () -> {
+            if (getPlayers().contains(ply) && getPlayers().contains(objPly)) openTeamSelectionMenu(ply, objPly);
+        });
 	}
 	@Override
 	protected void donarItemsPreparatiusGenerals(final Player ply) {
 		super.donarItemsPreparatiusGenerals(ply);
 		PlayerInventory inventory = ply.getInventory();
-		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOKSHELF), ChatColor.YELLOW + "Selecciona l'equip"), ply, event -> {
-            if(!hasHostPrivilleges(event.getPlayer())){
-                event.getPlayer().sendMessage("No pots seleccionar l'equip. " + "Cal que l'administrador de la partida habiliti els equips personalitzats.");
-            }
+		ItemButton button = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BOOKSHELF), Messages.sharedItemMarker(MessageKey.TEAMS_SELECT)), ply, event -> {
             if ((!isEquipsBloquejats() || ply.isOp())){
-                openTemSelectionMenu(ply, ply, "Unir-se a l'equip...");
+                openTeamSelectionMenu(ply, ply);
 
             }else{
-                event.getPlayer().sendMessage("No pots seleccionar l'equip. Equips bloquejats.");
+                Messages.send(event.getPlayer(), MessageKey.TEAMS_SELECT_LOCKED);
             }
         });
 		inventory.setItem(2, button.getItemStack());
-		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.COMMAND_BLOCK), ChatColor.YELLOW + "Equips equilibrats"), ply, event -> ferEquipsEquilibrats());
+		ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.COMMAND_BLOCK), Messages.sharedItemMarker(MessageKey.TEAMS_BALANCE)), ply, event -> ferEquipsEquilibrats());
 		if(hasHostPrivilleges(ply))inventory.setItem(3, button2.getItemStack());
-		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), ChatColor.YELLOW + "Equips aleatoris + Inici"), ply, event -> {
+		ItemButton button3 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SLIME_BALL), Messages.sharedItemMarker(MessageKey.TEAMS_RANDOM_START)), ply, event -> {
             if(canBeStartedBy(ply, true)){
                 ferEquipsAleatoris(true);
                 JocIniciat();
             }
         });
 		if(hasHostPrivilleges(ply))inventory.setItem(4, button3.getItemStack());
-		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.EMERALD_BLOCK), ChatColor.GREEN + "Netejar equips"), ply, event -> resetTeams());
+		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.EMERALD_BLOCK), Messages.sharedItemMarker(MessageKey.TEAMS_CLEAR)), ply, event -> resetTeams());
 		if(hasHostPrivilleges(ply))inventory.setItem(5, button4.getItemStack());
 //		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BONE), ChatColor.GREEN + "Establir equip"), ply, new ItemButton.OptionClickEventHandler() {
 //			@Override
@@ -595,7 +602,7 @@ public abstract class JocEquips extends Joc {
 //						int pos = event.getPosition();
 //
 //						Player pl = AllPlayers.get(pos);
-//						openTemSelectionMenu(ply, pl, "Equip (" + pl.getName() + "");
+//						openTeamSelectionMenu(ply, pl, "Equip (" + pl.getName() + "");
 //
 //
 //
@@ -692,7 +699,7 @@ public abstract class JocEquips extends Joc {
 				Player ply = evt.getPlayer();
 				Player clicked = (Player) evt.getRightClicked();
 				if (ply.getItemInHand().getType() == Material.BONE){
-					openTemSelectionMenu(clicked, ply, "Equip (" + clicked.getName() + ")");
+					openTeamSelectionMenu(clicked, ply);
 				}
 			}
 		}
@@ -960,6 +967,11 @@ public abstract class JocEquips extends Joc {
 		public void setColor(DyeColor color) {
 			this.color = color;
 		}
+        public Component getLocalizedName(Player viewer) {
+            Component name = TeamNames.component(viewer, getColor(), getAdjectiu());
+            NamedTextColor teamColor = NamedTextColor.NAMES.value(getChatColor().name().toLowerCase(java.util.Locale.ROOT));
+            return name.color(teamColor == null ? NamedTextColor.WHITE : teamColor);
+        }
 		public String getAdjectiu() {
 			return adjectiu;
 		}

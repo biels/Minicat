@@ -164,7 +164,10 @@ public class GestorMapes implements Listener{
 
     private void openLanguageSelectorFromMenu(Player player) {
         MenuSession origin = openMapMenus.get(player.getUniqueId());
-        if (origin == null || player.getOpenInventory().getTopInventory() != origin.inventory()) return;
+        if (origin == null || player.getOpenInventory().getTopInventory() != origin.inventory()) {
+            Messages.openLanguageSelector(player);
+            return;
+        }
         Messages.openLanguageSelector(player);
         Inventory selector = player.getOpenInventory().getTopInventory();
         // A cancelled open must not turn the origin menu into a selector session.
@@ -690,7 +693,7 @@ public class GestorMapes implements Listener{
 			}
 
 			menu.open(ply);
-            trackMenu(menu, ply, () -> ObrirMenu(ply));
+            trackLocalizedMenu(menu, ply, () -> ObrirMenu(ply));
 		}
 
 		public ArrayList<Joc> getInstàncies() {
@@ -723,7 +726,7 @@ public class GestorMapes implements Listener{
 		}	
 
 		menu.open(ply);
-        trackMenu(menu, ply, () -> openAllGamesMenu(ply));
+        trackLocalizedMenu(menu, ply, () -> openAllGamesMenu(ply));
 	}
 	//	public ItemStack getIconForInstance(Mapa m){
 	//		ItemStack stack = new ItemStack(Material.OAK_PLANKS
@@ -737,7 +740,7 @@ public class GestorMapes implements Listener{
 	//		
 	//		}
 	//	}
-    private void trackMenu(IconMenu menu, Player player, Runnable reopen) {
+    public void trackLocalizedMenu(IconMenu menu, Player player, Runnable reopen) {
         Inventory inventory = player.getOpenInventory().getTopInventory();
         if (menu.isThisOne(inventory, player)) openMapMenus.put(player.getUniqueId(), new MenuSession(inventory, reopen));
     }

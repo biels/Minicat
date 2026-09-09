@@ -1,0 +1,252 @@
+{
+  "items": [
+    {
+      "type": "text",
+      "key": "minicat.teams.select",
+      "languages": {
+        "en_US": "[minimsg]<yellow><!italic>Choose a team</!italic></yellow>",
+        "ca_ES": "[minimsg]<yellow><!italic>Tria un equip</!italic></yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.select-for",
+      "languages": {
+        "en_US": "[minimsg]Choose a team for %1",
+        "ca_ES": "[minimsg]Tria un equip per a %1"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.unassigned",
+      "languages": {
+        "en_US": "[minimsg]<red>Cannot start: choose a team for %1.</red>",
+        "ca_ES": "[minimsg]<red>No es pot iniciar: tria un equip per a %1.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.assigned",
+      "languages": {
+        "en_US": "[minimsg]<gray>%1 joined %2.</gray>",
+        "ca_ES": "[minimsg]<gray>%1 ara és a: %2.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.custom",
+      "languages": {
+        "en_US": "[minimsg]<yellow>%1 chose a team. Custom selection is active; choose your teams.</yellow>",
+        "ca_ES": "[minimsg]<yellow>%1 ha triat un equip. La selecció personalitzada està activada; trieu els vostres equips.</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.reset",
+      "languages": {
+        "en_US": "[minimsg]<gray>Teams have been reset.</gray>",
+        "ca_ES": "[minimsg]<gray>S’han restablert els equips.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.locked",
+      "languages": {
+        "en_US": "[minimsg]<red>Teams are locked.</red>",
+        "ca_ES": "[minimsg]<red>Els equips estan bloquejats.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.unlocked",
+      "languages": {
+        "en_US": "[minimsg]<green>Teams are unlocked.</green>",
+        "ca_ES": "[minimsg]<green>Els equips estan desbloquejats.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.select-locked",
+      "languages": {
+        "en_US": "[minimsg]<red>You cannot change teams while they are locked.</red>",
+        "ca_ES": "[minimsg]<red>No pots canviar d’equip mentre estan bloquejats.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.spectator",
+      "languages": {
+        "en_US": "[minimsg]<green>Spectator</green>",
+        "ca_ES": "[minimsg]<green>Espectador</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.spectator-unavailable",
+      "languages": {
+        "en_US": "[minimsg]<gray>Spectator selection is unavailable here.</gray>",
+        "ca_ES": "[minimsg]<gray>Aquí no es pot seleccionar el mode espectador.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.balance",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Balance teams</yellow>",
+        "ca_ES": "[minimsg]<yellow>Equilibra els equips</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.random-start",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Random teams and start</yellow>",
+        "ca_ES": "[minimsg]<yellow>Equips aleatoris i inicia</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.clear",
+      "languages": {
+        "en_US": "[minimsg]<green>Reset teams</green>",
+        "ca_ES": "[minimsg]<green>Restableix els equips</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.board",
+      "languages": {
+        "en_US": "[minimsg]<white><!italic>Teams</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>Equips</!italic></white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.white",
+      "languages": {
+        "en_US": "[minimsg]White team",
+        "ca_ES": "[minimsg]Equip blanc"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.orange",
+      "languages": {
+        "en_US": "[minimsg]Orange team",
+        "ca_ES": "[minimsg]Equip taronja"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.magenta",
+      "languages": {
+        "en_US": "[minimsg]Magenta team",
+        "ca_ES": "[minimsg]Equip magenta"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.light_blue",
+      "languages": {
+        "en_US": "[minimsg]Light blue team",
+        "ca_ES": "[minimsg]Equip blau clar"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.yellow",
+      "languages": {
+        "en_US": "[minimsg]Yellow team",
+        "ca_ES": "[minimsg]Equip groc"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.lime",
+      "languages": {
+        "en_US": "[minimsg]Lime team",
+        "ca_ES": "[minimsg]Equip verd llima"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.pink",
+      "languages": {
+        "en_US": "[minimsg]Pink team",
+        "ca_ES": "[minimsg]Equip rosa"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.gray",
+      "languages": {
+        "en_US": "[minimsg]Gray team",
+        "ca_ES": "[minimsg]Equip gris"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.light_gray",
+      "languages": {
+        "en_US": "[minimsg]Light gray team",
+        "ca_ES": "[minimsg]Equip gris clar"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.cyan",
+      "languages": {
+        "en_US": "[minimsg]Cyan team",
+        "ca_ES": "[minimsg]Equip cian"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.purple",
+      "languages": {
+        "en_US": "[minimsg]Purple team",
+        "ca_ES": "[minimsg]Equip lila"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.blue",
+      "languages": {
+        "en_US": "[minimsg]Blue team",
+        "ca_ES": "[minimsg]Equip blau"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.brown",
+      "languages": {
+        "en_US": "[minimsg]Brown team",
+        "ca_ES": "[minimsg]Equip marró"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.green",
+      "languages": {
+        "en_US": "[minimsg]Green team",
+        "ca_ES": "[minimsg]Equip verd"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.red",
+      "languages": {
+        "en_US": "[minimsg]Red team",
+        "ca_ES": "[minimsg]Equip vermell"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.teams.name.black",
+      "languages": {
+        "en_US": "[minimsg]Black team",
+        "ca_ES": "[minimsg]Equip negre"
+      }
+    }
+  ]
+}

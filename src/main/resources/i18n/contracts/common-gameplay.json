@@ -149,7 +149,7 @@
     },
     "minicat.match.invite.click": {
       "constant": "MATCH_INVITE_CLICK",
-      "purpose": "Join match",
+      "purpose": "Join match.",
       "arguments": [],
       "surfaces": [
         "chat"
@@ -227,7 +227,7 @@
     },
     "minicat.match.add.all.lore": {
       "constant": "MATCH_ADD_ALL_LORE",
-      "purpose": "Move lobby players into this game..",
+      "purpose": "Move lobby players into this game.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -249,7 +249,7 @@
     },
     "minicat.match.invite.all.lore": {
       "constant": "MATCH_INVITE_ALL_LORE",
-      "purpose": "Send an invitation to lobby players..",
+      "purpose": "Send an invitation to lobby players.",
       "arguments": [],
       "surfaces": [
         "menu",
@@ -282,7 +282,7 @@
     },
     "minicat.match.not.in.game": {
       "constant": "NOT_IN_GAME",
-      "purpose": "Join a game to use this command..",
+      "purpose": "Join a game to use this command.",
       "arguments": [],
       "surfaces": [
         "menu",

@@ -107,6 +107,18 @@ run the locale/packet checks. Game Java code does not gain language switches.
 
 This slice covers shared navigation, lobby tools/help, instance menus and creation
 feedback, join/start errors, invitations, reconnect feedback and ranking explanations.
+Shared `JocEquips` team selection, preparation controls, assignment/lock/reset
+feedback and its pre-match team board are also localized in `common-teams.json`.
+Games inherit these translations when they use the base implementation. Standard
+color-team names use `TeamNames`; custom proper names and legacy team identifiers
+remain unchanged. Use `Equip.getLocalizedName(viewer)` for recipient-facing names.
+Team menus reuse the tracked inventory lifecycle and rebuild on language changes.
+
+Score-holder strings are identifiers: Triton does not translate them. The shared
+team board uses `ScoreBoardUpdater.setTranslatedScoreBoard` with invisible holders
+and translatable team prefixes, allowing language refresh without changing scores.
+Keep this distinction when migrating game boards.
+
 It does not translate each game mode's instructions, match announcements, combat
-UI, team selection, per-game scoreboard or editor tools. Migrate those by feature
+UI, per-game scoreboard overrides or editor tools. Migrate those by feature
 using this system; do not bulk rewrite unrelated legacy text.

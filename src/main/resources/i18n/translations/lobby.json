@@ -52,8 +52,8 @@
       "type": "text",
       "key": "minicat.lobby.help.title",
       "languages": {
-        "en_US": "[minimsg]Minicat help",
-        "ca_ES": "[minimsg]Ajuda de Minicat"
+        "en_US": "[minimsg]<yellow><!italic>Minicat help</!italic></yellow>",
+        "ca_ES": "[minimsg]<yellow><!italic>Ajuda de Minicat</!italic></yellow>"
       }
     },
     {

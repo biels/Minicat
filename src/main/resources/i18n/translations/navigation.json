@@ -196,48 +196,48 @@
       "type": "text",
       "key": "minicat.navigation.state.waiting",
       "languages": {
-        "en_US": "[minimsg]Waiting for players",
-        "ca_ES": "[minimsg]Esperant jugadors"
+        "en_US": "[minimsg]<white><!italic>Waiting for players</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>Esperant jugadors</!italic></white>"
       }
     },
     {
       "type": "text",
       "key": "minicat.navigation.state.preparing",
       "languages": {
-        "en_US": "[minimsg]Preparing",
-        "ca_ES": "[minimsg]Preparant"
+        "en_US": "[minimsg]<white><!italic>Preparing</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>Preparant</!italic></white>"
       }
     },
     {
       "type": "text",
       "key": "minicat.navigation.state.playing",
       "languages": {
-        "en_US": "[minimsg]In progress",
-        "ca_ES": "[minimsg]En joc"
+        "en_US": "[minimsg]<white><!italic>In progress</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>En joc</!italic></white>"
       }
     },
     {
       "type": "text",
       "key": "minicat.navigation.state.complete",
       "languages": {
-        "en_US": "[minimsg]Finished",
-        "ca_ES": "[minimsg]Finalitzada"
+        "en_US": "[minimsg]<white><!italic>Finished</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>Finalitzada</!italic></white>"
       }
     },
     {
       "type": "text",
       "key": "minicat.navigation.state.resetting",
       "languages": {
-        "en_US": "[minimsg]Resetting",
-        "ca_ES": "[minimsg]Reiniciant"
+        "en_US": "[minimsg]<white><!italic>Resetting</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>Reiniciant</!italic></white>"
       }
     },
     {
       "type": "text",
       "key": "minicat.navigation.state.editing",
       "languages": {
-        "en_US": "[minimsg]Editing",
-        "ca_ES": "[minimsg]En edició"
+        "en_US": "[minimsg]<white><!italic>Editing</!italic></white>",
+        "ca_ES": "[minimsg]<white><!italic>En edició</!italic></white>"
       }
     },
     {

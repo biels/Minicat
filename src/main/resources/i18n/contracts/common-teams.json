@@ -1,0 +1,369 @@
+{
+  "keys": {
+    "minicat.teams.select": {
+      "constant": "TEAMS_SELECT",
+      "purpose": "Choose a team.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.select-for": {
+      "constant": "TEAMS_SELECT_FOR",
+      "purpose": "Choose a team for %1.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.unassigned": {
+      "constant": "TEAMS_UNASSIGNED",
+      "purpose": "Cannot start: choose a team for %1.",
+      "arguments": [
+        {
+          "name": "players",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.assigned": {
+      "constant": "TEAMS_ASSIGNED",
+      "purpose": "%1 joined %2.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        },
+        {
+          "name": "team",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.custom": {
+      "constant": "TEAMS_CUSTOM",
+      "purpose": "%1 chose a team. Custom selection is active; choose your teams.",
+      "arguments": [
+        {
+          "name": "player",
+          "type": "TEXT"
+        }
+      ],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.reset": {
+      "constant": "TEAMS_RESET",
+      "purpose": "Teams have been reset.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.locked": {
+      "constant": "TEAMS_LOCKED",
+      "purpose": "Teams are locked.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.unlocked": {
+      "constant": "TEAMS_UNLOCKED",
+      "purpose": "Teams are unlocked.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.select-locked": {
+      "constant": "TEAMS_SELECT_LOCKED",
+      "purpose": "You cannot change teams while they are locked.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.spectator": {
+      "constant": "TEAMS_SPECTATOR",
+      "purpose": "Spectator.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.spectator-unavailable": {
+      "constant": "TEAMS_SPECTATOR_UNAVAILABLE",
+      "purpose": "Spectator selection is unavailable here.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.balance": {
+      "constant": "TEAMS_BALANCE",
+      "purpose": "Balance teams.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.random-start": {
+      "constant": "TEAMS_RANDOM_START",
+      "purpose": "Random teams and start.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.clear": {
+      "constant": "TEAMS_CLEAR",
+      "purpose": "Reset teams.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.board": {
+      "constant": "TEAMS_BOARD",
+      "purpose": "Teams.",
+      "arguments": [],
+      "surfaces": [
+        "chat",
+        "menu",
+        "item"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.white": {
+      "constant": "TEAM_NAME_WHITE",
+      "purpose": "White team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.orange": {
+      "constant": "TEAM_NAME_ORANGE",
+      "purpose": "Orange team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.magenta": {
+      "constant": "TEAM_NAME_MAGENTA",
+      "purpose": "Magenta team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.light_blue": {
+      "constant": "TEAM_NAME_LIGHT_BLUE",
+      "purpose": "Light blue team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.yellow": {
+      "constant": "TEAM_NAME_YELLOW",
+      "purpose": "Yellow team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.lime": {
+      "constant": "TEAM_NAME_LIME",
+      "purpose": "Lime team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.pink": {
+      "constant": "TEAM_NAME_PINK",
+      "purpose": "Pink team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.gray": {
+      "constant": "TEAM_NAME_GRAY",
+      "purpose": "Gray team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.light_gray": {
+      "constant": "TEAM_NAME_LIGHT_GRAY",
+      "purpose": "Light gray team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.cyan": {
+      "constant": "TEAM_NAME_CYAN",
+      "purpose": "Cyan team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.purple": {
+      "constant": "TEAM_NAME_PURPLE",
+      "purpose": "Purple team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.blue": {
+      "constant": "TEAM_NAME_BLUE",
+      "purpose": "Blue team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.brown": {
+      "constant": "TEAM_NAME_BROWN",
+      "purpose": "Brown team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.green": {
+      "constant": "TEAM_NAME_GREEN",
+      "purpose": "Green team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.red": {
+      "constant": "TEAM_NAME_RED",
+      "purpose": "Red team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    },
+    "minicat.teams.name.black": {
+      "constant": "TEAM_NAME_BLACK",
+      "purpose": "Black team.",
+      "arguments": [],
+      "surfaces": [
+        "menu",
+        "scoreboard",
+        "chat"
+      ],
+      "maxTemplateCharacters": 240
+    }
+  }
+}
