@@ -19,7 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.MapaResetejable;
 import com.biel.lobby.mapes.TemplateImport;
-import com.biel.lobby.mapes.jocs.RainbowClay;
+import com.biel.lobby.mapes.jocs.rainbowclay.RainbowClay;
 import com.biel.lobby.agent.AgentSnapshotHttpServer;
 import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.GestorPropietats;

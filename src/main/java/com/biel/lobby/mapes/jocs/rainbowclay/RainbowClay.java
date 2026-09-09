@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.rainbowclay;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.PaperMessages;
 
 public class RainbowClay extends JocObjectius {
-	private RainbowClaySnapshotPublisher agentSnapshotPublisher;
+	private SnapshotPublisher agentSnapshotPublisher;
 
 	public RainbowClay() {
 		super();
@@ -59,7 +59,7 @@ public class RainbowClay extends JocObjectius {
 		if (agentSnapshotPublisher != null) return;
 		AgentSnapshotHttpServer endpoint = lobby.getPlugin().getAgentSnapshotHttpServer();
 		if (endpoint == null || !endpoint.isRunning()) return;
-		agentSnapshotPublisher = new RainbowClaySnapshotPublisher(this, endpoint);
+		agentSnapshotPublisher = new SnapshotPublisher(this, endpoint);
 		agentSnapshotPublisher.start();
 	}
 

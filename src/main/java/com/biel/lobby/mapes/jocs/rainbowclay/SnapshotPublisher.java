@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.rainbowclay;
 
 import com.biel.lobby.agent.AgentSnapshotHttpServer;
 import com.biel.lobby.mapes.JocEquips.Equip;
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 // -Dminicat.agent-http.enabled) is transport, not consent. Publishing runs only while
 // an operator has switched it on with /minicatai on, which is off at every server
 // start, and /minicatai off withdraws every instance immediately.
-final class RainbowClaySnapshotPublisher {
+final class SnapshotPublisher {
     // A snapshot must reach the bot young and stay valid for a whole turn, and at
     // 100 ticks / 7500 ms it could do neither. The bot refuses to think against a
     // snapshot with less than its decision budget left, so the budget could never
@@ -57,7 +57,7 @@ final class RainbowClaySnapshotPublisher {
     private int publishTaskId = -1;
     private boolean closed;
 
-    RainbowClaySnapshotPublisher(RainbowClay game, AgentSnapshotHttpServer endpoint) {
+    SnapshotPublisher(RainbowClay game, AgentSnapshotHttpServer endpoint) {
         this.game = game;
         this.endpoint = endpoint;
     }
