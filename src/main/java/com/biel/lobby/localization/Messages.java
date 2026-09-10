@@ -23,6 +23,7 @@ import net.kyori.adventure.text.Component;
 public final class Messages {
 	private static Messages instance;
 
+	private static boolean privateCatalan;
 	private final Triton triton;
 	private final String guiMarker;
 	private final String itemMarker;
@@ -40,6 +41,7 @@ public final class Messages {
 		if (plugin == null || !plugin.isEnabled()) throw new IllegalStateException("Triton 4.1.0 must be loaded before Minicat");
 		Triton api = TritonAPI.getInstance();
 		if (api == null) throw new IllegalStateException("Triton's public API is unavailable");
+		privateCatalan = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "config.yml")).getBoolean("minicat.private-catalan", false);
 		validateConfiguration(plugin, api);
 		validateRuntimeCatalog(api);
 		instance = new Messages(api);
@@ -69,11 +71,11 @@ public final class Messages {
 		}
 		YamlConfiguration diskConfig = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "config.yml"));
         var configuredLanguages = diskConfig.getConfigurationSection("languages");
-        var expectedLanguages = new java.util.HashSet<>(LanguageCatalog.entries().stream().map(LanguageCatalog.Entry::id).toList());
+        var expectedLanguages = new java.util.HashSet<>(activeLanguages().stream().map(LanguageCatalog.Entry::id).toList());
         if (configuredLanguages == null || !configuredLanguages.getKeys(false).equals(expectedLanguages)) {
             throw new IllegalStateException("Triton active languages differ from i18n/languages.json; run the localization installer");
         }
-        for (var entry : LanguageCatalog.entries()) {
+        for (var entry : activeLanguages()) {
             if (!diskConfig.getStringList("languages." + entry.id() + ".minecraft-code").equals(entry.minecraftCodes())) {
                 throw new IllegalStateException("Triton client locale mappings differ for " + entry.id());
             }
@@ -120,7 +122,7 @@ public final class Messages {
     }
 
 	private static void validateRuntimeCatalog(Triton api) {
-		for (var entry : LanguageCatalog.entries()) {
+		for (var entry : activeLanguages()) {
             String languageName = entry.id();
 			Language language = api.getLanguageManager().getLanguageByName(languageName)
 					.orElseThrow(() -> new IllegalStateException("Triton language is not configured: " + languageName));
@@ -131,10 +133,16 @@ public final class Messages {
 				}
 			}
 		}
-		if (!LanguageCatalog.fallback().equals(api.getLanguageManager().getMainLanguage().getName())) {
-			throw new IllegalStateException("Triton main-language must be en_US");
+		if (!(privateCatalan ? "ca_ES" : LanguageCatalog.fallback()).equals(api.getLanguageManager().getMainLanguage().getName())) {
+			throw new IllegalStateException("Triton main-language differs from the deployment language mode");
 		}
 	}
+
+    public static boolean languageSelectionEnabled() { return !privateCatalan; }
+
+    private static java.util.List<LanguageCatalog.Entry> activeLanguages() {
+        return LanguageCatalog.entries().stream().filter(entry -> !privateCatalan || entry.id().equals("ca_ES")).toList();
+    }
 
 	private static String markerName(FeatureSyntax syntax, String surface) {
 		if (syntax == null || syntax.getLang() == null || syntax.getLang().isBlank()) {
@@ -195,10 +203,11 @@ public final class Messages {
 	}
 
 	public static void openLanguageSelector(Player player) {
-		get().triton.openLanguagesSelectionGUI(get().languagePlayer(player));
+		if (languageSelectionEnabled()) get().triton.openLanguagesSelectionGUI(get().languagePlayer(player));
 	}
 
 	public static boolean setLanguage(Player player, String requestedLanguage) {
+        if (!languageSelectionEnabled()) return false;
         var entry = LanguageCatalog.find(requestedLanguage).orElse(null);
         if (entry == null) return false;
         Language language = get().triton.getLanguageManager().getLanguageByName(entry.id())

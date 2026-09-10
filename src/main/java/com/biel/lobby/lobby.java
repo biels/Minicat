@@ -93,7 +93,7 @@ public final class lobby extends JavaPlugin {
 	@Override
 	public java.util.List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
 		if (!command.getName().equalsIgnoreCase("lang")) return super.onTabComplete(sender, command, alias, args);
-		if (args.length != 1) return java.util.List.of();
+		if (!Messages.languageSelectionEnabled() || args.length != 1) return java.util.List.of();
 		String prefix = args[0].toLowerCase(java.util.Locale.ROOT);
 		return com.biel.lobby.localization.LanguageCatalog.suggestions(prefix);
 	}
@@ -205,6 +205,10 @@ public final class lobby extends JavaPlugin {
 		}
 		Player ply = (Player) sender;
 		if(cmd.getName().equalsIgnoreCase("lang")){
+            if (!Messages.languageSelectionEnabled()) {
+                Messages.send(ply, MessageKey.LANGUAGE_CHANGED, MessageArgument.text("language", "Català"));
+                return true;
+            }
 			if(args.length == 0){
 				Messages.openLanguageSelector(ply);
 				return true;

@@ -150,7 +150,7 @@ public class GestorMapes implements Listener{
 			menu.setOption(Mapes.indexOf(mapa), icon, mapa.getDisplayName(), mapa.getDescription());
 
 		}
-		menu.setOption(languageSlot, new ItemStack(Material.COMPASS),
+		if (Messages.languageSelectionEnabled()) menu.setOption(languageSlot, new ItemStack(Material.COMPASS),
 				Messages.sharedItemMarker(MessageKey.MAPS_LANGUAGE_NAME),
 				Messages.sharedItemMarker(MessageKey.MAPS_LANGUAGE_LORE));
 		menu.setOption(rankingBookSlot, new ItemStack(Material.WRITTEN_BOOK),

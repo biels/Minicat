@@ -122,3 +122,13 @@ Keep this distinction when migrating game boards.
 It does not translate each game mode's instructions, match announcements, combat
 UI, per-game scoreboard overrides or editor tools. Migrate those by feature
 using this system; do not bulk rewrite unrelated legacy text.
+
+## Private-server deployment
+
+Until public launch, the real server may use the installer's `--private-catalan`
+mode. This sets `minicat.private-catalan` in Triton's config, activates only Catalan
+and hides Minicat's language picker. Catalogs remain bilingual and preference JSON
+is retained; unavailable saved languages resolve through Triton's Catalan fallback.
+`/lang` reports Catalan without offering a switch. Ordinary reinstalls preserve the
+mode; use `--public-languages` while stopped, then restart to restore detection and
+language selection. This deployment exception does not change English source copy.

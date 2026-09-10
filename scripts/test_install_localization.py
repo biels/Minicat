@@ -34,6 +34,17 @@ class InstallerTest(unittest.TestCase):
             self.assertIn('Juga', signs[0]['lines']['ca_ES'][0])
             self.assertNotIn('[lang]', signs[0]['lines']['ca_ES'][0])
             self.assertEqual(set(yaml.safe_load((root / 'config.yml').read_text())['languages']), {'en_US','ca_ES'})
+            installer.install(JAR, root, private_catalan=True)
+            installer.install(JAR, root)
+            private = yaml.safe_load((root / 'config.yml').read_text())
+            self.assertEqual(set(private['languages']), {'ca_ES'})
+            self.assertEqual(private['main-language'], 'ca_ES')
+            self.assertEqual(private['languages']['ca_ES']['fallback-languages'], [])
+            self.assertEqual((root / 'players.json').read_text(), '{"old-player":"es_ES"}\n')
+            installer.install(JAR, root, private_catalan=False)
+            public = yaml.safe_load((root / 'config.yml').read_text())
+            self.assertEqual(set(public['languages']), {'en_US','ca_ES'})
+            self.assertEqual(public['main-language'], 'en_US')
 
 
 if __name__ == '__main__': unittest.main()

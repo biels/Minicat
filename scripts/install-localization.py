@@ -9,7 +9,7 @@ import zipfile
 import yaml
 
 
-def install(jar_path, triton_directory, sign_bindings=None):
+def install(jar_path, triton_directory, sign_bindings=None, private_catalan=None):
     config_path = triton_directory / 'config.yml'
     config = yaml.safe_load(config_path.read_text())
     with zipfile.ZipFile(jar_path) as jar:
@@ -32,16 +32,21 @@ def install(jar_path, triton_directory, sign_bindings=None):
                 'lines': {entry['id']: [catalog[key]['languages'][entry['id']] if key else '' for key in lines] + [''] * (8 - len(lines)) for entry in definition['languages']}})
         collections['minicat-signs.json'] = (json.dumps({'items': signs}, ensure_ascii=False, indent=2) + '\n').encode()
 
+    if private_catalan is None:
+        private_catalan = config.get('minicat', {}).get('private-catalan', False)
+    config.setdefault('minicat', {})['private-catalan'] = private_catalan
+    active_languages = [entry for entry in definition['languages'] if not private_catalan or entry['id'] == 'ca_ES']
+    main_language = 'ca_ES' if private_catalan else definition['default']
     existing = config.get('languages', {})
     config['languages'] = {
         entry['id']: {
             'flag': existing.get(entry['id'], {}).get('flag', 'eapwplpnpmbzbj'),
             'minecraft-code': entry['minecraftCodes'],
             'display-name': '<gold>' + entry['displayName'],
-            'fallback-languages': [] if entry['id'] == definition['default'] else [definition['default']],
-        } for entry in definition['languages']
+            'fallback-languages': [] if entry['id'] == main_language else [main_language],
+        } for entry in active_languages
     }
-    config['main-language'] = definition['default']
+    config['main-language'] = main_language
     config['force-client-locale-on-join'] = False
     config['message-parser'] = 'adventure'
     config['storage']['type'] = 'local'
@@ -82,5 +87,8 @@ if __name__ == '__main__':
     parser.add_argument('triton_directory', type=Path)
     parser.add_argument('--sign-bindings', type=Path, help='World locations and catalog keys; no duplicated translations')
     parser.add_argument('--server-stopped', action='store_true', required=True, help='Confirm the target server is stopped; restart after installation')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--private-catalan', dest='private_catalan', action='store_true', default=None)
+    mode.add_argument('--public-languages', dest='private_catalan', action='store_false')
     arguments = parser.parse_args()
-    install(arguments.jar, arguments.triton_directory, arguments.sign_bindings)
+    install(arguments.jar, arguments.triton_directory, arguments.sign_bindings, arguments.private_catalan)
