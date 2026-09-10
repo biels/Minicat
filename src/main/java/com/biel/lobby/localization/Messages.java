@@ -76,7 +76,7 @@ public final class Messages {
             throw new IllegalStateException("Triton active languages differ from i18n/languages.json; run the localization installer");
         }
         for (var entry : activeLanguages()) {
-            if (!diskConfig.getStringList("languages." + entry.id() + ".minecraft-code").equals(entry.minecraftCodes())) {
+            if (!diskConfig.getStringList("languages." + entry.id() + ".minecraft-code").equals(privateCatalan ? java.util.List.of() : entry.minecraftCodes())) {
                 throw new IllegalStateException("Triton client locale mappings differ for " + entry.id());
             }
         }
@@ -138,10 +138,10 @@ public final class Messages {
 		}
 	}
 
-    public static boolean languageSelectionEnabled() { return !privateCatalan; }
+    public static boolean languagePickerVisible() { return !privateCatalan; }
 
     private static java.util.List<LanguageCatalog.Entry> activeLanguages() {
-        return LanguageCatalog.entries().stream().filter(entry -> !privateCatalan || entry.id().equals("ca_ES")).toList();
+        return LanguageCatalog.entries();
     }
 
 	private static String markerName(FeatureSyntax syntax, String surface) {
@@ -203,11 +203,10 @@ public final class Messages {
 	}
 
 	public static void openLanguageSelector(Player player) {
-		if (languageSelectionEnabled()) get().triton.openLanguagesSelectionGUI(get().languagePlayer(player));
+		get().triton.openLanguagesSelectionGUI(get().languagePlayer(player));
 	}
 
 	public static boolean setLanguage(Player player, String requestedLanguage) {
-        if (!languageSelectionEnabled()) return false;
         var entry = LanguageCatalog.find(requestedLanguage).orElse(null);
         if (entry == null) return false;
         Language language = get().triton.getLanguageManager().getLanguageByName(entry.id())

@@ -35,13 +35,13 @@ def install(jar_path, triton_directory, sign_bindings=None, private_catalan=None
     if private_catalan is None:
         private_catalan = config.get('minicat', {}).get('private-catalan', False)
     config.setdefault('minicat', {})['private-catalan'] = private_catalan
-    active_languages = [entry for entry in definition['languages'] if not private_catalan or entry['id'] == 'ca_ES']
+    active_languages = definition['languages']
     main_language = 'ca_ES' if private_catalan else definition['default']
     existing = config.get('languages', {})
     config['languages'] = {
         entry['id']: {
             'flag': existing.get(entry['id'], {}).get('flag', 'eapwplpnpmbzbj'),
-            'minecraft-code': entry['minecraftCodes'],
+            'minecraft-code': [] if private_catalan else entry['minecraftCodes'],
             'display-name': '<gold>' + entry['displayName'],
             'fallback-languages': [] if entry['id'] == main_language else [main_language],
         } for entry in active_languages

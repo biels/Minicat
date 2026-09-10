@@ -126,9 +126,10 @@ using this system; do not bulk rewrite unrelated legacy text.
 ## Private-server deployment
 
 Until public launch, the real server may use the installer's `--private-catalan`
-mode. This sets `minicat.private-catalan` in Triton's config, activates only Catalan
-and hides Minicat's language picker. Catalogs remain bilingual and preference JSON
-is retained; unavailable saved languages resolve through Triton's Catalan fallback.
-`/lang` reports Catalan without offering a switch. Ordinary reinstalls preserve the
-mode; use `--public-languages` while stopped, then restart to restore detection and
-language selection. This deployment exception does not change English source copy.
+mode. This sets `minicat.private-catalan` in Triton's config and hides only the
+menu picker. Both languages remain active: `/lang`, `/lang en`, `/lang ca` and
+completion work normally, and saved choices are honored. New players default to
+Catalan regardless of client locale (client mappings are empty in this mode).
+Ordinary reinstalls preserve the mode; use `--public-languages` while stopped,
+then restart to restore client detection, English fallback and the menu icon.
+This deployment exception does not change English source copy.
