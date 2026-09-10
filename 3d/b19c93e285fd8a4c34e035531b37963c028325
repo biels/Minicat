@@ -1,0 +1,37 @@
+scripts/install-localization.py
+  s_39575a5e08f48d::t_3433f70b97170a 12,35-39,46-47,49,90-92,94
+scripts/test_install_localization.py
+  s_667b83b1d0304d::t_feeead9a368304 37-47
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_39575a5e08f48d::t_b1b06fe95ea2dc 153
+src/main/java/com/biel/lobby/lobby.java
+  s_39575a5e08f48d::t_47179e20f0a2b6 96,208-211
+src/main/java/com/biel/lobby/localization/Messages.java
+  s_39575a5e08f48d::t_0ae51bb774162b 26,44,74,78,125,136-137,141-146,206,210
+src/main/resources/i18n/COPY.md
+  s_39575a5e08f48d::t_367d8f0e1345a4 125-134
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "3db19c93e285fd8a4c34e035531b37963c028325",
+  "prompts": {},
+  "sessions": {
+    "s_39575a5e08f48d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08788-cc3d-7d20-98ff-e3932634ed4f",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_667b83b1d0304d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08591-a615-7f01-af4b-075363019da2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
