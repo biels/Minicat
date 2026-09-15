@@ -5,7 +5,7 @@
       "key": "minicat.match.join.unavailable",
       "languages": {
         "en_US": "[minimsg]<red>You cannot join this instance in its current state.</red>",
-        "ca_ES": "[minimsg]<red>No et pots unir a aquesta instància en el seu estat actual.</red>"
+        "ca_ES": "[minimsg]<red>No et pots unir a aquesta instància ara mateix.</red>"
       }
     },
     {
@@ -13,7 +13,7 @@
       "key": "minicat.match.start.wait",
       "languages": {
         "en_US": "[minimsg]<yellow>Time before you can start: %1 s.</yellow>",
-        "ca_ES": "[minimsg]<yellow>Temps per poder iniciar: %1 s.</yellow>"
+        "ca_ES": "[minimsg]<yellow>Temps que falta per poder iniciar: %1 s.</yellow>"
       }
     },
     {
@@ -181,7 +181,7 @@
       "key": "minicat.match.not.in.game",
       "languages": {
         "en_US": "[minimsg]<red><!italic>Join a game to use this command.</!italic></red>",
-        "ca_ES": "[minimsg]<red><!italic>Entra en una partida per fer servir aquesta ordre.</!italic></red>"
+        "ca_ES": "[minimsg]<red><!italic>Entra a una partida per fer servir aquest command.</!italic></red>"
       }
     },
     {

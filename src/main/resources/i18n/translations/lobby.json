@@ -85,7 +85,7 @@
       "key": "minicat.lobby.teleported",
       "languages": {
         "en_US": "[minimsg]<gray>%1 returned you to the lobby.</gray>",
-        "ca_ES": "[minimsg]<gray>%1 t’ha tornat al lobby.</gray>"
+        "ca_ES": "[minimsg]<gray>%1 t’ha fet tornar al lobby.</gray>"
       }
     }
   ]

@@ -20,8 +20,8 @@
       "type": "text",
       "key": "minicat.menu.maps.ranking.lore",
       "languages": {
-        "en_US": "[minimsg]<white>Which games count and their weight</white>",
-        "ca_ES": "[minimsg]<white>Quins jocs puntuen i amb quin pes</white>"
+        "en_US": "[minimsg]<white>Which games count and their weight in ELO K</white>",
+        "ca_ES": "[minimsg]<white>Quins jocs puntuen i amb quina ELO K</white>"
       }
     },
     {
