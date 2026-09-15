@@ -1,0 +1,20 @@
+src/main/resources/i18n/translations/rankings.json
+  h_c9701b0283fbf3 40,48,71-72,87-88,111-112
+src/main/resources/i18n/translations/lobby.json
+  h_c9701b0283fbf3 88
+src/main/resources/i18n/translations/navigation.json
+  h_c9701b0283fbf3 23-24
+src/main/resources/i18n/translations/common-gameplay.json
+  h_c9701b0283fbf3 8,16,184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7ad91cbeae526406598ff4569a12beac7a16df9e",
+  "prompts": {},
+  "humans": {
+    "h_c9701b0283fbf3": {
+      "author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
