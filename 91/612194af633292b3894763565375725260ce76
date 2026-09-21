@@ -1,0 +1,62 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/package-info.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-5
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/ScrapShape.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-12
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/ScrapShapes.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-43
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/JunkDropPolicy.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-31
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/JunkDropPolicyTest.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-52
+src/main/resources/i18n/translations/robo-rampage.json
+  s_82fcc3fb2b3151::t_9e8af7c076098f 1-60
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/package-info.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-4
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageLegacyBehaviorTest.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-62
+src/test/resources/roborampage/README.md
+  s_82fcc3fb2b3151::t_86cc26f9427f1a 1-9
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_82fcc3fb2b3151::t_8c1a670f872ef8 353
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1,4-11,13,16,21,23,28-30,34,37-40,42-49,52,54-352,354-380
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/ScrapMaterial.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-9
+src/main/resources/i18n/contracts/robo-rampage.json
+  s_82fcc3fb2b3151::t_9e8af7c076098f 1-53
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/ScrapGridTest.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-104
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRulesTest.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-42
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/ScrapGrid.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-234
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 44
+  s_82fcc3fb2b3151::t_9e8af7c076098f 81
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/ScrapDropController.java
+  s_82fcc3fb2b3151::t_db3e885aa333c0 1-18,21-23,29,31-46,48-154,159-265
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 24-28,30,47
+  s_82fcc3fb2b3151::t_73a61dbe29ac6c 19-20,155-158
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRules.java
+  s_82fcc3fb2b3151::t_ee16fcf24f322f 1-125
+src/main/java/com/biel/lobby/localization/Messages.java
+  s_82fcc3fb2b3151::t_9e8af7c076098f 30,177-183
+  s_82fcc3fb2b3151::t_b2ac9b611d4b68 36
+src/test/resources/roborampage/legacy-behavior.txt
+  s_82fcc3fb2b3151::t_86cc26f9427f1a 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "91612194af633292b3894763565375725260ce76",
+  "prompts": {},
+  "sessions": {
+    "s_82fcc3fb2b3151": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c49b-204d-7593-b139-3de12aa1edc0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
