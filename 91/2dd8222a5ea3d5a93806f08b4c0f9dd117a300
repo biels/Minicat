@@ -1,0 +1,22 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/ScrapDropController.java
+  s_82fcc3fb2b3151::t_e7bfa65186a22e 23,35-36,61-73,78,153,224-229,235,237-239,250,254,256-258,271-277,286
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_82fcc3fb2b3151::t_e7bfa65186a22e 361-378,384,395-397
+  s_82fcc3fb2b3151::t_847861e07e7d34 398
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "912dd8222a5ea3d5a93806f08b4c0f9dd117a300",
+  "prompts": {},
+  "sessions": {
+    "s_82fcc3fb2b3151": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c49b-204d-7593-b139-3de12aa1edc0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
