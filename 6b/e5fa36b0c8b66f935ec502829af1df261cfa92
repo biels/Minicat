@@ -1,0 +1,42 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/TaserDropPolicy.java
+  s_82fcc3fb2b3151::t_c577f80b1f2f4e 1-36
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/package-info.java
+  s_82fcc3fb2b3151::t_c577f80b1f2f4e 2
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/TaserController.java
+  s_82fcc3fb2b3151::t_213c1afced619e 1-380
+src/main/resources/i18n/contracts/robo-rampage.json
+  s_82fcc3fb2b3151::t_237380a389e517 51-99
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/package-info.java
+  s_82fcc3fb2b3151::t_213c1afced619e 3-4
+src/main/resources/i18n/translations/robo-rampage.json
+  s_82fcc3fb2b3151::t_237380a389e517 58-113
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_82fcc3fb2b3151::t_6c8f6d7ef22934 21,29-30,66,92,94,115-119,144,304,342-343,348-361,401-414
+  s_82fcc3fb2b3151::t_ca8eb7edca38f3 415
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/ElectricNetwork.java
+  s_82fcc3fb2b3151::t_c577f80b1f2f4e 1-85
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/ElectricNetworkTest.java
+  s_82fcc3fb2b3151::t_c577f80b1f2f4e 1-57
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/TaserDropPolicyTest.java
+  s_82fcc3fb2b3151::t_c577f80b1f2f4e 1-33
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/TaserRulesTest.java
+  s_82fcc3fb2b3151::t_c577f80b1f2f4e 1-24
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/TaserRules.java
+  s_82fcc3fb2b3151::t_c577f80b1f2f4e 1-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6be5fa36b0c8b66f935ec502829af1df261cfa92",
+  "prompts": {},
+  "sessions": {
+    "s_82fcc3fb2b3151": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c49b-204d-7593-b139-3de12aa1edc0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
