@@ -1,0 +1,53 @@
+{
+  "keys": {
+    "minicat.robo-rampage.info.scrap": {
+      "constant": "ROBO_RAMPAGE_INFO_SCRAP",
+      "purpose": "Explain that destroyed robots become terrain.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.info.junk": {
+      "constant": "ROBO_RAMPAGE_INFO_JUNK",
+      "purpose": "Explain occasional unevenness-triggered junk deliveries.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.info.goal": {
+      "constant": "ROBO_RAMPAGE_INFO_GOAL",
+      "purpose": "Explain the target height.",
+      "arguments": [{"name": "height", "type": "NUMBER"}],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.score.scrap": {
+      "constant": "ROBO_RAMPAGE_SCORE_SCRAP",
+      "purpose": "Scoreboard label for settled scrap height.",
+      "arguments": [],
+      "surfaces": ["scoreboard"],
+      "maxTemplateCharacters": 32
+    },
+    "minicat.robo-rampage.score.target": {
+      "constant": "ROBO_RAMPAGE_SCORE_TARGET",
+      "purpose": "Scoreboard label for target height.",
+      "arguments": [],
+      "surfaces": ["scoreboard"],
+      "maxTemplateCharacters": 32
+    },
+    "minicat.robo-rampage.junk.incoming": {
+      "constant": "ROBO_RAMPAGE_JUNK_INCOMING",
+      "purpose": "Announce an occasional bulky junk delivery.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.victory": {
+      "constant": "ROBO_RAMPAGE_VICTORY",
+      "purpose": "Announce the cooperative climb completion.",
+      "arguments": [{"name": "height", "type": "NUMBER"}],
+      "surfaces": ["chat", "title"],
+      "maxTemplateCharacters": 220
+    }
+  }
+}

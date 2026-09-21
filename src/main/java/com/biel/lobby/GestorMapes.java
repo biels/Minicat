@@ -41,6 +41,7 @@ import com.biel.lobby.mapes.jocs.*;
 import com.biel.lobby.mapes.jocs.inkwars.InkWars;
 import com.biel.lobby.mapes.jocs.obsidiandefenders.ObsidianDefenders;
 import com.biel.lobby.mapes.jocs.rainbowclay.RainbowClay;
+import com.biel.lobby.mapes.jocs.roborampage.RoboRampage;
 
 
 public class GestorMapes implements Listener{
@@ -77,7 +78,7 @@ public class GestorMapes implements Listener{
 		//Mapes.add(new ContenidorJoc(Coliseu.class, "Coliseu", Material.QUARTZ_BLOCK, DevelopmentState.NotWorking));
 		//Mapes.add(new ContenidorJoc(TheTowers.class, "The Towers", Material.EXPERIENCE_BOTTLE, DevelopmentState.NotWorking));
 		Mapes.add(new ContenidorJoc(TNTRun.class, "TNT Run", Material.TNT, DevelopmentState.KnownIssues));
-		//Mapes.add(new ContenidorJoc(RoboRampage.class, "ToTheSky", Material.LAPIS_BLOCK, DevelopmentState.InDevelopment));
+		Mapes.add(new ContenidorJoc(RoboRampage.class, "Robo Rampage", Material.LAPIS_BLOCK, DevelopmentState.PreAlpha));
 		//Mapes.add(new ContenidorJoc(Arena1v1.class, "Arena 1v1", Material.WOODEN_SWORD, DevelopmentState.PreAlpha));
 		Mapes.add(new ContenidorJoc(ArenaAllvAll.class, "Arena ALLvsALL", Material.SAND, DevelopmentState.Beta));
 		Mapes.add(new ContenidorJoc(BaseLunar.class, "Base Lunar", Material.GLASS, DevelopmentState.Alpha));

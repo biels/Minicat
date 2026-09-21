@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.scrap",
+      "languages": {
+        "en_US": "[minimsg]<white>Destroy robots: their wreckage becomes climbable scrap.</white>",
+        "ca_ES": "[minimsg]<white>Destrueix robots: les seves restes es converteixen en ferralla escalable.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.junk",
+      "languages": {
+        "en_US": "[minimsg]<gray>A very uneven heap occasionally attracts a bulky junk drop.</gray>",
+        "ca_ES": "[minimsg]<gray>Una pila molt desnivellada atrau ocasionalment una gran càrrega de ferralla.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.goal",
+      "languages": {
+        "en_US": "[minimsg]<green>Build and climb onto settled scrap at %1 m.</green>",
+        "ca_ES": "[minimsg]<green>Construeix i puja sobre ferralla assentada a %1 m.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.score.scrap",
+      "languages": {
+        "en_US": "[minimsg]<green>Scrap</green>",
+        "ca_ES": "[minimsg]<green>Ferralla</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.score.target",
+      "languages": {
+        "en_US": "[minimsg]<gold>Target</gold>",
+        "ca_ES": "[minimsg]<gold>Objectiu</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.junk.incoming",
+      "languages": {
+        "en_US": "[minimsg]<gold>Incoming junk! It will settle into a low part of the heap.</gold>",
+        "ca_ES": "[minimsg]<gold>Arriba ferralla! S'assentarà en una zona baixa de la pila.</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.victory",
+      "languages": {
+        "en_US": "[minimsg]<green><bold>The team reached %1 m!</bold></green>",
+        "ca_ES": "[minimsg]<green><bold>L'equip ha arribat als %1 m!</bold></green>"
+      }
+    }
+  ]
+}

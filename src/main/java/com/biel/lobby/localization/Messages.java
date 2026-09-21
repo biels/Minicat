@@ -27,11 +27,13 @@ public final class Messages {
 	private final Triton triton;
 	private final String guiMarker;
 	private final String itemMarker;
+	private final String scoreboardMarker;
 
 	private Messages(Triton triton) {
 		this.triton = triton;
 		this.guiMarker = markerName(triton.getConfig().getGuiSyntax(), "GUI");
 		this.itemMarker = markerName(triton.getConfig().getItemsSyntax(), "item");
+		this.scoreboardMarker = markerName(triton.getConfig().getScoreboardSyntax(), "scoreboard");
 	}
 
 	public static void initialize(JavaPlugin owner) {
@@ -172,9 +174,13 @@ public final class Messages {
 		return marker(get().guiMarker, key);
 	}
 
-	public static String sharedItemMarker(MessageKey key) {
-		return marker(get().itemMarker, key);
-	}
+    public static String sharedItemMarker(MessageKey key) {
+        return marker(get().itemMarker, key);
+    }
+
+    public static String scoreboardMarker(MessageKey key) {
+        return marker(get().scoreboardMarker, key);
+    }
 
 	public static Component sharedItemMarkerComponent(MessageKey key) {
 		return Component.text(sharedItemMarker(key));
