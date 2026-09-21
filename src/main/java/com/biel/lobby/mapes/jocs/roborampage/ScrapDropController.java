@@ -169,6 +169,7 @@ final class ScrapDropController implements AutoCloseable {
                     block.getX() + 1, block.getY() + 1, block.getZ() + 1);
             for (Entity entity : world.getNearbyEntities(blockBounds)) {
                 if (!(entity instanceof LivingEntity living) || !living.isValid() || living.isDead()) continue;
+                if (GuardianBeamRenderer.isHelper(living)) continue;
                 if (living instanceof Player player && player.getGameMode() == GameMode.SPECTATOR) continue;
                 return false;
             }

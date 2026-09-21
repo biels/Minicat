@@ -65,6 +65,7 @@ final class TaserController implements AutoCloseable {
     private final NamespacedKey chargeKey;
     private final NamespacedKey lastDischargeTickKey;
     private final TaserDropPolicy dropPolicy;
+    private final GuardianBeamRenderer guardianBeams;
     private final Set<UUID> activePlayers = new LinkedHashSet<>();
     private final Set<String> createdTaserIds = new HashSet<>();
     private final Set<UUID> energizedRobotIds = new HashSet<>();
@@ -88,11 +89,13 @@ final class TaserController implements AutoCloseable {
         this.chargeKey = new NamespacedKey(plugin, "robo_rampage_taser_charge");
         this.lastDischargeTickKey = new NamespacedKey(plugin, "robo_rampage_taser_last_discharge");
         this.dropPolicy = new TaserDropPolicy(random);
+        this.guardianBeams = new GuardianBeamRenderer(world);
     }
 
     void tick() {
         currentTick++;
         energizedRobotIds.clear();
+        guardianBeams.beginFrame();
         Map<UUID, Mob> robotsById = liveRobotMap();
         for (UUID playerId : new ArrayList<>(activePlayers)) {
             Player player = Bukkit.getPlayer(playerId);
@@ -119,13 +122,15 @@ final class TaserController implements AutoCloseable {
             player.getInventory().setItemInMainHand(taser);
             for (Edge edge : network.edges()) energizedRobotIds.add(edge.targetId());
 
-            if (currentTick % BEAM_RENDER_INTERVAL_TICKS == 0) render(network);
+            renderGuardianBeams(player, network);
+            if (currentTick % BEAM_RENDER_INTERVAL_TICKS == 0) renderElectricSparks(network);
             long lastPulse = lastPulseByPlayer.getOrDefault(playerId, Long.MIN_VALUE / 2);
             if (currentTick - lastPulse >= TaserRules.PULSE_INTERVAL_TICKS) {
                 pulse(player, network);
                 lastPulseByPlayer.put(playerId, currentTick);
             }
         }
+        guardianBeams.finishFrame();
 
         for (Player player : world.getPlayers()) {
             if (!activeParticipant.test(player)) continue;
@@ -178,6 +183,8 @@ final class TaserController implements AutoCloseable {
     boolean isApplyingDamageTo(UUID robotId) { return applyingDamageToRobotIds.contains(robotId); }
 
     boolean isEnergized(UUID robotId) { return energizedRobotIds.contains(robotId); }
+
+    boolean isVisualBeamEntity(UUID entityId) { return guardianBeams.isHelper(entityId); }
 
     int createdTaserCount() { return createdTaserIds.size(); }
 
@@ -238,7 +245,25 @@ final class TaserController implements AutoCloseable {
         return new NetworkSnapshot(sourceLocation, edges, robotsById);
     }
 
-    private void render(NetworkSnapshot network) {
+    private void renderGuardianBeams(Player operator, NetworkSnapshot network) {
+        UUID operatorId = operator.getUniqueId();
+        for (Edge edge : network.edges()) {
+            Location source = edge.parentTargetId()
+                    .map(network.robotsById()::get)
+                    .map(this::targetLocation)
+                    .orElse(network.source());
+            Mob target = network.robotsById().get(edge.targetId());
+            if (target == null) continue;
+            guardianBeams.show(
+                    operatorId,
+                    edge.parentTargetId().orElse(operatorId),
+                    edge.targetId(),
+                    source,
+                    target);
+        }
+    }
+
+    private void renderElectricSparks(NetworkSnapshot network) {
         for (Edge edge : network.edges()) {
             Location from = edge.parentTargetId()
                     .map(network.robotsById()::get)
@@ -382,6 +407,7 @@ final class TaserController implements AutoCloseable {
 
     @Override
     public void close() {
+        guardianBeams.close();
         activePlayers.clear();
         energizedRobotIds.clear();
         applyingDamageToRobotIds.clear();

@@ -342,6 +342,10 @@ public class RoboRampage extends JocCooperatiu {
             EntityDamageByEntityEvent event, Entity damaged, Entity damager) {
         super.onEntityDamageByEntity(event, damaged, damager);
         Entity source = damageSource(damager);
+        if (tasers != null && tasers.isVisualBeamEntity(damager.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
         if (damaged instanceof Player && source instanceof Player) {
             event.setCancelled(true);
             return;
