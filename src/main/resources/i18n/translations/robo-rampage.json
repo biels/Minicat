@@ -55,6 +55,62 @@
         "en_US": "[minimsg]<green><bold>The team reached %1 m!</bold></green>",
         "ca_ES": "[minimsg]<green><bold>L'equip ha arribat als %1 m!</bold></green>"
       }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.taser",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Some robots drop Tasers that chain electricity and slowly recharge.</aqua>",
+        "ca_ES": "[minimsg]<aqua>Alguns robots deixen anar Tasers que encadenen electricitat i es recarreguen lentament.</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.name",
+      "languages": {
+        "en_US": "[minimsg]<aqua><bold>Taser</bold></aqua>",
+        "ca_ES": "[minimsg]<aqua><bold>Taser</bold></aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.lore.network",
+      "languages": {
+        "en_US": "[minimsg]<gray>Right-click to connect nearby robots automatically.</gray>",
+        "ca_ES": "[minimsg]<gray>Clic dret per connectar automàticament els robots propers.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.lore.charge",
+      "languages": {
+        "en_US": "[minimsg]<gray>More charge supports more targets; it recharges while carried.</gray>",
+        "ca_ES": "[minimsg]<gray>Més càrrega permet més objectius; es recarrega mentre el portes.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.dropped",
+      "languages": {
+        "en_US": "[minimsg]<aqua><bold>A Taser dropped from the wreckage!</bold></aqua>",
+        "ca_ES": "[minimsg]<aqua><bold>Ha caigut un Taser de les restes!</bold></aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.charge.ready",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Taser charge: %1%</aqua>",
+        "ca_ES": "[minimsg]<aqua>Càrrega del Taser: %1%</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.charge.active",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Taser active: %1%</yellow>",
+        "ca_ES": "[minimsg]<yellow>Taser actiu: %1%</yellow>"
+      }
     }
   ]
 }

@@ -18,6 +18,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -25,6 +26,8 @@ import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EntityEquipment;
@@ -60,6 +63,7 @@ public class RoboRampage extends JocCooperatiu {
     private final RandomGenerator random = ThreadLocalRandom.current();
     private JunkDropPolicy junkDropPolicy;
     private ScrapDropController scrapDrops;
+    private TaserController tasers;
     private int displayedScrapHeight;
     private boolean climbFinished;
 
@@ -85,7 +89,9 @@ public class RoboRampage extends JocCooperatiu {
         displayedScrapHeight = 0;
         junkDropPolicy = new JunkDropPolicy();
         scrapDrops = new ScrapDropController(world, battleCenter(), random);
+        tasers = new TaserController(Com.getPlugin(), world, random, this::liveRobotMobs, this::isActiveTaserUser);
         scheduleGameplayRepeatingTask(scrapDrops::tick, 1, 1);
+        scheduleGameplayRepeatingTask(tasers::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::runDirector, 1, 40);
         scheduleGameplayRepeatingTask(this::sampleProgress, 20, 20);
     }
@@ -105,6 +111,11 @@ public class RoboRampage extends JocCooperatiu {
                     + ", junk scrap=" + scrapDrops.settledJunkBlocks()
                     + ", unevenness=" + scrapDrops.unevenness());
             scrapDrops.close();
+        }
+        if (tasers != null) {
+            Com.getPlugin().getLogger().info("Robo Rampage Tasers created=" + tasers.createdTaserCount()
+                    + "; next drop progress=" + tasers.dropProgress() + "/" + tasers.nextDropThreshold());
+            tasers.close();
         }
         for (UUID robotId : new ArrayList<>(robots.keySet())) {
             Entity entity = Bukkit.getEntity(robotId);
@@ -130,6 +141,7 @@ public class RoboRampage extends JocCooperatiu {
         return new ArrayList<>(List.of(
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_SCRAP),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_JUNK),
+                Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_TASER),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_GOAL,
                         MessageArgument.number("height", targetHeight()))));
     }
@@ -289,6 +301,7 @@ public class RoboRampage extends JocCooperatiu {
                     random.nextDouble(-0.75, 0.75), 0, random.nextDouble(-0.75, 0.75)), ScrapMaterial.IRON);
         }
         if (killer != null) applyReward(killer, reward);
+        if (tasers != null) tasers.recordRobotDeath(entity.getLocation(), state.type(), getPlayers().size());
     }
 
     private void enqueueScrap(Location location, ScrapMaterial material) {
@@ -326,9 +339,24 @@ public class RoboRampage extends JocCooperatiu {
         }
         if (damaged instanceof Player && sourceIsRobot) {
             event.setDamage(event.getDamage() * RoboRampageRules.PLAYER_DAMAGE_MULTIPLIER);
-        } else if (targetIsRobot && source instanceof Player) {
+        } else if (targetIsRobot && source instanceof Player
+                && (tasers == null || !tasers.isApplyingDamageTo(damaged.getUniqueId()))) {
             event.setDamage(event.getDamage() * RoboRampageRules.ROBOT_DAMAGE_MULTIPLIER);
         }
+    }
+
+    @Override
+    protected void onProjectileLaunch(ProjectileLaunchEvent event, Projectile projectile) {
+        super.onProjectileLaunch(event, projectile);
+        if (!(projectile instanceof Fireball) || tasers == null) return;
+        ProjectileSource shooter = projectile.getShooter();
+        if (shooter instanceof Entity entity && tasers.isEnergized(entity.getUniqueId())) event.setCancelled(true);
+    }
+
+    @Override
+    protected void onPlayerInteract(PlayerInteractEvent event, Player player) {
+        super.onPlayerInteract(event, player);
+        if (tasers != null) tasers.handleInteraction(event, player);
     }
 
     private Entity damageSource(Entity damager) {
@@ -369,6 +397,21 @@ public class RoboRampage extends JocCooperatiu {
     }
 
     private Location battleCenter() { return pMapaActual().ObtenirLocation("BCenter", world); }
+
+    private List<Mob> liveRobotMobs() {
+        List<Mob> result = new ArrayList<>();
+        for (UUID robotId : robots.keySet()) {
+            Entity entity = Bukkit.getEntity(robotId);
+            if (entity instanceof Mob mob && mob.isValid() && !mob.isDead() && mob.getWorld() == world) {
+                result.add(mob);
+            }
+        }
+        return List.copyOf(result);
+    }
+
+    private boolean isActiveTaserUser(Player player) {
+        return JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player);
+    }
 
     private static Material helmetMaterial(HelmetVariant helmet) {
         return switch (helmet) {

@@ -48,6 +48,55 @@
       "arguments": [{"name": "height", "type": "NUMBER"}],
       "surfaces": ["chat", "title"],
       "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.info.taser": {
+      "constant": "ROBO_RAMPAGE_INFO_TASER",
+      "purpose": "Explain occasional rechargeable chain-lightning weapon drops.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.taser.name": {
+      "constant": "ROBO_RAMPAGE_TASER_NAME",
+      "purpose": "Shared display name for the transferable Taser item.",
+      "arguments": [],
+      "surfaces": ["item"],
+      "maxTemplateCharacters": 32
+    },
+    "minicat.robo-rampage.taser.lore.network": {
+      "constant": "ROBO_RAMPAGE_TASER_LORE_NETWORK",
+      "purpose": "Explain the Taser's automatic electrical network.",
+      "arguments": [],
+      "surfaces": ["item"],
+      "maxTemplateCharacters": 90
+    },
+    "minicat.robo-rampage.taser.lore.charge": {
+      "constant": "ROBO_RAMPAGE_TASER_LORE_CHARGE",
+      "purpose": "Explain how Taser charge affects targets and recovers.",
+      "arguments": [],
+      "surfaces": ["item"],
+      "maxTemplateCharacters": 100
+    },
+    "minicat.robo-rampage.taser.dropped": {
+      "constant": "ROBO_RAMPAGE_TASER_DROPPED",
+      "purpose": "Announce that robot wreckage dropped a Taser.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.robo-rampage.taser.charge.ready": {
+      "constant": "ROBO_RAMPAGE_TASER_CHARGE_READY",
+      "purpose": "Show carried Taser charge while inactive.",
+      "arguments": [{"name": "charge", "type": "NUMBER"}],
+      "surfaces": ["actionbar"],
+      "maxTemplateCharacters": 50
+    },
+    "minicat.robo-rampage.taser.charge.active": {
+      "constant": "ROBO_RAMPAGE_TASER_CHARGE_ACTIVE",
+      "purpose": "Show carried Taser charge while its network is active.",
+      "arguments": [{"name": "charge", "type": "NUMBER"}],
+      "surfaces": ["actionbar"],
+      "maxTemplateCharacters": 50
     }
   }
 }
