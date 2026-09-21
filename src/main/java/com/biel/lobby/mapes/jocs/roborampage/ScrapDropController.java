@@ -20,6 +20,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
 
 import com.biel.lobby.mapes.jocs.roborampage.utils.ScrapGrid;
 import com.biel.lobby.mapes.jocs.roborampage.utils.ScrapMaterial;
@@ -31,6 +32,8 @@ final class ScrapDropController implements AutoCloseable {
     private static final int ARENA_RADIUS = 7;
     private static final int MAX_MOVING_BLOCKS = 128;
     private static final int MAX_QUEUED_DROPS = 512;
+    private static final double CRITICAL_EJECTION_DISTANCE = 3.0;
+    private static final int CRITICAL_EJECTION_TICKS = 6;
 
     private final World world;
     private final int originX;
@@ -55,12 +58,24 @@ final class ScrapDropController implements AutoCloseable {
     public boolean dropRobotScrap(Location worldLocation, ScrapMaterial material) {
         int localX = clamp(worldLocation.getBlockX() - originX, 0, ScrapGrid.DEFAULT_WIDTH - 1);
         int localZ = clamp(worldLocation.getBlockZ() - originZ, 0, ScrapGrid.DEFAULT_DEPTH - 1);
-        return enqueue(new PendingDrop(ScrapShapes.single(material), localX, localZ, 4, false));
+        return enqueue(new PendingDrop(ScrapShapes.single(material), localX, localZ, 4, false, null));
+    }
+
+    public boolean ejectRobotScrap(Location source, Vector direction, ScrapMaterial material) {
+        Vector horizontalDirection = direction.clone().setY(0);
+        if (horizontalDirection.lengthSquared() < 1.0E-6) return dropRobotScrap(source, material);
+        Location landingArea = source.clone().add(
+                horizontalDirection.normalize().multiply(CRITICAL_EJECTION_DISTANCE));
+        int localX = clamp(landingArea.getBlockX() - originX, 0, ScrapGrid.DEFAULT_WIDTH - 1);
+        int localZ = clamp(landingArea.getBlockZ() - originZ, 0, ScrapGrid.DEFAULT_DEPTH - 1);
+        Location displayOrigin = source.clone().subtract(0.5, 0, 0.5);
+        return enqueue(new PendingDrop(
+                ScrapShapes.single(material), localX, localZ, 4, false, displayOrigin));
     }
 
     public boolean dropCorrectiveCar() {
         ScrapGrid.Cell target = grid.lowestPatch(random);
-        return enqueue(new PendingDrop(ScrapShapes.car(), target.x(), target.z(), 12, true));
+        return enqueue(new PendingDrop(ScrapShapes.car(), target.x(), target.z(), 12, true, null));
     }
 
     public void tick() {
@@ -135,7 +150,7 @@ final class ScrapDropController implements AutoCloseable {
             ScrapGrid.DropPlan plan = grid.planDrop(
                     pending.shape(), pending.localX(), pending.localZ(), pending.launchClearance(),
                     pending.bulky(), random);
-            ActiveDrop active = new ActiveDrop(plan);
+            ActiveDrop active = new ActiveDrop(plan, pending.displayOrigin());
             activeDrops.add(active);
             movingBlockCount += active.renderedBlocks.size();
             pendingDrops.remove();
@@ -206,15 +221,22 @@ final class ScrapDropController implements AutoCloseable {
     }
 
     private record PendingDrop(
-            ScrapShape shape, int localX, int localZ, int launchClearance, boolean bulky) {}
+            ScrapShape shape,
+            int localX,
+            int localZ,
+            int launchClearance,
+            boolean bulky,
+            Location displayOrigin) {}
 
     private final class ActiveDrop {
         private final ScrapGrid.DropPlan plan;
         private final List<RenderedBlock> renderedBlocks;
 
-        private ActiveDrop(ScrapGrid.DropPlan plan) {
+        private ActiveDrop(ScrapGrid.DropPlan plan, Location displayOrigin) {
             this.plan = plan;
-            this.renderedBlocks = plan.blocks().stream().map(RenderedBlock::new).toList();
+            this.renderedBlocks = plan.blocks().stream()
+                    .map(motion -> new RenderedBlock(motion, displayOrigin))
+                    .toList();
         }
 
         private void advance() { renderedBlocks.forEach(RenderedBlock::advance); }
@@ -225,12 +247,15 @@ final class ScrapDropController implements AutoCloseable {
     private final class RenderedBlock {
         private final ScrapGrid.BlockMotion motion;
         private final BlockDisplay display;
+        private boolean awaitingEjection;
         private int nextSegment;
         private int ticksRemaining;
 
-        private RenderedBlock(ScrapGrid.BlockMotion motion) {
+        private RenderedBlock(ScrapGrid.BlockMotion motion, Location displayOrigin) {
             this.motion = motion;
-            this.display = world.spawn(worldLocation(motion.start()), BlockDisplay.class, spawned -> {
+            this.awaitingEjection = displayOrigin != null;
+            Location initialLocation = awaitingEjection ? displayOrigin : worldLocation(motion.start());
+            this.display = world.spawn(initialLocation, BlockDisplay.class, spawned -> {
                 spawned.setBlock(material(motion.material()).createBlockData());
                 spawned.setViewRange(48);
                 spawned.setShadowRadius(0.8F);
@@ -243,6 +268,13 @@ final class ScrapDropController implements AutoCloseable {
                 ticksRemaining--;
                 return;
             }
+            if (awaitingEjection) {
+                awaitingEjection = false;
+                display.setTeleportDuration(CRITICAL_EJECTION_TICKS);
+                display.teleport(worldLocation(motion.start()));
+                ticksRemaining = CRITICAL_EJECTION_TICKS;
+                return;
+            }
             if (nextSegment >= motion.segments().size()) return;
             ScrapGrid.Segment segment = motion.segments().get(nextSegment++);
             display.setTeleportDuration(segment.durationTicks());
@@ -251,7 +283,7 @@ final class ScrapDropController implements AutoCloseable {
         }
 
         private boolean finished() {
-            return nextSegment >= motion.segments().size() && ticksRemaining == 0;
+            return !awaitingEjection && nextSegment >= motion.segments().size() && ticksRemaining == 0;
         }
 
         private void remove() {

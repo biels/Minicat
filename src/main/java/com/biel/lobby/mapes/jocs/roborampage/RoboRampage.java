@@ -358,15 +358,30 @@ public class RoboRampage extends JocCooperatiu {
                 && (tasers == null || !tasers.isApplyingDamageTo(damaged.getUniqueId()))) {
             event.setDamage(event.getDamage() * RoboRampageRules.ROBOT_DAMAGE_MULTIPLIER);
         }
-        if (targetIsRobot) rememberCriticalKillingHit(event, damaged, damager);
+        if (targetIsRobot) {
+            ejectIronHeadScrapOnCriticalHit(event, damaged, damager);
+            rememberCriticalKillingHit(event, damaged, damager);
+        }
+    }
+
+    private void ejectIronHeadScrapOnCriticalHit(
+            EntityDamageByEntityEvent event, Entity damaged, Entity directDamager) {
+        RobotState robot = robots.get(damaged.getUniqueId());
+        if (scrapDrops == null || robot == null || robot.helmet() != HelmetVariant.IRON_BLOCK
+                || !isDirectPlayerCritical(event, directDamager)) return;
+        Player attacker = (Player) directDamager;
+        Vector awayFromAttacker = damaged.getLocation().toVector().subtract(attacker.getLocation().toVector());
+        Location ejectionOrigin = damaged.getLocation().add(0, damaged.getHeight() * 0.65, 0);
+        if (!scrapDrops.ejectRobotScrap(ejectionOrigin, awayFromAttacker, ScrapMaterial.IRON)) {
+            Com.getPlugin().getLogger().warning(
+                    "Robo Rampage scrap queue is full; critical-hit scrap could not be ejected");
+        }
     }
 
     private void rememberCriticalKillingHit(
             EntityDamageByEntityEvent event, Entity damaged, Entity directDamager) {
         UUID robotId = damaged.getUniqueId();
-        boolean lethalDirectCritical = !event.isCancelled()
-                && directDamager instanceof Player
-                && event.isCritical()
+        boolean lethalDirectCritical = isDirectPlayerCritical(event, directDamager)
                 && damaged instanceof LivingEntity robot
                 && event.getFinalDamage() >= robot.getHealth();
         if (!lethalDirectCritical) {
@@ -375,6 +390,10 @@ public class RoboRampage extends JocCooperatiu {
         }
         criticalKillCandidates.add(robotId);
         scheduleGameplayTask(() -> criticalKillCandidates.remove(robotId), 1);
+    }
+
+    private boolean isDirectPlayerCritical(EntityDamageByEntityEvent event, Entity directDamager) {
+        return !event.isCancelled() && directDamager instanceof Player && event.isCritical();
     }
 
     @Override
