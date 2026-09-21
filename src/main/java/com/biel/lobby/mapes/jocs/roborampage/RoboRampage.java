@@ -2,10 +2,12 @@ package com.biel.lobby.mapes.jocs.roborampage;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.random.RandomGenerator;
@@ -19,6 +21,7 @@ import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -44,8 +47,8 @@ import com.biel.lobby.localization.Messages;
 import com.biel.lobby.mapes.JocCooperatiu;
 import com.biel.lobby.mapes.jocs.roborampage.utils.JunkDropPolicy;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules;
-import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.DeathReward;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.HelmetVariant;
+import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.LiveDeathReward;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.PowerUp;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.RobotCounts;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.RobotType;
@@ -60,6 +63,7 @@ public class RoboRampage extends JocCooperatiu {
     private static final int POST_GAME_TICKS = 20 * 10;
 
     private final Map<UUID, RobotState> robots = new LinkedHashMap<>();
+    private final Set<UUID> criticalKillCandidates = new HashSet<>();
     private final RandomGenerator random = ThreadLocalRandom.current();
     private JunkDropPolicy junkDropPolicy;
     private ScrapDropController scrapDrops;
@@ -73,7 +77,14 @@ public class RoboRampage extends JocCooperatiu {
 
     @Override
     protected ArrayList<ItemStack> getStartingItems(Player player) {
-        return new ArrayList<>(List.of(new ItemStack(Material.DIAMOND_SWORD)));
+        ArrayList<ItemStack> startingItems = new ArrayList<>(List.of(new ItemStack(Material.DIAMOND_SWORD)));
+        if (tasers != null) startingItems.add(tasers.createStartingTaser(player));
+        return startingItems;
+    }
+
+    @Override
+    protected boolean canBeDropped(ItemStack item, Player player) {
+        return (tasers == null || !tasers.isStartingTaser(item)) && super.canBeDropped(item, player);
     }
 
     @Override
@@ -85,6 +96,7 @@ public class RoboRampage extends JocCooperatiu {
     @Override
     protected void customJocIniciat() {
         robots.clear();
+        criticalKillCandidates.clear();
         climbFinished = false;
         displayedScrapHeight = 0;
         junkDropPolicy = new JunkDropPolicy();
@@ -122,6 +134,7 @@ public class RoboRampage extends JocCooperatiu {
             if (entity != null && entity.isValid()) entity.remove();
         }
         robots.clear();
+        criticalKillCandidates.clear();
     }
 
     @Override
@@ -292,13 +305,15 @@ public class RoboRampage extends JocCooperatiu {
         event.getDrops().clear();
         event.setDroppedExp(0);
         Player killer = event.getEntity().getKiller();
-        DeathReward reward = state.type() == RobotType.BLAZE
-                ? RoboRampageRules.blazeReward()
-                : RoboRampageRules.groundRobotReward(state.helmet());
-        enqueueScrap(entity.getLocation(), reward.baseScrap());
-        for (int block = 0; block < reward.extraIronBlocks(); block++) {
+        boolean criticalKill = criticalKillCandidates.remove(entity.getUniqueId());
+        LiveDeathReward reward = state.type() == RobotType.BLAZE
+                ? RoboRampageRules.liveBlazeReward()
+                : RoboRampageRules.liveGroundRobotReward(state.helmet());
+        int blockCount = reward.rollBlockCount(random, criticalKill);
+        enqueueScrap(entity.getLocation(), reward.scrapMaterial());
+        for (int block = 1; block < blockCount; block++) {
             enqueueScrap(entity.getLocation().clone().add(
-                    random.nextDouble(-0.75, 0.75), 0, random.nextDouble(-0.75, 0.75)), ScrapMaterial.IRON);
+                    random.nextDouble(-0.75, 0.75), 0, random.nextDouble(-0.75, 0.75)), reward.scrapMaterial());
         }
         if (killer != null) applyReward(killer, reward);
         if (tasers != null) tasers.recordRobotDeath(entity.getLocation(), state.type(), getPlayers().size());
@@ -311,7 +326,7 @@ public class RoboRampage extends JocCooperatiu {
         }
     }
 
-    private void applyReward(Player killer, DeathReward reward) {
+    private void applyReward(Player killer, LiveDeathReward reward) {
         if (reward.powerUp() == PowerUp.STRENGTH) {
             killer.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH,
                     RoboRampageRules.POWER_UP_TICKS, RoboRampageRules.POWER_UP_AMPLIFIER));
@@ -343,6 +358,23 @@ public class RoboRampage extends JocCooperatiu {
                 && (tasers == null || !tasers.isApplyingDamageTo(damaged.getUniqueId()))) {
             event.setDamage(event.getDamage() * RoboRampageRules.ROBOT_DAMAGE_MULTIPLIER);
         }
+        if (targetIsRobot) rememberCriticalKillingHit(event, damaged, damager);
+    }
+
+    private void rememberCriticalKillingHit(
+            EntityDamageByEntityEvent event, Entity damaged, Entity directDamager) {
+        UUID robotId = damaged.getUniqueId();
+        boolean lethalDirectCritical = !event.isCancelled()
+                && directDamager instanceof Player
+                && event.isCritical()
+                && damaged instanceof LivingEntity robot
+                && event.getFinalDamage() >= robot.getHealth();
+        if (!lethalDirectCritical) {
+            criticalKillCandidates.remove(robotId);
+            return;
+        }
+        criticalKillCandidates.add(robotId);
+        scheduleGameplayTask(() -> criticalKillCandidates.remove(robotId), 1);
     }
 
     @Override

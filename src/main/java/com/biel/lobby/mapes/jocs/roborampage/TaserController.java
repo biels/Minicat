@@ -61,6 +61,7 @@ final class TaserController implements AutoCloseable {
     private final Supplier<? extends Collection<Mob>> liveRobots;
     private final Predicate<Player> activeParticipant;
     private final NamespacedKey taserIdKey;
+    private final NamespacedKey startingTaserKey;
     private final NamespacedKey chargeKey;
     private final NamespacedKey lastDischargeTickKey;
     private final TaserDropPolicy dropPolicy;
@@ -83,6 +84,7 @@ final class TaserController implements AutoCloseable {
         this.liveRobots = liveRobots;
         this.activeParticipant = activeParticipant;
         this.taserIdKey = new NamespacedKey(plugin, "robo_rampage_taser_id");
+        this.startingTaserKey = new NamespacedKey(plugin, "robo_rampage_starting_taser");
         this.chargeKey = new NamespacedKey(plugin, "robo_rampage_taser_charge");
         this.lastDischargeTickKey = new NamespacedKey(plugin, "robo_rampage_taser_last_discharge");
         this.dropPolicy = new TaserDropPolicy(random);
@@ -183,22 +185,40 @@ final class TaserController implements AutoCloseable {
 
     int nextDropThreshold() { return dropPolicy.nextDropThreshold(); }
 
+    ItemStack createStartingTaser(Player player) {
+        String taserId = "starter:" + player.getUniqueId();
+        createdTaserIds.add(taserId);
+        return createTaser(taserId, true);
+    }
+
+    boolean isStartingTaser(ItemStack item) {
+        return isTaser(item) && item.getItemMeta().getPersistentDataContainer()
+                .has(startingTaserKey, PersistentDataType.BYTE);
+    }
+
     private ItemStack createTaser() {
+        String taserId = UUID.randomUUID().toString();
+        createdTaserIds.add(taserId);
+        return createTaser(taserId, false);
+    }
+
+    private ItemStack createTaser(String taserId, boolean startingTaser) {
         ItemStack taser = Utils.setItemNameAndLore(
                 new ItemStack(Material.LIGHTNING_ROD),
                 Messages.sharedItemMarker(MessageKey.ROBO_RAMPAGE_TASER_NAME),
                 Messages.sharedItemMarker(MessageKey.ROBO_RAMPAGE_TASER_LORE_NETWORK),
                 Messages.sharedItemMarker(MessageKey.ROBO_RAMPAGE_TASER_LORE_CHARGE));
         ItemMeta meta = taser.getItemMeta();
-        String taserId = UUID.randomUUID().toString();
         meta.getPersistentDataContainer().set(taserIdKey, PersistentDataType.STRING, taserId);
+        if (startingTaser) {
+            meta.getPersistentDataContainer().set(startingTaserKey, PersistentDataType.BYTE, (byte) 1);
+        }
         meta.getPersistentDataContainer().set(chargeKey, PersistentDataType.INTEGER, TaserRules.MAXIMUM_CHARGE);
         meta.getPersistentDataContainer().set(lastDischargeTickKey, PersistentDataType.LONG, Long.MIN_VALUE / 2);
         meta.setEnchantmentGlintOverride(true);
         meta.setMaxStackSize(1);
         meta.setUnbreakable(true);
         taser.setItemMeta(meta);
-        createdTaserIds.add(taserId);
         return taser;
     }
 

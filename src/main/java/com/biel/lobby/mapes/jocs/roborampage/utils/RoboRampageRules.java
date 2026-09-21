@@ -28,6 +28,24 @@ public final class RoboRampageRules {
     public record DeathReward(
             ScrapMaterial baseScrap, PowerUp powerUp, int extraIronBlocks, boolean extinguishKiller) {}
 
+    public record LiveDeathReward(
+            ScrapMaterial scrapMaterial,
+            PowerUp powerUp,
+            int minimumBlockCount,
+            int maximumBlockCount,
+            boolean extinguishKiller) {
+        public LiveDeathReward {
+            if (minimumBlockCount < 1 || maximumBlockCount < minimumBlockCount) {
+                throw new IllegalArgumentException("Invalid scrap block range");
+            }
+        }
+
+        public int rollBlockCount(RandomGenerator random, boolean criticalKill) {
+            int blockCount = random.nextInt(minimumBlockCount, maximumBlockCount + 1);
+            return blockCount + (criticalKill ? 1 : 0);
+        }
+    }
+
     public record RobotCounts(int zombies, int skeletons, int blazes) {
         public int total() { return zombies + skeletons + blazes; }
 
@@ -116,6 +134,28 @@ public final class RoboRampageRules {
 
     public static DeathReward blazeReward() {
         return new DeathReward(ScrapMaterial.GOLD, PowerUp.NONE, 0, true);
+    }
+
+    public static LiveDeathReward liveGroundRobotReward(HelmetVariant helmet) {
+        DeathReward recoveredReward = groundRobotReward(helmet);
+        int minimumBlockCount = helmet == HelmetVariant.IRON_BLOCK ? 3 : 2;
+        int maximumBlockCount = helmet == HelmetVariant.IRON_BLOCK ? 5 : 2;
+        return new LiveDeathReward(
+                recoveredReward.baseScrap(),
+                recoveredReward.powerUp(),
+                minimumBlockCount,
+                maximumBlockCount,
+                recoveredReward.extinguishKiller());
+    }
+
+    public static LiveDeathReward liveBlazeReward() {
+        DeathReward recoveredReward = blazeReward();
+        return new LiveDeathReward(
+                recoveredReward.baseScrap(),
+                recoveredReward.powerUp(),
+                2,
+                2,
+                recoveredReward.extinguishKiller());
     }
 
     /** Mirrors Utils.Possibilitat: its historical random range is [0, 101), not [0, 100). */
