@@ -128,6 +128,7 @@ public class RoboRampage extends JocCooperatiu {
         scheduleGameplayRepeatingTask(this::tickSupplyPhase, 1, 1);
         scheduleGameplayRepeatingTask(scaffolds::tickRobotDamage, 20, 20);
         scheduleGameplayRepeatingTask(ghastProjectiles::tick, 1, 1);
+        scheduleGameplayRepeatingTask(this::keepFlyingRobotsReachable, 1, 1);
         scheduleGameplayRepeatingTask(this::runDirector, 1, 40);
         scheduleGameplayRepeatingTask(this::sampleProgress, 20, 20);
         announceWaveStart();
@@ -213,7 +214,6 @@ public class RoboRampage extends JocCooperatiu {
     private void runDirector() {
         if (!JocEnMarxa() || scrapDrops == null) return;
         removeMissingRobots();
-        keepFlyingRobotsReachable();
         if (wavePhase == WavePhase.SUPPLY) return;
         if (wavePhase == WavePhase.CLEANUP) {
             if (robots.isEmpty()) beginSupplyPhase();
