@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.bukkit.Location;
+import org.bukkit.Input;
 import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.Sound;
@@ -23,6 +24,7 @@ import org.bukkit.block.BlockType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInputEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,7 +56,7 @@ class MobilityAndCutterControllerTest {
         f.jump();
         assertEquals(1, f.launches.size());
         assertEquals(0.34, f.launches.getFirst().getX(), 1e-9);
-        assertEquals(0.58, f.launches.getFirst().getY(), 1e-9);
+        assertEquals(0.48, f.launches.getFirst().getY(), 1e-9);
         assertEquals(0, f.launches.getFirst().getZ(), 1e-9);
         f.jump();
         assertEquals(1, f.launches.size(), "duplicate event cannot double-launch");
@@ -75,7 +77,7 @@ class MobilityAndCutterControllerTest {
         f.jumps.onRespawn(f.player);
         f.jump();
         assertEquals(2, f.launches.size(), "respawn preserves the cooldown");
-        f.tickJump(159);
+        f.tickJump(157);
         f.jump();
         assertEquals(2, f.launches.size());
         f.tickJump(1);
@@ -106,6 +108,39 @@ class MobilityAndCutterControllerTest {
         f.jumps.close();
         f.jump();
         assertTrue(f.launches.isEmpty(), "closed match cannot launch players");
+    }
+
+    @Test
+    void queuedJumpWaitsForServerJumpAndRespectsLateCancellationOrTeleport() {
+        Fixture f = new Fixture();
+        PlayerJumpEvent cancelled = f.jumpEvent();
+        f.jumps.onJump(cancelled);
+        assertTrue(f.launches.isEmpty());
+        cancelled.setCancelled(true);
+        f.tickJump(1);
+        assertTrue(f.launches.isEmpty());
+        f.jumps.onJump(f.jumpEvent());
+        f.playerLocation.setX(5);
+        f.tickJump(1);
+        assertTrue(f.launches.isEmpty(), "a teleport must not receive a stale launch");
+    }
+
+    @Test
+    void scaffoldTopAcceptsJumpInputWithoutEnablingMidairOrSideBoosts() {
+        Fixture f = new Fixture();
+        f.scaffold(0, 1);
+        f.playerLocation.setY(2);
+        f.jumps.onInput(f.input(true));
+        f.tickJump(1);
+        assertEquals(1, f.launches.size());
+        assertEquals(0.54, f.launches.getFirst().getY(), 1e-9);
+        f.grounded = false;
+        f.playerLocation.setY(1.5);
+        f.tickJump(170);
+        f.jumps.onInput(f.input(false));
+        f.jumps.onInput(f.input(true));
+        f.tickJump(1);
+        assertEquals(1, f.launches.size());
     }
 
     @Test
@@ -239,12 +274,21 @@ class MobilityAndCutterControllerTest {
         Object worldAnswer(String method, Object[] args) {
             return switch (method) {
                 case "getPlayers" -> List.of(player);
-                case "getBlockAt" -> blocks.get(args[0] + ":" + args[1]);
+                case "getBlockAt" -> args[0] instanceof Location location
+                        ? blocks.get(location.getBlockX() + ":" + location.getBlockY())
+                        : blocks.get(args[0] + ":" + args[1]);
                 default -> null;
             };
         }
         PlayerJumpEvent jumpEvent() { return new PlayerJumpEvent(player, playerLocation, playerLocation.clone().add(0, 0.42, 0)); }
-        void jump() { jumps.onJump(jumpEvent()); }
+        void jump() { jumps.onJump(jumpEvent()); jumps.tick(); }
+        PlayerInputEvent input(boolean jumping) {
+            return new PlayerInputEvent(player, stub(Input.class, (method, args) -> switch (method) {
+                case "isSneak" -> true;
+                case "isJump" -> jumping;
+                default -> null;
+            }));
+        }
         void tickJump(int ticks) { for (int i = 0; i < ticks; i++) jumps.tick(); }
         void tickSaw(int ticks) { for (int i = 0; i < ticks; i++) scaffolds.tickRobotDamage(); }
         Block scaffold(int x, int y) {
