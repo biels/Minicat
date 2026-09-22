@@ -1,0 +1,35 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRules.java
+  s_490bdcb8eae95a::t_ea0662af161f32 258-261
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/ScrapDropController.java
+  s_490bdcb8eae95a::t_355033f4913afd 36,76-83,259,265-266,280-282,284,295
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_490bdcb8eae95a::t_ea0662af161f32 592-593,599
+  s_490bdcb8eae95a::t_355033f4913afd 594-598
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRulesTest.java
+  s_490bdcb8eae95a::t_ea0662af161f32 179-182
+  s_1d57b8c5da05d2::t_e05268661f8a07 178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7cb75d4e9422d00f6affa7f40278125cf54bcb0b",
+  "prompts": {},
+  "sessions": {
+    "s_1d57b8c5da05d2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c959-2d77-7733-be7d-5bc5d552ce6f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_490bdcb8eae95a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c93b-d7a5-78f0-9d9f-11fbc084f997",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
