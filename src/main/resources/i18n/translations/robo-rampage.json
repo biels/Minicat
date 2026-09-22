@@ -207,6 +207,70 @@
         "en_US": "[minimsg]<gold>A Cutter spins up for 1.2 seconds before cutting scaffolds, then rests for 2 seconds. Stop it with your Taser or jump away!</gold>",
         "ca_ES": "[minimsg]<gold>El tallador prepara la serra durant 1,2 segons abans de tallar bastides i després descansa 2 segons. Atura'l amb el Taser o salta per fugir!</gold>"
       }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.boss",
+      "languages": {
+        "en_US": "[minimsg]<white>Every fifth wave brings the Compactor. Jump over its slam, dodge its throw, then attack while its armor is open. Hold the Taser on a warning to interrupt it.</white>",
+        "ca_ES": "[minimsg]<white>Cada cinquena onada arriba el Compactador. Salta per esquivar el cop, evita el projectil i ataca quan obri l’armadura. Mantén el Taser durant l’avís per interrompre’l.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.boss.start",
+      "languages": {
+        "en_US": "[minimsg]<white>Wave %1: the Compactor! Watch for yellow warnings; attack when the bar turns green.</white>",
+        "ca_ES": "[minimsg]<white>Onada %1: el Compactador! Vigila els avisos grocs; ataca quan la barra es torni verda.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.boss.enraged",
+      "languages": {
+        "en_US": "[minimsg]<white>The Compactor is overheating! Attacks come faster; warning time stays the same.</white>",
+        "ca_ES": "[minimsg]<white>El Compactador se sobreescalfa! Ataca més sovint; el temps d’avís és el mateix.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.boss.bar",
+      "languages": {
+        "en_US": "[minimsg]<white>Compactor • Armored</white>",
+        "ca_ES": "[minimsg]<white>Compactador • Blindat</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.boss.bar.slam",
+      "languages": {
+        "en_US": "[minimsg]<white>Compactor • GROUND SLAM — Jump!</white>",
+        "ca_ES": "[minimsg]<white>Compactador • COP A TERRA — Salta!</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.boss.bar.throw",
+      "languages": {
+        "en_US": "[minimsg]<white>Compactor • IRON THROW — Dodge!</white>",
+        "ca_ES": "[minimsg]<white>Compactador • LLANÇAMENT — Esquiva!</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.boss.bar.exposed",
+      "languages": {
+        "en_US": "[minimsg]<white>Compactor • EXPOSED — Attack!</white>",
+        "ca_ES": "[minimsg]<white>Compactador • VULNERABLE — Ataca!</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.boss.bar.enraged",
+      "languages": {
+        "en_US": "[minimsg]<white>Compactor • Overheating</white>",
+        "ca_ES": "[minimsg]<white>Compactador • Sobreescalfat</white>"
+      }
     }
   ]
 }

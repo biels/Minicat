@@ -185,6 +185,83 @@
         "chat"
       ],
       "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.info.boss": {
+      "constant": "ROBO_RAMPAGE_INFO_BOSS",
+      "purpose": "Explain the Compactor encounter.",
+      "arguments": [],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.boss.start": {
+      "constant": "ROBO_RAMPAGE_BOSS_START",
+      "purpose": "Explain the Compactor encounter.",
+      "arguments": [
+        {
+          "name": "wave",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.boss.enraged": {
+      "constant": "ROBO_RAMPAGE_BOSS_ENRAGED",
+      "purpose": "Explain the Compactor encounter.",
+      "arguments": [],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.boss.bar": {
+      "constant": "ROBO_RAMPAGE_BOSS_BAR",
+      "purpose": "Describe the Compactor encounter state.",
+      "arguments": [],
+      "surfaces": [
+        "bossbar"
+      ],
+      "maxTemplateCharacters": 90
+    },
+    "minicat.robo-rampage.boss.bar.slam": {
+      "constant": "ROBO_RAMPAGE_BOSS_BAR_SLAM",
+      "purpose": "Describe the Compactor encounter state.",
+      "arguments": [],
+      "surfaces": [
+        "bossbar"
+      ],
+      "maxTemplateCharacters": 90
+    },
+    "minicat.robo-rampage.boss.bar.throw": {
+      "constant": "ROBO_RAMPAGE_BOSS_BAR_THROW",
+      "purpose": "Describe the Compactor encounter state.",
+      "arguments": [],
+      "surfaces": [
+        "bossbar"
+      ],
+      "maxTemplateCharacters": 90
+    },
+    "minicat.robo-rampage.boss.bar.exposed": {
+      "constant": "ROBO_RAMPAGE_BOSS_BAR_EXPOSED",
+      "purpose": "Describe the Compactor encounter state.",
+      "arguments": [],
+      "surfaces": [
+        "bossbar"
+      ],
+      "maxTemplateCharacters": 90
+    },
+    "minicat.robo-rampage.boss.bar.enraged": {
+      "constant": "ROBO_RAMPAGE_BOSS_BAR_ENRAGED",
+      "purpose": "Describe the Compactor encounter state.",
+      "arguments": [],
+      "surfaces": [
+        "bossbar"
+      ],
+      "maxTemplateCharacters": 90
     }
   }
 }

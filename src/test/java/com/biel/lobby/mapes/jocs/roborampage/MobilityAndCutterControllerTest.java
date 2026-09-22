@@ -233,6 +233,22 @@ class MobilityAndCutterControllerTest {
         assertEquals(Material.SCAFFOLDING, target.getType());
     }
 
+    @Test
+    void bossSlamCollapsesNearbyTrackedColumnsAndPreservesDistantScaffolds() {
+        Fixture f = new Fixture();
+        Block base = f.scaffold(1, 1);
+        Block top = f.scaffold(1, 4);
+        Block distant = f.scaffold(6, 1);
+        Block elevated = f.scaffold(2, 5);
+        f.scaffolds.collapseNear(new Location(f.world, 0, 1, 0), 3.5);
+        assertEquals(Material.AIR, base.getType());
+        assertEquals(Material.AIR, top.getType());
+        assertEquals(Material.SCAFFOLDING, distant.getType());
+        assertEquals(Material.SCAFFOLDING, elevated.getType());
+        f.scaffolds.collapseNear(new Location(f.world, 0, 1, 0), 3.5);
+        assertEquals(Material.SCAFFOLDING, distant.getType());
+    }
+
     private static final class Fixture {
         final UUID playerId = UUID.randomUUID();
         final UUID robotId = UUID.randomUUID();

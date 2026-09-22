@@ -172,6 +172,15 @@ final class ScaffoldController implements AutoCloseable {
         }
     }
 
+    void collapseNear(Location origin, double radius) {
+        for (BlockPosition position : new ArrayList<>(placedScaffolding)) {
+            Location center = position.center(world);
+            double dx = center.getX() - origin.getX(), dz = center.getZ() - origin.getZ();
+            if (Math.abs(center.getY() - origin.getY()) <= 1.5 && dx * dx + dz * dz <= radius * radius
+                    && placedScaffolding.contains(position)) collapseColumnFrom(position);
+        }
+    }
+
     private Optional<BlockPosition> nearestReachableScaffold(Location robotLocation) {
         return placedScaffolding.stream()
                 .filter(position -> position.block(world).getType() == Material.SCAFFOLDING)

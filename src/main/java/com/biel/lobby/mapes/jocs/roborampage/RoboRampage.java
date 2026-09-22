@@ -23,6 +23,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -52,6 +53,7 @@ import com.biel.lobby.localization.MessageKey;
 import com.biel.lobby.localization.Messages;
 import com.biel.lobby.mapes.JocCooperatiu;
 import com.biel.lobby.mapes.jocs.roborampage.utils.JunkDropPolicy;
+import com.biel.lobby.mapes.jocs.roborampage.utils.CompactorCycle;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.HelmetVariant;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.GroundRobotProfile;
@@ -81,7 +83,9 @@ public class RoboRampage extends JocCooperatiu {
     private ScaffoldController scaffolds;
     private PistonJumpController pistonJumps;
     private DemolitionController demolition;
-    private GhastMetalProjectileController ghastProjectiles;
+    private MetalProjectileController metalProjectiles;
+    private CompactorController compactor;
+    private int bossScrapReward;
     private int displayedScrapHeight;
     private int waveNumber;
     private int waveRobotQuota;
@@ -129,28 +133,33 @@ public class RoboRampage extends JocCooperatiu {
         waveNumber = 1;
         wavePhase = WavePhase.ASSAULT;
         robotsSpawnedThisWave = 0;
-        waveRobotQuota = RoboRampageRules.waveRobotQuota(waveNumber, getPlayers().size());
+        waveRobotQuota = CompactorCycle.isBossWave(waveNumber) ? 1
+                : RoboRampageRules.waveRobotQuota(waveNumber, getPlayers().size());
         junkDropPolicy = new JunkDropPolicy();
         scrapDrops = new ScrapDropController(world, battleCenter(), random);
         tasers = new TaserController(Com.getPlugin(), world, this::liveRobotMobs, this::isActiveWeaponUser);
         supplyDrops = new SupplyDropController(Com.getPlugin(), world, random, tasers);
         scaffolds = new ScaffoldController(
                 world, battleCenter(), ARENA_RADIUS, this::targetHeight,
-                this::liveRobotMobs, this::scaffoldDamageFor,
+                () -> liveRobotMobs().stream().filter(robot -> !compactor.owns(robot.getUniqueId())).toList(),
+                this::scaffoldDamageFor,
                 robot -> tasers.isEnergized(robot.getUniqueId()));
         pistonJumps = new PistonJumpController(world, this::isActiveWeaponUser);
         pistonJumps.register(Com.getPlugin());
         demolition = new DemolitionController(world, battleCenter(), ARENA_RADIUS,
                 this::targetHeight, this::isActiveWeaponUser, scaffolds);
         demolition.register(Com.getPlugin());
-        ghastProjectiles = new GhastMetalProjectileController(world);
+        metalProjectiles = new MetalProjectileController(world, this::isActiveWeaponUser);
+        compactor = new CompactorController(world, this::getPlayers, this::isActiveWeaponUser,
+                tasers::isEnergized, metalProjectiles::launch, scaffolds);
         scheduleGameplayRepeatingTask(scrapDrops::tick, 1, 1);
         scheduleGameplayRepeatingTask(tasers::tick, 1, 1);
+        scheduleGameplayRepeatingTask(compactor::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::tickSupplyPhase, 1, 1);
         scheduleGameplayRepeatingTask(scaffolds::tickRobotDamage, 1, 1);
         scheduleGameplayRepeatingTask(pistonJumps::tick, 1, 1);
         scheduleGameplayRepeatingTask(demolition::pruneMissingCharges, 20, 20);
-        scheduleGameplayRepeatingTask(ghastProjectiles::tick, 1, 1);
+        scheduleGameplayRepeatingTask(metalProjectiles::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::keepFlyingRobotsReachable, 1, 1);
         scheduleGameplayRepeatingTask(this::runDirector, 1, 40);
         scheduleGameplayRepeatingTask(this::sampleProgress, 20, 20);
@@ -180,7 +189,8 @@ public class RoboRampage extends JocCooperatiu {
         if (demolition != null) demolition.close();
         if (scaffolds != null) scaffolds.close();
         if (pistonJumps != null) pistonJumps.close();
-        if (ghastProjectiles != null) ghastProjectiles.close();
+        if (metalProjectiles != null) metalProjectiles.close();
+        if (compactor != null) compactor.close();
         for (UUID robotId : new ArrayList<>(robots.keySet())) {
             Entity entity = Bukkit.getEntity(robotId);
             if (entity != null && entity.isValid()) entity.remove();
@@ -210,6 +220,7 @@ public class RoboRampage extends JocCooperatiu {
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_TNT),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_PISTON_JUMP),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_CUTTER),
+                Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_BOSS),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_SUPPLIES),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_ENEMIES),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_GOAL,
@@ -252,6 +263,13 @@ public class RoboRampage extends JocCooperatiu {
             if (robots.isEmpty()) beginSupplyPhase();
             return;
         }
+        if (CompactorCycle.isBossWave(waveNumber)) {
+            findCompactorSpawnLocation().ifPresent(location -> {
+                spawnRobot(RobotType.COMPACTOR, location);
+                robotsSpawnedThisWave++;
+            });
+            return;
+        }
         int playerCount = Math.max(1, getPlayers().size());
         RobotCounts counts = robotCounts();
         RoboRampageRules.chooseSpawn(
@@ -268,7 +286,8 @@ public class RoboRampage extends JocCooperatiu {
         wavePhase = WavePhase.SUPPLY;
         supplyTicksRemaining = SUPPLY_DURATION_TICKS;
         extinguishArena();
-        ghastProjectiles.clear();
+        metalProjectiles.clear();
+        compactor.clear();
         supplyDrops.dropWaveSupplies(battleCenter(), waveNumber, getPlayers());
         broadcast(MessageKey.ROBO_RAMPAGE_SUPPLY_INCOMING,
                 MessageArgument.number("wave", waveNumber),
@@ -286,12 +305,17 @@ public class RoboRampage extends JocCooperatiu {
         waveNumber++;
         wavePhase = WavePhase.ASSAULT;
         robotsSpawnedThisWave = 0;
-        waveRobotQuota = RoboRampageRules.waveRobotQuota(waveNumber, getPlayers().size());
+        waveRobotQuota = CompactorCycle.isBossWave(waveNumber) ? 1
+                : RoboRampageRules.waveRobotQuota(waveNumber, getPlayers().size());
         announceWaveStart();
         updateScoreBoards();
     }
 
     private void announceWaveStart() {
+        if (CompactorCycle.isBossWave(waveNumber)) {
+            broadcast(MessageKey.ROBO_RAMPAGE_BOSS_START, MessageArgument.number("wave", waveNumber));
+            return;
+        }
         broadcast(MessageKey.ROBO_RAMPAGE_WAVE_START,
                 MessageArgument.number("wave", waveNumber),
                 MessageArgument.number("robots", waveRobotQuota));
@@ -336,6 +360,25 @@ public class RoboRampage extends JocCooperatiu {
         return Optional.empty();
     }
 
+    private Optional<Location> findCompactorSpawnLocation() {
+        Location center = battleCenter();
+        for (int attempt = 0; attempt < SPAWN_ATTEMPTS; attempt++) {
+            int x = center.getBlockX() + random.nextInt(-ARENA_RADIUS + 1, ARENA_RADIUS);
+            int z = center.getBlockZ() + random.nextInt(-ARENA_RADIUS + 1, ARENA_RADIUS);
+            int surfaceY = world.getMinHeight();
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    surfaceY = Math.max(surfaceY, world.getHighestBlockYAt(x + dx, z + dz));
+                }
+            }
+            if (surfaceY + 4 >= world.getMaxHeight()) continue;
+            Location spawn = new Location(world, x + 0.5, surfaceY + 1, z + 0.5);
+            if (getPlayers().stream().filter(this::isActiveWeaponUser)
+                    .noneMatch(player -> player.getLocation().distanceSquared(spawn) < 16)) return Optional.of(spawn);
+        }
+        return Optional.empty();
+    }
+
     private Optional<Location> findGhastSpawnLocation() {
         Location center = battleCenter();
         for (int attempt = 0; attempt < SPAWN_ATTEMPTS; attempt++) {
@@ -361,6 +404,15 @@ public class RoboRampage extends JocCooperatiu {
 
     private void spawnRobot(RobotType type, Location location) {
         switch (type) {
+            case COMPACTOR -> {
+                IronGolem golem = world.spawn(location, IronGolem.class);
+                prepareMob(golem);
+                double health = CompactorCycle.maximumHealth(getPlayers().size());
+                applyGroundRobotProfile(golem, new GroundRobotProfile(health, 0.20, 1));
+                bossScrapReward = CompactorCycle.deathScrap(getPlayers().size());
+                rememberRobot(golem, type, HelmetVariant.IRON_HELMET);
+                compactor.attach(golem, health);
+            }
             case ZOMBIE -> {
                 Zombie zombie = (Zombie) world.spawnEntity(location, EntityType.ZOMBIE);
                 HelmetVariant helmet = RoboRampageRules.randomZombieHelmet(random);
@@ -468,6 +520,7 @@ public class RoboRampage extends JocCooperatiu {
                 case BLAZE -> blazes++;
                 case CUTTER -> cutters++;
                 case GHAST -> ghasts++;
+                case COMPACTOR -> { } // Boss waves do not use ordinary population limits.
             }
         }
         return new RobotCounts(zombies, skeletons, blazes, cutters, ghasts);
@@ -512,7 +565,16 @@ public class RoboRampage extends JocCooperatiu {
         event.getDrops().clear();
         event.setDroppedExp(0);
         boolean criticalKill = criticalKillCandidates.remove(entity.getUniqueId());
+        if (state.type() == RobotType.COMPACTOR) {
+            compactor.clear();
+            for (int block = 0; block < bossScrapReward; block++) {
+                enqueueScrap(entity.getLocation().clone().add(
+                        random.nextDouble(-2, 2), 0, random.nextDouble(-2, 2)), ScrapMaterial.IRON);
+            }
+            return;
+        }
         LiveDeathReward reward = switch (state.type()) {
+            case COMPACTOR -> throw new IllegalStateException("Boss reward already handled");
             case BLAZE -> RoboRampageRules.liveBlazeReward();
             case GHAST -> RoboRampageRules.liveGhastReward();
             case ZOMBIE, SKELETON, CUTTER -> RoboRampageRules.liveGroundRobotReward(state.helmet());
@@ -536,6 +598,13 @@ public class RoboRampage extends JocCooperatiu {
     protected void onEntityDamageByEntity(
             EntityDamageByEntityEvent event, Entity damaged, Entity damager) {
         super.onEntityDamageByEntity(event, damaged, damager);
+        if (compactor != null && compactor.owns(damaged.getUniqueId())) {
+            event.setDamage(event.getDamage() * compactor.incomingDamageMultiplier());
+        }
+        if (compactor != null && compactor.owns(damager.getUniqueId()) && !compactor.isApplyingSlam()) {
+            event.setCancelled(true);
+            return;
+        }
         if (demolition != null && demolition.owns(damager)) {
             if (!demolition.mayDamage(damager, damaged, robots.containsKey(damaged.getUniqueId()))) {
                 event.setCancelled(true);
@@ -619,21 +688,21 @@ public class RoboRampage extends JocCooperatiu {
         }
         RobotState robot = robots.get(entity.getUniqueId());
         if (robot == null || robot.type() != RobotType.GHAST || !(entity instanceof Ghast ghast)
-                || ghastProjectiles == null) return;
+                || metalProjectiles == null) return;
         event.setCancelled(true);
-        nearestPlayer(ghast).ifPresent(target -> ghastProjectiles.launch(ghast, target));
+        nearestPlayer(ghast).ifPresent(target -> metalProjectiles.launch(ghast, target));
     }
 
     @Override
     protected void onProjectileHit(ProjectileHitEvent event, Projectile projectile) {
         super.onProjectileHit(event, projectile);
-        if (ghastProjectiles == null || scrapDrops == null) return;
+        if (metalProjectiles == null || scrapDrops == null) return;
         Location impactLocation = projectile.getLocation();
-        if (ghastProjectiles.handleHit(event, projectile)
+        if (metalProjectiles.handleHit(event, projectile)
                 && !scrapDrops.dropImpactScrap(
                         impactLocation, RoboRampageRules.ghastProjectileImpactScrap())) {
             Com.getPlugin().getLogger().warning(
-                    "Robo Rampage scrap queue is full; Ghast impact scrap could not be placed");
+                    "Robo Rampage scrap queue is full; Metal impact scrap could not be placed");
         }
     }
 

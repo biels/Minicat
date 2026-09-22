@@ -23,7 +23,7 @@ public final class RoboRampageRules {
 
     private RoboRampageRules() {}
 
-    public enum RobotType { ZOMBIE, SKELETON, BLAZE, CUTTER, GHAST }
+    public enum RobotType { ZOMBIE, SKELETON, BLAZE, CUTTER, GHAST, COMPACTOR }
 
     public enum WavePhase { ASSAULT, CLEANUP, SUPPLY }
 
@@ -67,6 +67,7 @@ public final class RoboRampageRules {
                 case BLAZE -> blazes;
                 case CUTTER -> cutters;
                 case GHAST -> ghasts;
+                case COMPACTOR -> 0; // Dedicated boss waves bypass normal spawn limits.
             };
         }
     }
@@ -79,6 +80,7 @@ public final class RoboRampageRules {
                 case BLAZE -> blazes;
                 case CUTTER -> cutters;
                 case GHAST -> ghasts;
+                case COMPACTOR -> 0; // Dedicated boss waves bypass normal spawn limits.
             };
         }
     }
