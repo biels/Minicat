@@ -33,7 +33,7 @@ final class ScrapDropController implements AutoCloseable {
     private static final int MAX_MOVING_BLOCKS = 128;
     private static final int MAX_QUEUED_DROPS = 512;
     private static final double CRITICAL_EJECTION_DISTANCE = 3.0;
-    private static final int CRITICAL_EJECTION_TICKS = 6;
+    private static final int SOURCE_TRANSFER_TICKS = 6;
 
     private final World world;
     private final int originX;
@@ -69,6 +69,14 @@ final class ScrapDropController implements AutoCloseable {
         int localX = clamp(landingArea.getBlockX() - originX, 0, ScrapGrid.DEFAULT_WIDTH - 1);
         int localZ = clamp(landingArea.getBlockZ() - originZ, 0, ScrapGrid.DEFAULT_DEPTH - 1);
         Location displayOrigin = source.clone().subtract(0.5, 0, 0.5);
+        return enqueue(new PendingDrop(
+                ScrapShapes.single(material), localX, localZ, 4, false, displayOrigin));
+    }
+
+    public boolean dropImpactScrap(Location impact, ScrapMaterial material) {
+        int localX = clamp(impact.getBlockX() - originX, 0, ScrapGrid.DEFAULT_WIDTH - 1);
+        int localZ = clamp(impact.getBlockZ() - originZ, 0, ScrapGrid.DEFAULT_DEPTH - 1);
+        Location displayOrigin = impact.clone().subtract(0.5, 0.5, 0.5);
         return enqueue(new PendingDrop(
                 ScrapShapes.single(material), localX, localZ, 4, false, displayOrigin));
     }
@@ -248,14 +256,14 @@ final class ScrapDropController implements AutoCloseable {
     private final class RenderedBlock {
         private final ScrapGrid.BlockMotion motion;
         private final BlockDisplay display;
-        private boolean awaitingEjection;
+        private boolean awaitingSourceTransfer;
         private int nextSegment;
         private int ticksRemaining;
 
         private RenderedBlock(ScrapGrid.BlockMotion motion, Location displayOrigin) {
             this.motion = motion;
-            this.awaitingEjection = displayOrigin != null;
-            Location initialLocation = awaitingEjection ? displayOrigin : worldLocation(motion.start());
+            this.awaitingSourceTransfer = displayOrigin != null;
+            Location initialLocation = awaitingSourceTransfer ? displayOrigin : worldLocation(motion.start());
             this.display = world.spawn(initialLocation, BlockDisplay.class, spawned -> {
                 spawned.setBlock(material(motion.material()).createBlockData());
                 spawned.setViewRange(48);
@@ -269,11 +277,11 @@ final class ScrapDropController implements AutoCloseable {
                 ticksRemaining--;
                 return;
             }
-            if (awaitingEjection) {
-                awaitingEjection = false;
-                display.setTeleportDuration(CRITICAL_EJECTION_TICKS);
+            if (awaitingSourceTransfer) {
+                awaitingSourceTransfer = false;
+                display.setTeleportDuration(SOURCE_TRANSFER_TICKS);
                 display.teleport(worldLocation(motion.start()));
-                ticksRemaining = CRITICAL_EJECTION_TICKS;
+                ticksRemaining = SOURCE_TRANSFER_TICKS;
                 return;
             }
             if (nextSegment >= motion.segments().size()) return;
@@ -284,7 +292,7 @@ final class ScrapDropController implements AutoCloseable {
         }
 
         private boolean finished() {
-            return !awaitingEjection && nextSegment >= motion.segments().size() && ticksRemaining == 0;
+            return !awaitingSourceTransfer && nextSegment >= motion.segments().size() && ticksRemaining == 0;
         }
 
         private void remove() {

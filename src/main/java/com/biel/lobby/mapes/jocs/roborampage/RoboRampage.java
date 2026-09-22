@@ -589,7 +589,14 @@ public class RoboRampage extends JocCooperatiu {
     @Override
     protected void onProjectileHit(ProjectileHitEvent event, Projectile projectile) {
         super.onProjectileHit(event, projectile);
-        if (ghastProjectiles != null) ghastProjectiles.handleHit(event, projectile);
+        if (ghastProjectiles == null || scrapDrops == null) return;
+        Location impactLocation = projectile.getLocation();
+        if (ghastProjectiles.handleHit(event, projectile)
+                && !scrapDrops.dropImpactScrap(
+                        impactLocation, RoboRampageRules.ghastProjectileImpactScrap())) {
+            Com.getPlugin().getLogger().warning(
+                    "Robo Rampage scrap queue is full; Ghast impact scrap could not be placed");
+        }
     }
 
     @Override

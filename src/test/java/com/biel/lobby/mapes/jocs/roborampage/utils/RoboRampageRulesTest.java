@@ -176,6 +176,11 @@ class RoboRampageRulesTest {
     }
 
     @Test
+    void everyGhastProjectileImpactContributesOneIronScrapBlock() {
+        assertEquals(ScrapMaterial.IRON, RoboRampageRules.ghastProjectileImpactScrap());
+    }
+
+    @Test
     void waveQuotasScaleButRemainFinite() {
         assertEquals(7, RoboRampageRules.waveRobotQuota(1, 1));
         assertEquals(16, RoboRampageRules.waveRobotQuota(1, 4));

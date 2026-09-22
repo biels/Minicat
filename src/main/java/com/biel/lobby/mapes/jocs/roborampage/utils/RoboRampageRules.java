@@ -255,6 +255,10 @@ public final class RoboRampageRules {
         return new LiveDeathReward(ScrapMaterial.IRON, PowerUp.NONE, 8, 12, false);
     }
 
+    public static ScrapMaterial ghastProjectileImpactScrap() {
+        return ScrapMaterial.IRON;
+    }
+
     /** Mirrors Utils.Possibilitat: its historical random range is [0, 101), not [0, 100). */
     private static boolean percentRoll(RandomGenerator random, int percent) {
         return random.nextDouble(101.0) <= percent;
