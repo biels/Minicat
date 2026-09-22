@@ -1,0 +1,42 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRules.java
+  s_82fcc3fb2b3151::t_a74999c1ae0fc8 18,24,55-59,66,71,77,88,91,93-96,99,101-105,107,133-142,201-203
+  s_4062af1d98bbbd::t_1fa89a2b3003cf 204
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_82fcc3fb2b3151::t_a219dcdc70c3cd 24,34,54,78,125,130,157,185,216,230-232,243,290-294,309-331,351-360,366,380-393,417,423,426,436-437,440-446,458-462,544,546-561
+src/main/resources/i18n/contracts/robo-rampage.json
+  s_82fcc3fb2b3151::t_9b093ae4ba95ee 73-79
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRulesTest.java
+  s_82fcc3fb2b3151::t_878bbf4a767409 105
+  s_82fcc3fb2b3151::t_a74999c1ae0fc8 14,18,20,24,28-42,45-46,52-53,56,92-104,106-116
+  s_4062af1d98bbbd::t_5e67eb2d768020 117
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/GhastMetalProjectileController.java
+  s_82fcc3fb2b3151::t_660f3c8c68b432 1-44,47-120
+  s_82fcc3fb2b3151::t_47541215a2dda6 45-46
+src/main/resources/i18n/translations/robo-rampage.json
+  s_82fcc3fb2b3151::t_9b093ae4ba95ee 85-90
+  s_82fcc3fb2b3151::t_5c347fddf0b8a5 83-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "34299c05922cd974da2b1b2202127b2f72c5cd36",
+  "prompts": {},
+  "sessions": {
+    "s_4062af1d98bbbd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1f8809a5-bfc9-49a7-be1c-14b8583133d6",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_82fcc3fb2b3151": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c49b-204d-7593-b139-3de12aa1edc0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
