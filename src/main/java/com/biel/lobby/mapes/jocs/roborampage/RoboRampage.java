@@ -35,9 +35,11 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
@@ -603,6 +605,19 @@ public class RoboRampage extends JocCooperatiu {
     protected void onPlayerInteract(PlayerInteractEvent event, Player player) {
         super.onPlayerInteract(event, player);
         if (tasers != null) tasers.handleInteraction(event, player);
+    }
+
+    @Override
+    protected void onPlayerItemConsume(PlayerItemConsumeEvent event, Player player) {
+        super.onPlayerItemConsume(event, player);
+        if (event.isCancelled() || event.getHand() != EquipmentSlot.HAND
+                || event.getItem().getType() != Material.POTION) return;
+        int consumedHotbarSlot = player.getInventory().getHeldItemSlot();
+        scheduleGameplayTask(() -> {
+            if (player.isOnline() && player.getWorld() == world) {
+                HotbarBottleManager.moveBottleToStorage(player, consumedHotbarSlot);
+            }
+        }, 1);
     }
 
     @Override
