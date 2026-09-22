@@ -1,0 +1,40 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/CompactorCycle.java
+  s_a24c9c311dcc61::t_ecb7ad385b6571 1-70
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/CompactorController.java
+  s_a24c9c311dcc61::t_ecb7ad385b6571 1-206
+  s_a24c9c311dcc61::t_2edf4e20f1b3ce 207-217
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/MetalProjectileController.java
+  s_a24c9c311dcc61::t_d10a55fadef208 7,18,26-27,30-31,34-35,38,40,44-50,55,69,74,79,95-97,128
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_a24c9c311dcc61::t_9980f39cfb63e3 26,56,86-88,136-137,144-145,152-154,157,162,192-193,223,266-272,289-290,308-309,315-318,363-381,407-415,523,568-575,577,601-607,691,693,699,701,705
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/ScaffoldController.java
+  s_a24c9c311dcc61::t_68a8f316f35842 175-183
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRules.java
+  s_a24c9c311dcc61::t_2863626c965003 26,70,83
+src/main/resources/i18n/contracts/robo-rampage.json
+  s_a24c9c311dcc61::t_c18fa2b30f4939 188-264
+src/main/resources/i18n/translations/robo-rampage.json
+  s_a24c9c311dcc61::t_cbc7f6214e85fe 210-273
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/CompactorControllerTest.java
+  s_a24c9c311dcc61::t_6acd88eb504ce7 1-152
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/CompactorCycleTest.java
+  s_a24c9c311dcc61::t_61342171aa010d 1-86
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/MobilityAndCutterControllerTest.java
+  s_a24c9c311dcc61::t_1a4f35328cb7d1 236-251
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "49c764122e590d5ff78e3f27d17ffa649edaa65e",
+  "prompts": {},
+  "sessions": {
+    "s_a24c9c311dcc61": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c9d7-0e49-7c52-b77d-de251965fa2e",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
