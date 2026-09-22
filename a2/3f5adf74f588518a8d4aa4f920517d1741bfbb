@@ -1,0 +1,32 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRules.java
+  s_82fcc3fb2b3151::t_b3e17c0969eca6 18,25,59-60,67,73,79,91,108,111,147-153
+  s_82fcc3fb2b3151::t_6eac846df6217d 154
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRulesTest.java
+  s_82fcc3fb2b3151::t_c35f30e6f46d95 36
+  s_82fcc3fb2b3151::t_49484fe96f2235 19,26,41,50-51,57-58,109-117
+  s_82fcc3fb2b3151::t_416ed6af92d002 118-119
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/ScaffoldController.java
+  s_82fcc3fb2b3151::t_a73efa69c84611 12,35,44-45,51,73-74,84,86,88-90
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_82fcc3fb2b3151::t_998d15ff2ccf29 124-125,352-356,373-382,387-388,433,440,444-449,489
+src/main/resources/i18n/contracts/robo-rampage.json
+  s_82fcc3fb2b3151::t_afca6767b46378 75
+src/main/resources/i18n/translations/robo-rampage.json
+  s_82fcc3fb2b3151::t_afca6767b46378 87-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a23f5adf74f588518a8d4aa4f920517d1741bfbb",
+  "prompts": {},
+  "sessions": {
+    "s_82fcc3fb2b3151": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c49b-204d-7593-b139-3de12aa1edc0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
