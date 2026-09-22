@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiPredicate;
+import java.util.function.ToDoubleFunction;
 
 /** Builds a deterministic, bounded electrical tree through visible nearby targets. */
 public final class ElectricNetwork {
@@ -34,6 +35,22 @@ public final class ElectricNetwork {
             double sourceRange,
             double jumpRange,
             BiPredicate<Point, Point> hasLineOfSight) {
+        return build(
+                source,
+                candidates,
+                maximumTargets,
+                ignored -> sourceRange,
+                jumpRange,
+                hasLineOfSight);
+    }
+
+    public static List<Edge> build(
+            Point source,
+            List<Target> candidates,
+            int maximumTargets,
+            ToDoubleFunction<Target> sourceRange,
+            double jumpRange,
+            BiPredicate<Point, Point> hasLineOfSight) {
         if (maximumTargets <= 0 || candidates.isEmpty()) return List.of();
 
         List<Target> orderedCandidates = candidates.stream()
@@ -51,10 +68,12 @@ public final class ElectricNetwork {
         while (edges.size() < maximumTargets) {
             CandidateEdge shortestEdge = null;
             for (ConnectedNode parent : connectedNodes) {
-                double range = parent.targetId().isEmpty() ? sourceRange : jumpRange;
-                double rangeSquared = range * range;
                 for (Target target : orderedCandidates) {
                     if (connectedTargetIds.contains(target.id())) continue;
+                    double range = parent.targetId().isEmpty()
+                            ? Math.max(0, sourceRange.applyAsDouble(target))
+                            : jumpRange;
+                    double rangeSquared = range * range;
                     double distanceSquared = parent.position().distanceSquared(target.position());
                     if (distanceSquared > rangeSquared || !hasLineOfSight.test(parent.position(), target.position())) {
                         continue;

@@ -22,6 +22,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
+import org.bukkit.entity.Ghast;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -233,7 +234,7 @@ final class TaserController implements AutoCloseable {
                 source,
                 targets,
                 TaserRules.maximumTargets(charge, level),
-                TaserRules.SOURCE_RANGE,
+                target -> TaserRules.sourceRange(robotsById.get(target.id()) instanceof Ghast),
                 TaserRules.JUMP_RANGE,
                 this::hasLineOfSight);
         return new NetworkSnapshot(sourceLocation, edges, robotsById);

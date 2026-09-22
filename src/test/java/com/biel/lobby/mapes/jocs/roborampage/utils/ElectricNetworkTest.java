@@ -51,6 +51,22 @@ class ElectricNetworkTest {
         assertEquals(1, edges.size());
     }
 
+    @Test
+    void directRangeCanBeExtendedForOneTargetWithoutExtendingChainJumps() {
+        var ordinary = target(NEAR, 22, 0, 0);
+        var elevatedTarget = target(FAR, 15, 0, 0);
+
+        var edges = ElectricNetwork.build(
+                SOURCE,
+                List.of(ordinary, elevatedTarget),
+                2,
+                target -> target.id().equals(FAR) ? 16 : 12,
+                6,
+                (from, to) -> true);
+
+        assertEquals(List.of(new ElectricNetwork.Edge(Optional.empty(), FAR)), edges);
+    }
+
     private static ElectricNetwork.Target target(UUID id, double x, double y, double z) {
         return new ElectricNetwork.Target(id, new ElectricNetwork.Point(x, y, z));
     }

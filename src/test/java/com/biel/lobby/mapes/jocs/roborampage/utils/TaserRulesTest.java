@@ -24,4 +24,10 @@ class TaserRulesTest {
         assertEquals(3, TaserRules.rechargeIntervalTicks(5));
         assertEquals(5, TaserRules.normalizedLevel(99));
     }
+
+    @Test
+    void directRangeIsLongerAndEspeciallyGenerousForGhasts() {
+        assertEquals(12.0, TaserRules.sourceRange(false));
+        assertEquals(16.0, TaserRules.sourceRange(true));
+    }
 }

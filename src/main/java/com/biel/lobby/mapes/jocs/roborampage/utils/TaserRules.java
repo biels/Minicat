@@ -9,7 +9,8 @@ public final class TaserRules {
     public static final int RECHARGE_DELAY_TICKS = 40;
     public static final int PULSE_INTERVAL_TICKS = 10;
     public static final double DAMAGE_PER_PULSE = 2.0;
-    public static final double SOURCE_RANGE = 10.0;
+    public static final double SOURCE_RANGE = 12.0;
+    public static final double GHAST_SOURCE_RANGE = 16.0;
     public static final double JUMP_RANGE = 6.0;
 
     private TaserRules() {}
@@ -26,6 +27,10 @@ public final class TaserRules {
 
     public static int rechargeIntervalTicks(int level) {
         return Math.max(3, RECHARGE_INTERVAL_TICKS - (normalizedLevel(level) - 1) / 2);
+    }
+
+    public static double sourceRange(boolean ghast) {
+        return ghast ? GHAST_SOURCE_RANGE : SOURCE_RANGE;
     }
 
     public static int normalizedLevel(int level) {
