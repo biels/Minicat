@@ -191,6 +191,22 @@
         "en_US": "[minimsg]<gray>Too much TNT deployed. Recover or detonate a charge first.</gray>",
         "ca_ES": "[minimsg]<gray>Hi ha massa TNT desplegada. Recupera o fes explotar una càrrega abans.</gray>"
       }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.piston-jump",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Sneak + jump to boost about 2 blocks up and 3 forward. Land and wait 8 seconds to reuse. A click and sparks mean ready.</aqua>",
+        "ca_ES": "[minimsg]<aqua>Ajup-te i salta per impulsar-te uns 2 blocs amunt i 3 endavant. Aterra i espera 8 segons per repetir. Un clic i espurnes indiquen que està llest.</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.cutter",
+      "languages": {
+        "en_US": "[minimsg]<gold>A Cutter spins up for 1.2 seconds before cutting scaffolds, then rests for 2 seconds. Stop it with your Taser or jump away!</gold>",
+        "ca_ES": "[minimsg]<gold>El tallador prepara la serra durant 1,2 segons abans de tallar bastides i després descansa 2 segons. Atura'l amb el Taser o salta per fugir!</gold>"
+      }
     }
   ]
 }

@@ -79,6 +79,7 @@ public class RoboRampage extends JocCooperatiu {
     private TaserController tasers;
     private SupplyDropController supplyDrops;
     private ScaffoldController scaffolds;
+    private PistonJumpController pistonJumps;
     private DemolitionController demolition;
     private GhastMetalProjectileController ghastProjectiles;
     private int displayedScrapHeight;
@@ -135,7 +136,10 @@ public class RoboRampage extends JocCooperatiu {
         supplyDrops = new SupplyDropController(Com.getPlugin(), world, random, tasers);
         scaffolds = new ScaffoldController(
                 world, battleCenter(), ARENA_RADIUS, this::targetHeight,
-                this::liveRobotMobs, this::scaffoldDamageFor);
+                this::liveRobotMobs, this::scaffoldDamageFor,
+                robot -> tasers.isEnergized(robot.getUniqueId()));
+        pistonJumps = new PistonJumpController(world, this::isActiveWeaponUser);
+        pistonJumps.register(Com.getPlugin());
         demolition = new DemolitionController(world, battleCenter(), ARENA_RADIUS,
                 this::targetHeight, this::isActiveWeaponUser, scaffolds);
         demolition.register(Com.getPlugin());
@@ -143,7 +147,8 @@ public class RoboRampage extends JocCooperatiu {
         scheduleGameplayRepeatingTask(scrapDrops::tick, 1, 1);
         scheduleGameplayRepeatingTask(tasers::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::tickSupplyPhase, 1, 1);
-        scheduleGameplayRepeatingTask(scaffolds::tickRobotDamage, 20, 20);
+        scheduleGameplayRepeatingTask(scaffolds::tickRobotDamage, 1, 1);
+        scheduleGameplayRepeatingTask(pistonJumps::tick, 1, 1);
         scheduleGameplayRepeatingTask(demolition::pruneMissingCharges, 20, 20);
         scheduleGameplayRepeatingTask(ghastProjectiles::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::keepFlyingRobotsReachable, 1, 1);
@@ -174,6 +179,7 @@ public class RoboRampage extends JocCooperatiu {
         if (supplyDrops != null) supplyDrops.close();
         if (demolition != null) demolition.close();
         if (scaffolds != null) scaffolds.close();
+        if (pistonJumps != null) pistonJumps.close();
         if (ghastProjectiles != null) ghastProjectiles.close();
         for (UUID robotId : new ArrayList<>(robots.keySet())) {
             Entity entity = Bukkit.getEntity(robotId);
@@ -202,6 +208,8 @@ public class RoboRampage extends JocCooperatiu {
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_JUNK),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_TASER),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_TNT),
+                Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_PISTON_JUMP),
+                Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_CUTTER),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_SUPPLIES),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_ENEMIES),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_GOAL,
@@ -547,6 +555,10 @@ public class RoboRampage extends JocCooperatiu {
         }
         boolean sourceIsRobot = source != null && robots.containsKey(source.getUniqueId());
         boolean targetIsRobot = robots.containsKey(damaged.getUniqueId());
+        if (sourceIsRobot && scaffolds != null && scaffolds.isSawBusy(source.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
         if (sourceIsRobot && targetIsRobot) {
             event.setCancelled(true);
             return;
@@ -681,6 +693,7 @@ public class RoboRampage extends JocCooperatiu {
     protected void onPlayerRespawnAfterTick(PlayerRespawnEvent event, Player player) {
         super.onPlayerRespawnAfterTick(event, player);
         if (scrapDrops != null && JocEnMarxa()) player.teleport(scrapDrops.safePlayerSpawn());
+        if (pistonJumps != null && JocEnMarxa()) pistonJumps.onRespawn(player);
     }
 
     @Override

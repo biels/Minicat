@@ -7,7 +7,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.IntSupplier;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 
@@ -20,12 +22,15 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.util.Vector;
 
 /** Tracks the temporary player-built scaffold layer and bounded robot damage against it. */
 final class ScaffoldController implements AutoCloseable {
     private static final int MAX_TRACKED_SCAFFOLDING = 128;
     private static final int HITS_TO_BREAK = 3;
     private static final double ROBOT_REACH_SQUARED = 2.6 * 2.6;
+    static final int CUTTER_WINDUP_TICKS = 24;
+    static final int CUTTER_RECOVERY_TICKS = 40;
 
     private final World world;
     private final Location battleCenter;
@@ -33,8 +38,26 @@ final class ScaffoldController implements AutoCloseable {
     private final IntSupplier targetHeight;
     private final Supplier<? extends Iterable<Mob>> robots;
     private final ToIntFunction<Mob> scaffoldDamageByRobot;
+    private final Predicate<Mob> interruptedByTaser;
     private final Set<BlockPosition> placedScaffolding = new HashSet<>();
     private final Map<BlockPosition, Integer> damageByPosition = new HashMap<>();
+    private final Map<UUID, SawAttack> sawAttacks = new HashMap<>();
+    private long currentTick;
+
+    private static final class SawAttack {
+        final Mob robot;
+        final BlockPosition target;
+        final boolean originalAI;
+        final long strikeAt;
+        long recoveryUntil;
+
+        SawAttack(Mob robot, BlockPosition target, long strikeAt) {
+            this.robot = robot;
+            this.target = target;
+            this.originalAI = robot.hasAI();
+            this.strikeAt = strikeAt;
+        }
+    }
 
     ScaffoldController(
             World world,
@@ -43,12 +66,20 @@ final class ScaffoldController implements AutoCloseable {
             IntSupplier targetHeight,
             Supplier<? extends Iterable<Mob>> robots,
             ToIntFunction<Mob> scaffoldDamageByRobot) {
+        this(world, battleCenter, arenaRadius, targetHeight, robots, scaffoldDamageByRobot, robot -> false);
+    }
+
+    ScaffoldController(
+            World world, Location battleCenter, int arenaRadius, IntSupplier targetHeight,
+            Supplier<? extends Iterable<Mob>> robots, ToIntFunction<Mob> scaffoldDamageByRobot,
+            Predicate<Mob> interruptedByTaser) {
         this.world = world;
         this.battleCenter = battleCenter.clone();
         this.arenaRadius = arenaRadius;
         this.targetHeight = targetHeight;
         this.robots = robots;
         this.scaffoldDamageByRobot = scaffoldDamageByRobot;
+        this.interruptedByTaser = interruptedByTaser;
     }
 
     boolean handlePlacement(BlockPlaceEvent event, Block block) {
@@ -68,10 +99,69 @@ final class ScaffoldController implements AutoCloseable {
     }
 
     void tickRobotDamage() {
-        pruneMissingBlocks();
+        currentTick++;
+        if (currentTick % 20 == 0) pruneMissingBlocks();
+        Set<UUID> liveRobotIds = new HashSet<>();
         for (Mob robot : robots.get()) {
-            nearestReachableScaffold(robot.getLocation()).ifPresent(position ->
-                    damage(position, Math.max(1, scaffoldDamageByRobot.applyAsInt(robot))));
+            if (!robot.isValid() || robot.isDead() || robot.getWorld() != world) continue;
+            liveRobotIds.add(robot.getUniqueId());
+            if (scaffoldDamageByRobot.applyAsInt(robot) >= HITS_TO_BREAK) {
+                tickCutter(robot);
+            } else if (currentTick % 20 == 0) {
+                nearestReachableScaffold(robot.getLocation()).ifPresent(position ->
+                        damage(position, Math.max(1, scaffoldDamageByRobot.applyAsInt(robot))));
+            }
+        }
+        for (UUID robotId : new ArrayList<>(sawAttacks.keySet())) {
+            if (!liveRobotIds.contains(robotId)) finishAttack(robotId);
+        }
+    }
+
+    boolean isSawBusy(UUID robotId) { return sawAttacks.containsKey(robotId); }
+
+    private void tickCutter(Mob robot) {
+        UUID robotId = robot.getUniqueId();
+        SawAttack attack = sawAttacks.get(robotId);
+        if (attack == null) {
+            if (interruptedByTaser.test(robot)) return;
+            nearestReachableScaffold(robot.getLocation()).ifPresent(target -> {
+                sawAttacks.put(robotId, new SawAttack(robot, target, currentTick + CUTTER_WINDUP_TICKS));
+                robot.setAI(false);
+                robot.setVelocity(new Vector(0, robot.getVelocity().getY(), 0));
+                world.playSound(robot.getLocation(), Sound.BLOCK_GRINDSTONE_USE, 1.0F, 0.65F);
+                warnSawTarget(target);
+            });
+            return;
+        }
+        if (attack.recoveryUntil > 0) {
+            if (currentTick >= attack.recoveryUntil) finishAttack(robotId);
+            return;
+        }
+        if (interruptedByTaser.test(robot) || !placedScaffolding.contains(attack.target)
+                || attack.target.block(world).getType() != Material.SCAFFOLDING
+                || attack.target.center(world).distanceSquared(robot.getLocation()) > ROBOT_REACH_SQUARED) {
+            attack.recoveryUntil = currentTick + CUTTER_RECOVERY_TICKS;
+            world.playSound(robot.getLocation(), Sound.BLOCK_PISTON_CONTRACT, 0.6F, 0.65F);
+            return;
+        }
+        if (currentTick >= attack.strikeAt) {
+            damage(attack.target, HITS_TO_BREAK);
+            attack.recoveryUntil = currentTick + CUTTER_RECOVERY_TICKS;
+        } else if (currentTick % 4 == 0) {
+            warnSawTarget(attack.target);
+            world.playSound(robot.getLocation(), Sound.BLOCK_GRINDSTONE_USE, 0.65F,
+                    0.7F + (CUTTER_WINDUP_TICKS - (attack.strikeAt - currentTick)) / 30.0F);
+        }
+    }
+
+    private void warnSawTarget(BlockPosition target) {
+        world.spawnParticle(Particle.CRIT, target.center(world), 10, 0.35, 0.4, 0.35, 0.04);
+    }
+
+    private void finishAttack(UUID robotId) {
+        SawAttack attack = sawAttacks.remove(robotId);
+        if (attack != null && attack.robot.isValid() && !attack.robot.isDead()) {
+            attack.robot.setAI(attack.originalAI);
         }
     }
 
@@ -84,6 +174,7 @@ final class ScaffoldController implements AutoCloseable {
 
     private Optional<BlockPosition> nearestReachableScaffold(Location robotLocation) {
         return placedScaffolding.stream()
+                .filter(position -> position.block(world).getType() == Material.SCAFFOLDING)
                 .filter(position -> position.center(world).distanceSquared(robotLocation) <= ROBOT_REACH_SQUARED)
                 .min(Comparator.comparingDouble(position -> position.center(world).distanceSquared(robotLocation)));
     }
@@ -134,6 +225,7 @@ final class ScaffoldController implements AutoCloseable {
 
     @Override
     public void close() {
+        for (UUID robotId : new ArrayList<>(sawAttacks.keySet())) finishAttack(robotId);
         for (BlockPosition position : new ArrayList<>(placedScaffolding)) {
             Block block = position.block(world);
             if (block.getType() == Material.SCAFFOLDING) block.setType(Material.AIR, false);

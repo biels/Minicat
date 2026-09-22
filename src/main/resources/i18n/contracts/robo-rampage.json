@@ -167,6 +167,24 @@
       "arguments": [],
       "surfaces": ["chat"],
       "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.info.piston-jump": {
+      "constant": "ROBO_RAMPAGE_INFO_PISTON_JUMP",
+      "purpose": "Explain grounded piston jump controls, range and recharge.",
+      "arguments": [],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.info.cutter": {
+      "constant": "ROBO_RAMPAGE_INFO_CUTTER",
+      "purpose": "Explain the Cutter windup, Taser interrupt and recovery window.",
+      "arguments": [],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 220
     }
   }
 }
