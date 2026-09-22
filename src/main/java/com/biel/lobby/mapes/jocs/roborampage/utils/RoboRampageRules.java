@@ -140,6 +140,11 @@ public final class RoboRampageRules {
         };
     }
 
+    public static double maximumFlyingHeight(double battleCenterY, int settledScrapHeight, RobotType type) {
+        double chassisClearance = type == RobotType.GHAST ? 11 : 6;
+        return battleCenterY + Math.max(0, settledScrapHeight) + chassisClearance;
+    }
+
     /** The old code rolled in order; later successful rolls overwrite earlier helmets. */
     public static HelmetVariant zombieHelmet(boolean ironBlockRoll, boolean redstoneRoll) {
         HelmetVariant helmet = ironBlockRoll ? HelmetVariant.IRON_BLOCK : HelmetVariant.IRON_HELMET;

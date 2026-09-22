@@ -102,6 +102,13 @@ class RoboRampageRulesTest {
     }
 
     @Test
+    void flyingRobotCeilingsFollowTheSettledHeap() {
+        assertEquals(18, RoboRampageRules.maximumFlyingHeight(2, 10, RoboRampageRules.RobotType.BLAZE));
+        assertEquals(23, RoboRampageRules.maximumFlyingHeight(2, 10, RoboRampageRules.RobotType.GHAST));
+        assertEquals(13, RoboRampageRules.maximumFlyingHeight(2, -4, RoboRampageRules.RobotType.GHAST));
+    }
+
+    @Test
     void ghastDeathIsASignificantButBoundedScrapEvent() {
         var reward = RoboRampageRules.liveGhastReward();
         boolean sawMinimum = false;

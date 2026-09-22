@@ -434,13 +434,18 @@ public class RoboRampage extends JocCooperatiu {
     }
 
     private void keepFlyingRobotsReachable() {
-        double baseCeiling = battleCenter().getY() + scrapDrops.settledHeight();
+        double battleCenterY = battleCenter().getY();
         for (Map.Entry<UUID, RobotState> entry : robots.entrySet()) {
             Entity entity = Bukkit.getEntity(entry.getKey());
-            double ceiling = baseCeiling + (entry.getValue().type() == RobotType.GHAST ? 11 : 6);
-            if (!(entity instanceof Mob flyingRobot) || flyingRobot.getLocation().getY() <= ceiling
-                    || (entry.getValue().type() != RobotType.BLAZE
-                    && entry.getValue().type() != RobotType.GHAST)) continue;
+            RobotType robotType = entry.getValue().type();
+            if (!(entity instanceof Mob flyingRobot)
+                    || (robotType != RobotType.BLAZE && robotType != RobotType.GHAST)) continue;
+            double maximumFlyingHeight = RoboRampageRules.maximumFlyingHeight(
+                    battleCenterY, scrapDrops.settledHeight(), robotType);
+            if (flyingRobot.getLocation().getY() <= maximumFlyingHeight) continue;
+            Location boundedLocation = flyingRobot.getLocation();
+            boundedLocation.setY(maximumFlyingHeight);
+            flyingRobot.teleport(boundedLocation);
             Vector velocity = flyingRobot.getVelocity();
             flyingRobot.setVelocity(new Vector(velocity.getX() * 0.4, -0.35, velocity.getZ() * 0.4));
             nearestPlayer(flyingRobot).ifPresent(flyingRobot::setTarget);
