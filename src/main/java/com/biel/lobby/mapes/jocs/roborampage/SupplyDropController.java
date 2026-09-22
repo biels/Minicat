@@ -82,6 +82,13 @@ final class SupplyDropController implements AutoCloseable {
     }
 
     private void dropMajorReward(Location dropOrigin, int waveNumber, Player player) {
+        PlayerInventory inventory = player.getInventory();
+        boolean carriesBow = inventory.contains(Material.BOW);
+        boolean carriesArrow = inventory.contains(Material.ARROW);
+        if (RoboRampageRules.needsGuaranteedRangedSupply(waveNumber, carriesBow, carriesArrow)) {
+            dropRangedKit(dropOrigin, player, carriesBow);
+            return;
+        }
         EnumSet<SupplyReward> availableRewards = EnumSet.of(SupplyReward.BOW);
         if (armorUpgrade(player, waveNumber) != null) availableRewards.add(SupplyReward.ARMOR);
         if (tasers.canUpgrade(player)) availableRewards.add(SupplyReward.TASER_UPGRADE);
@@ -89,12 +96,14 @@ final class SupplyDropController implements AutoCloseable {
         SupplyReward reward = choices.get(random.nextInt(choices.size()));
         switch (reward) {
             case ARMOR -> dropOwned(dropOrigin, armorUpgrade(player, waveNumber), player);
-            case BOW -> {
-                dropOwned(dropOrigin, new ItemStack(Material.BOW), player);
-                dropOwned(dropOrigin, new ItemStack(Material.ARROW, BOW_ARROW_COUNT), player);
-            }
+            case BOW -> dropRangedKit(dropOrigin, player, carriesBow);
             case TASER_UPGRADE -> dropOwned(dropOrigin, createTaserUpgrade(), player);
         }
+    }
+
+    private void dropRangedKit(Location dropOrigin, Player player, boolean carriesBow) {
+        if (!carriesBow) dropOwned(dropOrigin, new ItemStack(Material.BOW), player);
+        dropOwned(dropOrigin, new ItemStack(Material.ARROW, BOW_ARROW_COUNT), player);
     }
 
     private ItemStack armorUpgrade(Player player, int waveNumber) {

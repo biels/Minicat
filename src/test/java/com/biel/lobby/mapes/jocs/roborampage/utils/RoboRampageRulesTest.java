@@ -1,6 +1,7 @@
 package com.biel.lobby.mapes.jocs.roborampage.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -104,8 +105,17 @@ class RoboRampageRulesTest {
     @Test
     void flyingRobotCeilingsFollowTheSettledHeap() {
         assertEquals(18, RoboRampageRules.maximumFlyingHeight(2, 10, RoboRampageRules.RobotType.BLAZE));
-        assertEquals(23, RoboRampageRules.maximumFlyingHeight(2, 10, RoboRampageRules.RobotType.GHAST));
-        assertEquals(13, RoboRampageRules.maximumFlyingHeight(2, -4, RoboRampageRules.RobotType.GHAST));
+        assertEquals(20, RoboRampageRules.maximumFlyingHeight(2, 10, RoboRampageRules.RobotType.GHAST));
+        assertEquals(10, RoboRampageRules.maximumFlyingHeight(2, -4, RoboRampageRules.RobotType.GHAST));
+    }
+
+    @Test
+    void waveThreeSupplyGuaranteesRangedReadinessForTheFirstGhastWave() {
+        assertFalse(RoboRampageRules.needsGuaranteedRangedSupply(2, false, false));
+        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(3, false, false));
+        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(3, true, false));
+        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(3, false, true));
+        assertFalse(RoboRampageRules.needsGuaranteedRangedSupply(3, true, true));
     }
 
     @Test
