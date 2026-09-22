@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -31,6 +32,7 @@ final class ScaffoldController implements AutoCloseable {
     private final int arenaRadius;
     private final IntSupplier targetHeight;
     private final Supplier<? extends Iterable<Mob>> robots;
+    private final ToIntFunction<Mob> scaffoldDamageByRobot;
     private final Set<BlockPosition> placedScaffolding = new HashSet<>();
     private final Map<BlockPosition, Integer> damageByPosition = new HashMap<>();
 
@@ -39,12 +41,14 @@ final class ScaffoldController implements AutoCloseable {
             Location battleCenter,
             int arenaRadius,
             IntSupplier targetHeight,
-            Supplier<? extends Iterable<Mob>> robots) {
+            Supplier<? extends Iterable<Mob>> robots,
+            ToIntFunction<Mob> scaffoldDamageByRobot) {
         this.world = world;
         this.battleCenter = battleCenter.clone();
         this.arenaRadius = arenaRadius;
         this.targetHeight = targetHeight;
         this.robots = robots;
+        this.scaffoldDamageByRobot = scaffoldDamageByRobot;
     }
 
     boolean handlePlacement(BlockPlaceEvent event, Block block) {
@@ -66,7 +70,8 @@ final class ScaffoldController implements AutoCloseable {
     void tickRobotDamage() {
         pruneMissingBlocks();
         for (Mob robot : robots.get()) {
-            nearestReachableScaffold(robot.getLocation()).ifPresent(this::damage);
+            nearestReachableScaffold(robot.getLocation()).ifPresent(position ->
+                    damage(position, Math.max(1, scaffoldDamageByRobot.applyAsInt(robot))));
         }
     }
 
@@ -76,12 +81,13 @@ final class ScaffoldController implements AutoCloseable {
                 .min(Comparator.comparingDouble(position -> position.center(world).distanceSquared(robotLocation)));
     }
 
-    private void damage(BlockPosition position) {
+    private void damage(BlockPosition position, int damageAmount) {
         Block block = position.block(world);
-        int hitCount = damageByPosition.merge(position, 1, Integer::sum);
+        int hitCount = damageByPosition.merge(position, damageAmount, Integer::sum);
         world.spawnParticle(Particle.BLOCK, block.getLocation().add(0.5, 0.5, 0.5),
-                8, 0.3, 0.3, 0.3, block.getBlockData());
-        world.playSound(block.getLocation(), Sound.BLOCK_SCAFFOLDING_HIT, 0.55F, 0.8F + hitCount * 0.12F);
+                8 + damageAmount * 3, 0.3, 0.3, 0.3, block.getBlockData());
+        world.playSound(block.getLocation(), Sound.BLOCK_SCAFFOLDING_HIT,
+                0.55F + damageAmount * 0.1F, 0.8F + Math.min(hitCount, HITS_TO_BREAK) * 0.12F);
         if (hitCount < HITS_TO_BREAK) return;
         collapseColumnFrom(position);
     }

@@ -72,7 +72,7 @@
     },
     "minicat.robo-rampage.info.enemies": {
       "constant": "ROBO_RAMPAGE_INFO_ENEMIES",
-      "purpose": "Explain wave-based chassis unlocks and scrap-rich Ghasts.",
+      "purpose": "Explain wave-based chassis unlocks, scaffold-cutting robots and scrap-rich Ghasts.",
       "arguments": [],
       "surfaces": ["chat"],
       "maxTemplateCharacters": 220

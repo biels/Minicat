@@ -16,12 +16,14 @@ class RoboRampageRulesTest {
         assertEquals(2, bottom.zombies());
         assertEquals(0, bottom.skeletons());
         assertEquals(0, bottom.blazes());
+        assertEquals(0, bottom.cutters());
         assertEquals(0, bottom.ghasts());
 
         var highFourPlayer = RoboRampageRules.liveSpawnLimits(255, 4, 20);
         assertTrue(highFourPlayer.zombies() <= 10);
         assertTrue(highFourPlayer.skeletons() <= 6);
         assertTrue(highFourPlayer.blazes() <= 4);
+        assertTrue(highFourPlayer.cutters() <= 2);
         assertTrue(highFourPlayer.ghasts() <= 2);
         assertTrue(highFourPlayer.total() <= 24);
     }
@@ -31,10 +33,12 @@ class RoboRampageRulesTest {
         var waveTwo = RoboRampageRules.liveSpawnLimits(0, 1, 2);
         assertEquals(1, waveTwo.skeletons());
         assertEquals(0, waveTwo.blazes());
+        assertEquals(0, waveTwo.cutters());
         assertEquals(0, waveTwo.ghasts());
 
         var waveThree = RoboRampageRules.liveSpawnLimits(0, 1, 3);
         assertEquals(1, waveThree.blazes());
+        assertEquals(1, waveThree.cutters());
         assertEquals(0, waveThree.ghasts());
 
         var waveFour = RoboRampageRules.liveSpawnLimits(0, 1, 4);
@@ -43,15 +47,15 @@ class RoboRampageRulesTest {
 
     @Test
     void spawnChoiceReturnsEmptyImmediatelyWhenCapsAreFull() {
-        var limits = new RoboRampageRules.SpawnLimits(2, 1, 1, 1, 5);
-        var counts = new RoboRampageRules.RobotCounts(2, 1, 1, 1);
+        var limits = new RoboRampageRules.SpawnLimits(2, 1, 1, 1, 1, 6);
+        var counts = new RoboRampageRules.RobotCounts(2, 1, 1, 1, 1);
         assertTrue(RoboRampageRules.chooseSpawn(limits, counts, new Random(1)).isEmpty());
     }
 
     @Test
     void spawnChoiceNeverSelectsAFullRole() {
-        var limits = new RoboRampageRules.SpawnLimits(2, 1, 1, 1, 5);
-        var counts = new RoboRampageRules.RobotCounts(2, 0, 0, 0);
+        var limits = new RoboRampageRules.SpawnLimits(2, 1, 1, 1, 1, 6);
+        var counts = new RoboRampageRules.RobotCounts(2, 0, 0, 0, 0);
         for (int seed = 0; seed < 100; seed++) {
             var chosen = RoboRampageRules.chooseSpawn(limits, counts, new Random(seed)).orElseThrow();
             assertTrue(chosen != RoboRampageRules.RobotType.ZOMBIE);
@@ -100,6 +104,17 @@ class RoboRampageRulesTest {
         assertTrue(ironHead.movementSpeed() < ordinary.movementSpeed());
         assertTrue(ironHead.knockbackResistance() > ordinary.knockbackResistance());
         assertTrue(overclocker.movementSpeed() > ordinary.movementSpeed());
+    }
+
+    @Test
+    void cutterTradesPlayerPressureForImmediateScaffoldDamage() {
+        var cutter = RoboRampageRules.cutterProfile();
+        var ordinary = RoboRampageRules.groundRobotProfile(RoboRampageRules.HelmetVariant.IRON_HELMET);
+
+        assertTrue(cutter.maximumHealth() < ordinary.maximumHealth());
+        assertTrue(cutter.movementSpeed() < ordinary.movementSpeed());
+        assertEquals(3, RoboRampageRules.scaffoldDamagePerAttack(RoboRampageRules.RobotType.CUTTER));
+        assertEquals(1, RoboRampageRules.scaffoldDamagePerAttack(RoboRampageRules.RobotType.ZOMBIE));
     }
 
     @Test

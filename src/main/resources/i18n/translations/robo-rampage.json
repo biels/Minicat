@@ -84,8 +84,8 @@
       "type": "text",
       "key": "minicat.robo-rampage.info.enemies",
       "languages": {
-        "en_US": "[minimsg]<gold>Later waves unlock new robot chassis. Ghasts throw iron blocks and release a large scrap payload.</gold>",
-        "ca_ES": "[minimsg]<gold>Les onades posteriors desbloquegen nous xassissos. Els Ghasts llancen blocs de ferro i alliberen molta ferralla.</gold>"
+        "en_US": "[minimsg]<gold>Later waves unlock new chassis. Cutters carry stonecutters and tear down scaffolds; Ghasts throw iron blocks and release lots of scrap.</gold>",
+        "ca_ES": "[minimsg]<gold>Les onades posteriors desbloquegen nous xassissos. Els talladors destrueixen bastides; els Ghasts llancen blocs de ferro i alliberen molta ferralla.</gold>"
       }
     },
     {

@@ -121,7 +121,8 @@ public class RoboRampage extends JocCooperatiu {
         tasers = new TaserController(Com.getPlugin(), world, this::liveRobotMobs, this::isActiveTaserUser);
         supplyDrops = new SupplyDropController(Com.getPlugin(), world, random, tasers);
         scaffolds = new ScaffoldController(
-                world, battleCenter(), ARENA_RADIUS, this::targetHeight, this::liveRobotMobs);
+                world, battleCenter(), ARENA_RADIUS, this::targetHeight,
+                this::liveRobotMobs, this::scaffoldDamageFor);
         ghastProjectiles = new GhastMetalProjectileController(world);
         scheduleGameplayRepeatingTask(scrapDrops::tick, 1, 1);
         scheduleGameplayRepeatingTask(tasers::tick, 1, 1);
@@ -348,6 +349,11 @@ public class RoboRampage extends JocCooperatiu {
                 prepareMob(blaze);
                 rememberRobot(blaze, type, HelmetVariant.IRON_HELMET);
             }
+            case CUTTER -> {
+                Zombie cutter = (Zombie) world.spawnEntity(location, EntityType.ZOMBIE);
+                equipCutterRobot(cutter);
+                rememberRobot(cutter, type, HelmetVariant.IRON_HELMET);
+            }
             case GHAST -> {
                 Ghast ghast = (Ghast) world.spawnEntity(location, EntityType.GHAST);
                 prepareMob(ghast);
@@ -364,12 +370,22 @@ public class RoboRampage extends JocCooperatiu {
     private void equipGroundRobot(Mob robot, HelmetVariant helmet) {
         prepareMob(robot);
         applyGroundRobotProfile(robot, RoboRampageRules.groundRobotProfile(helmet));
+        equipIronRobot(robot, helmetMaterial(helmet), Material.IRON_SWORD);
+    }
+
+    private void equipCutterRobot(Mob robot) {
+        prepareMob(robot);
+        applyGroundRobotProfile(robot, RoboRampageRules.cutterProfile());
+        equipIronRobot(robot, Material.IRON_HELMET, Material.STONECUTTER);
+    }
+
+    private void equipIronRobot(Mob robot, Material helmetMaterial, Material heldMaterial) {
         EntityEquipment equipment = robot.getEquipment();
         equipment.setBoots(new ItemStack(Material.IRON_BOOTS));
         equipment.setLeggings(new ItemStack(Material.IRON_LEGGINGS));
         equipment.setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
-        equipment.setItemInMainHand(new ItemStack(Material.IRON_SWORD));
-        equipment.setHelmet(new ItemStack(helmetMaterial(helmet)));
+        equipment.setItemInMainHand(new ItemStack(heldMaterial));
+        equipment.setHelmet(new ItemStack(helmetMaterial));
         equipment.setBootsDropChance(0);
         equipment.setLeggingsDropChance(0);
         equipment.setChestplateDropChance(0);
@@ -414,16 +430,23 @@ public class RoboRampage extends JocCooperatiu {
         int zombies = 0;
         int skeletons = 0;
         int blazes = 0;
+        int cutters = 0;
         int ghasts = 0;
         for (RobotState state : robots.values()) {
             switch (state.type()) {
                 case ZOMBIE -> zombies++;
                 case SKELETON -> skeletons++;
                 case BLAZE -> blazes++;
+                case CUTTER -> cutters++;
                 case GHAST -> ghasts++;
             }
         }
-        return new RobotCounts(zombies, skeletons, blazes, ghasts);
+        return new RobotCounts(zombies, skeletons, blazes, cutters, ghasts);
+    }
+
+    private int scaffoldDamageFor(Mob robot) {
+        RobotState state = robots.get(robot.getUniqueId());
+        return state == null ? 1 : RoboRampageRules.scaffoldDamagePerAttack(state.type());
     }
 
     private void removeMissingRobots() {
@@ -463,7 +486,7 @@ public class RoboRampage extends JocCooperatiu {
         LiveDeathReward reward = switch (state.type()) {
             case BLAZE -> RoboRampageRules.liveBlazeReward();
             case GHAST -> RoboRampageRules.liveGhastReward();
-            case ZOMBIE, SKELETON -> RoboRampageRules.liveGroundRobotReward(state.helmet());
+            case ZOMBIE, SKELETON, CUTTER -> RoboRampageRules.liveGroundRobotReward(state.helmet());
         };
         int blockCount = reward.rollBlockCount(random, criticalKill);
         enqueueScrap(entity.getLocation(), reward.scrapMaterial());

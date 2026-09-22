@@ -15,13 +15,14 @@ public final class RoboRampageRules {
     private static final int MAX_ZOMBIES = 10;
     private static final int MAX_SKELETONS = 6;
     private static final int MAX_BLAZES = 4;
+    private static final int MAX_CUTTERS = 2;
     private static final int MAX_GHASTS = 2;
     private static final int MAX_ROBOTS = 24;
     private static final int MAX_WAVE_ROBOTS = 30;
 
     private RoboRampageRules() {}
 
-    public enum RobotType { ZOMBIE, SKELETON, BLAZE, GHAST }
+    public enum RobotType { ZOMBIE, SKELETON, BLAZE, CUTTER, GHAST }
 
     public enum WavePhase { ASSAULT, CLEANUP, SUPPLY }
 
@@ -55,25 +56,27 @@ public final class RoboRampageRules {
     public record GroundRobotProfile(
             double maximumHealth, double movementSpeed, double knockbackResistance) {}
 
-    public record RobotCounts(int zombies, int skeletons, int blazes, int ghasts) {
-        public int total() { return zombies + skeletons + blazes + ghasts; }
+    public record RobotCounts(int zombies, int skeletons, int blazes, int cutters, int ghasts) {
+        public int total() { return zombies + skeletons + blazes + cutters + ghasts; }
 
         public int count(RobotType type) {
             return switch (type) {
                 case ZOMBIE -> zombies;
                 case SKELETON -> skeletons;
                 case BLAZE -> blazes;
+                case CUTTER -> cutters;
                 case GHAST -> ghasts;
             };
         }
     }
 
-    public record SpawnLimits(int zombies, int skeletons, int blazes, int ghasts, int total) {
+    public record SpawnLimits(int zombies, int skeletons, int blazes, int cutters, int ghasts, int total) {
         public int limit(RobotType type) {
             return switch (type) {
                 case ZOMBIE -> zombies;
                 case SKELETON -> skeletons;
                 case BLAZE -> blazes;
+                case CUTTER -> cutters;
                 case GHAST -> ghasts;
             };
         }
@@ -85,7 +88,7 @@ public final class RoboRampageRules {
         int zombies = height / 2 + 2;
         int skeletons = height / 2;
         int blazes = height / 3;
-        return new SpawnLimits(zombies, skeletons, blazes, 0, zombies + skeletons + blazes);
+        return new SpawnLimits(zombies, skeletons, blazes, 0, 0, zombies + skeletons + blazes);
     }
 
     /** Keeps the old height curve while waves provide predictable chassis unlocks. */
@@ -102,9 +105,10 @@ public final class RoboRampageRules {
                 ? Math.max(1, Math.min(MAX_SKELETONS, legacy.skeletons() + (players - 1) / 2))
                 : 0;
         int blazes = wave >= 3 ? Math.max(1, Math.min(MAX_BLAZES, legacy.blazes())) : 0;
+        int cutters = wave >= 3 ? Math.min(MAX_CUTTERS, (players + 1) / 2) : 0;
         int ghasts = wave >= 4 ? Math.min(MAX_GHASTS, 1 + Math.max(0, wave - 7) / 4) : 0;
         int total = Math.min(MAX_ROBOTS, 6 + players * 4);
-        return new SpawnLimits(zombies, skeletons, blazes, ghasts, total);
+        return new SpawnLimits(zombies, skeletons, blazes, cutters, ghasts, total);
     }
 
     /** One bounded decision replaces the original main-thread-blocking while(true) loop. */
@@ -138,6 +142,14 @@ public final class RoboRampageRules {
             case REDSTONE_BLOCK -> new GroundRobotProfile(16, 0.32, 0.1);
             case LAPIS_BLOCK -> new GroundRobotProfile(22, 0.24, 0.15);
         };
+    }
+
+    public static GroundRobotProfile cutterProfile() {
+        return new GroundRobotProfile(18, 0.21, 0.2);
+    }
+
+    public static int scaffoldDamagePerAttack(RobotType type) {
+        return type == RobotType.CUTTER ? 3 : 1;
     }
 
     public static double maximumFlyingHeight(double battleCenterY, int settledScrapHeight, RobotType type) {
