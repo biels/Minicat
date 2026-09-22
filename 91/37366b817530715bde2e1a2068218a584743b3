@@ -1,0 +1,26 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRules.java
+  s_82fcc3fb2b3151::t_4ad38ae57596f2 144,148-151
+  s_82fcc3fb2b3151::t_b634daae5a573b 152-153
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRulesTest.java
+  s_82fcc3fb2b3151::t_4ad38ae57596f2 108-113,115-117
+  s_82fcc3fb2b3151::t_6a0e178d6b5eab 4,114,118
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/SupplyDropController.java
+  s_82fcc3fb2b3151::t_4ad38ae57596f2 85-91,99,104-106
+  s_82fcc3fb2b3151::t_c4830518c543e9 107-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9137366b817530715bde2e1a2068218a584743b3",
+  "prompts": {},
+  "sessions": {
+    "s_82fcc3fb2b3151": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c49b-204d-7593-b139-3de12aa1edc0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
