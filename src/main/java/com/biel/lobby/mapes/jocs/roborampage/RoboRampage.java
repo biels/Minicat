@@ -30,6 +30,7 @@ import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -78,6 +79,7 @@ public class RoboRampage extends JocCooperatiu {
     private TaserController tasers;
     private SupplyDropController supplyDrops;
     private ScaffoldController scaffolds;
+    private DemolitionController demolition;
     private GhastMetalProjectileController ghastProjectiles;
     private int displayedScrapHeight;
     private int waveNumber;
@@ -95,12 +97,20 @@ public class RoboRampage extends JocCooperatiu {
     protected ArrayList<ItemStack> getStartingItems(Player player) {
         ArrayList<ItemStack> startingItems = new ArrayList<>(List.of(new ItemStack(Material.DIAMOND_SWORD)));
         if (tasers != null) startingItems.add(tasers.createStartingTaser(player));
+        if (demolition != null) startingItems.add(demolition.createIgniter());
         return startingItems;
     }
 
     @Override
+    protected void donarItemsInicials(Player player) {
+        super.donarItemsInicials(player);
+        if (demolition != null) demolition.giveInitialCharges(player);
+    }
+
+    @Override
     protected boolean canBeDropped(ItemStack item, Player player) {
-        return (tasers == null || !tasers.isStartingTaser(item)) && super.canBeDropped(item, player);
+        return item.getType() != Material.FLINT_AND_STEEL
+                && (tasers == null || !tasers.isStartingTaser(item)) && super.canBeDropped(item, player);
     }
 
     @Override
@@ -121,16 +131,20 @@ public class RoboRampage extends JocCooperatiu {
         waveRobotQuota = RoboRampageRules.waveRobotQuota(waveNumber, getPlayers().size());
         junkDropPolicy = new JunkDropPolicy();
         scrapDrops = new ScrapDropController(world, battleCenter(), random);
-        tasers = new TaserController(Com.getPlugin(), world, this::liveRobotMobs, this::isActiveTaserUser);
+        tasers = new TaserController(Com.getPlugin(), world, this::liveRobotMobs, this::isActiveWeaponUser);
         supplyDrops = new SupplyDropController(Com.getPlugin(), world, random, tasers);
         scaffolds = new ScaffoldController(
                 world, battleCenter(), ARENA_RADIUS, this::targetHeight,
                 this::liveRobotMobs, this::scaffoldDamageFor);
+        demolition = new DemolitionController(world, battleCenter(), ARENA_RADIUS,
+                this::targetHeight, this::isActiveWeaponUser, scaffolds);
+        demolition.register(Com.getPlugin());
         ghastProjectiles = new GhastMetalProjectileController(world);
         scheduleGameplayRepeatingTask(scrapDrops::tick, 1, 1);
         scheduleGameplayRepeatingTask(tasers::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::tickSupplyPhase, 1, 1);
         scheduleGameplayRepeatingTask(scaffolds::tickRobotDamage, 20, 20);
+        scheduleGameplayRepeatingTask(demolition::pruneMissingCharges, 20, 20);
         scheduleGameplayRepeatingTask(ghastProjectiles::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::keepFlyingRobotsReachable, 1, 1);
         scheduleGameplayRepeatingTask(this::runDirector, 1, 40);
@@ -158,6 +172,7 @@ public class RoboRampage extends JocCooperatiu {
             tasers.close();
         }
         if (supplyDrops != null) supplyDrops.close();
+        if (demolition != null) demolition.close();
         if (scaffolds != null) scaffolds.close();
         if (ghastProjectiles != null) ghastProjectiles.close();
         for (UUID robotId : new ArrayList<>(robots.keySet())) {
@@ -186,6 +201,7 @@ public class RoboRampage extends JocCooperatiu {
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_SCRAP),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_JUNK),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_TASER),
+                Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_TNT),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_SUPPLIES),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_ENEMIES),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_GOAL,
@@ -512,6 +528,14 @@ public class RoboRampage extends JocCooperatiu {
     protected void onEntityDamageByEntity(
             EntityDamageByEntityEvent event, Entity damaged, Entity damager) {
         super.onEntityDamageByEntity(event, damaged, damager);
+        if (demolition != null && demolition.owns(damager)) {
+            if (!demolition.mayDamage(damager, damaged, robots.containsKey(damaged.getUniqueId()))) {
+                event.setCancelled(true);
+            }
+            // Native blast damage already accounts for distance, exposure and armor.
+            criticalKillCandidates.remove(damaged.getUniqueId());
+            return;
+        }
         Entity source = damageSource(damager);
         if (tasers != null && tasers.isVisualBeamEntity(damager.getUniqueId())) {
             event.setCancelled(true);
@@ -604,6 +628,7 @@ public class RoboRampage extends JocCooperatiu {
     @Override
     protected void onPlayerInteract(PlayerInteractEvent event, Player player) {
         super.onPlayerInteract(event, player);
+        if (demolition != null && demolition.handleInteraction(event, player)) return;
         if (tasers != null) tasers.handleInteraction(event, player);
     }
 
@@ -629,12 +654,14 @@ public class RoboRampage extends JocCooperatiu {
     @Override
     protected void onBlockPlace(BlockPlaceEvent event, Block block) {
         super.onBlockPlace(event, block);
+        if (demolition != null) demolition.handlePlacement(event, block);
         if (scaffolds != null) scaffolds.handlePlacement(event, block);
     }
 
     @Override
     protected void onBlockBreak(BlockBreakEvent event, Block block) {
         super.onBlockBreak(event, block);
+        if (demolition != null) demolition.handleBreak(event, block);
         if (scaffolds != null) scaffolds.handleBreak(event, block);
     }
 
@@ -642,6 +669,12 @@ public class RoboRampage extends JocCooperatiu {
         if (!(damager instanceof Projectile projectile)) return damager;
         ProjectileSource shooter = projectile.getShooter();
         return shooter instanceof Entity entity ? entity : damager;
+    }
+
+    @Override
+    protected void onEntityExplode(EntityExplodeEvent event, Entity entity) {
+        super.onEntityExplode(event, entity);
+        if (demolition != null) demolition.handleExplosion(event);
     }
 
     @Override
@@ -688,8 +721,9 @@ public class RoboRampage extends JocCooperatiu {
         return List.copyOf(result);
     }
 
-    private boolean isActiveTaserUser(Player player) {
-        return JocEnMarxa() && getPlayers().contains(player) && !isSpectator(player);
+    private boolean isActiveWeaponUser(Player player) {
+        return JocEnMarxa() && player.getWorld() == world && !player.isDead()
+                && getPlayers().contains(player) && !isSpectator(player);
     }
 
     private static Material helmetMaterial(HelmetVariant helmet) {

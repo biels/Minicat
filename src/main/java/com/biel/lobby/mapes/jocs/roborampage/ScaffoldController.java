@@ -75,6 +75,13 @@ final class ScaffoldController implements AutoCloseable {
         }
     }
 
+    void destroyInBlast(Iterable<Block> affectedBlocks) {
+        for (Block block : affectedBlocks) {
+            BlockPosition position = BlockPosition.of(block);
+            if (placedScaffolding.contains(position)) collapseColumnFrom(position);
+        }
+    }
+
     private Optional<BlockPosition> nearestReachableScaffold(Location robotLocation) {
         return placedScaffolding.stream()
                 .filter(position -> position.center(world).distanceSquared(robotLocation) <= ROBOT_REACH_SQUARED)

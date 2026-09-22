@@ -175,6 +175,22 @@
         "en_US": "[minimsg]<gray>Your Taser is already fully upgraded.</gray>",
         "ca_ES": "[minimsg]<gray>El teu Taser ja està millorat al màxim.</gray>"
       }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.tnt",
+      "languages": {
+        "en_US": "[minimsg]<gold>Place TNT, light it with flint and steel, then retreat! Unlit TNT is recoverable. Blasts hurt you and robots, break scaffolds and chain nearby TNT; scrap and teammates are safe.</gold>",
+        "ca_ES": "[minimsg]<gold>Posa TNT, encén-la amb l'encenedor i allunya't! Pots recuperar-la apagada. L'explosió et fereix a tu i als robots, trenca bastides i encén TNT propera; respecta ferralla i companys.</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.tnt.limit",
+      "languages": {
+        "en_US": "[minimsg]<gray>Too much TNT deployed. Recover or detonate a charge first.</gray>",
+        "ca_ES": "[minimsg]<gray>Hi ha massa TNT desplegada. Recupera o fes explotar una càrrega abans.</gray>"
+      }
     }
   ]
 }

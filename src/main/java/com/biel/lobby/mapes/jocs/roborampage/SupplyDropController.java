@@ -56,6 +56,7 @@ final class SupplyDropController implements AutoCloseable {
             if (!player.isOnline() || player.getWorld() != world) continue;
             dropOwned(dropOrigin, new ItemStack(
                     Material.SCAFFOLDING, RoboRampageRules.scaffoldingPerPlayer(waveNumber)), player);
+            dropOwned(dropOrigin, new ItemStack(Material.TNT), player);
             dropRewards(dropOrigin, waveNumber, player);
         }
         world.spawnParticle(Particle.END_ROD, dropOrigin, 70, 2.0, 1.5, 2.0, 0.04);

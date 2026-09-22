@@ -153,6 +153,20 @@
       "arguments": [],
       "surfaces": ["chat"],
       "maxTemplateCharacters": 100
+    },
+    "minicat.robo-rampage.info.tnt": {
+      "constant": "ROBO_RAMPAGE_INFO_TNT",
+      "purpose": "Explain TNT placement, recovery, ignition and blast safety.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.tnt.limit": {
+      "constant": "ROBO_RAMPAGE_TNT_LIMIT",
+      "purpose": "Explain the arena limit for placed and primed TNT.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
     }
   }
 }
