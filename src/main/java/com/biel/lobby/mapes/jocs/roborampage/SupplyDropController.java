@@ -23,6 +23,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 import com.biel.lobby.localization.MessageKey;
@@ -91,6 +92,8 @@ final class SupplyDropController implements AutoCloseable {
                 armorUpgrade != null,
                 tasers.canUpgrade(player),
                 random);
+        dropOwned(dropOrigin, Utils.createPotion(
+                PotionType.HEALING, supplyPlan.healingPotions(), false), player);
         if (supplyPlan.taserUpgrade()) dropOwned(dropOrigin, createTaserUpgrade(), player);
         switch (supplyPlan.majorReward()) {
             case ARMOR -> dropOwned(dropOrigin, armorUpgrade, player);

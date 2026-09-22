@@ -8,6 +8,7 @@ import java.util.random.RandomGenerator;
 /** Pure rules recovered from the 2015 Robo Rampage prototype, plus bounded live limits. */
 public final class RoboRampageRules {
     public static final double PLAYER_DAMAGE_MULTIPLIER = 0.25;
+    public static final double LIVE_PLAYER_DAMAGE_MULTIPLIER = PLAYER_DAMAGE_MULTIPLIER * 0.8;
     public static final double ROBOT_DAMAGE_MULTIPLIER = 2.65;
     public static final int POWER_UP_TICKS = 20 * 20;
     public static final int POWER_UP_AMPLIFIER = 1;
@@ -82,11 +83,12 @@ public final class RoboRampageRules {
         }
     }
 
-    public record SupplyPlan(SupplyReward majorReward, boolean taserUpgrade) {
+    public record SupplyPlan(SupplyReward majorReward, boolean taserUpgrade, int healingPotions) {
         public SupplyPlan {
             if (majorReward == SupplyReward.TASER_UPGRADE) {
                 throw new IllegalArgumentException("Taser upgrades are guaranteed separately from the major reward");
             }
+            if (healingPotions < 0) throw new IllegalArgumentException("Healing potion count cannot be negative");
         }
     }
 
@@ -180,14 +182,15 @@ public final class RoboRampageRules {
             boolean canUpgradeTaser,
             RandomGenerator random) {
         if (needsGuaranteedRangedSupply(completedWaveNumber, carriesBow, carriesArrow)) {
-            return new SupplyPlan(SupplyReward.BOW, canUpgradeTaser);
+            return new SupplyPlan(SupplyReward.BOW, canUpgradeTaser, 1);
         }
         List<SupplyReward> availableMajorRewards = new ArrayList<>();
         availableMajorRewards.add(SupplyReward.BOW);
         if (hasArmorUpgrade) availableMajorRewards.add(SupplyReward.ARMOR);
         return new SupplyPlan(
                 availableMajorRewards.get(random.nextInt(availableMajorRewards.size())),
-                canUpgradeTaser);
+                canUpgradeTaser,
+                1);
     }
 
     /** The old code rolled in order; later successful rolls overwrite earlier helmets. */

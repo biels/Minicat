@@ -526,7 +526,7 @@ public class RoboRampage extends JocCooperatiu {
             return;
         }
         if (damaged instanceof Player && sourceIsRobot) {
-            event.setDamage(event.getDamage() * RoboRampageRules.PLAYER_DAMAGE_MULTIPLIER);
+            event.setDamage(event.getDamage() * RoboRampageRules.LIVE_PLAYER_DAMAGE_MULTIPLIER);
         } else if (targetIsRobot && source instanceof Player
                 && (tasers == null || !tasers.isApplyingDamageTo(damaged.getUniqueId()))) {
             event.setDamage(event.getDamage() * RoboRampageRules.ROBOT_DAMAGE_MULTIPLIER);

@@ -139,6 +139,7 @@ class RoboRampageRulesTest {
             var plan = RoboRampageRules.supplyPlan(1, true, true, true, true, new Random(seed));
             assertTrue(plan.taserUpgrade());
             assertTrue(plan.majorReward() != RoboRampageRules.SupplyReward.TASER_UPGRADE);
+            assertEquals(1, plan.healingPotions());
         }
 
         var maximumLevelPlan = RoboRampageRules.supplyPlan(1, true, true, true, false, new Random(1));
@@ -150,6 +151,14 @@ class RoboRampageRulesTest {
         var plan = RoboRampageRules.supplyPlan(3, false, false, true, true, new Random(1));
         assertEquals(RoboRampageRules.SupplyReward.BOW, plan.majorReward());
         assertTrue(plan.taserUpgrade());
+        assertEquals(1, plan.healingPotions());
+    }
+
+    @Test
+    void livePlayerDamageIsReducedByTwentyPercentFromTheRecoveredBalance() {
+        assertEquals(
+                RoboRampageRules.PLAYER_DAMAGE_MULTIPLIER * 0.8,
+                RoboRampageRules.LIVE_PLAYER_DAMAGE_MULTIPLIER);
     }
 
     @Test
