@@ -1,7 +1,6 @@
 package com.biel.lobby.mapes.jocs.roborampage;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,10 +28,9 @@ import org.bukkit.util.Vector;
 import com.biel.lobby.localization.MessageKey;
 import com.biel.lobby.localization.Messages;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules;
-import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.SupplyReward;
 import com.biel.lobby.utilities.Utils;
 
-/** Creates one owner-bound major reward and one scaffold bundle per player between waves. */
+/** Creates one Taser upgrade, one major reward and one scaffold bundle per player between waves. */
 final class SupplyDropController implements AutoCloseable {
     private static final int DROP_HEIGHT = 8;
     private static final int BOW_ARROW_COUNT = 16;
@@ -57,7 +55,7 @@ final class SupplyDropController implements AutoCloseable {
             if (!player.isOnline() || player.getWorld() != world) continue;
             dropOwned(dropOrigin, new ItemStack(
                     Material.SCAFFOLDING, RoboRampageRules.scaffoldingPerPlayer(waveNumber)), player);
-            dropMajorReward(dropOrigin, waveNumber, player);
+            dropRewards(dropOrigin, waveNumber, player);
         }
         world.spawnParticle(Particle.END_ROD, dropOrigin, 70, 2.0, 1.5, 2.0, 0.04);
         world.playSound(dropOrigin, Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1.0F, 0.8F);
@@ -81,23 +79,23 @@ final class SupplyDropController implements AutoCloseable {
         unclaimedItemIds.clear();
     }
 
-    private void dropMajorReward(Location dropOrigin, int waveNumber, Player player) {
+    private void dropRewards(Location dropOrigin, int waveNumber, Player player) {
         PlayerInventory inventory = player.getInventory();
         boolean carriesBow = inventory.contains(Material.BOW);
         boolean carriesArrow = inventory.contains(Material.ARROW);
-        if (RoboRampageRules.needsGuaranteedRangedSupply(waveNumber, carriesBow, carriesArrow)) {
-            dropRangedKit(dropOrigin, player, carriesBow);
-            return;
-        }
-        EnumSet<SupplyReward> availableRewards = EnumSet.of(SupplyReward.BOW);
-        if (armorUpgrade(player, waveNumber) != null) availableRewards.add(SupplyReward.ARMOR);
-        if (tasers.canUpgrade(player)) availableRewards.add(SupplyReward.TASER_UPGRADE);
-        List<SupplyReward> choices = new ArrayList<>(availableRewards);
-        SupplyReward reward = choices.get(random.nextInt(choices.size()));
-        switch (reward) {
-            case ARMOR -> dropOwned(dropOrigin, armorUpgrade(player, waveNumber), player);
+        ItemStack armorUpgrade = armorUpgrade(player, waveNumber);
+        var supplyPlan = RoboRampageRules.supplyPlan(
+                waveNumber,
+                carriesBow,
+                carriesArrow,
+                armorUpgrade != null,
+                tasers.canUpgrade(player),
+                random);
+        if (supplyPlan.taserUpgrade()) dropOwned(dropOrigin, createTaserUpgrade(), player);
+        switch (supplyPlan.majorReward()) {
+            case ARMOR -> dropOwned(dropOrigin, armorUpgrade, player);
             case BOW -> dropRangedKit(dropOrigin, player, carriesBow);
-            case TASER_UPGRADE -> dropOwned(dropOrigin, createTaserUpgrade(), player);
+            case TASER_UPGRADE -> throw new IllegalStateException("Taser upgrade cannot be a major reward");
         }
     }
 

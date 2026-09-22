@@ -66,6 +66,7 @@ public class RoboRampage extends JocCooperatiu {
     private static final int SPAWN_ATTEMPTS = 32;
     private static final int POST_GAME_TICKS = 20 * 10;
     private static final int SUPPLY_DURATION_TICKS = 20 * 12;
+    private static final int SUPPLY_FIRE_SWEEP_INTERVAL_TICKS = 20;
 
     private final Map<UUID, RobotState> robots = new LinkedHashMap<>();
     private final Set<UUID> criticalKillCandidates = new HashSet<>();
@@ -252,6 +253,8 @@ public class RoboRampage extends JocCooperatiu {
     private void tickSupplyPhase() {
         if (!JocEnMarxa() || wavePhase != WavePhase.SUPPLY) return;
         supplyTicksRemaining--;
+        for (Player player : getPlayers()) player.setFireTicks(0);
+        if (supplyTicksRemaining % SUPPLY_FIRE_SWEEP_INTERVAL_TICKS == 0) extinguishArena();
         if (supplyTicksRemaining > 0) return;
         supplyDrops.clearUnclaimed();
         waveNumber++;

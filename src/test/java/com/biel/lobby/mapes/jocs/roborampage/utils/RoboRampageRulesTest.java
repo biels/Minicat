@@ -134,6 +134,25 @@ class RoboRampageRulesTest {
     }
 
     @Test
+    void everyWaveClearGuaranteesExactlyOneTaserUpgradeUntilMaximumLevel() {
+        for (int seed = 0; seed < 100; seed++) {
+            var plan = RoboRampageRules.supplyPlan(1, true, true, true, true, new Random(seed));
+            assertTrue(plan.taserUpgrade());
+            assertTrue(plan.majorReward() != RoboRampageRules.SupplyReward.TASER_UPGRADE);
+        }
+
+        var maximumLevelPlan = RoboRampageRules.supplyPlan(1, true, true, true, false, new Random(1));
+        assertFalse(maximumLevelPlan.taserUpgrade());
+    }
+
+    @Test
+    void guaranteedRangedSupplyKeepsTheTaserUpgrade() {
+        var plan = RoboRampageRules.supplyPlan(3, false, false, true, true, new Random(1));
+        assertEquals(RoboRampageRules.SupplyReward.BOW, plan.majorReward());
+        assertTrue(plan.taserUpgrade());
+    }
+
+    @Test
     void ghastDeathIsASignificantButBoundedScrapEvent() {
         var reward = RoboRampageRules.liveGhastReward();
         boolean sawMinimum = false;

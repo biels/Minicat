@@ -82,6 +82,14 @@ public final class RoboRampageRules {
         }
     }
 
+    public record SupplyPlan(SupplyReward majorReward, boolean taserUpgrade) {
+        public SupplyPlan {
+            if (majorReward == SupplyReward.TASER_UPGRADE) {
+                throw new IllegalArgumentException("Taser upgrades are guaranteed separately from the major reward");
+            }
+        }
+    }
+
     /** The exact height formulas in the October 2015 source, including their unbounded growth. */
     public static SpawnLimits legacySpawnLimits(int scrapHeight) {
         int height = Math.max(0, scrapHeight);
@@ -161,6 +169,25 @@ public final class RoboRampageRules {
     public static boolean needsGuaranteedRangedSupply(
             int completedWaveNumber, boolean carriesBow, boolean carriesArrow) {
         return completedWaveNumber >= 3 && (!carriesBow || !carriesArrow);
+    }
+
+    /** Every cleared wave grants one Taser level, plus an independent equipment reward. */
+    public static SupplyPlan supplyPlan(
+            int completedWaveNumber,
+            boolean carriesBow,
+            boolean carriesArrow,
+            boolean hasArmorUpgrade,
+            boolean canUpgradeTaser,
+            RandomGenerator random) {
+        if (needsGuaranteedRangedSupply(completedWaveNumber, carriesBow, carriesArrow)) {
+            return new SupplyPlan(SupplyReward.BOW, canUpgradeTaser);
+        }
+        List<SupplyReward> availableMajorRewards = new ArrayList<>();
+        availableMajorRewards.add(SupplyReward.BOW);
+        if (hasArmorUpgrade) availableMajorRewards.add(SupplyReward.ARMOR);
+        return new SupplyPlan(
+                availableMajorRewards.get(random.nextInt(availableMajorRewards.size())),
+                canUpgradeTaser);
     }
 
     /** The old code rolled in order; later successful rolls overwrite earlier helmets. */
