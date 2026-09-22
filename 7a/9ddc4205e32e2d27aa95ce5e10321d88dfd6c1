@@ -1,0 +1,37 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/ElectricNetwork.java
+  s_490bdcb8eae95a::t_faa1b460265695 11,38-53,73-76
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/TaserRules.java
+  s_490bdcb8eae95a::t_faa1b460265695 12-13,32-33
+  s_6fe4591ce3198c::t_3679db6d5b35a9 34-35
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/TaserRulesTest.java
+  s_490bdcb8eae95a::t_faa1b460265695 27-32
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/TaserController.java
+  s_490bdcb8eae95a::t_faa1b460265695 25,237
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/ElectricNetworkTest.java
+  s_490bdcb8eae95a::t_faa1b460265695 54-55,57-69
+  s_490bdcb8eae95a::t_80583ceacf1676 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7a9ddc4205e32e2d27aa95ce5e10321d88dfd6c1",
+  "prompts": {},
+  "sessions": {
+    "s_490bdcb8eae95a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c93b-d7a5-78f0-9d9f-11fbc084f997",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_6fe4591ce3198c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c935-e215-7b72-aed2-5d53858b0b95",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
