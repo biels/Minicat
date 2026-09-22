@@ -1,0 +1,29 @@
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/MobilityAndCutterControllerTest.java
+  s_a24c9c311dcc61::t_e4d4fcd552e51b 1-282
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_a24c9c311dcc61::t_4b907e78bcb48a 82,139-142,150-151,182,211-212,558-561,696
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/PistonJumpController.java
+  s_a24c9c311dcc61::t_4b907e78bcb48a 1-110
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/ScaffoldController.java
+  s_a24c9c311dcc61::t_4b907e78bcb48a 10,12,25,32-33,41,44-60,69-75,82,102-104,106-164,177,228
+src/main/resources/i18n/contracts/robo-rampage.json
+  s_a24c9c311dcc61::t_2a9397b07e7389 170-187
+src/main/resources/i18n/translations/robo-rampage.json
+  s_a24c9c311dcc61::t_585971eda5bc9f 194-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3c07c155936636a74c51c3eac0bfc845093e9c36",
+  "prompts": {},
+  "sessions": {
+    "s_a24c9c311dcc61": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c9d7-0e49-7c52-b77d-de251965fa2e",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
