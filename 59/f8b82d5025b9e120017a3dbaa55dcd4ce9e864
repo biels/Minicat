@@ -1,0 +1,34 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_775291e110f2c3::t_65a1910ccc5535 100,104-109,134,140,678,724-726
+  s_775291e110f2c3::t_fe8e0fd736a97e 33,82,112-113,139,141,147,175,204,531-538,631,657,664,674-677
+  s_775291e110f2c3::t_c4e6390760ff54 679
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/ScaffoldController.java
+  s_775291e110f2c3::t_fe8e0fd736a97e 78-84
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/DemolitionController.java
+  s_775291e110f2c3::t_65a1910ccc5535 67,72,75-80,85
+  s_775291e110f2c3::t_fe8e0fd736a97e 1-66,68-71,73-74,81-84,86-182
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/SupplyDropController.java
+  s_775291e110f2c3::t_fe8e0fd736a97e 59
+src/main/resources/i18n/contracts/robo-rampage.json
+  s_775291e110f2c3::t_dc371d68b874fb 156-169
+src/main/resources/i18n/translations/robo-rampage.json
+  s_775291e110f2c3::t_22834ac5a4f130 178-193
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/DemolitionControllerTest.java
+  s_775291e110f2c3::t_54bb96d43e06d6 1-203
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "59f8b82d5025b9e120017a3dbaa55dcd4ce9e864",
+  "prompts": {},
+  "sessions": {
+    "s_775291e110f2c3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c9b6-a70e-7eb2-a77b-ec74afb0aded",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
