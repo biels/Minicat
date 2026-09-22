@@ -16,10 +16,15 @@ public final class RoboRampageRules {
     private static final int MAX_SKELETONS = 6;
     private static final int MAX_BLAZES = 4;
     private static final int MAX_ROBOTS = 24;
+    private static final int MAX_WAVE_ROBOTS = 30;
 
     private RoboRampageRules() {}
 
     public enum RobotType { ZOMBIE, SKELETON, BLAZE }
+
+    public enum WavePhase { ASSAULT, CLEANUP, SUPPLY }
+
+    public enum SupplyReward { ARMOR, BOW, TASER_UPGRADE }
 
     public enum HelmetVariant { IRON_HELMET, IRON_BLOCK, REDSTONE_BLOCK, LAPIS_BLOCK }
 
@@ -98,6 +103,17 @@ public final class RoboRampageRules {
         }
         if (available.isEmpty()) return Optional.empty();
         return Optional.of(available.get(random.nextInt(available.size())));
+    }
+
+    /** Finite waves grow with both party size and elapsed waves, but never become runaway swarms. */
+    public static int waveRobotQuota(int waveNumber, int playerCount) {
+        int wave = Math.max(1, waveNumber);
+        int players = Math.max(1, playerCount);
+        return Math.min(MAX_WAVE_ROBOTS, 5 + wave * 2 + (players - 1) * 3);
+    }
+
+    public static int scaffoldingPerPlayer(int waveNumber) {
+        return 8 + Math.min(4, Math.max(1, waveNumber)) * 2;
     }
 
     /** The old code rolled in order; later successful rolls overwrite earlier helmets. */

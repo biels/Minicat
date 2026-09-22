@@ -35,6 +35,13 @@
       "surfaces": ["scoreboard"],
       "maxTemplateCharacters": 32
     },
+    "minicat.robo-rampage.score.wave": {
+      "constant": "ROBO_RAMPAGE_SCORE_WAVE",
+      "purpose": "Scoreboard label for the current finite assault wave.",
+      "arguments": [],
+      "surfaces": ["scoreboard"],
+      "maxTemplateCharacters": 32
+    },
     "minicat.robo-rampage.junk.incoming": {
       "constant": "ROBO_RAMPAGE_JUNK_INCOMING",
       "purpose": "Announce an occasional bulky junk delivery.",
@@ -51,10 +58,31 @@
     },
     "minicat.robo-rampage.info.taser": {
       "constant": "ROBO_RAMPAGE_INFO_TASER",
-      "purpose": "Explain occasional rechargeable chain-lightning weapon drops.",
+      "purpose": "Explain the starting rechargeable Taser and its supply upgrades.",
       "arguments": [],
       "surfaces": ["chat"],
       "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.info.supplies": {
+      "constant": "ROBO_RAMPAGE_INFO_SUPPLIES",
+      "purpose": "Explain that equipment progression arrives between finite robot waves.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.robo-rampage.wave.start": {
+      "constant": "ROBO_RAMPAGE_WAVE_START",
+      "purpose": "Announce a finite assault wave and its robot quota.",
+      "arguments": [{"name": "wave", "type": "NUMBER"}, {"name": "robots", "type": "NUMBER"}],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.robo-rampage.supply.incoming": {
+      "constant": "ROBO_RAMPAGE_SUPPLY_INCOMING",
+      "purpose": "Announce the safe supply pause after a cleared wave.",
+      "arguments": [{"name": "wave", "type": "NUMBER"}, {"name": "seconds", "type": "NUMBER"}],
+      "surfaces": ["chat", "title"],
+      "maxTemplateCharacters": 180
     },
     "minicat.robo-rampage.taser.name": {
       "constant": "ROBO_RAMPAGE_TASER_NAME",
@@ -77,26 +105,47 @@
       "surfaces": ["item"],
       "maxTemplateCharacters": 100
     },
-    "minicat.robo-rampage.taser.dropped": {
-      "constant": "ROBO_RAMPAGE_TASER_DROPPED",
-      "purpose": "Announce that robot wreckage dropped a Taser.",
-      "arguments": [],
-      "surfaces": ["chat"],
-      "maxTemplateCharacters": 160
-    },
     "minicat.robo-rampage.taser.charge.ready": {
       "constant": "ROBO_RAMPAGE_TASER_CHARGE_READY",
       "purpose": "Show carried Taser charge while inactive.",
-      "arguments": [{"name": "charge", "type": "NUMBER"}],
+      "arguments": [{"name": "level", "type": "NUMBER"}, {"name": "charge", "type": "NUMBER"}, {"name": "maximum", "type": "NUMBER"}],
       "surfaces": ["actionbar"],
-      "maxTemplateCharacters": 50
+      "maxTemplateCharacters": 70
     },
     "minicat.robo-rampage.taser.charge.active": {
       "constant": "ROBO_RAMPAGE_TASER_CHARGE_ACTIVE",
       "purpose": "Show carried Taser charge while its network is active.",
-      "arguments": [{"name": "charge", "type": "NUMBER"}],
+      "arguments": [{"name": "level", "type": "NUMBER"}, {"name": "charge", "type": "NUMBER"}, {"name": "maximum", "type": "NUMBER"}],
       "surfaces": ["actionbar"],
-      "maxTemplateCharacters": 50
+      "maxTemplateCharacters": 70
+    },
+    "minicat.robo-rampage.taser.upgrade.name": {
+      "constant": "ROBO_RAMPAGE_TASER_UPGRADE_NAME",
+      "purpose": "Shared display name for the owner-bound Taser upgrade supply item.",
+      "arguments": [],
+      "surfaces": ["item"],
+      "maxTemplateCharacters": 40
+    },
+    "minicat.robo-rampage.taser.upgrade.lore": {
+      "constant": "ROBO_RAMPAGE_TASER_UPGRADE_LORE",
+      "purpose": "Explain that picking up the core improves the carried Taser.",
+      "arguments": [],
+      "surfaces": ["item"],
+      "maxTemplateCharacters": 100
+    },
+    "minicat.robo-rampage.taser.upgraded": {
+      "constant": "ROBO_RAMPAGE_TASER_UPGRADED",
+      "purpose": "Confirm the new Taser level after collecting an upgrade.",
+      "arguments": [{"name": "level", "type": "NUMBER"}],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 100
+    },
+    "minicat.robo-rampage.taser.upgrade.maximum": {
+      "constant": "ROBO_RAMPAGE_TASER_UPGRADE_MAXIMUM",
+      "purpose": "Tell a player that their carried Taser is already fully upgraded.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 100
     }
   }
 }

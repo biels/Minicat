@@ -72,4 +72,13 @@ class RoboRampageRulesTest {
         }
         assertTrue(sawThree && sawFive);
     }
+
+    @Test
+    void waveQuotasScaleButRemainFinite() {
+        assertEquals(7, RoboRampageRules.waveRobotQuota(1, 1));
+        assertEquals(16, RoboRampageRules.waveRobotQuota(1, 4));
+        assertEquals(30, RoboRampageRules.waveRobotQuota(100, 100));
+        assertEquals(10, RoboRampageRules.scaffoldingPerPlayer(1));
+        assertEquals(16, RoboRampageRules.scaffoldingPerPlayer(99));
+    }
 }

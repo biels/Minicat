@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.random.RandomGenerator;
 
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
@@ -44,8 +43,6 @@ import com.biel.lobby.localization.Messages;
 import com.biel.lobby.mapes.jocs.roborampage.utils.ElectricNetwork;
 import com.biel.lobby.mapes.jocs.roborampage.utils.ElectricNetwork.Edge;
 import com.biel.lobby.mapes.jocs.roborampage.utils.ElectricNetwork.Point;
-import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.RobotType;
-import com.biel.lobby.mapes.jocs.roborampage.utils.TaserDropPolicy;
 import com.biel.lobby.mapes.jocs.roborampage.utils.TaserRules;
 import com.biel.lobby.utilities.Utils;
 
@@ -57,17 +54,15 @@ final class TaserController implements AutoCloseable {
     private static final double PARTICLE_SPACING = 0.45;
 
     private final World world;
-    private final RandomGenerator random;
     private final Supplier<? extends Collection<Mob>> liveRobots;
     private final Predicate<Player> activeParticipant;
     private final NamespacedKey taserIdKey;
     private final NamespacedKey startingTaserKey;
     private final NamespacedKey chargeKey;
+    private final NamespacedKey levelKey;
     private final NamespacedKey lastDischargeTickKey;
-    private final TaserDropPolicy dropPolicy;
     private final GuardianBeamRenderer guardianBeams;
     private final Set<UUID> activePlayers = new LinkedHashSet<>();
-    private final Set<String> createdTaserIds = new HashSet<>();
     private final Set<UUID> energizedRobotIds = new HashSet<>();
     private final Set<UUID> applyingDamageToRobotIds = new HashSet<>();
     private final Map<UUID, Long> lastPulseByPlayer = new HashMap<>();
@@ -77,18 +72,16 @@ final class TaserController implements AutoCloseable {
     TaserController(
             Plugin plugin,
             World world,
-            RandomGenerator random,
             Supplier<? extends Collection<Mob>> liveRobots,
             Predicate<Player> activeParticipant) {
         this.world = world;
-        this.random = random;
         this.liveRobots = liveRobots;
         this.activeParticipant = activeParticipant;
         this.taserIdKey = new NamespacedKey(plugin, "robo_rampage_taser_id");
         this.startingTaserKey = new NamespacedKey(plugin, "robo_rampage_starting_taser");
         this.chargeKey = new NamespacedKey(plugin, "robo_rampage_taser_charge");
+        this.levelKey = new NamespacedKey(plugin, "robo_rampage_taser_level");
         this.lastDischargeTickKey = new NamespacedKey(plugin, "robo_rampage_taser_last_discharge");
-        this.dropPolicy = new TaserDropPolicy(random);
         this.guardianBeams = new GuardianBeamRenderer(world);
     }
 
@@ -114,7 +107,7 @@ final class TaserController implements AutoCloseable {
                 player.playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.7F, 0.7F);
                 continue;
             }
-            NetworkSnapshot network = buildNetwork(player, charge, robotsById);
+            NetworkSnapshot network = buildNetwork(player, charge, level(taser), robotsById);
             if (network.edges().isEmpty()) continue;
 
             setCharge(taser, charge - TaserRules.CHARGE_DRAIN_PER_TICK);
@@ -165,48 +158,46 @@ final class TaserController implements AutoCloseable {
         return true;
     }
 
-    void recordRobotDeath(Location location, RobotType robotType, int participantCount) {
-        if (!dropPolicy.recordRobotDeath(
-                robotType, createdTaserIds.size(), participantCount, random)) return;
-
-        ItemStack taser = createTaser();
-        Item droppedTaser = world.dropItemNaturally(location.clone().add(0, 0.5, 0), taser);
-        droppedTaser.setGlowing(true);
-        droppedTaser.setCanMobPickup(false);
-        droppedTaser.setUnlimitedLifetime(true);
-        droppedTaser.setWillAge(false);
-        world.spawnParticle(Particle.ELECTRIC_SPARK, droppedTaser.getLocation(), 45, 0.5, 0.5, 0.5, 0.08);
-        world.playSound(droppedTaser.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0F, 1.5F);
-        for (Player viewer : world.getPlayers()) Messages.send(viewer, MessageKey.ROBO_RAMPAGE_TASER_DROPPED);
-    }
-
     boolean isApplyingDamageTo(UUID robotId) { return applyingDamageToRobotIds.contains(robotId); }
 
     boolean isEnergized(UUID robotId) { return energizedRobotIds.contains(robotId); }
 
     boolean isVisualBeamEntity(UUID entityId) { return guardianBeams.isHelper(entityId); }
 
-    int createdTaserCount() { return createdTaserIds.size(); }
-
-    int dropProgress() { return dropPolicy.accumulatedPoints(); }
-
-    int nextDropThreshold() { return dropPolicy.nextDropThreshold(); }
-
     ItemStack createStartingTaser(Player player) {
         String taserId = "starter:" + player.getUniqueId();
-        createdTaserIds.add(taserId);
         return createTaser(taserId, true);
+    }
+
+    boolean canUpgrade(Player player) {
+        return carriedTaser(player).map(carried -> level(carried.item())).orElse(TaserRules.MAXIMUM_LEVEL)
+                < TaserRules.MAXIMUM_LEVEL;
+    }
+
+    boolean upgradeCarriedTaser(Player player) {
+        var carriedTaser = carriedTaser(player);
+        if (carriedTaser.isEmpty()) return false;
+        ItemStack taser = carriedTaser.get().item();
+        int upgradedLevel = Math.min(TaserRules.MAXIMUM_LEVEL, level(taser) + 1);
+        if (upgradedLevel == level(taser)) {
+            Messages.send(player, MessageKey.ROBO_RAMPAGE_TASER_UPGRADE_MAXIMUM);
+            return false;
+        }
+        ItemMeta meta = taser.getItemMeta();
+        meta.getPersistentDataContainer().set(levelKey, PersistentDataType.INTEGER, upgradedLevel);
+        meta.getPersistentDataContainer().set(
+                chargeKey, PersistentDataType.INTEGER, TaserRules.maximumCharge(upgradedLevel));
+        taser.setItemMeta(meta);
+        player.getInventory().setItem(carriedTaser.get().slot(), taser);
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.0F, 1.6F);
+        Messages.send(player, MessageKey.ROBO_RAMPAGE_TASER_UPGRADED,
+                MessageArgument.number("level", upgradedLevel));
+        return true;
     }
 
     boolean isStartingTaser(ItemStack item) {
         return isTaser(item) && item.getItemMeta().getPersistentDataContainer()
                 .has(startingTaserKey, PersistentDataType.BYTE);
-    }
-
-    private ItemStack createTaser() {
-        String taserId = UUID.randomUUID().toString();
-        createdTaserIds.add(taserId);
-        return createTaser(taserId, false);
     }
 
     private ItemStack createTaser(String taserId, boolean startingTaser) {
@@ -220,7 +211,9 @@ final class TaserController implements AutoCloseable {
         if (startingTaser) {
             meta.getPersistentDataContainer().set(startingTaserKey, PersistentDataType.BYTE, (byte) 1);
         }
-        meta.getPersistentDataContainer().set(chargeKey, PersistentDataType.INTEGER, TaserRules.MAXIMUM_CHARGE);
+        meta.getPersistentDataContainer().set(levelKey, PersistentDataType.INTEGER, 1);
+        meta.getPersistentDataContainer().set(
+                chargeKey, PersistentDataType.INTEGER, TaserRules.maximumCharge(1));
         meta.getPersistentDataContainer().set(lastDischargeTickKey, PersistentDataType.LONG, Long.MIN_VALUE / 2);
         meta.setEnchantmentGlintOverride(true);
         meta.setMaxStackSize(1);
@@ -229,7 +222,8 @@ final class TaserController implements AutoCloseable {
         return taser;
     }
 
-    private NetworkSnapshot buildNetwork(Player player, int charge, Map<UUID, Mob> robotsById) {
+    private NetworkSnapshot buildNetwork(
+            Player player, int charge, int level, Map<UUID, Mob> robotsById) {
         Location sourceLocation = player.getEyeLocation();
         Point source = point(sourceLocation);
         List<ElectricNetwork.Target> targets = robotsById.values().stream()
@@ -238,7 +232,7 @@ final class TaserController implements AutoCloseable {
         List<Edge> edges = ElectricNetwork.build(
                 source,
                 targets,
-                TaserRules.maximumTargets(charge),
+                TaserRules.maximumTargets(charge, level),
                 TaserRules.SOURCE_RANGE,
                 TaserRules.JUMP_RANGE,
                 this::hasLineOfSight);
@@ -319,9 +313,9 @@ final class TaserController implements AutoCloseable {
         PlayerInventory inventory = player.getInventory();
         for (int slot = 0; slot < inventory.getSize(); slot++) {
             ItemStack item = inventory.getItem(slot);
-            if (!isTaser(item) || charge(item) >= TaserRules.MAXIMUM_CHARGE
+            if (!isTaser(item) || charge(item) >= TaserRules.maximumCharge(level(item))
                     || currentTick - lastDischargeTick(item) < TaserRules.RECHARGE_DELAY_TICKS
-                    || currentTick % TaserRules.RECHARGE_INTERVAL_TICKS != 0) continue;
+                    || currentTick % TaserRules.rechargeIntervalTicks(level(item)) != 0) continue;
             setCharge(item, charge(item) + 1);
             inventory.setItem(slot, item);
         }
@@ -334,7 +328,10 @@ final class TaserController implements AutoCloseable {
                 ? MessageKey.ROBO_RAMPAGE_TASER_CHARGE_ACTIVE
                 : MessageKey.ROBO_RAMPAGE_TASER_CHARGE_READY;
         player.sendActionBar(Messages.component(
-                player, key, MessageArgument.number("charge", charge(heldItem))));
+                player, key,
+                MessageArgument.number("level", level(heldItem)),
+                MessageArgument.number("charge", charge(heldItem)),
+                MessageArgument.number("maximum", TaserRules.maximumCharge(level(heldItem)))));
     }
 
     private Map<UUID, Mob> liveRobotMap() {
@@ -381,6 +378,20 @@ final class TaserController implements AutoCloseable {
                 .getOrDefault(chargeKey, PersistentDataType.INTEGER, 0);
     }
 
+    private int level(ItemStack item) {
+        return TaserRules.normalizedLevel(item.getItemMeta().getPersistentDataContainer()
+                .getOrDefault(levelKey, PersistentDataType.INTEGER, 1));
+    }
+
+    private java.util.Optional<CarriedTaser> carriedTaser(Player player) {
+        PlayerInventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            ItemStack item = inventory.getItem(slot);
+            if (isTaser(item)) return java.util.Optional.of(new CarriedTaser(slot, item));
+        }
+        return java.util.Optional.empty();
+    }
+
     private long lastDischargeTick(ItemStack item) {
         return item.getItemMeta().getPersistentDataContainer()
                 .getOrDefault(lastDischargeTickKey, PersistentDataType.LONG, Long.MIN_VALUE / 2);
@@ -390,7 +401,7 @@ final class TaserController implements AutoCloseable {
         ItemMeta meta = item.getItemMeta();
         meta.getPersistentDataContainer().set(
                 chargeKey, PersistentDataType.INTEGER,
-                Math.max(0, Math.min(TaserRules.MAXIMUM_CHARGE, charge)));
+                Math.max(0, Math.min(TaserRules.maximumCharge(level(item)), charge)));
         item.setItemMeta(meta);
     }
 
@@ -423,4 +434,6 @@ final class TaserController implements AutoCloseable {
     }
 
     private record NetworkSnapshot(Location source, List<Edge> edges, Map<UUID, Mob> robotsById) {}
+
+    private record CarriedTaser(int slot, ItemStack item) {}
 }

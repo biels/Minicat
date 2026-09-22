@@ -42,6 +42,14 @@
     },
     {
       "type": "text",
+      "key": "minicat.robo-rampage.score.wave",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Wave</aqua>",
+        "ca_ES": "[minimsg]<aqua>Onada</aqua>"
+      }
+    },
+    {
+      "type": "text",
       "key": "minicat.robo-rampage.junk.incoming",
       "languages": {
         "en_US": "[minimsg]<gold>Incoming junk! It will settle into a low part of the heap.</gold>",
@@ -60,8 +68,32 @@
       "type": "text",
       "key": "minicat.robo-rampage.info.taser",
       "languages": {
-        "en_US": "[minimsg]<aqua>Some robots drop Tasers that chain electricity and slowly recharge.</aqua>",
-        "ca_ES": "[minimsg]<aqua>Alguns robots deixen anar Tasers que encadenen electricitat i es recarreguen lentament.</aqua>"
+        "en_US": "[minimsg]<aqua>Your Taser chains electricity, recharges slowly, and improves with supply cores.</aqua>",
+        "ca_ES": "[minimsg]<aqua>El teu Taser encadena electricitat, es recarrega lentament i millora amb nuclis de subministrament.</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.supplies",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Clear each wave: fires go out and personal equipment and scaffolding fall at the center.</yellow>",
+        "ca_ES": "[minimsg]<yellow>Supera cada onada: el foc s'apaga i al centre cauen equipament personal i bastides.</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.wave.start",
+      "languages": {
+        "en_US": "[minimsg]<red><bold>Wave %1:</bold></red> <white>%2 robots incoming.</white>",
+        "ca_ES": "[minimsg]<red><bold>Onada %1:</bold></red> <white>arriben %2 robots.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.supply.incoming",
+      "languages": {
+        "en_US": "[minimsg]<green><bold>Wave %1 cleared!</bold></green> <yellow>Supplies are falling at the center. Wave resumes in %2 s.</yellow>",
+        "ca_ES": "[minimsg]<green><bold>Onada %1 superada!</bold></green> <yellow>Cauen subministraments al centre. L'onada torna en %2 s.</yellow>"
       }
     },
     {
@@ -90,26 +122,50 @@
     },
     {
       "type": "text",
-      "key": "minicat.robo-rampage.taser.dropped",
-      "languages": {
-        "en_US": "[minimsg]<aqua><bold>A Taser dropped from the wreckage!</bold></aqua>",
-        "ca_ES": "[minimsg]<aqua><bold>Ha caigut un Taser de les restes!</bold></aqua>"
-      }
-    },
-    {
-      "type": "text",
       "key": "minicat.robo-rampage.taser.charge.ready",
       "languages": {
-        "en_US": "[minimsg]<aqua>Taser charge: %1%</aqua>",
-        "ca_ES": "[minimsg]<aqua>Càrrega del Taser: %1%</aqua>"
+        "en_US": "[minimsg]<aqua>Taser L%1: %2/%3</aqua>",
+        "ca_ES": "[minimsg]<aqua>Taser N%1: %2/%3</aqua>"
       }
     },
     {
       "type": "text",
       "key": "minicat.robo-rampage.taser.charge.active",
       "languages": {
-        "en_US": "[minimsg]<yellow>Taser active: %1%</yellow>",
-        "ca_ES": "[minimsg]<yellow>Taser actiu: %1%</yellow>"
+        "en_US": "[minimsg]<yellow>Taser L%1 active: %2/%3</yellow>",
+        "ca_ES": "[minimsg]<yellow>Taser N%1 actiu: %2/%3</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.upgrade.name",
+      "languages": {
+        "en_US": "[minimsg]<aqua><bold>Taser Core</bold></aqua>",
+        "ca_ES": "[minimsg]<aqua><bold>Nucli de Taser</bold></aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.upgrade.lore",
+      "languages": {
+        "en_US": "[minimsg]<gray>Pick up to upgrade your Taser's charge, chaining, and recharge.</gray>",
+        "ca_ES": "[minimsg]<gray>Recull-lo per millorar la càrrega, els enllaços i la recàrrega del Taser.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.upgraded",
+      "languages": {
+        "en_US": "[minimsg]<aqua><bold>Taser upgraded to level %1.</bold></aqua>",
+        "ca_ES": "[minimsg]<aqua><bold>Taser millorat al nivell %1.</bold></aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.taser.upgrade.maximum",
+      "languages": {
+        "en_US": "[minimsg]<gray>Your Taser is already fully upgraded.</gray>",
+        "ca_ES": "[minimsg]<gray>El teu Taser ja està millorat al màxim.</gray>"
       }
     }
   ]
