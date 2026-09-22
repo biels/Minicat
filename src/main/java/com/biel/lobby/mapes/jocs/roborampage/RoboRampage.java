@@ -21,6 +21,7 @@ import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
+import org.bukkit.entity.Ghast;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -30,6 +31,7 @@ import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -49,6 +51,7 @@ import com.biel.lobby.mapes.JocCooperatiu;
 import com.biel.lobby.mapes.jocs.roborampage.utils.JunkDropPolicy;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.HelmetVariant;
+import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.GroundRobotProfile;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.LiveDeathReward;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.RobotCounts;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules.RobotType;
@@ -72,6 +75,7 @@ public class RoboRampage extends JocCooperatiu {
     private TaserController tasers;
     private SupplyDropController supplyDrops;
     private ScaffoldController scaffolds;
+    private GhastMetalProjectileController ghastProjectiles;
     private int displayedScrapHeight;
     private int waveNumber;
     private int waveRobotQuota;
@@ -118,10 +122,12 @@ public class RoboRampage extends JocCooperatiu {
         supplyDrops = new SupplyDropController(Com.getPlugin(), world, random, tasers);
         scaffolds = new ScaffoldController(
                 world, battleCenter(), ARENA_RADIUS, this::targetHeight, this::liveRobotMobs);
+        ghastProjectiles = new GhastMetalProjectileController(world);
         scheduleGameplayRepeatingTask(scrapDrops::tick, 1, 1);
         scheduleGameplayRepeatingTask(tasers::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::tickSupplyPhase, 1, 1);
         scheduleGameplayRepeatingTask(scaffolds::tickRobotDamage, 20, 20);
+        scheduleGameplayRepeatingTask(ghastProjectiles::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::runDirector, 1, 40);
         scheduleGameplayRepeatingTask(this::sampleProgress, 20, 20);
         announceWaveStart();
@@ -148,6 +154,7 @@ public class RoboRampage extends JocCooperatiu {
         }
         if (supplyDrops != null) supplyDrops.close();
         if (scaffolds != null) scaffolds.close();
+        if (ghastProjectiles != null) ghastProjectiles.close();
         for (UUID robotId : new ArrayList<>(robots.keySet())) {
             Entity entity = Bukkit.getEntity(robotId);
             if (entity != null && entity.isValid()) entity.remove();
@@ -175,6 +182,7 @@ public class RoboRampage extends JocCooperatiu {
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_JUNK),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_TASER),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_SUPPLIES),
+                Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_ENEMIES),
                 Messages.legacy(player, MessageKey.ROBO_RAMPAGE_INFO_GOAL,
                         MessageArgument.number("height", targetHeight()))));
     }
@@ -205,7 +213,7 @@ public class RoboRampage extends JocCooperatiu {
     private void runDirector() {
         if (!JocEnMarxa() || scrapDrops == null) return;
         removeMissingRobots();
-        keepBlazesReachable();
+        keepFlyingRobotsReachable();
         if (wavePhase == WavePhase.SUPPLY) return;
         if (wavePhase == WavePhase.CLEANUP) {
             if (robots.isEmpty()) beginSupplyPhase();
@@ -219,8 +227,9 @@ public class RoboRampage extends JocCooperatiu {
         int playerCount = Math.max(1, getPlayers().size());
         RobotCounts counts = robotCounts();
         RoboRampageRules.chooseSpawn(
-                RoboRampageRules.liveSpawnLimits(scrapDrops.settledHeight(), playerCount), counts, random)
-                .flatMap(type -> findSpawnLocation().map(location -> new SpawnRequest(type, location)))
+                RoboRampageRules.liveSpawnLimits(
+                        scrapDrops.settledHeight(), playerCount, waveNumber), counts, random)
+                .flatMap(type -> findSpawnLocation(type).map(location -> new SpawnRequest(type, location)))
                 .ifPresent(request -> {
                     spawnRobot(request.type(), request.location());
                     robotsSpawnedThisWave++;
@@ -231,6 +240,7 @@ public class RoboRampage extends JocCooperatiu {
         wavePhase = WavePhase.SUPPLY;
         supplyTicksRemaining = SUPPLY_DURATION_TICKS;
         extinguishArena();
+        ghastProjectiles.clear();
         supplyDrops.dropWaveSupplies(battleCenter(), waveNumber, getPlayers());
         broadcast(MessageKey.ROBO_RAMPAGE_SUPPLY_INCOMING,
                 MessageArgument.number("wave", waveNumber),
@@ -277,7 +287,11 @@ public class RoboRampage extends JocCooperatiu {
         }
     }
 
-    private Optional<Location> findSpawnLocation() {
+    private Optional<Location> findSpawnLocation(RobotType type) {
+        return type == RobotType.GHAST ? findGhastSpawnLocation() : findGroundSpawnLocation();
+    }
+
+    private Optional<Location> findGroundSpawnLocation() {
         Location center = battleCenter();
         for (int attempt = 0; attempt < SPAWN_ATTEMPTS; attempt++) {
             int x = center.getBlockX() + random.nextInt(-ARENA_RADIUS, ARENA_RADIUS + 1);
@@ -288,6 +302,29 @@ public class RoboRampage extends JocCooperatiu {
             boolean tooClose = getPlayers().stream().anyMatch(player ->
                     player.getWorld() == world && player.getLocation().distanceSquared(spawn) < 16);
             if (!tooClose) return Optional.of(spawn);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<Location> findGhastSpawnLocation() {
+        Location center = battleCenter();
+        for (int attempt = 0; attempt < SPAWN_ATTEMPTS; attempt++) {
+            int x = center.getBlockX() + random.nextInt(-3, 4);
+            int z = center.getBlockZ() + random.nextInt(-3, 4);
+            int y = Math.min(world.getMaxHeight() - 5,
+                    world.getHighestBlockYAt(x, z) + 8 + random.nextInt(0, 4));
+            boolean obstructed = false;
+            for (int offsetX = -2; offsetX <= 2 && !obstructed; offsetX++) {
+                for (int offsetY = -2; offsetY <= 2 && !obstructed; offsetY++) {
+                    for (int offsetZ = -2; offsetZ <= 2; offsetZ++) {
+                        if (!world.getBlockAt(x + offsetX, y + offsetY, z + offsetZ).isEmpty()) {
+                            obstructed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!obstructed) return Optional.of(new Location(world, x + 0.5, y, z + 0.5));
         }
         return Optional.empty();
     }
@@ -311,11 +348,22 @@ public class RoboRampage extends JocCooperatiu {
                 prepareMob(blaze);
                 rememberRobot(blaze, type, HelmetVariant.IRON_HELMET);
             }
+            case GHAST -> {
+                Ghast ghast = (Ghast) world.spawnEntity(location, EntityType.GHAST);
+                prepareMob(ghast);
+                var maximumHealth = ghast.getAttribute(Attribute.MAX_HEALTH);
+                if (maximumHealth != null) {
+                    maximumHealth.setBaseValue(30);
+                    ghast.setHealth(30);
+                }
+                rememberRobot(ghast, type, HelmetVariant.IRON_HELMET);
+            }
         }
     }
 
     private void equipGroundRobot(Mob robot, HelmetVariant helmet) {
         prepareMob(robot);
+        applyGroundRobotProfile(robot, RoboRampageRules.groundRobotProfile(helmet));
         EntityEquipment equipment = robot.getEquipment();
         equipment.setBoots(new ItemStack(Material.IRON_BOOTS));
         equipment.setLeggings(new ItemStack(Material.IRON_LEGGINGS));
@@ -327,6 +375,20 @@ public class RoboRampage extends JocCooperatiu {
         equipment.setChestplateDropChance(0);
         equipment.setItemInMainHandDropChance(0);
         equipment.setHelmetDropChance(0);
+    }
+
+    private void applyGroundRobotProfile(Mob robot, GroundRobotProfile profile) {
+        var maximumHealth = robot.getAttribute(Attribute.MAX_HEALTH);
+        if (maximumHealth != null) {
+            maximumHealth.setBaseValue(profile.maximumHealth());
+            robot.setHealth(profile.maximumHealth());
+        }
+        var movementSpeed = robot.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (movementSpeed != null) movementSpeed.setBaseValue(profile.movementSpeed());
+        var knockbackResistance = robot.getAttribute(Attribute.KNOCKBACK_RESISTANCE);
+        if (knockbackResistance != null) {
+            knockbackResistance.setBaseValue(profile.knockbackResistance());
+        }
     }
 
     private void prepareMob(Mob robot) {
@@ -352,14 +414,16 @@ public class RoboRampage extends JocCooperatiu {
         int zombies = 0;
         int skeletons = 0;
         int blazes = 0;
+        int ghasts = 0;
         for (RobotState state : robots.values()) {
             switch (state.type()) {
                 case ZOMBIE -> zombies++;
                 case SKELETON -> skeletons++;
                 case BLAZE -> blazes++;
+                case GHAST -> ghasts++;
             }
         }
-        return new RobotCounts(zombies, skeletons, blazes);
+        return new RobotCounts(zombies, skeletons, blazes, ghasts);
     }
 
     private void removeMissingRobots() {
@@ -369,15 +433,17 @@ public class RoboRampage extends JocCooperatiu {
         });
     }
 
-    private void keepBlazesReachable() {
-        double ceiling = battleCenter().getY() + scrapDrops.settledHeight() + 6;
+    private void keepFlyingRobotsReachable() {
+        double baseCeiling = battleCenter().getY() + scrapDrops.settledHeight();
         for (Map.Entry<UUID, RobotState> entry : robots.entrySet()) {
-            if (entry.getValue().type() != RobotType.BLAZE) continue;
             Entity entity = Bukkit.getEntity(entry.getKey());
-            if (!(entity instanceof Blaze blaze) || blaze.getLocation().getY() <= ceiling) continue;
-            Vector velocity = blaze.getVelocity();
-            blaze.setVelocity(new Vector(velocity.getX() * 0.4, -0.35, velocity.getZ() * 0.4));
-            nearestPlayer(blaze).ifPresent(blaze::setTarget);
+            double ceiling = baseCeiling + (entry.getValue().type() == RobotType.GHAST ? 11 : 6);
+            if (!(entity instanceof Mob flyingRobot) || flyingRobot.getLocation().getY() <= ceiling
+                    || (entry.getValue().type() != RobotType.BLAZE
+                    && entry.getValue().type() != RobotType.GHAST)) continue;
+            Vector velocity = flyingRobot.getVelocity();
+            flyingRobot.setVelocity(new Vector(velocity.getX() * 0.4, -0.35, velocity.getZ() * 0.4));
+            nearestPlayer(flyingRobot).ifPresent(flyingRobot::setTarget);
         }
     }
 
@@ -389,9 +455,11 @@ public class RoboRampage extends JocCooperatiu {
         event.getDrops().clear();
         event.setDroppedExp(0);
         boolean criticalKill = criticalKillCandidates.remove(entity.getUniqueId());
-        LiveDeathReward reward = state.type() == RobotType.BLAZE
-                ? RoboRampageRules.liveBlazeReward()
-                : RoboRampageRules.liveGroundRobotReward(state.helmet());
+        LiveDeathReward reward = switch (state.type()) {
+            case BLAZE -> RoboRampageRules.liveBlazeReward();
+            case GHAST -> RoboRampageRules.liveGhastReward();
+            case ZOMBIE, SKELETON -> RoboRampageRules.liveGroundRobotReward(state.helmet());
+        };
         int blockCount = reward.rollBlockCount(random, criticalKill);
         enqueueScrap(entity.getLocation(), reward.scrapMaterial());
         for (int block = 1; block < blockCount; block++) {
@@ -473,9 +541,24 @@ public class RoboRampage extends JocCooperatiu {
     @Override
     protected void onProjectileLaunch(ProjectileLaunchEvent event, Projectile projectile) {
         super.onProjectileLaunch(event, projectile);
-        if (!(projectile instanceof Fireball) || tasers == null) return;
+        if (!(projectile instanceof Fireball)) return;
         ProjectileSource shooter = projectile.getShooter();
-        if (shooter instanceof Entity entity && tasers.isEnergized(entity.getUniqueId())) event.setCancelled(true);
+        if (!(shooter instanceof Entity entity)) return;
+        if (tasers != null && tasers.isEnergized(entity.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
+        RobotState robot = robots.get(entity.getUniqueId());
+        if (robot == null || robot.type() != RobotType.GHAST || !(entity instanceof Ghast ghast)
+                || ghastProjectiles == null) return;
+        event.setCancelled(true);
+        nearestPlayer(ghast).ifPresent(target -> ghastProjectiles.launch(ghast, target));
+    }
+
+    @Override
+    protected void onProjectileHit(ProjectileHitEvent event, Projectile projectile) {
+        super.onProjectileHit(event, projectile);
+        if (ghastProjectiles != null) ghastProjectiles.handleHit(event, projectile);
     }
 
     @Override

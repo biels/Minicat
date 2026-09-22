@@ -82,6 +82,14 @@
     },
     {
       "type": "text",
+      "key": "minicat.robo-rampage.info.enemies",
+      "languages": {
+        "en_US": "[minimsg]<gold>Later waves unlock new robot chassis. Ghasts throw iron blocks and release a large scrap payload.</gold>",
+        "ca_ES": "[minimsg]<gold>Les onades posteriors desbloquegen nous xassissos. Els Ghasts llancen blocs de ferro i alliberen molta ferralla.</gold>"
+      }
+    },
+    {
+      "type": "text",
       "key": "minicat.robo-rampage.wave.start",
       "languages": {
         "en_US": "[minimsg]<red><bold>Wave %1:</bold></red> <white>%2 robots incoming.</white>",

@@ -15,12 +15,13 @@ public final class RoboRampageRules {
     private static final int MAX_ZOMBIES = 10;
     private static final int MAX_SKELETONS = 6;
     private static final int MAX_BLAZES = 4;
+    private static final int MAX_GHASTS = 2;
     private static final int MAX_ROBOTS = 24;
     private static final int MAX_WAVE_ROBOTS = 30;
 
     private RoboRampageRules() {}
 
-    public enum RobotType { ZOMBIE, SKELETON, BLAZE }
+    public enum RobotType { ZOMBIE, SKELETON, BLAZE, GHAST }
 
     public enum WavePhase { ASSAULT, CLEANUP, SUPPLY }
 
@@ -51,24 +52,29 @@ public final class RoboRampageRules {
         }
     }
 
-    public record RobotCounts(int zombies, int skeletons, int blazes) {
-        public int total() { return zombies + skeletons + blazes; }
+    public record GroundRobotProfile(
+            double maximumHealth, double movementSpeed, double knockbackResistance) {}
+
+    public record RobotCounts(int zombies, int skeletons, int blazes, int ghasts) {
+        public int total() { return zombies + skeletons + blazes + ghasts; }
 
         public int count(RobotType type) {
             return switch (type) {
                 case ZOMBIE -> zombies;
                 case SKELETON -> skeletons;
                 case BLAZE -> blazes;
+                case GHAST -> ghasts;
             };
         }
     }
 
-    public record SpawnLimits(int zombies, int skeletons, int blazes, int total) {
+    public record SpawnLimits(int zombies, int skeletons, int blazes, int ghasts, int total) {
         public int limit(RobotType type) {
             return switch (type) {
                 case ZOMBIE -> zombies;
                 case SKELETON -> skeletons;
                 case BLAZE -> blazes;
+                case GHAST -> ghasts;
             };
         }
     }
@@ -79,18 +85,26 @@ public final class RoboRampageRules {
         int zombies = height / 2 + 2;
         int skeletons = height / 2;
         int blazes = height / 3;
-        return new SpawnLimits(zombies, skeletons, blazes, zombies + skeletons + blazes);
+        return new SpawnLimits(zombies, skeletons, blazes, 0, zombies + skeletons + blazes);
     }
 
-    /** Keeps the old height curve and unlock order while preventing runaway entity counts. */
+    /** Keeps the old height curve while waves provide predictable chassis unlocks. */
     public static SpawnLimits liveSpawnLimits(int scrapHeight, int playerCount) {
+        return liveSpawnLimits(scrapHeight, playerCount, Integer.MAX_VALUE);
+    }
+
+    public static SpawnLimits liveSpawnLimits(int scrapHeight, int playerCount, int waveNumber) {
         SpawnLimits legacy = legacySpawnLimits(scrapHeight);
         int players = Math.max(1, playerCount);
+        int wave = Math.max(1, waveNumber);
         int zombies = Math.min(MAX_ZOMBIES, legacy.zombies() + players - 1);
-        int skeletons = Math.min(MAX_SKELETONS, legacy.skeletons() + (players - 1) / 2);
-        int blazes = Math.min(MAX_BLAZES, legacy.blazes());
+        int skeletons = wave >= 2
+                ? Math.max(1, Math.min(MAX_SKELETONS, legacy.skeletons() + (players - 1) / 2))
+                : 0;
+        int blazes = wave >= 3 ? Math.max(1, Math.min(MAX_BLAZES, legacy.blazes())) : 0;
+        int ghasts = wave >= 4 ? Math.min(MAX_GHASTS, 1 + Math.max(0, wave - 7) / 4) : 0;
         int total = Math.min(MAX_ROBOTS, 6 + players * 4);
-        return new SpawnLimits(zombies, skeletons, blazes, total);
+        return new SpawnLimits(zombies, skeletons, blazes, ghasts, total);
     }
 
     /** One bounded decision replaces the original main-thread-blocking while(true) loop. */
@@ -114,6 +128,16 @@ public final class RoboRampageRules {
 
     public static int scaffoldingPerPlayer(int waveNumber) {
         return 8 + Math.min(4, Math.max(1, waveNumber)) * 2;
+    }
+
+    /** Minimal material-driven identities; advanced behaviors remain separate from equipment rewards. */
+    public static GroundRobotProfile groundRobotProfile(HelmetVariant helmet) {
+        return switch (helmet) {
+            case IRON_HELMET -> new GroundRobotProfile(20, 0.23, 0);
+            case IRON_BLOCK -> new GroundRobotProfile(36, 0.17, 0.65);
+            case REDSTONE_BLOCK -> new GroundRobotProfile(16, 0.32, 0.1);
+            case LAPIS_BLOCK -> new GroundRobotProfile(22, 0.24, 0.15);
+        };
     }
 
     /** The old code rolled in order; later successful rolls overwrite earlier helmets. */
@@ -172,6 +196,10 @@ public final class RoboRampageRules {
                 2,
                 2,
                 recoveredReward.extinguishKiller());
+    }
+
+    public static LiveDeathReward liveGhastReward() {
+        return new LiveDeathReward(ScrapMaterial.IRON, PowerUp.NONE, 8, 12, false);
     }
 
     /** Mirrors Utils.Possibilitat: its historical random range is [0, 101), not [0, 100). */

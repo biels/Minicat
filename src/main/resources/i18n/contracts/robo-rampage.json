@@ -70,6 +70,13 @@
       "surfaces": ["chat"],
       "maxTemplateCharacters": 220
     },
+    "minicat.robo-rampage.info.enemies": {
+      "constant": "ROBO_RAMPAGE_INFO_ENEMIES",
+      "purpose": "Explain wave-based chassis unlocks and scrap-rich Ghasts.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
     "minicat.robo-rampage.wave.start": {
       "constant": "ROBO_RAMPAGE_WAVE_START",
       "purpose": "Announce a finite assault wave and its robot quota.",
