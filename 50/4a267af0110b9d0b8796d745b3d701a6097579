@@ -1,0 +1,92 @@
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/DemolitionController.java
+  s_7742297e629992::t_00c804f1821b5d 58,64-69,77
+  s_7742297e629992::t_23a7b7ddd26ffe 82
+  s_7742297e629992::t_49d886dc54d36b 166,170-171,179
+  s_7742297e629992::t_10bd16bf903f67 12,14-15,35,39,41,52,54,59,62-63,76,83,141-145,148-154,172-178,180-212,220,232,245,254
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/DemolitionControllerTest.java
+  s_7742297e629992::t_49d886dc54d36b 138-145,294,298-301
+  s_7742297e629992::t_ac1c65a4e41031 16-18,56,65,68-69,73,78-137,146-162,213,220,227-251,254-255,257-260,274-276,282-293,295-297,302
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/DemolitionRulesTest.java
+  s_7742297e629992::t_b59087cf5540bc 35
+  s_7742297e629992::t_ac1c65a4e41031 1-34,36-49
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/SpringRobotController.java
+  s_7742297e629992::t_c162c0a07c1b2f 1-130
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRulesTest.java
+  s_7742297e629992::t_67c4f2fc38665b 13-45
+  s_7742297e629992::t_22016187e34637 56-61,73-75,79-82,151,165-170,188,222-224
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/SpringRobotControllerTest.java
+  s_7742297e629992::t_35dbeae3685cb7 118-119
+  s_7742297e629992::t_c75047bb1be428 1-117,120-145
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/SpringRobotCycleTest.java
+  s_7742297e629992::t_67c4f2fc38665b 1-40
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/TaserRules.java
+  s_7742297e629992::t_36542150d8ee95 8-9,11
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/CompactorCycle.java
+  s_7742297e629992::t_79c73873a62b7b 65,68
+docs/games/robo-rampage-improvements.md
+  s_7742297e629992::t_b3a55590155c09 1-83
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/JetpackRules.java
+  s_7742297e629992::t_6f8289ab85e41f 17,47,51,59,76
+  s_7742297e629992::t_cd650a8c4879a0 18,38-41,46,52-58,77
+  s_7742297e629992::t_861b90098f363e 1-16,19-37,42-45,48-50,60-75,78-81
+src/main/resources/i18n/contracts/robo-rampage.json
+  s_7742297e629992::t_1b6a9ce516427f 7-9,16-18,24-32,39-41,48-50,57-59,66-68,74-83,88,90-92,97,99-101,107-119,125-138,145-147,154-156,163-165,171-187,193-209,216-218,225-227,233-241,248-250,255,257-259,273,276-277,279,283,286-287,289,358-673
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/TeamLives.java
+  s_7742297e629992::t_eab7bb0ceffda3 1-42
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/TeamLivesTest.java
+  s_7742297e629992::t_eab7bb0ceffda3 1-51
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/CompactorCycleTest.java
+  s_7742297e629992::t_22016187e34637 22,76-77
+src/main/resources/i18n/translations/robo-rampage.json
+  s_7742297e629992::t_1b6a9ce516427f 71-72,79-80,175-176,191-192,199-200,258-286,289-505
+  s_7742297e629992::t_cb64405940a8b0 287-288
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/RoboRampageRules.java
+  s_7742297e629992::t_79c73873a62b7b 16-23,27,61-66,75,81-85,93,130-149,155-159,161-163,176,186-189,194-198,210,213
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/TaserRulesTest.java
+  s_7742297e629992::t_321347fda32946 4,36
+  s_7742297e629992::t_36542150d8ee95 24,34-35,37-41
+  s_7742297e629992::t_2bfc7314305d4b 42
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/IntroductionController.java
+  s_7742297e629992::t_eab7bb0ceffda3 1-9,11-21,25-30,44-45,49-53,57-61,64-66
+  s_7742297e629992::t_36542150d8ee95 10,22-24,31-43,46-48,54-56,62-63
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/JetpackController.java
+  s_7742297e629992::t_861b90098f363e 1-168
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/utils/JetpackRulesTest.java
+  s_7742297e629992::t_cd650a8c4879a0 71,73-83
+  s_7742297e629992::t_6f8289ab85e41f 1-70,72,84-97
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/JetpackControllerTest.java
+  s_7742297e629992::t_e29b2f836b3a7a 176-180
+  s_7742297e629992::t_6f8289ab85e41f 1-175,181-204
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/IntroductionControllerTest.java
+  s_7742297e629992::t_dad6e2f109d290 1-46
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampage.java
+  s_7742297e629992::t_295c65efed2f72 33-34,68,71,77,83,89-91,113,121-124,130,134-136,147,164-172,174-175,185-187,191,218-220,247-249,259-265,270-271,277,307-308,323-324,547,588,596,600,654,685-686,789,849,925,958
+  s_7742297e629992::t_321347fda32946 536
+  s_7742297e629992::t_768c1491b081e4 451-452,458-459,466,469-476,487-488,555-579,841-847,850-915
+  s_7742297e629992::t_ee078331ff9785 8,553-554
+src/test/java/com/biel/lobby/mapes/jocs/roborampage/RoboRampageLifecycleTest.java
+  s_7742297e629992::t_72c848b79716d0 1-13,16-19,22-27,36-161
+  s_7742297e629992::t_059745e58765ca 14-15,20-21,28-35
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/package-info.java
+  s_7742297e629992::t_dad6e2f109d290 3-5
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/SpringRobotCycle.java
+  s_7742297e629992::t_c162c0a07c1b2f 1-32
+src/main/java/com/biel/lobby/mapes/jocs/roborampage/utils/DemolitionRules.java
+  s_7742297e629992::t_10bd16bf903f67 1-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "504a267af0110b9d0b8796d745b3d701a6097579",
+  "prompts": {},
+  "sessions": {
+    "s_7742297e629992": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ef12-a34f-7a11-921a-8238c71a28b5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
