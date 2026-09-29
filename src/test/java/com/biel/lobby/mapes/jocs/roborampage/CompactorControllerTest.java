@@ -23,7 +23,7 @@ class CompactorControllerTest {
             Fixture f = new Fixture();
             f.tick(60);
             assertFalse(f.ai);
-            assertEquals(BossBar.Color.YELLOW, f.bars.getFirst().color());
+            assertEquals(BossBar.Color.RED, f.bars.getFirst().color());
             switch (scenario) {
                 case 1 -> f.grounded = false;
                 case 2 -> f.lineOfSight = false;
@@ -34,7 +34,7 @@ class CompactorControllerTest {
             assertEquals(scenario == 0 ? List.of(30.0) : List.of(), f.damage);
             if (scenario == 0) {
                 assertEquals(1.5, f.controller.incomingDamageMultiplier());
-                assertEquals(BossBar.Color.GREEN, f.bars.getFirst().color());
+                assertEquals(BossBar.Color.RED, f.bars.getFirst().color());
                 assertEquals(1, f.knockbacks);
             }
         }
@@ -56,7 +56,7 @@ class CompactorControllerTest {
         interrupted.tick(10);
         assertTrue(interrupted.throwsAt.isEmpty());
         assertEquals(1.5, interrupted.controller.incomingDamageMultiplier());
-        assertEquals(BossBar.Color.GREEN, interrupted.bars.getFirst().color());
+        assertEquals(BossBar.Color.RED, interrupted.bars.getFirst().color());
     }
 
     @Test void losingTargetCancelsWarningAndCleanupRemovesBarsAndRestoresAI() {
@@ -89,6 +89,26 @@ class CompactorControllerTest {
         f.tick(1);
         assertEquals(1, f.hiddenBars);
         assertFalse(f.controller.owns(f.bossId));
+    }
+
+    @Test void bossBarShowsOnlyTheNameAndHealthThroughWarningsRecoveryAndEnrage() {
+        Fixture f = new Fixture();
+        f.tick(60);
+        BossBar bar = f.bars.getFirst();
+        Component name = Component.text("ROBO_RAMPAGE_BOSS_BAR");
+        assertEquals(name, bar.name());
+        assertEquals(1, bar.progress());
+        f.health = 120;
+        f.tick(30);
+        assertEquals(0.5, bar.progress());
+        assertEquals(name, bar.name());
+        assertEquals(BossBar.Color.RED, bar.color());
+        f.energized = true;
+        f.tick(100);
+        assertEquals(name, bar.name());
+        assertEquals(0.5, bar.progress());
+        assertEquals(BossBar.Color.RED, bar.color());
+        assertEquals(1, f.bars.size(), "state transitions reuse the player's health bar");
     }
 
     private static final class Fixture {

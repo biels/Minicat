@@ -11,12 +11,12 @@
     },
     "minicat.robo-rampage.info.junk": {
       "constant": "ROBO_RAMPAGE_INFO_JUNK",
-      "purpose": "Explain occasional unevenness-triggered junk deliveries.",
+      "purpose": "Brief status caption: Uneven scrap attracts bulky junk.",
       "arguments": [],
       "surfaces": [
-        "chat"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 220
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.info.goal": {
       "constant": "ROBO_RAMPAGE_INFO_GOAL",
@@ -78,28 +78,27 @@
         }
       ],
       "surfaces": [
-        "chat",
-        "title"
+        "chat"
       ],
       "maxTemplateCharacters": 220
     },
     "minicat.robo-rampage.info.taser": {
       "constant": "ROBO_RAMPAGE_INFO_TASER",
-      "purpose": "<aqua>Right-click the Taser to toggle chain lightning; switch to your sword while it recharges.</aqua>",
+      "purpose": "Brief status caption: Taser: right-click to toggle; chains drain faster.",
       "arguments": [],
       "surfaces": [
-        "chat"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 220
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.info.supplies": {
       "constant": "ROBO_RAMPAGE_INFO_SUPPLIES",
-      "purpose": "<yellow>Between waves, collect your glowing supplies at the center: Taser cores, equipment, TNT and scaffolds.</yellow>",
+      "purpose": "Brief status caption: Collect your glowing supplies during the break.",
       "arguments": [],
       "surfaces": [
-        "chat"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 220
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.wave.start": {
       "constant": "ROBO_RAMPAGE_WAVE_START",
@@ -133,8 +132,7 @@
         }
       ],
       "surfaces": [
-        "chat",
-        "title"
+        "chat"
       ],
       "maxTemplateCharacters": 180
     },
@@ -158,7 +156,7 @@
     },
     "minicat.robo-rampage.taser.lore.charge": {
       "constant": "ROBO_RAMPAGE_TASER_LORE_CHARGE",
-      "purpose": "Explain how Taser charge affects targets and recovers.",
+      "purpose": "Explain per-robot charge drain and weapon-switch recharge.",
       "arguments": [],
       "surfaces": [
         "item"
@@ -252,12 +250,12 @@
     },
     "minicat.robo-rampage.info.tnt": {
       "constant": "ROBO_RAMPAGE_INFO_TNT",
-      "purpose": "<gold>Place TNT and light it with flint and steel: it blasts robots and lifts everyone nearby without hurting players.</gold>",
+      "purpose": "Brief status caption: TNT: blasts robots and lifts allies safely.",
       "arguments": [],
       "surfaces": [
-        "chat"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 220
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.tnt.limit": {
       "constant": "ROBO_RAMPAGE_TNT_LIMIT",
@@ -270,23 +268,21 @@
     },
     "minicat.robo-rampage.info.cutter": {
       "constant": "ROBO_RAMPAGE_INFO_CUTTER",
-      "purpose": "Stop its saw with the Taser, or leave the scaffold before it cuts.",
+      "purpose": "Brief status caption: Cutter: jump away before its saw cuts the scaffold.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.info.boss": {
       "constant": "ROBO_RAMPAGE_INFO_BOSS",
-      "purpose": "Jump over its slam; attack when its armor opens or interrupt with the Taser.",
+      "purpose": "Brief status caption: Compactor: dodge its slam; strike when its armor opens.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.boss.start": {
       "constant": "ROBO_RAMPAGE_BOSS_START",
@@ -313,43 +309,7 @@
     },
     "minicat.robo-rampage.boss.bar": {
       "constant": "ROBO_RAMPAGE_BOSS_BAR",
-      "purpose": "Describe the Compactor encounter state.",
-      "arguments": [],
-      "surfaces": [
-        "bossbar"
-      ],
-      "maxTemplateCharacters": 90
-    },
-    "minicat.robo-rampage.boss.bar.slam": {
-      "constant": "ROBO_RAMPAGE_BOSS_BAR_SLAM",
-      "purpose": "Describe the Compactor encounter state.",
-      "arguments": [],
-      "surfaces": [
-        "bossbar"
-      ],
-      "maxTemplateCharacters": 90
-    },
-    "minicat.robo-rampage.boss.bar.throw": {
-      "constant": "ROBO_RAMPAGE_BOSS_BAR_THROW",
-      "purpose": "Describe the Compactor encounter state.",
-      "arguments": [],
-      "surfaces": [
-        "bossbar"
-      ],
-      "maxTemplateCharacters": 90
-    },
-    "minicat.robo-rampage.boss.bar.exposed": {
-      "constant": "ROBO_RAMPAGE_BOSS_BAR_EXPOSED",
-      "purpose": "Describe the Compactor encounter state.",
-      "arguments": [],
-      "surfaces": [
-        "bossbar"
-      ],
-      "maxTemplateCharacters": 90
-    },
-    "minicat.robo-rampage.boss.bar.enraged": {
-      "constant": "ROBO_RAMPAGE_BOSS_BAR_ENRAGED",
-      "purpose": "Describe the Compactor encounter state.",
+      "purpose": "Name the Compactor above its health bar.",
       "arguments": [],
       "surfaces": [
         "bossbar"
@@ -367,12 +327,12 @@
     },
     "minicat.robo-rampage.info.jetpack": {
       "constant": "ROBO_RAMPAGE_INFO_JETPACK",
-      "purpose": "<aqua>Right-click the Jetpack feather to toggle thrust; switch items to stop, and land to recharge.</aqua>",
+      "purpose": "Brief status caption: Jetpack: right-click to fly; land to recharge.",
       "arguments": [],
       "surfaces": [
-        "chat"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 220
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.score.lives": {
       "constant": "ROBO_RAMPAGE_SCORE_LIVES",
@@ -434,180 +394,81 @@
       "purpose": "<red><bold>The team is out of lives.</bold></red> The climb ends here.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "chat"
       ],
       "maxTemplateCharacters": 140
-    },
-    "minicat.robo-rampage.enemy.worker": {
-      "constant": "ROBO_RAMPAGE_ENEMY_WORKER",
-      "purpose": "<gold>Worker</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
     },
     "minicat.robo-rampage.intro.worker": {
       "constant": "ROBO_RAMPAGE_INTRO_WORKER",
-      "purpose": "Slash it with your sword; its wreckage becomes climbing terrain.",
+      "purpose": "Brief status caption: Worker: slash it for climbing scrap.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
-    },
-    "minicat.robo-rampage.enemy.guard": {
-      "constant": "ROBO_RAMPAGE_ENEMY_GUARD",
-      "purpose": "<gold>Guard</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.intro.guard": {
       "constant": "ROBO_RAMPAGE_INTRO_GUARD",
-      "purpose": "This skeleton carries a sword; keep moving and use the Taser for groups.",
+      "purpose": "Brief status caption: Guard: carries a sword. Keep moving.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
-    },
-    "minicat.robo-rampage.enemy.springer": {
-      "constant": "ROBO_RAMPAGE_ENEMY_SPRINGER",
-      "purpose": "<gold>Springer</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.intro.springer": {
       "constant": "ROBO_RAMPAGE_INTRO_SPRINGER",
-      "purpose": "Its springs wind up before a hop; dodge sideways or stop it with the Taser.",
+      "purpose": "Brief status caption: Springer: jumps onto platforms. Dodge sideways.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
-    },
-    "minicat.robo-rampage.enemy.cutter": {
-      "constant": "ROBO_RAMPAGE_ENEMY_CUTTER",
-      "purpose": "<gold>Cutter</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
-    },
-    "minicat.robo-rampage.enemy.drone": {
-      "constant": "ROBO_RAMPAGE_ENEMY_DRONE",
-      "purpose": "<gold>Gold Drone</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.intro.drone": {
       "constant": "ROBO_RAMPAGE_INTRO_DRONE",
-      "purpose": "It throws fire; connect your Taser to stop its shots.",
+      "purpose": "Brief status caption: Gold Drone: dodge its fire or interrupt with the Taser.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
-    },
-    "minicat.robo-rampage.enemy.ghast": {
-      "constant": "ROBO_RAMPAGE_ENEMY_GHAST",
-      "purpose": "<gold>Iron Artillery</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.intro.ghast": {
       "constant": "ROBO_RAMPAGE_INTRO_GHAST",
-      "purpose": "Dodge its iron shots, then use your bow or Taser to bring it down.",
+      "purpose": "Brief status caption: Iron Artillery: dodge its shots; aim with your bow.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
-    },
-    "minicat.robo-rampage.enemy.compactor": {
-      "constant": "ROBO_RAMPAGE_ENEMY_COMPACTOR",
-      "purpose": "<gold>Compactor</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
-    },
-    "minicat.robo-rampage.enemy.heavy": {
-      "constant": "ROBO_RAMPAGE_ENEMY_HEAVY",
-      "purpose": "<gold>Heavy</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.intro.heavy": {
       "constant": "ROBO_RAMPAGE_INTRO_HEAVY",
-      "purpose": "Its iron head resists hits; use TNT or land a sword critical for extra scrap.",
+      "purpose": "Brief status caption: Heavy: tough armor. Use TNT or a sword critical.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
-    },
-    "minicat.robo-rampage.enemy.overclocker": {
-      "constant": "ROBO_RAMPAGE_ENEMY_OVERCLOCKER",
-      "purpose": "<gold>Overclocker</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.intro.overclocker": {
       "constant": "ROBO_RAMPAGE_INTRO_OVERCLOCKER",
-      "purpose": "Its redstone head makes it fast; slow it down with the Taser.",
+      "purpose": "Brief status caption: Overclocker: fast. Slow it with the Taser.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
-    },
-    "minicat.robo-rampage.enemy.scout": {
-      "constant": "ROBO_RAMPAGE_ENEMY_SCOUT",
-      "purpose": "<gold>Scout</gold>",
-      "arguments": [],
-      "surfaces": [
-        "title"
-      ],
-      "maxTemplateCharacters": 60
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.intro.scout": {
       "constant": "ROBO_RAMPAGE_INTRO_SCOUT",
-      "purpose": "Its lapis head marks an agile guard; keep it away from your scaffolds.",
+      "purpose": "Brief status caption: Scout: agile. Keep it away from your scaffolds.",
       "arguments": [],
       "surfaces": [
-        "chat",
-        "title"
+        "actionbar"
       ],
-      "maxTemplateCharacters": 140
+      "maxTemplateCharacters": 110
     },
     "minicat.robo-rampage.jetpack.name": {
       "constant": "ROBO_RAMPAGE_JETPACK_NAME",

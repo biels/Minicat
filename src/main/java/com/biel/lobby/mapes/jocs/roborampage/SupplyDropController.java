@@ -29,9 +29,10 @@ import org.bukkit.util.Vector;
 import com.biel.lobby.localization.MessageKey;
 import com.biel.lobby.localization.Messages;
 import com.biel.lobby.mapes.jocs.roborampage.utils.RoboRampageRules;
+import com.biel.lobby.mapes.jocs.roborampage.utils.SupplyUpgradeClaims;
 import com.biel.lobby.utilities.Utils;
 
-/** Creates one Taser upgrade, one major reward and one scaffold bundle per player between waves. */
+/** Owner-bound supplies; Taser upgrades are limited to one claim per earned wave. */
 final class SupplyDropController implements AutoCloseable {
     private static final int DROP_HEIGHT = 8;
     private static final int BOW_ARROW_COUNT = 16;
@@ -40,6 +41,9 @@ final class SupplyDropController implements AutoCloseable {
     private final RandomGenerator random;
     private final TaserController tasers;
     private final NamespacedKey taserUpgradeKey;
+    private final NamespacedKey upgradeOwnerKey;
+    private final NamespacedKey upgradeWaveKey;
+    private final SupplyUpgradeClaims upgradeClaims = new SupplyUpgradeClaims();
     private final Set<UUID> unclaimedItemIds = new HashSet<>();
 
     SupplyDropController(Plugin plugin, World world, RandomGenerator random, TaserController tasers) {
@@ -47,6 +51,8 @@ final class SupplyDropController implements AutoCloseable {
         this.random = random;
         this.tasers = tasers;
         this.taserUpgradeKey = new NamespacedKey(plugin, "robo_rampage_taser_upgrade");
+        this.upgradeOwnerKey = new NamespacedKey(plugin, "robo_rampage_upgrade_owner");
+        this.upgradeWaveKey = new NamespacedKey(plugin, "robo_rampage_upgrade_wave");
     }
 
     void dropWaveSupplies(Location battleCenter, int waveNumber, List<Player> players) {
@@ -66,8 +72,14 @@ final class SupplyDropController implements AutoCloseable {
     boolean handlePickup(PlayerPickupItemEvent event, Player player) {
         Item droppedItem = event.getItem();
         if (!isTaserUpgrade(droppedItem.getItemStack())) return false;
+        boolean previouslyCancelled = event.isCancelled();
         event.setCancelled(true);
-        if (!tasers.upgradeCarriedTaser(player)) return true;
+        if (previouslyCancelled || !droppedItem.isValid() || droppedItem.getWorld() != world
+                || player.getWorld() != world || player.isDead() || !player.isOnline()
+                || !unclaimedItemIds.contains(droppedItem.getUniqueId()) || !tasers.canUpgrade(player)
+                || !upgradeClaims.claim(droppedItem.getUniqueId(), player.getUniqueId())) return true;
+        // Claim before applying: removal can still leave a repeated native event in flight.
+        tasers.upgradeCarriedTaser(player);
         unclaimedItemIds.remove(droppedItem.getUniqueId());
         droppedItem.remove();
         return true;
@@ -79,6 +91,7 @@ final class SupplyDropController implements AutoCloseable {
             if (item != null && item.isValid()) item.remove();
         }
         unclaimedItemIds.clear();
+        upgradeClaims.discardUnclaimed();
     }
 
     private void dropRewards(Location dropOrigin, int waveNumber, Player player) {
@@ -95,7 +108,10 @@ final class SupplyDropController implements AutoCloseable {
                 random);
         dropOwned(dropOrigin, Utils.createPotion(
                 PotionType.HEALING, supplyPlan.healingPotions(), false), player);
-        if (supplyPlan.taserUpgrade()) dropOwned(dropOrigin, createTaserUpgrade(), player);
+        if (supplyPlan.taserUpgrade()) {
+            Item core = dropOwned(dropOrigin, createTaserUpgrade(player, waveNumber), player);
+            upgradeClaims.register(core.getUniqueId(), player.getUniqueId(), waveNumber);
+        }
         switch (supplyPlan.majorReward()) {
             case ARMOR -> dropOwned(dropOrigin, armorUpgrade, player);
             case BOW -> dropRangedKit(dropOrigin, player, carriesBow);
@@ -143,13 +159,16 @@ final class SupplyDropController implements AutoCloseable {
         return 0;
     }
 
-    private ItemStack createTaserUpgrade() {
+    private ItemStack createTaserUpgrade(Player owner, int waveNumber) {
         ItemStack upgrade = Utils.setItemNameAndLore(
                 new ItemStack(Material.PRISMARINE_CRYSTALS),
                 Messages.sharedItemMarker(MessageKey.ROBO_RAMPAGE_TASER_UPGRADE_NAME),
                 Messages.sharedItemMarker(MessageKey.ROBO_RAMPAGE_TASER_UPGRADE_LORE));
         ItemMeta meta = upgrade.getItemMeta();
         meta.getPersistentDataContainer().set(taserUpgradeKey, PersistentDataType.BYTE, (byte) 1);
+        meta.getPersistentDataContainer().set(upgradeOwnerKey, PersistentDataType.STRING, owner.getUniqueId().toString());
+        meta.getPersistentDataContainer().set(upgradeWaveKey, PersistentDataType.INTEGER, waveNumber);
+        meta.setMaxStackSize(1);
         meta.setEnchantmentGlintOverride(true);
         upgrade.setItemMeta(meta);
         return upgrade;
@@ -166,7 +185,7 @@ final class SupplyDropController implements AutoCloseable {
                 battleCenter.getBlockZ() + 0.5);
     }
 
-    private void dropOwned(Location origin, ItemStack itemStack, Player owner) {
+    private Item dropOwned(Location origin, ItemStack itemStack, Player owner) {
         Location location = origin.clone().add(
                 random.nextDouble(-1.75, 1.75), random.nextDouble(0, 1.5), random.nextDouble(-1.75, 1.75));
         Item item = world.dropItem(location, itemStack);
@@ -180,10 +199,12 @@ final class SupplyDropController implements AutoCloseable {
         item.setVelocity(new Vector(
                 random.nextDouble(-0.05, 0.05), -0.12, random.nextDouble(-0.05, 0.05)));
         unclaimedItemIds.add(item.getUniqueId());
+        return item;
     }
 
     @Override
     public void close() {
         clearUnclaimed();
+        upgradeClaims.close();
     }
 }

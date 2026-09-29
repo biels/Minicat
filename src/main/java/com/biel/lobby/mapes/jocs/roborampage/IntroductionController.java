@@ -1,64 +1,78 @@
 package com.biel.lobby.mapes.jocs.roborampage;
 
-import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.function.BiConsumer;
 
 import org.bukkit.entity.Player;
 
 import com.biel.lobby.localization.MessageKey;
 import com.biel.lobby.localization.Messages;
 
-import net.kyori.adventure.title.Title;
-
-/** First encounters get one short caption, with space between lessons. */
+/** Brief encounter/status captions; reserves the action bar while each is visible. */
 final class IntroductionController implements AutoCloseable {
-    private static final int SPACING_TICKS = 20 * 7;
-    private final BiConsumer<MessageKey, MessageKey> display;
-    private final Queue<Lesson> encounters = new ArrayDeque<>();
-    private final Queue<Lesson> tips = new ArrayDeque<>();
+    private static final int DISPLAY_TICKS = 80;
+    private static final int GAP_TICKS = 20;
+    private final Consumer<MessageKey> display;
+    private final Queue<MessageKey> encounters = new ArrayDeque<>();
+    private final Queue<MessageKey> tips = new ArrayDeque<>();
     private final Set<MessageKey> introduced = new HashSet<>();
-    private int remainingTicks = 60;
+    private MessageKey activeLesson;
+    private int remainingTicks = GAP_TICKS;
+    private boolean activeEncounter;
     private boolean closed;
 
-    private record Lesson(MessageKey name, MessageKey explanation) {}
-
     IntroductionController(Supplier<? extends List<Player>> audience) {
-        this((name, explanation) -> {
+        this(key -> {
             for (Player player : audience.get()) {
-                if (!player.isOnline()) continue;
-                Messages.send(player, explanation);
-                if (name != null) player.showTitle(Title.title(
-                        Messages.component(player, name), Messages.component(player, explanation),
-                        Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(4), Duration.ofMillis(400))));
+                if (player.isOnline()) player.sendActionBar(Messages.component(player, key));
             }
         });
     }
 
-    IntroductionController(BiConsumer<MessageKey, MessageKey> display) { this.display = display; }
+    IntroductionController(Consumer<MessageKey> display) { this.display = display; }
 
-    void introduce(MessageKey name, MessageKey explanation) {
+    void introduce(MessageKey explanation) {
         if (!closed && introduced.add(explanation)) {
-            (name == null ? tips : encounters).add(new Lesson(name, explanation));
+            encounters.add(explanation);
+            // New enemies take the status slot from a control tip immediately.
+            if (activeLesson != null && !activeEncounter) {
+                tips.add(activeLesson);
+                activeLesson = null;
+                remainingTicks = 0;
+            }
         }
     }
 
-    void tip(MessageKey explanation) { introduce(null, explanation); }
+    void tip(MessageKey explanation) {
+        if (!closed && introduced.add(explanation)) tips.add(explanation);
+    }
+
+    boolean isDisplaying() { return !closed && activeLesson != null; }
 
     void tick() {
-        if (closed || remainingTicks-- > 0 || encounters.isEmpty() && tips.isEmpty()) return;
-        Lesson lesson = (encounters.isEmpty() ? tips : encounters).remove();
-        display.accept(lesson.name(), lesson.explanation());
-        remainingTicks = SPACING_TICKS;
+        if (closed) return;
+        if (activeLesson != null) {
+            if (--remainingTicks <= 0) {
+                activeLesson = null;
+                remainingTicks = GAP_TICKS;
+            } else if (remainingTicks % 10 == 0) display.accept(activeLesson);
+            return;
+        }
+        if (remainingTicks-- > 0 || encounters.isEmpty() && tips.isEmpty()) return;
+        activeEncounter = !encounters.isEmpty();
+        activeLesson = (activeEncounter ? encounters : tips).remove();
+        remainingTicks = DISPLAY_TICKS;
+        display.accept(activeLesson);
     }
 
     @Override public void close() {
         closed = true;
+        activeLesson = null;
         encounters.clear();
         tips.clear();
         introduced.clear();

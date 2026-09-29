@@ -12,15 +12,17 @@ public final class RoboRampageRules {
     public static final double ROBOT_DAMAGE_MULTIPLIER = 2.65;
     public static final int POWER_UP_TICKS = 20 * 20;
     public static final int POWER_UP_AMPLIFIER = 1;
+    public static final int SPAWN_INTERVAL_TICKS = 20;
+    public static final int SUPPLY_DURATION_TICKS = 200;
 
-    private static final int MAX_ZOMBIES = 6;
-    private static final int MAX_SKELETONS = 4;
-    private static final int MAX_BLAZES = 2;
-    private static final int MAX_CUTTERS = 1;
-    private static final int MAX_GHASTS = 1;
-    private static final int MAX_SPRINGERS = 2;
-    private static final int MAX_ROBOTS = 14;
-    private static final int MAX_WAVE_ROBOTS = 22;
+    private static final int MAX_ZOMBIES = 10;
+    private static final int MAX_SKELETONS = 6;
+    private static final int MAX_BLAZES = 3;
+    private static final int MAX_CUTTERS = 2;
+    private static final int MAX_GHASTS = 2;
+    private static final int MAX_SPRINGERS = 3;
+    private static final int MAX_ROBOTS = 20;
+    private static final int MAX_WAVE_ROBOTS = 42;
 
     private RoboRampageRules() {}
 
@@ -121,21 +123,21 @@ public final class RoboRampageRules {
 
     public static SpawnLimits liveSpawnLimits(int scrapHeight, int playerCount, int waveNumber) {
         SpawnLimits legacy = legacySpawnLimits(scrapHeight);
-        int players = Math.max(1, playerCount);
+        int players = Math.clamp(playerCount, 1, 4);
         int wave = Math.max(1, waveNumber);
-        int zombies = Math.min(MAX_ZOMBIES, legacy.zombies() + players - 1);
+        int zombies = Math.min(MAX_ZOMBIES, Math.max(5 + wave / 2, legacy.zombies()) + players - 1);
         int skeletons = wave >= 2
-                ? Math.max(1, Math.min(MAX_SKELETONS, legacy.skeletons() + (players - 1) / 2))
+                ? Math.max(2, Math.min(MAX_SKELETONS, legacy.skeletons() + (players - 1) / 2))
                 : 0;
-        int springers = wave >= 3 ? Math.min(MAX_SPRINGERS, (players + 1) / 2) : 0;
-        int cutters = wave >= 4 ? MAX_CUTTERS : 0;
-        int blazes = wave >= 6 ? Math.max(1, Math.min(MAX_BLAZES, legacy.blazes())) : 0;
-        int ghasts = wave >= 7 ? MAX_GHASTS : 0;
-        int total = Math.min(MAX_ROBOTS, 3 + players * 2);
+        int springers = wave >= 3 ? Math.min(MAX_SPRINGERS, 1 + players / 2) : 0;
+        int cutters = wave >= 4 ? Math.min(MAX_CUTTERS, 1 + players / 3) : 0;
+        int blazes = wave >= 4 ? Math.max(1, Math.min(MAX_BLAZES, legacy.blazes())) : 0;
+        int ghasts = wave >= 6 ? Math.min(MAX_GHASTS, 1 + players / 4) : 0;
+        int total = Math.min(MAX_ROBOTS, 6 + players * 4);
         return new SpawnLimits(zombies, skeletons, blazes, cutters, ghasts, springers, total);
     }
 
-    /** New mechanics arrive one at a time, and their first spawn can be guaranteed. */
+    /** Signature chassis arrive predictably; the first mixed aerial encounter joins wave four. */
     public static Optional<RobotType> introRobotForWave(int waveNumber) {
         return switch (waveNumber) {
             case 1 -> Optional.of(RobotType.ZOMBIE);
@@ -143,10 +145,14 @@ public final class RoboRampageRules {
             case 3 -> Optional.of(RobotType.SPRINGER);
             case 4 -> Optional.of(RobotType.CUTTER);
             case 5 -> Optional.of(RobotType.COMPACTOR);
-            case 6 -> Optional.of(RobotType.BLAZE);
-            case 7 -> Optional.of(RobotType.GHAST);
+            case 6 -> Optional.of(RobotType.GHAST);
             default -> Optional.empty();
         };
+    }
+
+    public static List<RobotType> introRobotsForWave(int waveNumber) {
+        if (waveNumber == 4) return List.of(RobotType.CUTTER, RobotType.BLAZE);
+        return introRobotForWave(waveNumber).stream().toList();
     }
 
     /** One bounded decision replaces the original main-thread-blocking while(true) loop. */
@@ -172,8 +178,13 @@ public final class RoboRampageRules {
     /** Finite waves grow with both party size and elapsed waves, but never become runaway swarms. */
     public static int waveRobotQuota(int waveNumber, int playerCount) {
         int wave = Math.max(1, waveNumber);
-        int players = Math.max(1, playerCount);
-        return Math.min(MAX_WAVE_ROBOTS, 4 + wave + (players - 1) * 2);
+        int players = Math.clamp(playerCount, 1, 4);
+        return (int) Math.min(MAX_WAVE_ROBOTS, 10L + wave * 2L + (players - 1) * 3L);
+    }
+
+    /** Start each director step with a small group rather than drip-feeding isolated targets. */
+    public static int spawnBurstSize(int waveNumber, int playerCount) {
+        return playerCount > 1 ? 3 : 2;
     }
 
     public static int scaffoldingPerPlayer(int waveNumber) {
@@ -207,13 +218,13 @@ public final class RoboRampageRules {
         return battleCenterY + Math.max(0, settledScrapHeight) + chassisClearance;
     }
 
-    /** The first aerial chassis arrives on wave six; preceding supplies close any ranged-kit gap. */
+    /** Aerial chassis join the mixed fourth wave; preceding supplies close any ranged-kit gap. */
     public static boolean needsGuaranteedRangedSupply(
             int completedWaveNumber, boolean carriesBow, boolean carriesArrow) {
-        return completedWaveNumber >= 5 && (!carriesBow || !carriesArrow);
+        return completedWaveNumber >= 3 && (!carriesBow || !carriesArrow);
     }
 
-    /** Every cleared wave grants one Taser level, plus an independent equipment reward. */
+    /** Equipment arrives each wave; Taser levels arrive on alternating clears. */
     public static SupplyPlan supplyPlan(
             int completedWaveNumber,
             boolean carriesBow,
@@ -222,14 +233,14 @@ public final class RoboRampageRules {
             boolean canUpgradeTaser,
             RandomGenerator random) {
         if (needsGuaranteedRangedSupply(completedWaveNumber, carriesBow, carriesArrow)) {
-            return new SupplyPlan(SupplyReward.BOW, canUpgradeTaser, 1);
+            return new SupplyPlan(SupplyReward.BOW, canUpgradeTaser && completedWaveNumber % 2 == 0, 1);
         }
         List<SupplyReward> availableMajorRewards = new ArrayList<>();
         availableMajorRewards.add(SupplyReward.BOW);
         if (hasArmorUpgrade) availableMajorRewards.add(SupplyReward.ARMOR);
         return new SupplyPlan(
                 availableMajorRewards.get(random.nextInt(availableMajorRewards.size())),
-                canUpgradeTaser,
+                canUpgradeTaser && completedWaveNumber % 2 == 0,
                 1);
     }
 

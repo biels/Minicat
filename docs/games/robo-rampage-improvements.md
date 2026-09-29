@@ -1,29 +1,35 @@
-# Robo Rampage: easier combat, mobility and finite lives
+# Robo Rampage: combat pressure, mobility and finite lives
 
 Implemented design for Biel's 2026-09-29 request. The goal is a forgiving cooperative
 climb with readable threats, useful escape tools and a real failure condition.
 
 ## Combat and pacing
 
-- Ordinary ground robots have 12 HP (previously 20); iron-head heavies have 22
-  (previously 36). Redstone heads have 10 and lapis heads 14. Movement is slower;
-  zombie chassis are always adults. Keep the visible iron armor and existing sword
-  scaling. A fully charged diamond-sword hit should kill an ordinary robot, while
-  a heavy should take two; verify actual Paper armor/damage events on dev.
-- Start players with a chainmail chestplate and boots. Taser pulses deal 3 damage
-  rather than 2; recharge begins after one second and restores base charge in
-  twenty seconds. Upgrades retain their capacity, chaining and recharge benefit.
-- Boss health is 140 solo, plus 75 per additional player, capped at 365. Armored
-  damage intake rises from 35% to 55%; recovery remains 150%. Preserve the full
-  warning and interruption windows so lowering difficulty also teaches counterplay.
-- A director opportunity occurs every three seconds rather than two. Normal wave
-  quotas are `min(22, 4 + wave + 2 * (players - 1))`; population limits are smaller,
-  with one Cutter and one Ghast at most. The supply pause lasts 18 seconds.
-- Introduce chassis separately: Worker on wave 1, sword Guard on 2, Springer on 3,
-  Cutter on 4, Compactor on 5, Gold Drone on 6 and Iron Artillery on 7. Bosses still
-  replace each fifth wave. Guarantee the first spawn of a newly introduced chassis.
-  Block-head variants enter only from wave 8. Guarantee a missing ranged kit in
-  wave-five supplies, before flying enemies arrive.
+2026-09-30 playtest correction: restore group pressure rather than long gaps and
+an all-purpose Taser. Ordinary robots retain 12 HP and charged sword kills;
+chainmail starters, safe TNT, the Jetpack and three lives remain.
+
+- Director groups arrive every second: two robots solo, three with teammates,
+  always limited by the remaining quota and current chassis/population caps.
+  Quota is `min(42, 10 + 2 * wave + 3 * (players - 1))`; active population ranges
+  from 10 solo to 20 with a full team. Supply pauses last ten seconds.
+- Workers start on wave one, Guards on two, Springers on three. Wave four
+  guarantees both a Cutter and Gold Drone; wave six introduces Iron Artillery.
+  Compactors retain every fifth wave. Ranged gear is guaranteed after wave three
+  when missing, before flying enemies arrive. Block-head variants start on eight.
+- Taser pulses return to two damage. A starting weapon supports two linked robots,
+  growing to four at level five. Each energized robot consumes charge every tick,
+  so chains spend the same finite damage budget faster. Capacity rises from 100
+  to 140. Recovery starts after three seconds, at one charge per five ticks;
+  upgrades do not accelerate it. Restart requires twenty charge, and toggling or
+  switching weapons cannot bypass pulse cooldown.
+- Upgrade cores arrive every second cleared wave, preserve actual remaining
+  charge, belong to the intended player and can upgrade once per earned wave.
+  Repeated pickup callbacks, another player's core or regenerated same-wave cores
+  cannot grant additional levels.
+- Boss health and the readable slam/throw warnings remain as in the previous
+  release. The boss bar now shows only its localized name and health, with a
+  fixed color; phase explanations stay out of that bar.
 
 ## Tools and spring robots
 
@@ -33,10 +39,14 @@ climb with readable threats, useful escape tools and a real failure condition.
   delay, and preserves fuel on respawn. It uses bounded velocity, not creative
   flight. Its landing shield is single-use and expires five seconds after thrust.
   Reaching height in the air still cannot satisfy the settled-scrap win condition.
-- Springers wear a piston head and golden boots. They compress for one second,
-  then make a bounded hop toward a nearby participant, followed by five seconds
-  of recovery. The Taser interrupts compression. Invalid targets and cleanup
-  release their held AI. They use ordinary melee damage, with no additional slam.
+- Springers wear a piston head and golden boots. Ground hops retain a one-second
+  compression warning and five-second recovery, interruptible with the Taser.
+  Elevated players provoke pursuit toward owned scaffold steps: a robot approaches
+  a supported launch point, checks a clear body route and landing, then makes a
+  committed physical jump up to four blocks upward. Higher towers require valid
+  intermediate steps. AI resumes for flight; a temporary movement goal prevents
+  ordinary chasing from steering the jump. Changed targets, broken platforms,
+  interruptions and cleanup release held AI and movement goals.
 - TNT serves as the second major weapon. Blast power increases from 3 to 4 and
   robot blast damage gains a 1.5 multiplier. No player takes TNT damage. Exposed
   active players and tracked robots receive a bounded upward impulse after native
@@ -62,13 +72,13 @@ climb with readable threats, useful escape tools and a real failure condition.
 ## Teaching and feedback
 
 - Opening chat contains only the height goal, scrap rule and lives rule.
-- On the first actual appearance of each chassis or block-head variant, show its
-  name and one sentence of counterplay beneath it, and retain the sentence in chat.
-  Encounter captions take priority over queued tool tips. Space lessons seven
-  seconds apart and never repeat a lesson within the match.
-- Introduce Taser and Jetpack controls gradually. Explain TNT and scaffolding when
-  the first supply pause gives players time to use them; explain corrective junk
-  when it actually arrives. Author English and Catalan together.
+- Each chassis or head variant gets one short localized action-bar caption on
+  first appearance. No encounter titles/subtitles or duplicate chat captions.
+  Captions last four seconds, refresh during that interval, and briefly reserve
+  the status slot so Taser/Jetpack charge messages cannot overwrite them. A new
+  enemy takes priority over a control tip; lessons have a one-second gap.
+- Taser/Jetpack controls and supply tips use the same brief status slot. English
+  and Catalan are authored together.
 - The scoreboard includes personal lives and robots remaining, switching the latter
   to a seconds countdown during supplies.
 

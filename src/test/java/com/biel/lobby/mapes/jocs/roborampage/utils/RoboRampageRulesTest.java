@@ -11,12 +11,11 @@ import org.junit.jupiter.api.Test;
 
 class RoboRampageRulesTest {
     @Test
-    void introductionsGuaranteeOneNewChassisPerEarlyWaveWithoutBypassingCaps() {
+    void introductionsGuaranteeSignatureChassisAndMixedFourthWaveWithoutBypassingCaps() {
         var sequence = List.of(RoboRampageRules.RobotType.ZOMBIE, RoboRampageRules.RobotType.SKELETON,
                 RoboRampageRules.RobotType.SPRINGER, RoboRampageRules.RobotType.CUTTER,
-                RoboRampageRules.RobotType.COMPACTOR, RoboRampageRules.RobotType.BLAZE,
-                RoboRampageRules.RobotType.GHAST);
-        for (int wave = 1; wave <= 7; wave++) {
+                RoboRampageRules.RobotType.COMPACTOR, RoboRampageRules.RobotType.GHAST);
+        for (int wave = 1; wave <= 6; wave++) {
             var introduction = RoboRampageRules.introRobotForWave(wave);
             assertEquals(sequence.get(wave - 1), introduction.orElseThrow());
             if (wave == 5) continue; // Boss uses its dedicated spawn path.
@@ -27,9 +26,11 @@ class RoboRampageRulesTest {
             }
         }
         assertTrue(RoboRampageRules.introRobotForWave(8).isEmpty());
+        assertEquals(List.of(RoboRampageRules.RobotType.CUTTER, RoboRampageRules.RobotType.BLAZE),
+                RoboRampageRules.introRobotsForWave(4));
         var limits = RoboRampageRules.liveSpawnLimits(0, 1, 3);
         assertTrue(RoboRampageRules.chooseSpawn(limits,
-                new RoboRampageRules.RobotCounts(2, 1, 0, 0, 0, 2),
+                new RoboRampageRules.RobotCounts(6, 2, 0, 0, 0, 1),
                 RoboRampageRules.introRobotForWave(3), new Random(1)).isEmpty());
     }
 
@@ -46,25 +47,25 @@ class RoboRampageRulesTest {
     @Test
     void liveLimitsPreserveUnlockOrderAndStayBounded() {
         var bottom = RoboRampageRules.liveSpawnLimits(0, 1, 1);
-        assertEquals(2, bottom.zombies());
+        assertEquals(5, bottom.zombies());
         assertEquals(0, bottom.skeletons());
         assertEquals(0, bottom.blazes());
         assertEquals(0, bottom.cutters());
         assertEquals(0, bottom.ghasts());
 
         var highFourPlayer = RoboRampageRules.liveSpawnLimits(255, 4, 20);
-        assertTrue(highFourPlayer.zombies() <= 6);
-        assertTrue(highFourPlayer.skeletons() <= 4);
-        assertTrue(highFourPlayer.blazes() <= 2);
-        assertTrue(highFourPlayer.cutters() <= 1);
-        assertTrue(highFourPlayer.ghasts() <= 1);
-        assertTrue(highFourPlayer.total() <= 14);
+        assertTrue(highFourPlayer.zombies() <= 10);
+        assertTrue(highFourPlayer.skeletons() <= 6);
+        assertTrue(highFourPlayer.blazes() <= 3);
+        assertTrue(highFourPlayer.cutters() <= 2);
+        assertTrue(highFourPlayer.ghasts() <= 2);
+        assertTrue(highFourPlayer.total() <= 20);
     }
 
     @Test
     void wavesUnlockChassisIndependentlyFromHeapShape() {
         var waveTwo = RoboRampageRules.liveSpawnLimits(0, 1, 2);
-        assertEquals(1, waveTwo.skeletons());
+        assertEquals(2, waveTwo.skeletons());
         assertEquals(0, waveTwo.blazes());
         assertEquals(0, waveTwo.cutters());
         assertEquals(0, waveTwo.ghasts());
@@ -78,8 +79,8 @@ class RoboRampageRulesTest {
         var waveFour = RoboRampageRules.liveSpawnLimits(0, 1, 4);
         assertEquals(1, waveFour.cutters());
         assertEquals(0, waveFour.ghasts());
-        assertEquals(1, RoboRampageRules.liveSpawnLimits(0, 1, 6).blazes());
-        assertEquals(1, RoboRampageRules.liveSpawnLimits(0, 1, 7).ghasts());
+        assertEquals(1, waveFour.blazes());
+        assertEquals(1, RoboRampageRules.liveSpawnLimits(0, 1, 6).ghasts());
     }
 
     @Test
@@ -162,30 +163,34 @@ class RoboRampageRulesTest {
     }
 
     @Test
-    void waveFiveSupplyGuaranteesRangedReadinessForTheFirstAerialWave() {
-        assertFalse(RoboRampageRules.needsGuaranteedRangedSupply(4, false, false));
-        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(5, false, false));
-        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(5, true, false));
-        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(5, false, true));
-        assertFalse(RoboRampageRules.needsGuaranteedRangedSupply(5, true, true));
+    void waveThreeSupplyGuaranteesRangedReadinessForTheFirstAerialWave() {
+        assertFalse(RoboRampageRules.needsGuaranteedRangedSupply(2, false, false));
+        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(3, false, false));
+        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(3, true, false));
+        assertTrue(RoboRampageRules.needsGuaranteedRangedSupply(3, false, true));
+        assertFalse(RoboRampageRules.needsGuaranteedRangedSupply(3, true, true));
     }
 
     @Test
-    void everyWaveClearGuaranteesExactlyOneTaserUpgradeUntilMaximumLevel() {
+    void alternatingWaveClearsGuaranteeOneTaserUpgradeUntilMaximumLevel() {
         for (int seed = 0; seed < 100; seed++) {
-            var plan = RoboRampageRules.supplyPlan(1, true, true, true, true, new Random(seed));
+            var plan = RoboRampageRules.supplyPlan(2, true, true, true, true, new Random(seed));
             assertTrue(plan.taserUpgrade());
             assertTrue(plan.majorReward() != RoboRampageRules.SupplyReward.TASER_UPGRADE);
             assertEquals(1, plan.healingPotions());
         }
 
-        var maximumLevelPlan = RoboRampageRules.supplyPlan(1, true, true, true, false, new Random(1));
+        var maximumLevelPlan = RoboRampageRules.supplyPlan(2, true, true, true, false, new Random(1));
         assertFalse(maximumLevelPlan.taserUpgrade());
+        for (int wave = 1; wave <= 8; wave++) {
+            assertEquals(wave % 2 == 0,
+                    RoboRampageRules.supplyPlan(wave, true, true, true, true, new Random(1)).taserUpgrade());
+        }
     }
 
     @Test
     void guaranteedRangedSupplyKeepsTheTaserUpgrade() {
-        var plan = RoboRampageRules.supplyPlan(5, false, false, true, true, new Random(1));
+        var plan = RoboRampageRules.supplyPlan(4, false, false, true, true, new Random(1));
         assertEquals(RoboRampageRules.SupplyReward.BOW, plan.majorReward());
         assertTrue(plan.taserUpgrade());
         assertEquals(1, plan.healingPotions());
@@ -219,10 +224,24 @@ class RoboRampageRulesTest {
 
     @Test
     void waveQuotasScaleButRemainFinite() {
-        assertEquals(5, RoboRampageRules.waveRobotQuota(1, 1));
-        assertEquals(11, RoboRampageRules.waveRobotQuota(1, 4));
-        assertEquals(22, RoboRampageRules.waveRobotQuota(100, 100));
+        assertEquals(12, RoboRampageRules.waveRobotQuota(1, 1));
+        assertEquals(21, RoboRampageRules.waveRobotQuota(1, 4));
+        assertEquals(42, RoboRampageRules.waveRobotQuota(100, 100));
         assertEquals(10, RoboRampageRules.scaffoldingPerPlayer(1));
         assertEquals(16, RoboRampageRules.scaffoldingPerPlayer(99));
+        assertEquals(42, RoboRampageRules.waveRobotQuota(Integer.MAX_VALUE, Integer.MAX_VALUE));
+    }
+
+    @Test
+    void directorCreatesPressureInGroupsAndGroundCapsDoNotRequireAHeapFirst() {
+        assertEquals(20, RoboRampageRules.SPAWN_INTERVAL_TICKS);
+        assertEquals(2, RoboRampageRules.spawnBurstSize(1, 1));
+        assertEquals(3, RoboRampageRules.spawnBurstSize(1, 2));
+        assertEquals(200, RoboRampageRules.SUPPLY_DURATION_TICKS);
+        var solo = RoboRampageRules.liveSpawnLimits(0, 1, 2);
+        assertTrue(solo.zombies() >= 5);
+        assertTrue(solo.skeletons() >= 2);
+        assertEquals(10, solo.total());
+        assertEquals(20, RoboRampageRules.liveSpawnLimits(0, 4, 2).total());
     }
 }

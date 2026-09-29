@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -55,6 +56,7 @@ final class TaserController implements AutoCloseable {
     private static final double PARTICLE_SPACING = 0.45;
 
     private final World world;
+    private final BooleanSupplier statusAvailable;
     private final Supplier<? extends Collection<Mob>> liveRobots;
     private final Predicate<Player> activeParticipant;
     private final NamespacedKey taserIdKey;
@@ -75,6 +77,12 @@ final class TaserController implements AutoCloseable {
             World world,
             Supplier<? extends Collection<Mob>> liveRobots,
             Predicate<Player> activeParticipant) {
+        this(plugin, world, liveRobots, activeParticipant, () -> true);
+    }
+
+    TaserController(Plugin plugin, World world, Supplier<? extends Collection<Mob>> liveRobots,
+            Predicate<Player> activeParticipant, BooleanSupplier statusAvailable) {
+        this.statusAvailable = statusAvailable;
         this.world = world;
         this.liveRobots = liveRobots;
         this.activeParticipant = activeParticipant;
@@ -111,7 +119,7 @@ final class TaserController implements AutoCloseable {
             NetworkSnapshot network = buildNetwork(player, charge, level(taser), robotsById);
             if (network.edges().isEmpty()) continue;
 
-            setCharge(taser, charge - TaserRules.CHARGE_DRAIN_PER_TICK);
+            setCharge(taser, charge - TaserRules.chargeDrain(network.edges().size()));
             setLastDischargeTick(taser, currentTick);
             player.getInventory().setItemInMainHand(taser);
             for (Edge edge : network.edges()) energizedRobotIds.add(edge.targetId());
@@ -119,7 +127,7 @@ final class TaserController implements AutoCloseable {
             renderGuardianBeams(player, network);
             if (currentTick % BEAM_RENDER_INTERVAL_TICKS == 0) renderElectricSparks(network);
             long lastPulse = lastPulseByPlayer.getOrDefault(playerId, Long.MIN_VALUE / 2);
-            if (currentTick - lastPulse >= TaserRules.PULSE_INTERVAL_TICKS) {
+            if (TaserRules.pulseDue(currentTick, lastPulse)) {
                 pulse(player, network);
                 lastPulseByPlayer.put(playerId, currentTick);
             }
@@ -132,6 +140,7 @@ final class TaserController implements AutoCloseable {
             if (currentTick % 10 == 0) showCharge(player);
         }
         lastDamageByRobot.entrySet().removeIf(entry -> currentTick - entry.getValue() > 40);
+        lastPulseByPlayer.entrySet().removeIf(entry -> currentTick - entry.getValue() > 200);
     }
 
     boolean handleInteraction(PlayerInteractEvent event, Player player) {
@@ -145,11 +154,10 @@ final class TaserController implements AutoCloseable {
 
         UUID playerId = player.getUniqueId();
         if (activePlayers.remove(playerId)) {
-            lastPulseByPlayer.remove(playerId);
             player.playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.8F, 1.2F);
-        } else if (charge(event.getItem()) > 0) {
+        } else if (TaserRules.canActivate(charge(event.getItem()))) {
             activePlayers.add(playerId);
-            lastPulseByPlayer.put(playerId, currentTick - TaserRules.PULSE_INTERVAL_TICKS);
+            lastPulseByPlayer.putIfAbsent(playerId, currentTick - TaserRules.PULSE_INTERVAL_TICKS);
             player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.8F, 1.6F);
         } else {
             player.playSound(player.getLocation(), Sound.BLOCK_WOODEN_BUTTON_CLICK_OFF, 0.7F, 0.7F);
@@ -187,7 +195,7 @@ final class TaserController implements AutoCloseable {
         ItemMeta meta = taser.getItemMeta();
         meta.getPersistentDataContainer().set(levelKey, PersistentDataType.INTEGER, upgradedLevel);
         meta.getPersistentDataContainer().set(
-                chargeKey, PersistentDataType.INTEGER, TaserRules.maximumCharge(upgradedLevel));
+                chargeKey, PersistentDataType.INTEGER, TaserRules.chargeAfterUpgrade(charge(taser), upgradedLevel));
         taser.setItemMeta(meta);
         player.getInventory().setItem(carriedTaser.get().slot(), taser);
         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.0F, 1.6F);
@@ -323,6 +331,7 @@ final class TaserController implements AutoCloseable {
     }
 
     private void showCharge(Player player) {
+        if (!statusAvailable.getAsBoolean()) return;
         ItemStack heldItem = player.getInventory().getItemInMainHand();
         if (!isTaser(heldItem)) return;
         MessageKey key = activePlayers.contains(player.getUniqueId())
@@ -414,7 +423,6 @@ final class TaserController implements AutoCloseable {
 
     private void stop(UUID playerId) {
         activePlayers.remove(playerId);
-        lastPulseByPlayer.remove(playerId);
     }
 
     @Override

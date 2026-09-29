@@ -3,6 +3,7 @@ package com.biel.lobby.mapes.jocs.roborampage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
 import org.bukkit.GameMode;
@@ -37,6 +38,7 @@ import com.biel.lobby.utilities.Utils;
 /** A short, rechargeable escape tool. Flight is velocity only; fuel belongs to the match. */
 final class JetpackController implements Listener, AutoCloseable {
     private final World world;
+    private final BooleanSupplier statusAvailable;
     private final Predicate<Player> activeParticipant;
     private final NamespacedKey jetpackKey;
     private final Map<UUID, JetpackRules.State> states = new HashMap<>();
@@ -44,6 +46,12 @@ final class JetpackController implements Listener, AutoCloseable {
     private boolean closed;
 
     JetpackController(Plugin plugin, World world, Predicate<Player> activeParticipant) {
+        this(plugin, world, activeParticipant, () -> true);
+    }
+
+    JetpackController(Plugin plugin, World world, Predicate<Player> activeParticipant,
+            BooleanSupplier statusAvailable) {
+        this.statusAvailable = statusAvailable;
         this.world = world;
         this.activeParticipant = activeParticipant;
         this.jetpackKey = new NamespacedKey(plugin, "robo_rampage_jetpack");
@@ -144,6 +152,7 @@ final class JetpackController implements Listener, AutoCloseable {
     }
 
     private void showCharge(Player player, JetpackRules.State state) {
+        if (!statusAvailable.getAsBoolean()) return;
         player.sendActionBar(Messages.component(player,
                 state.firing() ? MessageKey.ROBO_RAMPAGE_JETPACK_CHARGE_ACTIVE : MessageKey.ROBO_RAMPAGE_JETPACK_CHARGE_READY,
                 MessageArgument.number("charge", state.chargePercent()), MessageArgument.number("maximum", 100)));

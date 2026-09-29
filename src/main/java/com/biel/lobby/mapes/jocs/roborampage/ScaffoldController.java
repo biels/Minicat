@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -118,6 +119,14 @@ final class ScaffoldController implements AutoCloseable {
     }
 
     boolean isSawBusy(UUID robotId) { return sawAttacks.containsKey(robotId); }
+
+    /** A fresh snapshot of owned supports; callers decide which tops are safe landings. */
+    List<Location> platformTops() {
+        return placedScaffolding.stream()
+                .filter(position -> position.block(world).getType() == Material.SCAFFOLDING)
+                .map(position -> new Location(world, position.x() + 0.5, position.y() + 1, position.z() + 0.5))
+                .toList();
+    }
 
     private void tickCutter(Mob robot) {
         UUID robotId = robot.getUniqueId();

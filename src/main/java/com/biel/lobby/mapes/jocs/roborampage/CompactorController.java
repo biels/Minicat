@@ -177,22 +177,15 @@ final class CompactorController implements AutoCloseable {
         for (Player player : new ArrayList<>(bars.keySet())) {
             if (!present.contains(player)) player.hideBossBar(bars.remove(player));
         }
-        MessageKey key = switch (cycle.phase()) {
-            case SLAM_WINDUP -> MessageKey.ROBO_RAMPAGE_BOSS_BAR_SLAM;
-            case THROW_WINDUP -> MessageKey.ROBO_RAMPAGE_BOSS_BAR_THROW;
-            case RECOVERY, STUNNED -> MessageKey.ROBO_RAMPAGE_BOSS_BAR_EXPOSED;
-            case APPROACH -> enraged ? MessageKey.ROBO_RAMPAGE_BOSS_BAR_ENRAGED : MessageKey.ROBO_RAMPAGE_BOSS_BAR;
-        };
-        BossBar.Color color = cycle.exposed() ? BossBar.Color.GREEN
-                : cycle.windingUp() ? BossBar.Color.YELLOW : BossBar.Color.RED;
         float progress = (float) Math.clamp(boss.getHealth() / maximumHealth, 0, 1);
         for (Player player : players) {
             BossBar bar = bars.computeIfAbsent(player, viewer -> {
-                BossBar created = BossBar.bossBar(localize.apply(viewer, key), progress, color, BossBar.Overlay.NOTCHED_10);
+                BossBar created = BossBar.bossBar(localize.apply(viewer, MessageKey.ROBO_RAMPAGE_BOSS_BAR),
+                        progress, BossBar.Color.RED, BossBar.Overlay.NOTCHED_10);
                 viewer.showBossBar(created);
                 return created;
             });
-            bar.name(localize.apply(player, key)).progress(progress).color(color);
+            bar.name(localize.apply(player, MessageKey.ROBO_RAMPAGE_BOSS_BAR)).progress(progress);
         }
     }
 

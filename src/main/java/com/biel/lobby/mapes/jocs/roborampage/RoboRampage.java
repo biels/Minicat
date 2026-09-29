@@ -74,7 +74,7 @@ public class RoboRampage extends JocCooperatiu {
     private static final int ARENA_RADIUS = 7;
     private static final int SPAWN_ATTEMPTS = 32;
     private static final int POST_GAME_TICKS = 20 * 10;
-    private static final int SUPPLY_DURATION_TICKS = 20 * 18;
+    private static final int SUPPLY_DURATION_TICKS = RoboRampageRules.SUPPLY_DURATION_TICKS;
     private static final int SUPPLY_FIRE_SWEEP_INTERVAL_TICKS = 20;
 
     private final Map<UUID, RobotState> robots = new LinkedHashMap<>();
@@ -154,19 +154,21 @@ public class RoboRampage extends JocCooperatiu {
                 : RoboRampageRules.waveRobotQuota(waveNumber, getPlayers().size());
         junkDropPolicy = new JunkDropPolicy();
         scrapDrops = new ScrapDropController(world, battleCenter(), random);
-        tasers = new TaserController(Com.getPlugin(), world, this::liveRobotMobs, this::isActiveWeaponUser);
+        tasers = new TaserController(Com.getPlugin(), world, this::liveRobotMobs, this::isActiveWeaponUser,
+                () -> introductions == null || !introductions.isDisplaying());
         supplyDrops = new SupplyDropController(Com.getPlugin(), world, random, tasers);
         scaffolds = new ScaffoldController(
                 world, battleCenter(), ARENA_RADIUS, this::targetHeight,
                 () -> liveRobotMobs().stream().filter(robot -> !compactor.owns(robot.getUniqueId())).toList(),
                 this::scaffoldDamageFor,
                 robot -> tasers.isEnergized(robot.getUniqueId()));
-        jetpacks = new JetpackController(Com.getPlugin(), world, this::isActiveWeaponUser);
+        jetpacks = new JetpackController(Com.getPlugin(), world, this::isActiveWeaponUser,
+                () -> introductions == null || !introductions.isDisplaying());
         jetpacks.register(Com.getPlugin());
-        springRobots = new SpringRobotController(world,
+        springRobots = new SpringRobotController(world, battleCenter(), ARENA_RADIUS,
                 () -> liveRobotMobs().stream().filter(robot ->
                         robots.get(robot.getUniqueId()).type() == RobotType.SPRINGER).toList(),
-                this::getPlayers, this::isActiveWeaponUser, tasers::isEnergized);
+                this::getPlayers, this::isActiveWeaponUser, tasers::isEnergized, scaffolds::platformTops);
         introductions = new IntroductionController(this::getViewers);
         introductions.tip(MessageKey.ROBO_RAMPAGE_INFO_TASER);
         introductions.tip(MessageKey.ROBO_RAMPAGE_INFO_JETPACK);
@@ -188,7 +190,8 @@ public class RoboRampage extends JocCooperatiu {
         scheduleGameplayRepeatingTask(demolition::pruneMissingCharges, 20, 20);
         scheduleGameplayRepeatingTask(metalProjectiles::tick, 1, 1);
         scheduleGameplayRepeatingTask(this::keepFlyingRobotsReachable, 1, 1);
-        scheduleGameplayRepeatingTask(this::runDirector, 60, 60);
+        scheduleGameplayRepeatingTask(this::runDirector, RoboRampageRules.SPAWN_INTERVAL_TICKS,
+                RoboRampageRules.SPAWN_INTERVAL_TICKS);
         scheduleGameplayRepeatingTask(this::sampleProgress, 20, 20);
         announceWaveStart();
     }
@@ -301,16 +304,20 @@ public class RoboRampage extends JocCooperatiu {
             return;
         }
         int playerCount = Math.max(1, getPlayers().size());
-        RobotCounts counts = robotCounts();
-        RoboRampageRules.chooseSpawn(
-                RoboRampageRules.liveSpawnLimits(
-                        scrapDrops.settledHeight(), playerCount, waveNumber), counts,
-                robotsSpawnedThisWave == 0 ? RoboRampageRules.introRobotForWave(waveNumber) : Optional.empty(), random)
-                .flatMap(type -> findSpawnLocation(type).map(location -> new SpawnRequest(type, location)))
-                .ifPresent(request -> {
-                    spawnRobot(request.type(), request.location());
-                    robotsSpawnedThisWave++;
-                });
+        for (int spawned = 0; spawned < RoboRampageRules.spawnBurstSize(waveNumber, playerCount)
+                && robotsSpawnedThisWave < waveRobotQuota; spawned++) {
+            // Recompute after every spawn so a burst obeys both chassis and arena limits.
+            List<RobotType> introductionsThisWave = RoboRampageRules.introRobotsForWave(waveNumber);
+            var preferred = robotsSpawnedThisWave < introductionsThisWave.size()
+                    ? Optional.of(introductionsThisWave.get(robotsSpawnedThisWave)) : Optional.<RobotType>empty();
+            var request = RoboRampageRules.chooseSpawn(
+                    RoboRampageRules.liveSpawnLimits(scrapDrops.settledHeight(), playerCount, waveNumber),
+                    robotCounts(), preferred, random)
+                    .flatMap(type -> findSpawnLocation(type).map(location -> new SpawnRequest(type, location)));
+            if (request.isEmpty()) break;
+            spawnRobot(request.get().type(), request.get().location());
+            robotsSpawnedThisWave++;
+        }
     }
 
     private void beginSupplyPhase() {
@@ -553,28 +560,18 @@ public class RoboRampage extends JocCooperatiu {
         robot.addScoreboardTag("robo_rampage_robot");
         robot.addScoreboardTag("robo_rampage_" + type.name().toLowerCase(Locale.ROOT));
         switch (type) {
-            case ZOMBIE -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_WORKER,
-                    MessageKey.ROBO_RAMPAGE_INTRO_WORKER);
-            case SKELETON -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_GUARD,
-                    MessageKey.ROBO_RAMPAGE_INTRO_GUARD);
-            case SPRINGER -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_SPRINGER,
-                    MessageKey.ROBO_RAMPAGE_INTRO_SPRINGER);
-            case CUTTER -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_CUTTER,
-                    MessageKey.ROBO_RAMPAGE_INFO_CUTTER);
-            case BLAZE -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_DRONE,
-                    MessageKey.ROBO_RAMPAGE_INTRO_DRONE);
-            case GHAST -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_GHAST,
-                    MessageKey.ROBO_RAMPAGE_INTRO_GHAST);
-            case COMPACTOR -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_COMPACTOR,
-                    MessageKey.ROBO_RAMPAGE_INFO_BOSS);
+            case ZOMBIE -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INTRO_WORKER);
+            case SKELETON -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INTRO_GUARD);
+            case SPRINGER -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INTRO_SPRINGER);
+            case CUTTER -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INFO_CUTTER);
+            case BLAZE -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INTRO_DRONE);
+            case GHAST -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INTRO_GHAST);
+            case COMPACTOR -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INFO_BOSS);
         }
         switch (helmet) {
-            case IRON_BLOCK -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_HEAVY,
-                    MessageKey.ROBO_RAMPAGE_INTRO_HEAVY);
-            case REDSTONE_BLOCK -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_OVERCLOCKER,
-                    MessageKey.ROBO_RAMPAGE_INTRO_OVERCLOCKER);
-            case LAPIS_BLOCK -> introductions.introduce(MessageKey.ROBO_RAMPAGE_ENEMY_SCOUT,
-                    MessageKey.ROBO_RAMPAGE_INTRO_SCOUT);
+            case IRON_BLOCK -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INTRO_HEAVY);
+            case REDSTONE_BLOCK -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INTRO_OVERCLOCKER);
+            case LAPIS_BLOCK -> introductions.introduce(MessageKey.ROBO_RAMPAGE_INTRO_SCOUT);
             case IRON_HELMET -> { }
         }
     }
