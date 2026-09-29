@@ -1,0 +1,21 @@
+src/main/resources/i18n/translations/robo-rampage.json
+  s_7742297e629992::t_ef027018d2fd43 207-208
+docs/games/robo-rampage-improvements.md
+  s_7742297e629992::t_ef027018d2fd43 32-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "01b40fbd6e028ec203a247a99134debeaf028826",
+  "prompts": {},
+  "sessions": {
+    "s_7742297e629992": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ef12-a34f-7a11-921a-8238c71a28b5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
