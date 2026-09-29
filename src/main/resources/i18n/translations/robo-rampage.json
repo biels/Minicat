@@ -204,8 +204,8 @@
       "type": "text",
       "key": "minicat.robo-rampage.boss.start",
       "languages": {
-        "en_US": "[minimsg]<white>Wave %1: the Compactor! Watch for yellow warnings; attack when the bar turns green.</white>",
-        "ca_ES": "[minimsg]<white>Onada %1: el Compactador! Vigila els avisos grocs; ataca quan la barra es torni verda.</white>"
+        "en_US": "[minimsg]<white>Wave %1: the Compactor!</white>",
+        "ca_ES": "[minimsg]<white>Onada %1: el Compactador!</white>"
       }
     },
     {

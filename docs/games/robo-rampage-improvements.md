@@ -29,7 +29,8 @@ chainmail starters, safe TNT, the Jetpack and three lives remain.
   cannot grant additional levels.
 - Boss health and the readable slam/throw warnings remain as in the previous
   release. The boss bar now shows only its localized name and health, with a
-  fixed color; phase explanations stay out of that bar.
+  fixed color; phase explanations stay out of that bar. Its arrival announcement
+  names the boss without the obsolete instruction to wait for a green bar.
 
 ## Tools and spring robots
 
