@@ -282,8 +282,8 @@ public final class RoboRampageRules {
 
     public static LiveDeathReward liveGroundRobotReward(HelmetVariant helmet) {
         DeathReward recoveredReward = groundRobotReward(helmet);
-        int minimumBlockCount = helmet == HelmetVariant.IRON_BLOCK ? 3 : 2;
-        int maximumBlockCount = helmet == HelmetVariant.IRON_BLOCK ? 5 : 2;
+        int minimumBlockCount = helmet == HelmetVariant.IRON_BLOCK ? 4 : 3;
+        int maximumBlockCount = helmet == HelmetVariant.IRON_BLOCK ? 6 : 3;
         return new LiveDeathReward(
                 recoveredReward.baseScrap(),
                 recoveredReward.powerUp(),
@@ -297,13 +297,13 @@ public final class RoboRampageRules {
         return new LiveDeathReward(
                 recoveredReward.baseScrap(),
                 recoveredReward.powerUp(),
-                2,
-                2,
+                3,
+                3,
                 recoveredReward.extinguishKiller());
     }
 
     public static LiveDeathReward liveGhastReward() {
-        return new LiveDeathReward(ScrapMaterial.IRON, PowerUp.NONE, 8, 12, false);
+        return new LiveDeathReward(ScrapMaterial.IRON, PowerUp.NONE, 20, 28, false);
     }
 
     public static ScrapMaterial ghastProjectileImpactScrap() {

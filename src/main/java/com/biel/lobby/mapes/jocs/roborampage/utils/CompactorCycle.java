@@ -66,5 +66,5 @@ public final class CompactorCycle {
 
     public static boolean isBossWave(int wave) { return wave > 0 && wave % 5 == 0; }
     public static double maximumHealth(int players) { return 140 + 75 * (Math.clamp(players, 1, 4) - 1); }
-    public static int deathScrap(int players) { return 24 + 8 * (Math.clamp(players, 1, 4) - 1); }
+    public static int deathScrap(int players) { return 25 + 8 * (Math.clamp(players, 1, 4) - 1); }
 }

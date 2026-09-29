@@ -55,6 +55,24 @@ chainmail starters, safe TNT, the Jetpack and three lives remain.
   eight seconds. Walls, original terrain and settled scrap remain protected;
   scaffolds collapse and nearby tracked TNT chains with the original attribution.
 
+## Scrap progression
+
+2026-09-30 scrap follow-up: fill the arena faster without reducing combat pressure.
+
+- Ordinary ground robots drop three iron blocks; iron heads drop four to six.
+  Gold Drones drop three gold blocks. Iron Artillery drops twenty to twenty-eight
+  iron blocks, scattered over a wider area. Compactors drop 25/33/41/49 iron
+  blocks for one/two/three/four participants. Critical killing hits retain the
+  existing extra block. Recovered 2015 rules remain unchanged.
+- A surviving armored robot at half health sheds one random equipped armor piece
+  and ejects one iron block through the existing falling-scrap animation. Direct
+  critical hits can knock off an iron-block head earlier. This can happen only
+  once per robot; cancelled, zero-damage and lethal hits do not shed armor.
+- Shedding waits until the damage has actually applied, preserving that hit's
+  armor calculation. If the scrap queue cannot accept the fragment, the robot
+  retains its armor and can retry on a later hit. Death, removal and match cleanup
+  discard pending shedding state.
+
 ## Lives and outcome
 
 - Each starting participant has three total lives. A death consumes one, preserves

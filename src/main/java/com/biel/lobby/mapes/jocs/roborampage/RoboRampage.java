@@ -83,6 +83,7 @@ public class RoboRampage extends JocCooperatiu {
     private final TeamLives teamLives = new TeamLives();
     private JunkDropPolicy junkDropPolicy;
     private ScrapDropController scrapDrops;
+    private RobotSheddingController robotShedding;
     private TaserController tasers;
     private SupplyDropController supplyDrops;
     private ScaffoldController scaffolds;
@@ -154,6 +155,10 @@ public class RoboRampage extends JocCooperatiu {
                 : RoboRampageRules.waveRobotQuota(waveNumber, getPlayers().size());
         junkDropPolicy = new JunkDropPolicy();
         scrapDrops = new ScrapDropController(world, battleCenter(), random);
+        robotShedding = new RobotSheddingController(world, robots::containsKey, random,
+                task -> scheduleGameplayTask(task, 1),
+                (origin, direction) -> scrapDrops.ejectRobotScrap(origin, direction, ScrapMaterial.IRON));
+        robotShedding.register(Com.getPlugin());
         tasers = new TaserController(Com.getPlugin(), world, this::liveRobotMobs, this::isActiveWeaponUser,
                 () -> introductions == null || !introductions.isDisplaying());
         supplyDrops = new SupplyDropController(Com.getPlugin(), world, random, tasers);
@@ -204,6 +209,7 @@ public class RoboRampage extends JocCooperatiu {
 
     @Override
     protected void customJocFinalitzat() {
+        if (robotShedding != null) robotShedding.close();
         if (scrapDrops != null) {
             displayedScrapHeight = scrapDrops.settledHeight();
             Com.getPlugin().getLogger().info("Robo Rampage finished at " + displayedScrapHeight
@@ -605,7 +611,9 @@ public class RoboRampage extends JocCooperatiu {
     private void removeMissingRobots() {
         robots.keySet().removeIf(robotId -> {
             Entity entity = Bukkit.getEntity(robotId);
-            return entity == null || !entity.isValid() || entity.isDead() || entity.getWorld() != world;
+            boolean missing = entity == null || !entity.isValid() || entity.isDead() || entity.getWorld() != world;
+            if (missing && robotShedding != null) robotShedding.forget(robotId);
+            return missing;
         });
     }
 
@@ -632,6 +640,7 @@ public class RoboRampage extends JocCooperatiu {
     protected void onEntityDeath(EntityDeathEvent event, Entity entity) {
         super.onEntityDeath(event, entity);
         RobotState state = robots.remove(entity.getUniqueId());
+        if (robotShedding != null) robotShedding.forget(entity.getUniqueId());
         if (state == null || scrapDrops == null) return;
         event.getDrops().clear();
         event.setDroppedExp(0);
@@ -651,10 +660,12 @@ public class RoboRampage extends JocCooperatiu {
             case ZOMBIE, SKELETON, CUTTER, SPRINGER -> RoboRampageRules.liveGroundRobotReward(state.helmet());
         };
         int blockCount = reward.rollBlockCount(random, criticalKill);
+        double scatterRadius = state.type() == RobotType.GHAST ? 2.5 : 0.75;
         enqueueScrap(entity.getLocation(), reward.scrapMaterial());
         for (int block = 1; block < blockCount; block++) {
             enqueueScrap(entity.getLocation().clone().add(
-                    random.nextDouble(-0.75, 0.75), 0, random.nextDouble(-0.75, 0.75)), reward.scrapMaterial());
+                    random.nextDouble(-scatterRadius, scatterRadius), 0,
+                    random.nextDouble(-scatterRadius, scatterRadius)), reward.scrapMaterial());
         }
     }
 
@@ -712,22 +723,7 @@ public class RoboRampage extends JocCooperatiu {
             event.setDamage(event.getDamage() * RoboRampageRules.ROBOT_DAMAGE_MULTIPLIER);
         }
         if (targetIsRobot) {
-            ejectIronHeadScrapOnCriticalHit(event, damaged, damager);
             rememberCriticalKillingHit(event, damaged, damager);
-        }
-    }
-
-    private void ejectIronHeadScrapOnCriticalHit(
-            EntityDamageByEntityEvent event, Entity damaged, Entity directDamager) {
-        RobotState robot = robots.get(damaged.getUniqueId());
-        if (scrapDrops == null || robot == null || robot.helmet() != HelmetVariant.IRON_BLOCK
-                || !isDirectPlayerCritical(event, directDamager)) return;
-        Player attacker = (Player) directDamager;
-        Vector awayFromAttacker = damaged.getLocation().toVector().subtract(attacker.getLocation().toVector());
-        Location ejectionOrigin = damaged.getLocation().add(0, damaged.getHeight() * 0.65, 0);
-        if (!scrapDrops.ejectRobotScrap(ejectionOrigin, awayFromAttacker, ScrapMaterial.IRON)) {
-            Com.getPlugin().getLogger().warning(
-                    "Robo Rampage scrap queue is full; critical-hit scrap could not be ejected");
         }
     }
 

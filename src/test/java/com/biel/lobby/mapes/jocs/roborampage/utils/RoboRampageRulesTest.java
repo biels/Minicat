@@ -101,35 +101,37 @@ class RoboRampageRulesTest {
     }
 
     @Test
-    void ordinaryRobotsDropTwoBlocksAndCriticalKillsAddOne() {
+    void ordinaryRobotsDropThreeBlocksAndCriticalKillsAddOne() {
         for (var helmet : List.of(
                 RoboRampageRules.HelmetVariant.IRON_HELMET,
                 RoboRampageRules.HelmetVariant.REDSTONE_BLOCK,
                 RoboRampageRules.HelmetVariant.LAPIS_BLOCK)) {
             var reward = RoboRampageRules.liveGroundRobotReward(helmet);
-            assertEquals(2, reward.rollBlockCount(new Random(1), false));
-            assertEquals(3, reward.rollBlockCount(new Random(1), true));
+            assertEquals(ScrapMaterial.IRON, reward.scrapMaterial());
+            assertEquals(3, reward.rollBlockCount(new Random(1), false));
+            assertEquals(4, reward.rollBlockCount(new Random(1), true));
         }
 
         var blazeReward = RoboRampageRules.liveBlazeReward();
-        assertEquals(2, blazeReward.rollBlockCount(new Random(1), false));
-        assertEquals(3, blazeReward.rollBlockCount(new Random(1), true));
+        assertEquals(ScrapMaterial.GOLD, blazeReward.scrapMaterial());
+        assertEquals(3, blazeReward.rollBlockCount(new Random(1), false));
+        assertEquals(4, blazeReward.rollBlockCount(new Random(1), true));
     }
 
     @Test
-    void ironHeadRobotsDropThreeToFiveBlocksBeforeCriticalBonus() {
+    void ironHeadRobotsDropFourToSixBlocksBeforeCriticalBonus() {
         var reward = RoboRampageRules.liveGroundRobotReward(RoboRampageRules.HelmetVariant.IRON_BLOCK);
-        boolean sawThree = false;
-        boolean sawFive = false;
+        boolean sawFour = false;
+        boolean sawSix = false;
         for (int seed = 0; seed < 100; seed++) {
             int normalBlockCount = reward.rollBlockCount(new Random(seed), false);
             int criticalBlockCount = reward.rollBlockCount(new Random(seed), true);
-            assertTrue(normalBlockCount >= 3 && normalBlockCount <= 5);
+            assertTrue(normalBlockCount >= 4 && normalBlockCount <= 6);
             assertEquals(normalBlockCount + 1, criticalBlockCount);
-            sawThree |= normalBlockCount == 3;
-            sawFive |= normalBlockCount == 5;
+            sawFour |= normalBlockCount == 4;
+            sawSix |= normalBlockCount == 6;
         }
-        assertTrue(sawThree && sawFive);
+        assertTrue(sawFour && sawSix);
     }
 
     @Test
@@ -206,13 +208,15 @@ class RoboRampageRulesTest {
     @Test
     void ghastDeathIsASignificantButBoundedScrapEvent() {
         var reward = RoboRampageRules.liveGhastReward();
+        assertEquals(ScrapMaterial.IRON, reward.scrapMaterial());
         boolean sawMinimum = false;
         boolean sawMaximum = false;
         for (int seed = 0; seed < 100; seed++) {
             int blocks = reward.rollBlockCount(new Random(seed), false);
-            assertTrue(blocks >= 8 && blocks <= 12);
-            sawMinimum |= blocks == 8;
-            sawMaximum |= blocks == 12;
+            assertTrue(blocks >= 20 && blocks <= 28);
+            assertEquals(blocks + 1, reward.rollBlockCount(new Random(seed), true));
+            sawMinimum |= blocks == 20;
+            sawMaximum |= blocks == 28;
         }
         assertTrue(sawMinimum && sawMaximum);
     }

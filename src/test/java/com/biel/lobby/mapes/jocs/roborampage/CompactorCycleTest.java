@@ -75,8 +75,10 @@ class CompactorCycleTest {
         assertTrue(CompactorCycle.isBossWave(10));
         assertEquals(140, CompactorCycle.maximumHealth(0));
         assertEquals(365, CompactorCycle.maximumHealth(100));
-        assertEquals(24, CompactorCycle.deathScrap(1));
-        assertEquals(48, CompactorCycle.deathScrap(100));
+        assertEquals(25, CompactorCycle.deathScrap(0));
+        assertEquals(25, CompactorCycle.deathScrap(1));
+        assertEquals(33, CompactorCycle.deathScrap(2));
+        assertEquals(49, CompactorCycle.deathScrap(100));
         var limits = RoboRampageRules.liveSpawnLimits(200, 20, 100);
         for (int seed = 0; seed < 100; seed++) {
             assertNotEquals(RoboRampageRules.RobotType.COMPACTOR, RoboRampageRules.chooseSpawn(limits,
