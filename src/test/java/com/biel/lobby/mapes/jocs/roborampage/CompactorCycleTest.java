@@ -19,7 +19,7 @@ class CompactorCycleTest {
     @Test void attacksCommitForFullWarningThenExposeArmor() {
         for (boolean near : new boolean[]{true, false}) {
             CompactorCycle cycle = warning(near);
-            assertEquals(0.35, cycle.incomingDamageMultiplier());
+            assertEquals(0.55, cycle.incomingDamageMultiplier());
             for (int tick = 0; tick < 29; tick++) assertEquals(NONE, cycle.tick(true, !near, false, true));
             assertEquals(near ? SLAM : THROW, cycle.tick(true, !near, false, true));
             assertEquals(RECOVERY, cycle.phase());
@@ -73,8 +73,8 @@ class CompactorCycleTest {
         assertFalse(CompactorCycle.isBossWave(4));
         assertTrue(CompactorCycle.isBossWave(5));
         assertTrue(CompactorCycle.isBossWave(10));
-        assertEquals(240, CompactorCycle.maximumHealth(0));
-        assertEquals(660, CompactorCycle.maximumHealth(100));
+        assertEquals(140, CompactorCycle.maximumHealth(0));
+        assertEquals(365, CompactorCycle.maximumHealth(100));
         assertEquals(24, CompactorCycle.deathScrap(1));
         assertEquals(48, CompactorCycle.deathScrap(100));
         var limits = RoboRampageRules.liveSpawnLimits(200, 20, 100);

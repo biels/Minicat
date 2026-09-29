@@ -9,7 +9,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 import java.util.function.Predicate;
+import java.util.function.Consumer;
 
+import org.bukkit.FluidCollisionMode;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -29,39 +32,55 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.Vector;
 
 import com.biel.lobby.localization.MessageKey;
 import com.biel.lobby.localization.Messages;
+import com.biel.lobby.mapes.jocs.roborampage.utils.DemolitionRules;
 
-/** Match-owned TNT. Vanilla handles the fuse, blast exposure, damage and knockback. */
+/** Match-owned TNT: native robot blast damage, explicit safe launch, protected terrain. */
 final class DemolitionController implements Listener, AutoCloseable {
     private static final int MAX_DEPLOYED_CHARGES = 16;
     private static final int FUSE_TICKS = 80;
     private static final int CHAIN_FUSE_TICKS = 20;
-    private static final float BLAST_POWER = 3.0F;
 
     private final World world;
     private final Location battleCenter;
     private final int arenaRadius;
     private final IntSupplier targetHeight;
     private final Predicate<Player> activePlayer;
+    private final Predicate<Entity> trackedRobot;
     private final ScaffoldController scaffolds;
+    private final DemolitionRules blastRules = new DemolitionRules();
     private final Set<Block> placedCharges = new HashSet<>();
     private final Map<UUID, TNTPrimed> primedCharges = new HashMap<>();
     private final Set<UUID> starterRecipients = new HashSet<>();
+    private Consumer<Runnable> scheduleLaunch;
+    private boolean closed;
 
     DemolitionController(World world, Location battleCenter, int arenaRadius,
-            IntSupplier targetHeight, Predicate<Player> activePlayer, ScaffoldController scaffolds) {
+            IntSupplier targetHeight, Predicate<Player> activePlayer, ScaffoldController scaffolds,
+            Predicate<Entity> trackedRobot) {
+        this(world, battleCenter, arenaRadius, targetHeight, activePlayer, scaffolds, trackedRobot, Runnable::run);
+    }
+
+    DemolitionController(World world, Location battleCenter, int arenaRadius,
+            IntSupplier targetHeight, Predicate<Player> activePlayer, ScaffoldController scaffolds,
+            Predicate<Entity> trackedRobot, Consumer<Runnable> scheduleLaunch) {
         this.world = world;
         this.battleCenter = battleCenter.clone();
         this.arenaRadius = arenaRadius;
         this.targetHeight = targetHeight;
         this.activePlayer = activePlayer;
         this.scaffolds = scaffolds;
+        this.trackedRobot = trackedRobot;
+        this.scheduleLaunch = scheduleLaunch;
     }
 
     void register(Plugin plugin) {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        // Apply once native explosion processing and this tick's movement have finished.
+        scheduleLaunch = launch -> plugin.getServer().getScheduler().runTask(plugin, launch);
     }
 
     ItemStack createIgniter() {
@@ -119,11 +138,19 @@ final class DemolitionController implements Listener, AutoCloseable {
     boolean owns(Entity entity) { return primedCharges.containsKey(entity.getUniqueId()); }
 
     boolean mayDamage(Entity explosion, Entity target, boolean targetIsRobot) {
-        TNTPrimed charge = primedCharges.get(explosion.getUniqueId());
-        if (charge == null) return false;
-        return targetIsRobot || target instanceof Player player && activePlayer.test(player)
-                && charge.getSource() != null && charge.getSource().getUniqueId().equals(player.getUniqueId());
+        return owns(explosion) && !(target instanceof Player) && targetIsRobot;
     }
+
+    double adjustedRobotDamage(double nativeDamage) {
+        return nativeDamage * DemolitionRules.ROBOT_DAMAGE_MULTIPLIER;
+    }
+
+    boolean consumeBlastFallProtection(Player player) {
+        return activePlayer.test(player)
+                && blastRules.consumeFallProtection(player.getUniqueId(), world.getGameTime());
+    }
+
+    void forgetPlayer(UUID playerId) { blastRules.forgetPlayer(playerId); }
 
     void handleExplosion(EntityExplodeEvent event) {
         if (!owns(event.getEntity())) return;
@@ -136,7 +163,51 @@ final class DemolitionController implements Listener, AutoCloseable {
         for (Block block : affectedBlocks) {
             if (placedCharges.contains(block)) prime(block, charge.getSource(), CHAIN_FUSE_TICKS);
         }
+        queueBlastLaunch(event);
         scaffolds.destroyInBlast(affectedBlocks);
+    }
+
+    private void queueBlastLaunch(EntityExplodeEvent blast) {
+        Location origin = blast.getLocation();
+        double radius = DemolitionRules.BLAST_RADIUS;
+        for (Entity target : world.getNearbyEntities(origin, radius, radius, radius)) {
+            if (!mayLaunch(target)) continue;
+            double exposure = exposure(origin, target);
+            double speed = DemolitionRules.launchSpeed(origin.distance(target.getLocation()), exposure);
+            if (speed == 0) continue;
+            scheduleLaunch.accept(() -> {
+                if (blast.isCancelled() || !mayLaunch(target)) return;
+                Vector velocity = target.getVelocity();
+                // Replace vertical knockback instead of adding to native/repeated blast impulses.
+                target.setVelocity(velocity.setY(speed));
+                target.setFallDistance(0);
+                if (target instanceof Player player) {
+                    blastRules.protectLanding(player.getUniqueId(), world.getGameTime());
+                }
+            });
+        }
+    }
+
+    private boolean mayLaunch(Entity target) {
+        if (closed || !target.isValid() || target.isDead() || target.getWorld() != world) return false;
+        if (target instanceof Player player) {
+            return player.isOnline() && player.getGameMode() != GameMode.SPECTATOR && activePlayer.test(player);
+        }
+        return trackedRobot.test(target);
+    }
+
+    private double exposure(Location origin, Entity target) {
+        var bounds = target.getBoundingBox();
+        int visibleSamples = 0;
+        double[] heights = {bounds.getMinY() + 0.1, bounds.getCenterY(), bounds.getMaxY() - 0.1};
+        for (double height : heights) {
+            Vector direction = new Vector(bounds.getCenterX() - origin.getX(),
+                    height - origin.getY(), bounds.getCenterZ() - origin.getZ());
+            double distance = direction.length();
+            if (distance <= 0.01 || world.rayTraceBlocks(origin, direction.normalize(),
+                    Math.max(0, distance - 0.05), FluidCollisionMode.NEVER, true) == null) visibleSamples++;
+        }
+        return visibleSamples / 3.0;
     }
 
     private void prime(Block block, Entity source, int fuseTicks) {
@@ -146,7 +217,7 @@ final class DemolitionController implements Listener, AutoCloseable {
         TNTPrimed charge = world.spawn(origin, TNTPrimed.class, entity -> {
             entity.setSource(source);
             entity.setFuseTicks(fuseTicks);
-            entity.setYield(BLAST_POWER);
+            entity.setYield(DemolitionRules.BLAST_POWER);
             entity.setIsIncendiary(false);
             entity.setPersistent(false);
             entity.addScoreboardTag("robo_rampage_tnt");
@@ -158,6 +229,7 @@ final class DemolitionController implements Listener, AutoCloseable {
     void pruneMissingCharges() {
         placedCharges.removeIf(block -> block.getType() != Material.TNT);
         primedCharges.values().removeIf(charge -> !charge.isValid());
+        blastRules.prune(world.getGameTime());
     }
 
     private boolean withinBuildArea(Block block) {
@@ -170,6 +242,7 @@ final class DemolitionController implements Listener, AutoCloseable {
 
     @Override
     public void close() {
+        closed = true;
         HandlerList.unregisterAll(this);
         for (Block block : placedCharges) {
             if (block.getType() == Material.TNT) block.setType(Material.AIR, false);
@@ -178,5 +251,6 @@ final class DemolitionController implements Listener, AutoCloseable {
         placedCharges.clear();
         primedCharges.clear();
         starterRecipients.clear();
+        blastRules.clear();
     }
 }

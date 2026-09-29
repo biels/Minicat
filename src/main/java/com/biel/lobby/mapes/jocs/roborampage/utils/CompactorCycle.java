@@ -62,9 +62,9 @@ public final class CompactorCycle {
     public boolean windingUp() { return phase == Phase.SLAM_WINDUP || phase == Phase.THROW_WINDUP; }
     public boolean exposed() { return phase == Phase.RECOVERY || phase == Phase.STUNNED; }
     public boolean canBeInterrupted() { return stunImmunityTicks == 0; }
-    public double incomingDamageMultiplier() { return exposed() ? 1.5 : 0.35; }
+    public double incomingDamageMultiplier() { return exposed() ? 1.5 : 0.55; }
 
     public static boolean isBossWave(int wave) { return wave > 0 && wave % 5 == 0; }
-    public static double maximumHealth(int players) { return 240 + 140 * (Math.clamp(players, 1, 4) - 1); }
+    public static double maximumHealth(int players) { return 140 + 75 * (Math.clamp(players, 1, 4) - 1); }
     public static int deathScrap(int players) { return 24 + 8 * (Math.clamp(players, 1, 4) - 1); }
 }

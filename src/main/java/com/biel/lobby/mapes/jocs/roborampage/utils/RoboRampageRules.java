@@ -13,17 +13,18 @@ public final class RoboRampageRules {
     public static final int POWER_UP_TICKS = 20 * 20;
     public static final int POWER_UP_AMPLIFIER = 1;
 
-    private static final int MAX_ZOMBIES = 10;
-    private static final int MAX_SKELETONS = 6;
-    private static final int MAX_BLAZES = 4;
-    private static final int MAX_CUTTERS = 2;
-    private static final int MAX_GHASTS = 2;
-    private static final int MAX_ROBOTS = 24;
-    private static final int MAX_WAVE_ROBOTS = 30;
+    private static final int MAX_ZOMBIES = 6;
+    private static final int MAX_SKELETONS = 4;
+    private static final int MAX_BLAZES = 2;
+    private static final int MAX_CUTTERS = 1;
+    private static final int MAX_GHASTS = 1;
+    private static final int MAX_SPRINGERS = 2;
+    private static final int MAX_ROBOTS = 14;
+    private static final int MAX_WAVE_ROBOTS = 22;
 
     private RoboRampageRules() {}
 
-    public enum RobotType { ZOMBIE, SKELETON, BLAZE, CUTTER, GHAST, COMPACTOR }
+    public enum RobotType { ZOMBIE, SKELETON, BLAZE, CUTTER, GHAST, COMPACTOR, SPRINGER }
 
     public enum WavePhase { ASSAULT, CLEANUP, SUPPLY }
 
@@ -57,8 +58,12 @@ public final class RoboRampageRules {
     public record GroundRobotProfile(
             double maximumHealth, double movementSpeed, double knockbackResistance) {}
 
-    public record RobotCounts(int zombies, int skeletons, int blazes, int cutters, int ghasts) {
-        public int total() { return zombies + skeletons + blazes + cutters + ghasts; }
+    public record RobotCounts(int zombies, int skeletons, int blazes, int cutters, int ghasts, int springers) {
+        public RobotCounts(int zombies, int skeletons, int blazes, int cutters, int ghasts) {
+            this(zombies, skeletons, blazes, cutters, ghasts, 0);
+        }
+
+        public int total() { return zombies + skeletons + blazes + cutters + ghasts + springers; }
 
         public int count(RobotType type) {
             return switch (type) {
@@ -67,12 +72,17 @@ public final class RoboRampageRules {
                 case BLAZE -> blazes;
                 case CUTTER -> cutters;
                 case GHAST -> ghasts;
+                case SPRINGER -> springers;
                 case COMPACTOR -> 0; // Dedicated boss waves bypass normal spawn limits.
             };
         }
     }
 
-    public record SpawnLimits(int zombies, int skeletons, int blazes, int cutters, int ghasts, int total) {
+    public record SpawnLimits(int zombies, int skeletons, int blazes, int cutters, int ghasts, int springers, int total) {
+        public SpawnLimits(int zombies, int skeletons, int blazes, int cutters, int ghasts, int total) {
+            this(zombies, skeletons, blazes, cutters, ghasts, 0, total);
+        }
+
         public int limit(RobotType type) {
             return switch (type) {
                 case ZOMBIE -> zombies;
@@ -80,6 +90,7 @@ public final class RoboRampageRules {
                 case BLAZE -> blazes;
                 case CUTTER -> cutters;
                 case GHAST -> ghasts;
+                case SPRINGER -> springers;
                 case COMPACTOR -> 0; // Dedicated boss waves bypass normal spawn limits.
             };
         }
@@ -116,17 +127,40 @@ public final class RoboRampageRules {
         int skeletons = wave >= 2
                 ? Math.max(1, Math.min(MAX_SKELETONS, legacy.skeletons() + (players - 1) / 2))
                 : 0;
-        int blazes = wave >= 3 ? Math.max(1, Math.min(MAX_BLAZES, legacy.blazes())) : 0;
-        int cutters = wave >= 3 ? Math.min(MAX_CUTTERS, (players + 1) / 2) : 0;
-        int ghasts = wave >= 4 ? Math.min(MAX_GHASTS, 1 + Math.max(0, wave - 7) / 4) : 0;
-        int total = Math.min(MAX_ROBOTS, 6 + players * 4);
-        return new SpawnLimits(zombies, skeletons, blazes, cutters, ghasts, total);
+        int springers = wave >= 3 ? Math.min(MAX_SPRINGERS, (players + 1) / 2) : 0;
+        int cutters = wave >= 4 ? MAX_CUTTERS : 0;
+        int blazes = wave >= 6 ? Math.max(1, Math.min(MAX_BLAZES, legacy.blazes())) : 0;
+        int ghasts = wave >= 7 ? MAX_GHASTS : 0;
+        int total = Math.min(MAX_ROBOTS, 3 + players * 2);
+        return new SpawnLimits(zombies, skeletons, blazes, cutters, ghasts, springers, total);
+    }
+
+    /** New mechanics arrive one at a time, and their first spawn can be guaranteed. */
+    public static Optional<RobotType> introRobotForWave(int waveNumber) {
+        return switch (waveNumber) {
+            case 1 -> Optional.of(RobotType.ZOMBIE);
+            case 2 -> Optional.of(RobotType.SKELETON);
+            case 3 -> Optional.of(RobotType.SPRINGER);
+            case 4 -> Optional.of(RobotType.CUTTER);
+            case 5 -> Optional.of(RobotType.COMPACTOR);
+            case 6 -> Optional.of(RobotType.BLAZE);
+            case 7 -> Optional.of(RobotType.GHAST);
+            default -> Optional.empty();
+        };
     }
 
     /** One bounded decision replaces the original main-thread-blocking while(true) loop. */
     public static Optional<RobotType> chooseSpawn(
             SpawnLimits limits, RobotCounts counts, RandomGenerator random) {
+        return chooseSpawn(limits, counts, Optional.empty(), random);
+    }
+
+    public static Optional<RobotType> chooseSpawn(
+            SpawnLimits limits, RobotCounts counts, Optional<RobotType> preferred, RandomGenerator random) {
         if (counts.total() >= limits.total()) return Optional.empty();
+        if (preferred.isPresent() && counts.count(preferred.get()) < limits.limit(preferred.get())) {
+            return preferred;
+        }
         List<RobotType> available = new ArrayList<>();
         for (RobotType type : RobotType.values()) {
             if (counts.count(type) < limits.limit(type)) available.add(type);
@@ -139,7 +173,7 @@ public final class RoboRampageRules {
     public static int waveRobotQuota(int waveNumber, int playerCount) {
         int wave = Math.max(1, waveNumber);
         int players = Math.max(1, playerCount);
-        return Math.min(MAX_WAVE_ROBOTS, 5 + wave * 2 + (players - 1) * 3);
+        return Math.min(MAX_WAVE_ROBOTS, 4 + wave + (players - 1) * 2);
     }
 
     public static int scaffoldingPerPlayer(int waveNumber) {
@@ -149,15 +183,19 @@ public final class RoboRampageRules {
     /** Minimal material-driven identities; advanced behaviors remain separate from equipment rewards. */
     public static GroundRobotProfile groundRobotProfile(HelmetVariant helmet) {
         return switch (helmet) {
-            case IRON_HELMET -> new GroundRobotProfile(20, 0.23, 0);
-            case IRON_BLOCK -> new GroundRobotProfile(36, 0.17, 0.65);
-            case REDSTONE_BLOCK -> new GroundRobotProfile(16, 0.32, 0.1);
-            case LAPIS_BLOCK -> new GroundRobotProfile(22, 0.24, 0.15);
+            case IRON_HELMET -> new GroundRobotProfile(12, 0.21, 0);
+            case IRON_BLOCK -> new GroundRobotProfile(22, 0.16, 0.45);
+            case REDSTONE_BLOCK -> new GroundRobotProfile(10, 0.26, 0.05);
+            case LAPIS_BLOCK -> new GroundRobotProfile(14, 0.21, 0.1);
         };
     }
 
     public static GroundRobotProfile cutterProfile() {
-        return new GroundRobotProfile(18, 0.21, 0.2);
+        return new GroundRobotProfile(12, 0.18, 0.1);
+    }
+
+    public static GroundRobotProfile springerProfile() {
+        return new GroundRobotProfile(12, 0.20, 0);
     }
 
     public static int scaffoldDamagePerAttack(RobotType type) {
@@ -169,10 +207,10 @@ public final class RoboRampageRules {
         return battleCenterY + Math.max(0, settledScrapHeight) + chassisClearance;
     }
 
-    /** Wave four introduces Ghasts, so wave-three supplies must close any ranged-kit gap. */
+    /** The first aerial chassis arrives on wave six; preceding supplies close any ranged-kit gap. */
     public static boolean needsGuaranteedRangedSupply(
             int completedWaveNumber, boolean carriesBow, boolean carriesArrow) {
-        return completedWaveNumber >= 3 && (!carriesBow || !carriesArrow);
+        return completedWaveNumber >= 5 && (!carriesBow || !carriesArrow);
     }
 
     /** Every cleared wave grants one Taser level, plus an independent equipment reward. */

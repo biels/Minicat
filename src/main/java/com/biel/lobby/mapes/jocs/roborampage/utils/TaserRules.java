@@ -5,10 +5,10 @@ public final class TaserRules {
     public static final int BASE_MAXIMUM_CHARGE = 100;
     public static final int MAXIMUM_LEVEL = 5;
     public static final int CHARGE_DRAIN_PER_TICK = 1;
-    public static final int RECHARGE_INTERVAL_TICKS = 5;
-    public static final int RECHARGE_DELAY_TICKS = 40;
+    public static final int RECHARGE_INTERVAL_TICKS = 4;
+    public static final int RECHARGE_DELAY_TICKS = 20;
     public static final int PULSE_INTERVAL_TICKS = 10;
-    public static final double DAMAGE_PER_PULSE = 2.0;
+    public static final double DAMAGE_PER_PULSE = 3.0;
     public static final double SOURCE_RANGE = 12.0;
     public static final double GHAST_SOURCE_RANGE = 16.0;
     public static final double JUMP_RANGE = 6.0;

@@ -68,24 +68,16 @@
       "type": "text",
       "key": "minicat.robo-rampage.info.taser",
       "languages": {
-        "en_US": "[minimsg]<aqua>Your Taser chains electricity, recharges slowly, and improves with supply cores.</aqua>",
-        "ca_ES": "[minimsg]<aqua>El teu Taser encadena electricitat, es recarrega lentament i millora amb nuclis de subministrament.</aqua>"
+        "en_US": "[minimsg]<aqua>Right-click the Taser to toggle chain lightning; switch to your sword while it recharges.</aqua>",
+        "ca_ES": "[minimsg]<aqua>Fes clic dret amb el Taser per activar els llamps; canvia a l’espasa mentre es recarrega.</aqua>"
       }
     },
     {
       "type": "text",
       "key": "minicat.robo-rampage.info.supplies",
       "languages": {
-        "en_US": "[minimsg]<yellow>Clear each wave: fires go out and personal equipment and scaffolding fall at the center.</yellow>",
-        "ca_ES": "[minimsg]<yellow>Supera cada onada: el foc s'apaga i al centre cauen equipament personal i bastides.</yellow>"
-      }
-    },
-    {
-      "type": "text",
-      "key": "minicat.robo-rampage.info.enemies",
-      "languages": {
-        "en_US": "[minimsg]<gold>Later waves unlock new chassis. Cutters carry stonecutters and tear down scaffolds; Ghasts throw iron blocks and release lots of scrap.</gold>",
-        "ca_ES": "[minimsg]<gold>Les onades posteriors desbloquegen nous xassissos. Els talladors destrueixen bastides; els Ghasts llancen blocs de ferro i alliberen molta ferralla.</gold>"
+        "en_US": "[minimsg]<yellow>Between waves, collect your glowing supplies at the center: Taser cores, equipment, TNT and scaffolds.</yellow>",
+        "ca_ES": "[minimsg]<yellow>Entre onades, recull els teus subministraments brillants al centre: nuclis de Taser, equipament, TNT i bastides.</yellow>"
       }
     },
     {
@@ -180,8 +172,8 @@
       "type": "text",
       "key": "minicat.robo-rampage.info.tnt",
       "languages": {
-        "en_US": "[minimsg]<gold>Place TNT, light it with flint and steel, then retreat! Unlit TNT is recoverable. Blasts hurt you and robots, break scaffolds and chain nearby TNT; scrap and teammates are safe.</gold>",
-        "ca_ES": "[minimsg]<gold>Posa TNT, encén-la amb l'encenedor i allunya't! Pots recuperar-la apagada. L'explosió et fereix a tu i als robots, trenca bastides i encén TNT propera; respecta ferralla i companys.</gold>"
+        "en_US": "[minimsg]<gold>Place TNT and light it with flint and steel: it blasts robots and lifts everyone nearby without hurting players.</gold>",
+        "ca_ES": "[minimsg]<gold>Posa TNT i encén-la amb l’encenedor: destrossa robots i aixeca tothom a prop sense fer mal als jugadors.</gold>"
       }
     },
     {
@@ -194,26 +186,18 @@
     },
     {
       "type": "text",
-      "key": "minicat.robo-rampage.info.piston-jump",
-      "languages": {
-        "en_US": "[minimsg]<aqua>Sneak + jump to boost about 2 blocks up and 3 forward. Land and wait 8 seconds to reuse. A click and sparks mean ready.</aqua>",
-        "ca_ES": "[minimsg]<aqua>Ajup-te i salta per impulsar-te uns 2 blocs amunt i 3 endavant. Aterra i espera 8 segons per repetir. Un clic i espurnes indiquen que està llest.</aqua>"
-      }
-    },
-    {
-      "type": "text",
       "key": "minicat.robo-rampage.info.cutter",
       "languages": {
-        "en_US": "[minimsg]<gold>A Cutter spins up for 1.2 seconds before cutting scaffolds, then rests for 2 seconds. Stop it with your Taser or jump away!</gold>",
-        "ca_ES": "[minimsg]<gold>El tallador prepara la serra durant 1,2 segons abans de tallar bastides i després descansa 2 segons. Atura'l amb el Taser o salta per fugir!</gold>"
+        "en_US": "[minimsg]<white>Stop its saw with the Taser, or leave the scaffold before it cuts.</white>",
+        "ca_ES": "[minimsg]<white>Atura la serra amb el Taser o abandona la bastida abans que la talli.</white>"
       }
     },
     {
       "type": "text",
       "key": "minicat.robo-rampage.info.boss",
       "languages": {
-        "en_US": "[minimsg]<white>Every fifth wave brings the Compactor. Jump over its slam, dodge its throw, then attack while its armor is open. Hold the Taser on a warning to interrupt it.</white>",
-        "ca_ES": "[minimsg]<white>Cada cinquena onada arriba el Compactador. Salta per esquivar el cop, evita el projectil i ataca quan obri l’armadura. Mantén el Taser durant l’avís per interrompre’l.</white>"
+        "en_US": "[minimsg]<white>Jump over its slam; attack when its armor opens or interrupt with the Taser.</white>",
+        "ca_ES": "[minimsg]<white>Salta per evitar el cop; ataca quan obri l’armadura o interromp-lo amb el Taser.</white>"
       }
     },
     {
@@ -270,6 +254,254 @@
       "languages": {
         "en_US": "[minimsg]<white>Compactor • Overheating</white>",
         "ca_ES": "[minimsg]<white>Compactador • Sobreescalfat</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.lives",
+      "languages": {
+        "en_US": "[minimsg]<white>You have 3 lives; keep your gear on respawn, spectate at zero. The team loses when everyone is out.</white>",
+        "ca_ES": "[minimsg]<white>Tens 3 vides; conserves l’equip en reaparèixer i observes quan s’acaben. L’equip perd quan no queda ningú.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.info.jetpack",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Right-click the Jetpack feather to toggle thrust; switch items to stop, and land to recharge.</aqua>",
+        "ca_ES": "[minimsg]<aqua>Fes clic dret amb la ploma de propulsió per volar; canvia d’objecte per parar i aterra per recarregar.</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.score.lives",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Lives</aqua>",
+        "ca_ES": "[minimsg]<aqua>Vides</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.score.supply",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Next wave in</aqua>",
+        "ca_ES": "[minimsg]<aqua>Propera onada en</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.score.robots",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Robots left</aqua>",
+        "ca_ES": "[minimsg]<aqua>Robots restants</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.life.lost",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Lives: %1. Respawn with your equipment and keep climbing.</yellow>",
+        "ca_ES": "[minimsg]<yellow>Vides: %1. Reapareix amb el teu equip i continua pujant.</yellow>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.eliminated",
+      "languages": {
+        "en_US": "[minimsg]<red>Lives: %1. You are now spectating; your teammates can still finish the climb.</red>",
+        "ca_ES": "[minimsg]<red>Vides: %1. Ara observes; els teus companys encara poden completar l’ascens.</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.defeat",
+      "languages": {
+        "en_US": "[minimsg]<red><bold>The team is out of lives.</bold></red> <white>The climb ends here.</white>",
+        "ca_ES": "[minimsg]<red><bold>L’equip s’ha quedat sense vides.</bold></red> <white>L’ascens acaba aquí.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.worker",
+      "languages": {
+        "en_US": "[minimsg]<gold>Worker</gold>",
+        "ca_ES": "[minimsg]<gold>Treballador</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.intro.worker",
+      "languages": {
+        "en_US": "[minimsg]<white>Slash it with your sword; its wreckage becomes climbing terrain.</white>",
+        "ca_ES": "[minimsg]<white>Ataca’l amb l’espasa; les restes es converteixen en terreny escalable.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.guard",
+      "languages": {
+        "en_US": "[minimsg]<gold>Guard</gold>",
+        "ca_ES": "[minimsg]<gold>Guàrdia</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.intro.guard",
+      "languages": {
+        "en_US": "[minimsg]<white>This skeleton carries a sword; keep moving and use the Taser for groups.</white>",
+        "ca_ES": "[minimsg]<white>Aquest esquelet porta espasa; mou-te i usa el Taser contra els grups.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.springer",
+      "languages": {
+        "en_US": "[minimsg]<gold>Springer</gold>",
+        "ca_ES": "[minimsg]<gold>Saltador</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.intro.springer",
+      "languages": {
+        "en_US": "[minimsg]<white>Its springs wind up before a hop; dodge sideways or stop it with the Taser.</white>",
+        "ca_ES": "[minimsg]<white>Prepara les molles abans de saltar; esquiva’l de costat o atura’l amb el Taser.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.cutter",
+      "languages": {
+        "en_US": "[minimsg]<gold>Cutter</gold>",
+        "ca_ES": "[minimsg]<gold>Tallador</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.drone",
+      "languages": {
+        "en_US": "[minimsg]<gold>Gold Drone</gold>",
+        "ca_ES": "[minimsg]<gold>Dron daurat</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.intro.drone",
+      "languages": {
+        "en_US": "[minimsg]<white>It throws fire; connect your Taser to stop its shots.</white>",
+        "ca_ES": "[minimsg]<white>Llança foc; connecta-hi el Taser per aturar els trets.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.ghast",
+      "languages": {
+        "en_US": "[minimsg]<gold>Iron Artillery</gold>",
+        "ca_ES": "[minimsg]<gold>Artilleria de ferro</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.intro.ghast",
+      "languages": {
+        "en_US": "[minimsg]<white>Dodge its iron shots, then use your bow or Taser to bring it down.</white>",
+        "ca_ES": "[minimsg]<white>Esquiva els trets de ferro i abat-lo amb l’arc o el Taser.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.compactor",
+      "languages": {
+        "en_US": "[minimsg]<gold>Compactor</gold>",
+        "ca_ES": "[minimsg]<gold>Compactador</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.heavy",
+      "languages": {
+        "en_US": "[minimsg]<gold>Heavy</gold>",
+        "ca_ES": "[minimsg]<gold>Pesant</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.intro.heavy",
+      "languages": {
+        "en_US": "[minimsg]<white>Its iron head resists hits; use TNT or land a sword critical for extra scrap.</white>",
+        "ca_ES": "[minimsg]<white>El cap de ferro resisteix cops; usa TNT o fes un crític per obtenir més ferralla.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.overclocker",
+      "languages": {
+        "en_US": "[minimsg]<gold>Overclocker</gold>",
+        "ca_ES": "[minimsg]<gold>Accelerat</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.intro.overclocker",
+      "languages": {
+        "en_US": "[minimsg]<white>Its redstone head makes it fast; slow it down with the Taser.</white>",
+        "ca_ES": "[minimsg]<white>El cap de redstone el fa ràpid; frena’l amb el Taser.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.enemy.scout",
+      "languages": {
+        "en_US": "[minimsg]<gold>Scout</gold>",
+        "ca_ES": "[minimsg]<gold>Explorador</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.intro.scout",
+      "languages": {
+        "en_US": "[minimsg]<white>Its lapis head marks an agile guard; keep it away from your scaffolds.</white>",
+        "ca_ES": "[minimsg]<white>El cap de lapislàtzuli marca un guàrdia àgil; allunya’l de les bastides.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.jetpack.name",
+      "languages": {
+        "en_US": "[minimsg]<aqua><bold>Jetpack</bold></aqua>",
+        "ca_ES": "[minimsg]<aqua><bold>Propulsor</bold></aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.jetpack.lore.thrust",
+      "languages": {
+        "en_US": "[minimsg]<gray>Right-click to toggle thrust; switch items to stop.</gray>",
+        "ca_ES": "[minimsg]<gray>Clic dret per volar; canvia d’objecte per parar.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.jetpack.lore.recharge",
+      "languages": {
+        "en_US": "[minimsg]<gray>Three seconds of flight; land to recharge.</gray>",
+        "ca_ES": "[minimsg]<gray>Tres segons de vol; aterra per recarregar.</gray>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.jetpack.charge.active",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Jetpack active: %1/%2</aqua>",
+        "ca_ES": "[minimsg]<aqua>Propulsor actiu: %1/%2</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.jetpack.charge.ready",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Jetpack: %1/%2</aqua>",
+        "ca_ES": "[minimsg]<aqua>Propulsor: %1/%2</aqua>"
       }
     }
   ]
