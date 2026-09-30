@@ -242,14 +242,6 @@
     },
     {
       "type": "text",
-      "key": "minicat.robo-rampage.score.lives",
-      "languages": {
-        "en_US": "[minimsg]<aqua>Lives</aqua>",
-        "ca_ES": "[minimsg]<aqua>Vides</aqua>"
-      }
-    },
-    {
-      "type": "text",
       "key": "minicat.robo-rampage.score.supply",
       "languages": {
         "en_US": "[minimsg]<aqua>Next wave in</aqua>",
@@ -390,6 +382,22 @@
       "languages": {
         "en_US": "[minimsg]<aqua>Jetpack: %1/%2</aqua>",
         "ca_ES": "[minimsg]<aqua>Propulsor: %1/%2</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.lives.name",
+      "languages": {
+        "en_US": "[minimsg]<red>❤ Lives: %1</red>",
+        "ca_ES": "[minimsg]<red>❤ Vides: %1</red>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.robo-rampage.lives.lore",
+      "languages": {
+        "en_US": "[minimsg]<gray>One heart is lost on death.</gray>",
+        "ca_ES": "[minimsg]<gray>Perds un cor quan mors.</gray>"
       }
     }
   ]

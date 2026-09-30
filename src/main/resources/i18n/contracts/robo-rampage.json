@@ -334,15 +334,6 @@
       ],
       "maxTemplateCharacters": 110
     },
-    "minicat.robo-rampage.score.lives": {
-      "constant": "ROBO_RAMPAGE_SCORE_LIVES",
-      "purpose": "<aqua>Lives</aqua>",
-      "arguments": [],
-      "surfaces": [
-        "scoreboard"
-      ],
-      "maxTemplateCharacters": 40
-    },
     "minicat.robo-rampage.score.supply": {
       "constant": "ROBO_RAMPAGE_SCORE_SUPPLY",
       "purpose": "<aqua>Supplies in</aqua>",
@@ -532,6 +523,29 @@
         "actionbar"
       ],
       "maxTemplateCharacters": 80
+    },
+    "minicat.robo-rampage.lives.name": {
+      "constant": "ROBO_RAMPAGE_LIVES_NAME",
+      "purpose": "Remaining lives shown by the heart stack in the last hotbar slot.",
+      "arguments": [
+        {
+          "name": "lives",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "item"
+      ],
+      "maxTemplateCharacters": 60
+    },
+    "minicat.robo-rampage.lives.lore": {
+      "constant": "ROBO_RAMPAGE_LIVES_LORE",
+      "purpose": "Explain that one heart is lost on death.",
+      "arguments": [],
+      "surfaces": [
+        "item"
+      ],
+      "maxTemplateCharacters": 100
     }
   }
 }

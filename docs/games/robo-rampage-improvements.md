@@ -78,6 +78,10 @@ chainmail starters, safe TNT, the Jetpack and three lives remain.
 - Each starting participant has three total lives. A death consumes one, preserves
   their inventory, armor and Taser upgrades, and respawns them on supported terrain.
   Duplicate death delivery cannot consume another life before respawn.
+- A red heart item in the last hotbar slot displays remaining lives as its stack
+  count and localized name. It updates on death, respawn and reconnect, disappears
+  at zero, and cannot be moved, dropped, equipped or placed. It is a display of
+  `TeamLives`, not a collectible or an extra source of lives. Match cleanup removes it.
 - At zero, the player becomes a spectator. The remaining team continues. When all
   roster slots have zero lives or have been deliberately abandoned, end the match,
   clean up all gameplay state and return viewers to the lobby after ten seconds.
@@ -98,8 +102,9 @@ chainmail starters, safe TNT, the Jetpack and three lives remain.
   enemy takes priority over a control tip; lessons have a one-second gap.
 - Taser/Jetpack controls and supply tips use the same brief status slot. English
   and Catalan are authored together.
-- The scoreboard includes personal lives and robots remaining, switching the latter
-  to a seconds countdown during supplies.
+- The scoreboard shows scrap height, target, wave and robots remaining, switching
+  the latter to a seconds countdown during supplies. Personal lives use the heart
+  item instead of a scoreboard row.
 
 ## Acceptance
 

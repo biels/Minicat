@@ -81,6 +81,7 @@ public class RoboRampage extends JocCooperatiu {
     private final Set<UUID> criticalKillCandidates = new HashSet<>();
     private final RandomGenerator random = ThreadLocalRandom.current();
     private final TeamLives teamLives = new TeamLives();
+    private LifeIndicator lifeIndicator;
     private JunkDropPolicy junkDropPolicy;
     private ScrapDropController scrapDrops;
     private RobotSheddingController robotShedding;
@@ -118,6 +119,7 @@ public class RoboRampage extends JocCooperatiu {
     @Override
     protected void donarItemsInicials(Player player) {
         super.donarItemsInicials(player);
+        if (lifeIndicator != null) lifeIndicator.update(player);
         if (demolition != null) demolition.giveInitialCharges(player);
         if (JocEnMarxa()) {
             player.getInventory().setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE));
@@ -146,6 +148,7 @@ public class RoboRampage extends JocCooperatiu {
         robots.clear();
         criticalKillCandidates.clear();
         teamLives.start(getPlayers().stream().map(Player::getUniqueId).toList());
+        lifeIndicator = new LifeIndicator(Com.getPlugin(), world, teamLives);
         climbFinished = false;
         displayedScrapHeight = 0;
         waveNumber = 1;
@@ -209,6 +212,7 @@ public class RoboRampage extends JocCooperatiu {
 
     @Override
     protected void customJocFinalitzat() {
+        if (lifeIndicator != null) lifeIndicator.close();
         if (robotShedding != null) robotShedding.close();
         if (scrapDrops != null) {
             displayedScrapHeight = scrapDrops.settledHeight();
@@ -266,10 +270,9 @@ public class RoboRampage extends JocCooperatiu {
                 Messages.scoreboardMarker(MessageKey.ROBO_RAMPAGE_SCORE_SCRAP),
                 Messages.scoreboardMarker(MessageKey.ROBO_RAMPAGE_SCORE_TARGET),
                 Messages.scoreboardMarker(MessageKey.ROBO_RAMPAGE_SCORE_WAVE),
-                Messages.scoreboardMarker(MessageKey.ROBO_RAMPAGE_SCORE_LIVES),
                 Messages.scoreboardMarker(wavePhase == WavePhase.SUPPLY
                         ? MessageKey.ROBO_RAMPAGE_SCORE_SUPPLY : MessageKey.ROBO_RAMPAGE_SCORE_ROBOTS)), List.of(
-                displayedScrapHeight, targetHeight(), waveNumber, teamLives.remaining(player.getUniqueId()),
+                displayedScrapHeight, targetHeight(), waveNumber,
                 wavePhase == WavePhase.SUPPLY ? (supplyTicksRemaining + 19) / 20
                         : Math.max(0, waveRobotQuota - robotsSpawnedThisWave) + robots.size()));
     }
@@ -833,6 +836,7 @@ public class RoboRampage extends JocCooperatiu {
         super.onPlayerRespawnAfterTick(event, player);
         if (teamLives.contains(player.getUniqueId())) {
             teamLives.respawn(player.getUniqueId());
+            if (lifeIndicator != null) lifeIndicator.update(player);
             if (!teamLives.canPlay(player.getUniqueId())) {
                 if (!isSpectator(player)) addSpectator(player);
                 return;
@@ -850,6 +854,7 @@ public class RoboRampage extends JocCooperatiu {
         event.setKeepLevel(true);
         event.getDrops().clear();
         event.setDroppedExp(0);
+        if (lifeIndicator != null) lifeIndicator.update(player);
         if (demolition != null) demolition.forgetPlayer(player.getUniqueId());
         Messages.send(player, teamLives.canPlay(player.getUniqueId())
                 ? MessageKey.ROBO_RAMPAGE_LIFE_LOST : MessageKey.ROBO_RAMPAGE_ELIMINATED,
@@ -878,6 +883,7 @@ public class RoboRampage extends JocCooperatiu {
     @Override
     protected void onSeatResumed(Player player) {
         super.onSeatResumed(player);
+        if (lifeIndicator != null) lifeIndicator.update(player);
         if (teamLives.contains(player.getUniqueId()) && !teamLives.canPlay(player.getUniqueId())
                 && !isSpectator(player)) addSpectator(player);
     }
@@ -885,6 +891,7 @@ public class RoboRampage extends JocCooperatiu {
     @Override
     protected void customLeave(Player player, List<String> attachments) {
         super.customLeave(player, attachments);
+        if (lifeIndicator != null) lifeIndicator.remove(player);
         retireParticipant(player.getUniqueId());
     }
 
