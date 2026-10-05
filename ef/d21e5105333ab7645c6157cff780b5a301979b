@@ -1,0 +1,19 @@
+docs/in-game-feedback.md
+  s_1386f7d989352e::t_66272d42542de9 1-141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "efd21e5105333ab7645c6157cff780b5a301979b",
+  "prompts": {},
+  "sessions": {
+    "s_1386f7d989352e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17193085-5b19-4aa6-a40b-e475ecd0845a",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
