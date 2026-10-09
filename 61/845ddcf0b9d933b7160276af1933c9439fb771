@@ -1,0 +1,27 @@
+src/main/java/com/biel/lobby/utilities/GestorPropietats.java
+  s_8ddc464fc17cef::t_0f0b923bd9475f 4-7,24-29,72
+src/test/java/com/biel/lobby/utilities/GestorPropietatsEncodingTest.java
+  s_8ddc464fc17cef::t_036be69c5ebb07 1-49
+src/main/java/com/biel/lobby/mapes/JocEquips.java
+  s_8ddc464fc17cef::t_47cb0b0ad2d86d 318,946,1075
+src/main/java/com/biel/lobby/mapes/jocs/Quakecraft.java
+  s_8ddc464fc17cef::t_199fcf7622b480 116-117,368
+src/main/java/com/biel/lobby/mapes/jocs/TNTRun.java
+  s_8ddc464fc17cef::t_54476bcb04670b 206
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "61845ddcf0b9d933b7160276af1933c9439fb771",
+  "prompts": {},
+  "sessions": {
+    "s_8ddc464fc17cef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a120f7-7303-7480-885d-c63df6101618",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
