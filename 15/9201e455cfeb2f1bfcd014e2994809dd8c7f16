@@ -1,0 +1,35 @@
+src/main/resources/i18n/contracts/the-towers.json
+  s_65995d0a0ac4fa::t_61b1d4689b4573 1-62
+src/test/java/com/biel/lobby/mapes/jocs/TheTowersLifecycleTest.java
+  s_65995d0a0ac4fa::t_1ac7062dfc6e0a 31,79,126,156
+  s_65995d0a0ac4fa::t_19af657dcc46b2 1-5,7-11,13-19,22-28,30,33-47,49-78,80-98,101-108,110-119,128-129,131-155,157-172,192-205
+  s_65995d0a0ac4fa::t_59956633142181 6,12,20-21,48,173-191
+  s_65995d0a0ac4fa::t_8e269b1b91de42 130
+  s_65995d0a0ac4fa::t_84728db86ab6ea 120-125
+  s_65995d0a0ac4fa::t_89ecc5bb80ef8f 29,32,99-100,109,127
+src/main/resources/i18n/translations/the-towers.json
+  s_65995d0a0ac4fa::t_2a690fff0975e8 23-24
+  s_65995d0a0ac4fa::t_61b1d4689b4573 1-22,25-60
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_65995d0a0ac4fa::t_c4fe7720dbfb7d 79
+src/main/java/com/biel/lobby/mapes/JocTeamScoreRace.java
+  s_65995d0a0ac4fa::t_c5514d7e9ec7be 39
+src/main/java/com/biel/lobby/mapes/jocs/TheTowers.java
+  s_65995d0a0ac4fa::t_e88a71019d9a9a 3-4,6-34,36-42,44-51,53,55-81,83-87,89-300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "159201e455cfeb2f1bfcd014e2994809dd8c7f16",
+  "prompts": {},
+  "sessions": {
+    "s_65995d0a0ac4fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1218a-5210-70e3-894f-2a462874bdda",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
