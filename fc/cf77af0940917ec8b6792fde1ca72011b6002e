@@ -1,0 +1,19 @@
+src/main/java/com/biel/lobby/mapes/jocs/TheTowers.java
+  s_65995d0a0ac4fa::t_b1a3b95c12b627 131-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fccf77af0940917ec8b6792fde1ca72011b6002e",
+  "prompts": {},
+  "sessions": {
+    "s_65995d0a0ac4fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1218a-5210-70e3-894f-2a462874bdda",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
