@@ -1,0 +1,21 @@
+src/test/java/com/biel/lobby/mapes/jocs/TheTowersBridgeTest.java
+  s_65995d0a0ac4fa::t_9fbaf16561bf52 22,121-133,279-282
+src/main/java/com/biel/lobby/mapes/jocs/TheTowers.java
+  s_65995d0a0ac4fa::t_5d8ac79f672b08 14,404-408
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "335ae3f59bd6162c760c338002c0fb790d33376e",
+  "prompts": {},
+  "sessions": {
+    "s_65995d0a0ac4fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1218a-5210-70e3-894f-2a462874bdda",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
