@@ -219,13 +219,14 @@ public class TNTRun extends JocLastStanding {
 
     @Override
     protected void customLeave(Player player, List<String> attachments) {
-        super.customLeave(player, attachments);
+        // Round elimination returns players to the lobby; that is not a forfeit.
+        if (!JocIniciat || isAlive(player)) super.customLeave(player, attachments);
         eliminateLeaver(player.getName());
     }
 
     @Override
     protected void onSeatAbandoned(Seat seat, List<String> attachments) {
-        super.onSeatAbandoned(seat, attachments);
+        if (!JocIniciat || isAlive(seat.getName())) super.onSeatAbandoned(seat, attachments);
         eliminateLeaver(seat.getName());
     }
 

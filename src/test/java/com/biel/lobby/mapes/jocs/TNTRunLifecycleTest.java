@@ -204,16 +204,43 @@ class TNTRunLifecycleTest {
         assertFalse(game.isAlive(carrier));
     }
 
+    @Test void ordinaryRoundEliminationDoesNotCountAsForfeiting() throws Exception {
+        TestGame game = new TestGame(4);
+        Player eliminated = game.players.getFirst();
+        var occupy = com.biel.lobby.mapes.Joc.class.getDeclaredMethod("occupySeat", Player.class);
+        occupy.setAccessible(true);
+        occupy.invoke(game, eliminated);
+        occupy.invoke(game, game.players.get(1));
+        game.posarTNT(eliminated);
+        game.explotarJugadors();
+        game.customLeave(eliminated, new ArrayList<>());
+        assertEquals(0, game.penaltyChecks);
+        game.customLeave(game.players.get(1), new ArrayList<>());
+        assertEquals(1, game.penaltyChecks, "an actual alive leaver still uses shared forfeit handling");
+    }
+
+    @Test void offlineEliminationDoesNotBecomeAForfeitWhenTheSeatExpires() throws Exception {
+        TestGame game = new TestGame(4);
+        Player eliminated = game.players.getFirst();
+        var occupy = com.biel.lobby.mapes.Joc.class.getDeclaredMethod("occupySeat", Player.class);
+        occupy.setAccessible(true);
+        occupy.invoke(game, eliminated);
+        game.getAliveNames().remove(eliminated.getName());
+        game.onSeatAbandoned(game.getSeats().getFirst(), new ArrayList<>());
+        assertEquals(0, game.penaltyChecks);
+    }
+
     private static class TestGame extends TNTRun {
         final ArrayList<Player> players = new ArrayList<>();
         final List<Player> restored = new ArrayList<>(), returnedPlayers = new ArrayList<>();
         final List<Runnable> delayed = new ArrayList<>();
         final List<Long> delays = new ArrayList<>();
         boolean running = true;
-        int startedRounds;
+        int startedRounds, penaltyChecks;
         Runnable repeating;
         long initialDelay, period;
         TestGame(int count) {
+            JocIniciat = true;
             for (int index = 0; index < count; index++) {
                 Player player = player("TntQA" + index);
                 players.add(player);
@@ -232,7 +259,7 @@ class TNTRunLifecycleTest {
         @Override public void updateScoreBoards() {}
         @Override public void sendGlobalMessage(String message) {}
         @Override public void sendGlobalMessage(MessageKey key, MessageArgument... arguments) {}
-        @Override public double getPunishForLeaving() { return 0; }
+        @Override public double getPunishForLeaving() { penaltyChecks++; return 0; }
         @Override public boolean hasHostPrivilleges(String name) { return false; }
         @Override protected void returnEliminatedPlayerToLobby(Player player) { returnedPlayers.add(player); }
         @Override public int scheduleGameplayTask(Runnable task, long delay) { delayed.add(task); delays.add(delay); return delayed.size() + 100; }
