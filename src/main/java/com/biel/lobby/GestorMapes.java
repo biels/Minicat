@@ -76,7 +76,7 @@ public class GestorMapes implements Listener{
 		Mapes.add(new ContenidorJoc(TeamDeathMatch.class, "Team Death Match", Material.IRON_SWORD, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(Arena4.class, "Arena 4", Material.RED_DYE, DevelopmentState.Alpha));
 		//Mapes.add(new ContenidorJoc(Coliseu.class, "Coliseu", Material.QUARTZ_BLOCK, DevelopmentState.NotWorking));
-		//Mapes.add(new ContenidorJoc(TheTowers.class, "The Towers", Material.EXPERIENCE_BOTTLE, DevelopmentState.NotWorking));
+		Mapes.add(new ContenidorJoc(TheTowers.class, "The Towers", Material.QUARTZ_BLOCK, DevelopmentState.Alpha));
 		Mapes.add(new ContenidorJoc(TNTRun.class, "TNT Run", Material.TNT, DevelopmentState.KnownIssues));
 		Mapes.add(new ContenidorJoc(RoboRampage.class, "Robo Rampage", Material.LAPIS_BLOCK, DevelopmentState.PreAlpha));
 		//Mapes.add(new ContenidorJoc(Arena1v1.class, "Arena 1v1", Material.WOODEN_SWORD, DevelopmentState.PreAlpha));

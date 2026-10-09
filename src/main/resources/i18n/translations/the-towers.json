@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "type": "text",
+      "key": "minicat.the-towers.info.goal",
+      "languages": {
+        "en_US": "[minimsg]<green>Be the first team to reach %1 points by jumping into the enemy scoring pit.</green>",
+        "ca_ES": "[minimsg]<green>Sigues el primer equip a arribar a %1 punts saltant al fossat de puntuació enemic.</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.the-towers.info.supplies",
+      "languages": {
+        "en_US": "[minimsg]<white>Build bridges, loot base chests, and gather iron and lapis in the center towers.</white>",
+        "ca_ES": "[minimsg]<white>Construeix ponts, saqueja els cofres de la base i recull ferro i lapislàtzuli a les torres centrals.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.the-towers.info.rules",
+      "languages": {
+        "en_US": "[minimsg]<gold>Keep chests, spawn rooms, scoring pits, and resource generators intact.</gold>",
+        "ca_ES": "[minimsg]<gold>Mantén intactes els cofres, les sales de spawn, els fossats de puntuació i els generadors de recursos.</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.the-towers.scored",
+      "languages": {
+        "en_US": "[minimsg]<green>%1 scored for %2!</green> <white>%3 / %4</white>",
+        "ca_ES": "[minimsg]<green>%1 ha puntuat per a %2!</green> <white>%3 / %4</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.the-towers.winner",
+      "languages": {
+        "en_US": "[minimsg]<green><bold>%1 wins The Towers!</bold></green>",
+        "ca_ES": "[minimsg]<green><bold>%1 guanya The Towers!</bold></green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.the-towers.score.target",
+      "languages": {
+        "en_US": "[minimsg]<gold>Target</gold>",
+        "ca_ES": "[minimsg]<gold>Objectiu</gold>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.the-towers.need-opponent",
+      "languages": {
+        "en_US": "[minimsg]<red>Choose at least one player for each team.</red>",
+        "ca_ES": "[minimsg]<red>Tria com a mínim un jugador per a cada equip.</red>"
+      }
+    }
+  ]
+}

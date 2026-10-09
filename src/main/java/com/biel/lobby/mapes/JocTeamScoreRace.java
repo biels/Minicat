@@ -36,6 +36,7 @@ public abstract class JocTeamScoreRace extends JocEquips {
 	}
 	@Override
 	protected void updateScoreBoard(Player ply) {
+		super.updateScoreBoard(ply);
 		if (JocIniciat){
 			ArrayList<String> list = new ArrayList<>();
 			ArrayList<Integer> values = new ArrayList<>();

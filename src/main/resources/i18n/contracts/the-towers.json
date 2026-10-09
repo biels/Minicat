@@ -1,0 +1,62 @@
+{
+  "keys": {
+    "minicat.the-towers.info.goal": {
+      "constant": "TOWERS_INFO_GOAL",
+      "purpose": "Explain that the first team to reach the target score wins by jumping the enemy scoring pit.",
+      "arguments": [
+        { "name": "score", "type": "NUMBER" }
+      ],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.the-towers.info.supplies": {
+      "constant": "TOWERS_INFO_SUPPLIES",
+      "purpose": "Explain bridge building and resource gathering locations.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.the-towers.info.rules": {
+      "constant": "TOWERS_INFO_RULES",
+      "purpose": "Explain protected map infrastructure that players must not break.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 260
+    },
+    "minicat.the-towers.scored": {
+      "constant": "TOWERS_SCORED",
+      "purpose": "Announce that a player scored for their team and show progress toward the target.",
+      "arguments": [
+        { "name": "player", "type": "TEXT" },
+        { "name": "team", "type": "TEXT" },
+        { "name": "score", "type": "NUMBER" },
+        { "name": "target", "type": "NUMBER" }
+      ],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 160
+    },
+    "minicat.the-towers.winner": {
+      "constant": "TOWERS_WINNER",
+      "purpose": "Announce the winning team.",
+      "arguments": [
+        { "name": "team", "type": "TEXT" }
+      ],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 120
+    },
+    "minicat.the-towers.score.target": {
+      "constant": "TOWERS_SCORE_TARGET",
+      "purpose": "Short scoreboard label for the target score.",
+      "arguments": [],
+      "surfaces": ["scoreboard"],
+      "maxTemplateCharacters": 32
+    },
+    "minicat.the-towers.need-opponent": {
+      "constant": "TOWERS_NEED_OPPONENT",
+      "purpose": "Prevent starting until both teams have at least one player.",
+      "arguments": [],
+      "surfaces": ["chat", "menu", "item"],
+      "maxTemplateCharacters": 120
+    }
+  }
+}
