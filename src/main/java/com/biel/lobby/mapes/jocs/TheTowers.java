@@ -128,6 +128,9 @@ public class TheTowers extends JocTeamScoreRace implements Listener {
     }
 
     @Override protected void customJocIniciat() {
+        // Both teams are populated before start; two active players means a 1v1.
+        // Select once, before the shared start hook publishes the scoreboard.
+        if (getPlayers().size() == 2) scoreToWin = 5;
         super.customJocIniciat();
         setBlockBreakPlace(true);
     }
