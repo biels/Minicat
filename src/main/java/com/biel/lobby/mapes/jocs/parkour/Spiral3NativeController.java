@@ -51,10 +51,10 @@ final class Spiral3NativeController {
     private final Set<String> reportedFeedback = new HashSet<>();
     private final List<Chunk> loadedChunks = new ArrayList<>();
     private final List<org.bukkit.block.Block> nativeCommandBlocks = new ArrayList<>();
+    private final List<String> objectives = new ArrayList<>();
     private final Set<BukkitTask> delayedTasks = new HashSet<>();
     private final Map<String, ItemStack[]> suspendedInventories = new HashMap<>();
-    private boolean initialized;
-    private boolean initializationAttempted;
+    private final Map<String, Double> originalBurningTimes = new HashMap<>();
     private boolean closed;
 
     Spiral3NativeController(World world, Plugin plugin, Predicate<Player> activeRunner, Supplier<String> status) {
@@ -66,6 +66,7 @@ final class Spiral3NativeController {
             if (feedback instanceof net.kyori.adventure.text.TranslatableComponent translated
                     && translated.key().startsWith("commands.function.success")) return;
             String message = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(feedback);
+            if (message.startsWith("Running function " + NAMESPACE) || message.startsWith("Executed ")) return;
             if (reportedFeedback.size() < 20 && reportedFeedback.add(message))
                 plugin.getLogger().warning("Spiral 3 command feedback in " + world.getName() + ": " + message);
         });
@@ -81,6 +82,13 @@ final class Spiral3NativeController {
             JsonObject nativeRules = profile.getAsJsonObject("native");
             if (nativeRules == null || !"spiral3-scoped-v1".equals(nativeRules.get("mechanicsVersion").getAsString()))
                 throw new IllegalArgumentException("Spiral 3 requires its qualified scoped mechanics profile");
+            for (var value : nativeRules.getAsJsonArray("objectives")) {
+                String objective = value.getAsString();
+                if (!objective.matches("[a-z0-9_]{1,64}") || objectives.contains(objective))
+                    throw new IllegalArgumentException("Invalid Spiral 3 objective inventory");
+                objectives.add(objective);
+            }
+            if (!objectives.contains("adapter")) throw new IllegalArgumentException("Missing Spiral 3 initializer sentinel inventory");
             var chunks = nativeRules.getAsJsonArray("requiredChunks");
             if (chunks == null || chunks.isEmpty() || chunks.size() > 256)
                 throw new IllegalArgumentException("Invalid Spiral 3 mechanics chunk inventory");
@@ -109,10 +117,9 @@ final class Spiral3NativeController {
                 nativeCommandBlocks.add(block.getBlock());
             }
             INSTANCES.put(instance, this);
-            initializationAttempted = true;
             call("initialize");
-            initialized = Bukkit.getScoreboardManager().getMainScoreboard().getObjective(prefix + "adapter") != null;
-            if (!initialized || Bukkit.getScoreboardManager().getMainScoreboard().getObjective(prefix + "adapter")
+            if (Bukkit.getScoreboardManager().getMainScoreboard().getObjective(prefix + "adapter") == null
+                    || Bukkit.getScoreboardManager().getMainScoreboard().getObjective(prefix + "adapter")
                     .getScore("#version").getScore() != 1)
                 throw new IllegalStateException("Spiral 3 mechanics pack is missing or failed initialization; install minicat-spiral3.zip and restart Paper");
             plugin.getLogger().info("Spiral 3 mechanics ready: world=" + world.getName() + " prefix=" + prefix + " players=" + playersTag);
@@ -128,6 +135,11 @@ final class Spiral3NativeController {
         if (closed) return;
         for (Player player : world.getPlayers()) {
             if (activeRunner.test(player)) {
+                var burningTime = player.getAttribute(org.bukkit.attribute.Attribute.BURNING_TIME);
+                if (burningTime != null) {
+                    originalBurningTimes.putIfAbsent(player.getName(), burningTime.getBaseValue());
+                    burningTime.setBaseValue(0.001);
+                }
                 player.addScoreboardTag(playersTag);
                 player.addScoreboardTag("ingame");
             } else {
@@ -144,6 +156,7 @@ final class Spiral3NativeController {
         player.removeScoreboardTag(playersTag);
         PLAYER_TAGS.forEach(player::removeScoreboardTag);
         suspendedInventories.remove(player.getName());
+        restoreBurningTime(player);
     }
 
     void suspendPlayer(Player player) {
@@ -152,11 +165,19 @@ final class Spiral3NativeController {
                 .map(item -> item == null ? null : item.clone()).toArray(ItemStack[]::new));
         player.removeScoreboardTag(playersTag);
         player.removeScoreboardTag("ingame");
+        restoreBurningTime(player);
     }
 
     void resumePlayer(Player player) {
         ItemStack[] contents = suspendedInventories.remove(player.getName());
         if (contents != null) player.getInventory().setContents(contents);
+    }
+
+    private void restoreBurningTime(Player player) {
+        Double original = originalBurningTimes.remove(player.getName());
+        if (original == null) return;
+        var attribute = player.getAttribute(org.bukkit.attribute.Attribute.BURNING_TIME);
+        if (attribute != null) attribute.setBaseValue(original);
     }
 
     void clear() {
@@ -165,20 +186,34 @@ final class Spiral3NativeController {
         delayedTasks.forEach(BukkitTask::cancel);
         delayedTasks.clear();
         suspendedInventories.clear();
-        world.getPlayers().forEach(this::releasePlayer);
+        boolean worldLoaded = Bukkit.getWorld(world.getUID()) == world;
+        if (worldLoaded) world.getPlayers().forEach(this::releasePlayer);
+        // The shared lifecycle can move runners to the lobby and unload their
+        // course before cleanup. Resolve saved names without retaining entities
+        // or querying a dimension that is no longer registered.
+        for (String playerName : new ArrayList<>(originalBurningTimes.keySet())) {
+            Player onlinePlayer = Bukkit.getPlayerExact(playerName);
+            if (onlinePlayer != null) restoreBurningTime(onlinePlayer);
+        }
+        originalBurningTimes.clear();
         // A finished game's world can remain loaded for its ranking screen. Its
         // pressure-plate callbacks must be inert before this prefix is reused.
-        nativeCommandBlocks.forEach(block -> {
+        if (worldLoaded) nativeCommandBlocks.forEach(block -> {
             if (block.getState() instanceof CommandBlock commandBlock) {
                 commandBlock.setCommand("");
                 commandBlock.update(true, false);
             }
         });
         nativeCommandBlocks.clear();
-        if (initializationAttempted) call("cleanup");
+        // The shared map lifecycle may already have unloaded this dimension.
+        // Scoreboards belong to the server, so cleanup cannot rely on execute in.
+        for (String name : objectives) {
+            var objective = Bukkit.getScoreboardManager().getMainScoreboard().getObjective(prefix + name);
+            if (objective != null) objective.unregister();
+        }
         INSTANCES.remove(instance, this);
         PREFIXES.remove(prefix);
-        loadedChunks.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
+        if (worldLoaded) loadedChunks.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
         loadedChunks.clear();
     }
 
@@ -223,7 +258,8 @@ final class Spiral3NativeController {
                 boolean trustedMechanics = INSTANCES.values().stream().anyMatch(controller -> controller.mechanicsSender == origin);
                 if (!(caller instanceof ConsoleCommandSender) && !(caller instanceof BlockCommandSender) && !trustedMechanics) return false;
                 if (arguments.length == 2 && arguments[0].equals("status") && caller instanceof ConsoleCommandSender) {
-                    INSTANCES.values().stream().filter(controller -> controller.world.getName().equals(arguments[1]))
+                    INSTANCES.values().stream().filter(controller -> controller.world.getName().equals(arguments[1])
+                                    || controller.world.getKey().getKey().equalsIgnoreCase(arguments[1]))
                             .findFirst().ifPresent(controller -> sender.sendMessage("PARKOUR_STATUS " + controller.status.get()));
                     return true;
                 }

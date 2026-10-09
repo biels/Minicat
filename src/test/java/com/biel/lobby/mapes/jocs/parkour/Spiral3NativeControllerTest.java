@@ -11,10 +11,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,8 +24,11 @@ import java.util.regex.Pattern;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CommandBlock;
@@ -46,6 +51,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -63,6 +69,19 @@ class Spiral3NativeControllerTest {
     @TempDir Path temporaryDirectory;
     private Harness harness;
     private Object previousServer;
+
+    @BeforeAll static void installAttributeRegistry() throws Exception {
+        Field unsafeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        sun.misc.Unsafe allocator = (sun.misc.Unsafe) unsafeField.get(null);
+        Field providerField = Class.forName("io.papermc.paper.registry.RegistryAccessHolder").getDeclaredField("INSTANCE");
+        Object provider = stub(io.papermc.paper.registry.RegistryAccess.class, (method, args) ->
+                method.equals("getRegistry") ? stub(Registry.class, (operation, values) -> {
+                    if (!operation.equals("get") && !operation.equals("getOrThrow")) return null;
+                    return stub(Attribute.class, (attributeMethod, ignored) -> attributeMethod.equals("getKey") ? values[0] : null);
+                }) : null);
+        allocator.putObject(allocator.staticFieldBase(providerField), allocator.staticFieldOffset(providerField), Optional.of(provider));
+    }
 
     @BeforeEach void installServer() throws Exception {
         ((Map<?, ?>) field(Spiral3NativeController.class, "INSTANCES").get(null)).clear();
@@ -254,6 +273,64 @@ class Spiral3NativeControllerTest {
         assertNull(replacement.contents[4], "resume consumes the saved snapshot instead of duplicating equipment");
     }
 
+    @Test void nativeBurningTimeAppliesOnlyToActiveRunnersAndRestoresOnDropFinishAndTeardown() throws Exception {
+        Fixture first = fixture("burning_first"), second = fixture("burning_second");
+        Runner active = first.addRunner("Biel", true).withBurningTime(0.5);
+        Runner waiting = first.addRunner("Waiting", false).withBurningTime(1.0);
+        Runner other = second.addRunner("Other", true).withBurningTime(1.0);
+        Spiral3NativeController firstController = first.create(), secondController = second.create();
+        firstController.tick(1);
+        firstController.tick(2);
+        assertEquals(0.001, active.burningTime);
+        assertEquals(1.0, waiting.burningTime);
+        assertEquals(1.0, other.burningTime, "one match's tick cannot alter another world's runner");
+        secondController.tick(1);
+        assertEquals(0.001, other.burningTime);
+        firstController.suspendPlayer(active.player);
+        assertEquals(0.5, active.burningTime, "drop restores the value captured before repeated native ticks");
+        assertEquals(0.001, other.burningTime);
+        firstController.resumePlayer(active.player);
+        firstController.tick(3);
+        assertEquals(0.001, active.burningTime);
+        firstController.releasePlayer(active.player);
+        active.active = false;
+        firstController.tick(4);
+        assertEquals(0.5, active.burningTime, "finishing removes the match's attribute override");
+        active.active = true;
+        firstController.tick(5);
+        assertEquals(0.001, active.burningTime);
+        firstController.clear();
+        assertEquals(0.5, active.burningTime);
+        assertEquals(1.0, waiting.burningTime);
+        assertEquals(0.001, other.burningTime, "tearing down one match preserves another match's override");
+        secondController.clear();
+        assertEquals(1.0, other.burningTime);
+    }
+
+    @Test void burningTimeRestoresBySavedNameAfterTheRunnerMovesToTheLobbyAndCourseUnloads() throws Exception {
+        Fixture course = fixture("burning_unloaded"), other = fixture("burning_other"), lobby = fixture("lobby");
+        Runner runner = course.addRunner("Biel", true).withBurningTime(0.5);
+        Runner waiting = course.addRunner("Waiting", false).withBurningTime(1.0);
+        Runner unrelated = other.addRunner("Other", true).withBurningTime(1.0);
+        Spiral3NativeController controller = course.create(), otherController = other.create();
+        controller.tick(1);
+        otherController.tick(1);
+        runner.currentWorld = lobby.world;
+        course.runners.remove(runner);
+        lobby.runners.add(runner);
+        course.loaded = false;
+        harness.loadedWorlds.remove(course.id);
+        assertDoesNotThrow(controller::clear, "restoration must not read the unloaded course's player, block or chunk APIs");
+        assertSame(lobby.world, runner.player.getWorld());
+        assertEquals(0.5, runner.burningTime);
+        assertEquals(1.0, waiting.burningTime, "an inactive player has no saved override to restore");
+        assertEquals(0.001, unrelated.burningTime, "another match keeps its own burning-time override");
+        assertEquals(List.of("Biel"), harness.playerLookups, "only this match's saved player names are resolved");
+        runner.burningTime = 1.0;
+        controller.clear();
+        assertEquals(1.0, runner.burningTime, "teardown consumes its restoration state");
+    }
+
     @Test void deliberateReleaseOrTeardownDiscardsSuspendedEquipment() throws Exception {
         Fixture fixture = fixture("inventory_release");
         Runner original = fixture.addRunner("Biel", true);
@@ -287,7 +364,9 @@ class Spiral3NativeControllerTest {
         assertEquals(Set.of(second.playersTag(), "ingame"), secondRunner.tags);
         assertFalse(harness.objectives.containsKey(firstController.prefix() + "adapter"));
         assertTrue(harness.objectives.containsKey(secondController.prefix() + "adapter"));
-        assertEquals(1, harness.commands.stream().filter(command -> command.contains("function minicat_spiral3:cleanup")).count());
+        assertEquals(Set.of(firstController.prefix() + "adapter", firstController.prefix() + "diamond_timer", firstController.prefix() + "dripstone_timer"),
+                new HashSet<>(harness.unregisteredObjectives));
+        assertTrue(harness.commands.isEmpty(), "scoreboard cleanup uses the main scoreboard directly");
         assertEquals(first.totalTicketsAdded(), first.totalTicketsRemoved());
         assertEquals(0, second.totalTicketsRemoved());
     }
@@ -315,13 +394,45 @@ class Spiral3NativeControllerTest {
     }
 
     @Test void crashedInstancesExistingAdapterObjectiveReservesItsPrefix() throws Exception {
-        Objective stale = Harness.objective(1);
+        Objective stale = harness.objective("00adapter", 1);
         harness.objectives.put("00adapter", stale);
         Fixture fixture = fixture("after_crash");
         Spiral3NativeController controller = fixture.create();
         assertEquals("01", controller.prefix());
         controller.clear();
         assertSame(stale, harness.objectives.get("00adapter"), "launching and clearing a fresh match must not overwrite a stale instance's state");
+    }
+
+    @Test void cleanupAfterWorldUnloadUnregistersScoresAndTasksWithoutReadingBlocksOrChunks() throws Exception {
+        Fixture unloaded = fixture("unloaded"), live = fixture("still_live");
+        Runner runner = unloaded.addRunner("Biel", true);
+        Spiral3NativeController controller = unloaded.create(), otherController = live.create();
+        controller.suspendPlayer(runner.player);
+        assertTrue(harness.bridge.execute(harness.console, "minicatparkour", schedule(unloaded)));
+        ScheduledTask pending = harness.tasks.getLast();
+        unloaded.loaded = false;
+        harness.loadedWorlds.remove(unloaded.id);
+        harness.commands.clear();
+        assertDoesNotThrow(controller::clear, "unloaded world block, entity and chunk APIs are no longer available");
+        assertTrue(pending.cancelled);
+        assertFalse(harness.objectives.containsKey(controller.prefix() + "adapter"));
+        assertFalse(harness.objectives.containsKey(controller.prefix() + "diamond_timer"));
+        assertFalse(harness.objectives.containsKey(controller.prefix() + "dripstone_timer"));
+        assertTrue(harness.objectives.containsKey(otherController.prefix() + "adapter"));
+        assertTrue(harness.commands.isEmpty(), "execute in an unloaded dimension cannot clean server-global objectives");
+        assertEquals(0, unloaded.totalTicketsRemoved(), "Paper releases unloaded-world tickets; cleanup must not read the dead world");
+        pending.callback.run();
+        assertTrue(harness.commands.isEmpty());
+        assertFalse(harness.bridge.execute(harness.console, "minicatparkour", schedule(unloaded)));
+    }
+
+    @Test void statusAcceptsCaseInsensitiveDimensionAliasWhenPaperWorldNameHasAPrefix() throws Exception {
+        Fixture fixture = fixture("parkour2");
+        fixture.worldName = "liveworlds_parkour2";
+        fixture.key = new NamespacedKey("minecraft", "parkour2");
+        fixture.create();
+        assertTrue(harness.bridge.execute(harness.console, "minicatparkour", new String[]{"status", "Parkour2"}));
+        assertEquals(List.of("PARKOUR_STATUS fixture"), harness.consoleMessages);
     }
 
     @Test void invalidCompiledResourceDimensionOrMacroCannotBeInstalled() throws Exception {
@@ -342,7 +453,7 @@ class Spiral3NativeControllerTest {
 
     private final class Fixture {
         final UUID id = UUID.randomUUID();
-        final NamespacedKey key;
+        NamespacedKey key;
         final Path directory;
         final World world;
         final Plugin plugin = stub(Plugin.class, (method, args) -> method.equals("getLogger") ? Logger.getLogger("Spiral3NativeControllerTest") : null);
@@ -353,19 +464,28 @@ class Spiral3NativeControllerTest {
         int consoleCount = 1;
         boolean blockPresent = true;
         boolean additionalCommandBlock;
+        boolean loaded = true;
+        String worldName;
         String sourceCommand = NATIVE_SOURCE, compiledCommand = NATIVE_COMMAND;
 
         Fixture(String name, Path directory) throws Exception {
             this.directory = directory;
             Files.createDirectories(directory);
             key = new NamespacedKey("minicat", "spiral_" + name);
+            worldName = name;
             world = stub(World.class, (method, args) -> switch (method) {
                 case "getUID" -> id;
-                case "getName" -> name;
+                case "getName" -> worldName;
                 case "getKey" -> key;
                 case "getWorldFolder" -> directory.toFile();
-                case "getPlayers" -> runners.stream().map(runner -> runner.player).toList();
-                case "getChunkAt" -> chunks.computeIfAbsent(new ChunkPosition((Integer) args[0], (Integer) args[1]), ignored -> new ChunkState()).chunk;
+                case "getPlayers" -> {
+                    assertTrue(loaded, "cannot read players from an unloaded world");
+                    yield runners.stream().map(runner -> runner.player).toList();
+                }
+                case "getChunkAt" -> {
+                    assertTrue(loaded, "cannot read chunks from an unloaded world");
+                    yield chunks.computeIfAbsent(new ChunkPosition((Integer) args[0], (Integer) args[1]), ignored -> new ChunkState(() -> loaded)).chunk;
+                }
                 case "getEntitiesByClass" -> {
                     List<Marker> markers = new ArrayList<>();
                     for (int index = 0; index < consoleCount; index++) markers.add(stub(Marker.class, (entityMethod, ignored) -> entityMethod.equals("getCustomName") ? "console" : null));
@@ -376,21 +496,33 @@ class Spiral3NativeControllerTest {
             });
             block.owningBlock = this::block;
             secondBlock.owningBlock = () -> block(secondBlock);
+            harness.loadedWorlds.put(id, world);
         }
         Block block() { return block(block); }
         Block block(CommandBlockState selected) { return stub(Block.class, (method, args) -> switch (method) {
             case "getWorld" -> world;
-            case "getState" -> blockPresent ? selected.state : stub(BlockState.class, (ignored, values) -> null);
+            case "getState" -> {
+                assertTrue(loaded, "cannot read blocks from an unloaded world");
+                yield blockPresent ? selected.state : stub(BlockState.class, (ignored, values) -> null);
+            }
             default -> null;
         }); }
         BlockCommandSender blockSender() { return stub(BlockCommandSender.class, (method, args) -> method.equals("getBlock") ? block() : null); }
-        Runner addRunner(String name, boolean active) { Runner runner = new Runner(this, name, active); runners.add(runner); return runner; }
+        Runner addRunner(String name, boolean active) {
+            Runner runner = new Runner(this, name, active);
+            runners.add(runner);
+            harness.onlinePlayers.put(name, runner.player);
+            return runner;
+        }
         String playersTag() { return "minicat_spiral_" + id; }
         int totalTicketsAdded() { return chunks.values().stream().mapToInt(chunk -> chunk.added).sum(); }
         int totalTicketsRemoved() { return chunks.values().stream().mapToInt(chunk -> chunk.removed).sum(); }
         Spiral3NativeController create() throws Exception {
             JsonObject profile = new JsonObject(), nativeRules = new JsonObject();
             nativeRules.addProperty("mechanicsVersion", "spiral3-scoped-v1");
+            JsonArray objectives = new JsonArray();
+            for (String objective : List.of("adapter", "diamond_timer", "dripstone_timer")) objectives.add(objective);
+            nativeRules.add("objectives", objectives);
             JsonArray requiredChunks = new JsonArray();
             for (ChunkPosition coordinates : List.of(new ChunkPosition(0, -2), new ChunkPosition(-2, 6))) {
                 JsonObject point = new JsonObject(); point.addProperty("x", coordinates.x); point.addProperty("z", coordinates.z);
@@ -415,11 +547,14 @@ class Spiral3NativeControllerTest {
 
     private static final class ChunkState {
         int added, removed;
-        final Chunk chunk = stub(Chunk.class, (method, args) -> switch (method) {
-            case "addPluginChunkTicket" -> { added++; yield true; }
-            case "removePluginChunkTicket" -> { removed++; yield true; }
-            default -> null;
-        });
+        final Chunk chunk;
+        ChunkState(BooleanSupplier loaded) {
+            chunk = stub(Chunk.class, (method, args) -> switch (method) {
+                case "addPluginChunkTicket" -> { assertTrue(loaded.getAsBoolean()); added++; yield true; }
+                case "removePluginChunkTicket" -> { assertTrue(loaded.getAsBoolean(), "cannot release a ticket through an unloaded chunk"); removed++; yield true; }
+                default -> null;
+            });
+        }
     }
     private static final class CommandBlockState {
         String command = NATIVE_SOURCE;
@@ -435,8 +570,11 @@ class Spiral3NativeControllerTest {
     }
     private static final class Runner {
         final Player player;
+        World currentWorld;
         final Set<String> tags = new HashSet<>();
         boolean active;
+        double burningTime;
+        AttributeInstance burningAttribute;
         ItemStack[] contents = new ItemStack[41];
         final PlayerInventory inventory = stub(PlayerInventory.class, (method, args) -> switch (method) {
             case "getContents" -> contents;
@@ -445,15 +583,29 @@ class Spiral3NativeControllerTest {
         });
         Runner(Fixture fixture, String name, boolean active) {
             this.active = active;
+            currentWorld = fixture.world;
             player = stub(Player.class, (method, args) -> switch (method) {
                 case "getName" -> name;
-                case "getWorld" -> fixture.world;
+                case "getWorld" -> currentWorld;
                 case "getInventory" -> inventory;
+                case "getAttribute" -> {
+                    assertSame(Attribute.BURNING_TIME, args[0]);
+                    yield burningAttribute;
+                }
                 case "addScoreboardTag" -> tags.add((String) args[0]);
                 case "removeScoreboardTag" -> tags.remove((String) args[0]);
                 case "getScoreboardTags" -> tags;
                 default -> null;
             });
+        }
+        Runner withBurningTime(double initialValue) {
+            burningTime = initialValue;
+            burningAttribute = stub(AttributeInstance.class, (method, args) -> switch (method) {
+                case "getBaseValue" -> burningTime;
+                case "setBaseValue" -> { burningTime = ((Number) args[0]).doubleValue(); yield null; }
+                default -> null;
+            });
+            return this;
         }
     }
     /** A metadata-bearing item without a server item factory; cloning mirrors the SDK contract. */
@@ -482,9 +634,16 @@ class Spiral3NativeControllerTest {
         final List<Consumer<net.kyori.adventure.text.Component>> feedbackCallbacks = new ArrayList<>();
         final List<ScheduledTask> tasks = new ArrayList<>();
         final Map<String, Objective> objectives = new HashMap<>();
+        final Map<UUID, World> loadedWorlds = new HashMap<>();
+        final Map<String, Player> onlinePlayers = new HashMap<>();
+        final List<String> playerLookups = new ArrayList<>();
+        final List<String> unregisteredObjectives = new ArrayList<>(), consoleMessages = new ArrayList<>();
         Command bridge;
         Runnable cleanupObserver = () -> {};
-        final ConsoleCommandSender console = stub(ConsoleCommandSender.class, (method, args) -> null);
+        final ConsoleCommandSender console = stub(ConsoleCommandSender.class, (method, args) -> {
+            if (method.equals("sendMessage")) consoleMessages.add(args[0].toString());
+            return null;
+        });
         final Scoreboard scoreboard = stub(Scoreboard.class, (method, args) -> method.equals("getObjective") ? objectives.get(args[0]) : null);
         final ScoreboardManager scoreboardManager = stub(ScoreboardManager.class, (method, args) -> method.equals("getMainScoreboard") ? scoreboard : null);
         final CommandMap commandMap = stub(CommandMap.class, (method, args) -> {
@@ -503,6 +662,8 @@ class Spiral3NativeControllerTest {
             case "getCommandMap" -> commandMap;
             case "getScheduler" -> scheduler;
             case "getScoreboardManager" -> scoreboardManager;
+            case "getWorld" -> loadedWorlds.get(args[0]);
+            case "getPlayerExact" -> { playerLookups.add((String) args[0]); yield onlinePlayers.get(args[0]); }
             case "getName", "getVersion", "getBukkitVersion" -> "test";
             case "getLogger" -> Logger.getLogger("Spiral3NativeControllerTest");
             case "createCommandSender" -> {
@@ -518,8 +679,9 @@ class Spiral3NativeControllerTest {
                 Matcher prefix = PREFIX.matcher(command);
                 assertTrue(prefix.find());
                 if (command.contains("function minicat_spiral3:initialize")) {
-                    objectives.put(prefix.group(1) + "diamond_timer", objective(0));
-                    if (sentinel != Sentinel.MISSING) objectives.put(prefix.group(1) + "adapter", objective(sentinel == Sentinel.OK ? 1 : 0));
+                    objectives.put(prefix.group(1) + "diamond_timer", objective(prefix.group(1) + "diamond_timer", 0));
+                    objectives.put(prefix.group(1) + "dripstone_timer", objective(prefix.group(1) + "dripstone_timer", 0));
+                    if (sentinel != Sentinel.MISSING) objectives.put(prefix.group(1) + "adapter", objective(prefix.group(1) + "adapter", sentinel == Sentinel.OK ? 1 : 0));
                 } else if (command.contains("function minicat_spiral3:cleanup")) {
                     cleanupObserver.run();
                     objectives.keySet().removeIf(name -> name.startsWith(prefix.group(1)));
@@ -528,9 +690,15 @@ class Spiral3NativeControllerTest {
             }
             default -> null;
         });
-        private static Objective objective(int scoreValue) {
+        private Objective objective(String name, int scoreValue) {
             Score score = stub(Score.class, (method, args) -> method.equals("getScore") ? scoreValue : null);
-            return stub(Objective.class, (method, args) -> method.equals("getScore") ? score : null);
+            return stub(Objective.class, (method, args) -> switch (method) {
+                case "getScore" -> score;
+                case "unregister" -> {
+                    cleanupObserver.run(); unregisteredObjectives.add(name); objectives.remove(name); yield null;
+                }
+                default -> null;
+            });
         }
     }
     @FunctionalInterface private interface Answer { Object call(String method, Object[] arguments); }
