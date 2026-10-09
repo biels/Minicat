@@ -1,0 +1,25 @@
+src/main/java/com/biel/lobby/mapes/jocs/TNTRun.java
+  s_275c364ee91d51::t_cac687cb956bbc 5-7,9,16,22-23,28,30-198,200,202-205,207-282
+src/main/resources/i18n/contracts/tnt-run.json
+  s_275c364ee91d51::t_353d28180860c2 1-18
+src/main/resources/i18n/translations/tnt-run.json
+  s_275c364ee91d51::t_470f80cc6f96ad 1-12
+src/test/java/com/biel/lobby/mapes/jocs/TNTRunLifecycleTest.java
+  s_275c364ee91d51::t_e108b8a1b96d83 1-260
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9cbb3f65f02d0f731cb411169fcd2893304f3606",
+  "prompts": {},
+  "sessions": {
+    "s_275c364ee91d51": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12176-465f-72d0-9821-fbd34ebcdb86",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
