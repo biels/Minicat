@@ -213,7 +213,7 @@ final class Spiral3NativeController {
         throw new IllegalStateException("Spiral 3 mechanics objective capacity exhausted");
     }
 
-    private static void registerBridge() {
+    static void registerBridge() {
         if (commandRegistered) return;
         Command bridge = new Command("minicatparkour") {
             @Override public boolean execute(CommandSender sender, String label, String[] arguments) {

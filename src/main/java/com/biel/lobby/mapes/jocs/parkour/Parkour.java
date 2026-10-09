@@ -47,6 +47,8 @@ import com.biel.lobby.utilities.PaperMessages;
 import com.biel.lobby.utilities.HologramFacade;
 
 public class Parkour extends JocScoreCombo{
+	/** Register the internal bridge during enable, before the command tree is built. */
+	public static void registerNativeCommands() { Spiral3NativeController.registerBridge(); }
 
 	ArrayList<ParkourStream> streams = new ArrayList<>();
 	// Names, not Players: a player who rejoins after a disconnect is a new Player object, and a stored reference would never match again
