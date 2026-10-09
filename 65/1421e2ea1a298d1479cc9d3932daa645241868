@@ -1,0 +1,23 @@
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_9dcea03fa54adb::t_af0d54a61c9010 95
+src/main/java/com/biel/lobby/mapes/jocs/parkour/Parkour.java
+  s_9dcea03fa54adb::t_af0d54a61c9010 50-51
+src/main/java/com/biel/lobby/mapes/jocs/parkour/Spiral3NativeController.java
+  s_9dcea03fa54adb::t_af0d54a61c9010 216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "651421e2ea1a298d1479cc9d3932daa645241868",
+  "prompts": {},
+  "sessions": {
+    "s_9dcea03fa54adb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12179-bf14-7021-9c65-f9d6d22f586c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
