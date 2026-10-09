@@ -1,6 +1,10 @@
 package com.biel.lobby.utilities;
 
 import java.io.*;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 import org.bukkit.*;
@@ -17,10 +21,12 @@ public class GestorPropietats {
 	private ArrayList<String> LlegirArxiuPropietats(){
 		ArrayList<String> Arr = new ArrayList<>();
 		if (!new File(Ruta).isFile()) return Arr;
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(Ruta)))) {
-			String strLine;
-			while ((strLine = br.readLine()) != null) {
-				Arr.add(strLine);
+		try {
+			try {
+				Arr.addAll(Files.readAllLines(new File(Ruta).toPath(), StandardCharsets.UTF_8));
+			} catch (CharacterCodingException legacyEncoding) {
+				// Original Windows map templates predate UTF-8 (Ràdio, Fàbrica, Turó).
+				Arr.addAll(Files.readAllLines(new File(Ruta).toPath(), Charset.forName("windows-1252")));
 			}
 		} catch (IOException e) {
 			Com.getPlugin().getLogger().log(java.util.logging.Level.WARNING, "Error reading properties " + Ruta, e);
@@ -63,7 +69,7 @@ public class GestorPropietats {
 		File f = new File(Ruta);
 		f.delete();
 		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(f, false));
+			BufferedWriter bw = Files.newBufferedWriter(f.toPath(), StandardCharsets.UTF_8);
 
 			for (String linia : Arr){
 				String[] parts = linia.split("=");

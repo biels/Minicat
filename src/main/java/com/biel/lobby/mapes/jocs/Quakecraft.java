@@ -113,8 +113,8 @@ public class Quakecraft extends JocScoreRace {
 		int t = getMaxT(ply);
 		String l = Integer.toString(t) + "ms CD";
 		if(t >= 1800){return Utils.setItemNameAndLore(new ItemStack(Material.WOODEN_HOE), "Escopeta de fira", l);}
-		if(t >= 1600){return Utils.setItemNameAndLore(new ItemStack(Material.STONE_HOE), ChatColor.YELLOW + "Llan�a-pilotes", l);}
-		if(t >= 1400){return Utils.setItemNameAndLore(new ItemStack(Material.IRON_HOE), ChatColor.YELLOW + "Llan�ador de focs artificials", l);}
+		if(t >= 1600){return Utils.setItemNameAndLore(new ItemStack(Material.STONE_HOE), ChatColor.YELLOW + "Llança-pilotes", l);}
+		if(t >= 1400){return Utils.setItemNameAndLore(new ItemStack(Material.IRON_HOE), ChatColor.YELLOW + "Llançador de focs artificials", l);}
 		if(t >= 1200){return Utils.setItemNameAndLore(new ItemStack(Material.GOLDEN_HOE), ChatColor.YELLOW + "Railgun experimental", l);}
 		ItemStack item = new ItemStack(Material.DIAMOND_HOE);
 		if(t >= 1000){return Utils.setItemNameAndLore(item, ChatColor.AQUA + "Railgun", l);}
@@ -365,7 +365,7 @@ public class Quakecraft extends JocScoreRace {
 		.broadcastMessage(
 				p.getName() + " ha " + verb + " a "
 						+ target.getName());
-		//"�7[�cQuake�7]: "
+		//"§7[§cQuake§7]: "
 		for (Player pl : getPlayers()) {
 			pl.playSound(pl.getLocation(), Sound.ENTITY_BLAZE_DEATH, 1, 1);
 		}

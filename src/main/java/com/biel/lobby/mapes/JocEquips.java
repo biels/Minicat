@@ -315,7 +315,7 @@ public abstract class JocEquips extends Joc {
 
 		}
 		if(JocIniciat){
-			//Bukkit.broadcastMessage("Alerta: " + name + " no �s a cap equip! -- Null");
+			//Bukkit.broadcastMessage("Alerta: " + name + " no és a cap equip! -- Null");
 		}
 		return null;
 	}
@@ -943,7 +943,7 @@ public abstract class JocEquips extends Joc {
 			Utils.healDamageable(damaged, evt.getDamage());
 			evt.setDamage(0);
 			//damager.setVelocity(new Vector(0, GUtils.NombreEntre(0, 4), 0));
-			//sendPlayerMessage(damager, ChatColor.GRAY + "Atac a la base no perm�s. El mal retorna a l'emisor, bon viatge.");
+			//sendPlayerMessage(damager, ChatColor.GRAY + "Atac a la base no permès. El mal retorna a l'emisor, bon viatge.");
 		}
 	}
 	private boolean areInSameTeam(Player p1, Player p2) {
@@ -1072,7 +1072,7 @@ public abstract class JocEquips extends Joc {
 	void keepAwayFromForcefields(Player p){
 		//Sempre que estigui activat...
 		if (!isForcefieldEnabled()){return;}
-		//Mirar si est� en algun forcefield enemic
+		//Mirar si està en algun forcefield enemic
 		int radius = getProtectionRadius();
 		ArrayList<Location> enemyForcefields = getTeamForcefields(obtenirEquipEnemic(p));
 		for (Location forcefieldOrigin : enemyForcefields){
