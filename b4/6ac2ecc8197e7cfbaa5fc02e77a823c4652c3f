@@ -1,0 +1,32 @@
+src/main/java/com/biel/lobby/mapes/jocs/TheTowers.java
+  s_65995d0a0ac4fa::t_c0224e8fb1fc00 30,167-171
+  s_1f0955e739ff18::t_578d060c5a6274 172-173
+src/test/java/com/biel/lobby/mapes/jocs/TheTowersLifecycleTest.java
+  s_65995d0a0ac4fa::t_a0cf25ca165304 37,197-201,203-208
+  s_65995d0a0ac4fa::t_9d3436dd625354 8-9,29,42-49,202
+  s_65995d0a0ac4fa::t_632dec9c8691bb 26,116-156,169,173-174,191,210,215-217,226,237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b46ac2ecc8197e7cfbaa5fc02e77a823c4652c3f",
+  "prompts": {},
+  "sessions": {
+    "s_1f0955e739ff18": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1204d-b18e-73d3-b404-de5be50a51ac",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_65995d0a0ac4fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1218a-5210-70e3-894f-2a462874bdda",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
