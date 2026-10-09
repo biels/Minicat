@@ -19,6 +19,7 @@ import org.bukkit.Registry;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
@@ -115,6 +116,19 @@ class TheTowersBridgeTest {
         fixture.game.protectedAreas = List.of(new BoundingBox(4, 0, 0, 5, 1, 1));
         fixture.game.prepareBridgeFloor(fixture.at(4, 0, 0), 1);
         assertEquals(Material.AIR, fixture.material(4, 0, 0), "protected air is also preserved");
+    }
+
+    @Test
+    void builderPreservesOpeningAirAboveBothChestTypes() throws Exception {
+        Fixture fixture = new Fixture();
+        for (Material chest : List.of(Material.CHEST, Material.TRAPPED_CHEST)) {
+            fixture.terrain.put(new Cell(2, 0, 0), chest);
+            assertFalse(fixture.game.canPlaceBridge(fixture.block(2, 1, 0)), "the chest lid requires this air block");
+            fixture.game.prepareBridgeFloor(fixture.at(2, 1, 0), 3);
+            assertEquals(Material.AIR, fixture.material(2, 1, 0), "a bridge never roofs an intact chest");
+            assertEquals(chest, fixture.material(2, 0, 0), "the original chest is also preserved");
+        }
+        assertTrue(fixture.game.canPlaceBridge(fixture.block(3, 1, 0)), "ordinary construction air remains available");
     }
 
     @Test
@@ -262,6 +276,10 @@ class TheTowersBridgeTest {
                 case "getWorld" -> world;
                 case "getLocation" -> at(x, y, z);
                 case "getType" -> terrain.getOrDefault(cell, Material.AIR);
+                case "getRelative" -> {
+                    BlockFace direction = (BlockFace) args[0];
+                    yield block(x + direction.getModX(), y + direction.getModY(), z + direction.getModZ());
+                }
                 case "setType" -> { terrain.put(cell, (Material) args[0]); yield null; }
                 case "isPassable" -> material(x, y, z) == Material.AIR || material(x, y, z) == Material.WATER;
                 case "isLiquid" -> material(x, y, z) == Material.WATER;

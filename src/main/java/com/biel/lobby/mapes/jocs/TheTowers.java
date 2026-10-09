@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -400,8 +401,11 @@ public class TheTowers extends JocTeamScoreRace implements Listener {
     }
 
     boolean canPlaceBridge(Block block) {
-        return block.getWorld() == world && arenaBounds.contains(block.getLocation().toVector())
-                && !isProtected(block) && (block.getType().isAir() || block.getType() == Material.SNOW);
+        if (block.getWorld() != world || !arenaBounds.contains(block.getLocation().toVector())
+                || isProtected(block) || (!block.getType().isAir() && block.getType() != Material.SNOW)) return false;
+        // A preserved chest still needs its lid to open; protecting only the chest block would roof it over.
+        Material below = block.getRelative(BlockFace.DOWN).getType();
+        return below != Material.CHEST && below != Material.TRAPPED_CHEST;
     }
 
     boolean prepareBridgeFloor(Location floor, int width) {
