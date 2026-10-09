@@ -50,6 +50,7 @@ final class Spiral3NativeController {
     private final CommandSender mechanicsSender;
     private final Set<String> reportedFeedback = new HashSet<>();
     private final List<Chunk> loadedChunks = new ArrayList<>();
+    private final List<org.bukkit.block.Block> nativeCommandBlocks = new ArrayList<>();
     private final Set<BukkitTask> delayedTasks = new HashSet<>();
     private final Map<String, ItemStack[]> suspendedInventories = new HashMap<>();
     private boolean initialized;
@@ -105,6 +106,7 @@ final class Spiral3NativeController {
                     throw new IllegalArgumentException("Spiral 3 command block differs from audited source at " + position);
                 block.setCommand(command);
                 block.update(true, false);
+                nativeCommandBlocks.add(block.getBlock());
             }
             INSTANCES.put(instance, this);
             initializationAttempted = true;
@@ -164,6 +166,15 @@ final class Spiral3NativeController {
         delayedTasks.clear();
         suspendedInventories.clear();
         world.getPlayers().forEach(this::releasePlayer);
+        // A finished game's world can remain loaded for its ranking screen. Its
+        // pressure-plate callbacks must be inert before this prefix is reused.
+        nativeCommandBlocks.forEach(block -> {
+            if (block.getState() instanceof CommandBlock commandBlock) {
+                commandBlock.setCommand("");
+                commandBlock.update(true, false);
+            }
+        });
+        nativeCommandBlocks.clear();
         if (initializationAttempted) call("cleanup");
         INSTANCES.remove(instance, this);
         PREFIXES.remove(prefix);
@@ -196,6 +207,7 @@ final class Spiral3NativeController {
         for (int number = 0; number < 1296; number++) {
             String candidate = Integer.toString(number, 36);
             if (candidate.length() == 1) candidate = "0" + candidate;
+            if (Bukkit.getScoreboardManager().getMainScoreboard().getObjective(candidate + "adapter") != null) continue;
             if (PREFIXES.add(candidate)) return candidate;
         }
         throw new IllegalStateException("Spiral 3 mechanics objective capacity exhausted");

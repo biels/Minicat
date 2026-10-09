@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -291,6 +292,38 @@ class Spiral3NativeControllerTest {
         assertEquals(0, second.totalTicketsRemoved());
     }
 
+    @Test void teardownDisablesEveryNativeCallbackBeforeTheRankingWorldsPrefixCanBeReused() throws Exception {
+        Fixture finished = fixture("ranking_world");
+        finished.additionalCommandBlock = true;
+        Spiral3NativeController completed = finished.create();
+        assertFalse(finished.block.command.isEmpty());
+        assertFalse(finished.secondBlock.command.isEmpty());
+        harness.cleanupObserver = () -> {
+            assertEquals("", finished.block.command);
+            assertEquals("", finished.secondBlock.command);
+        };
+        completed.clear();
+        harness.cleanupObserver = () -> {};
+        Fixture next = fixture("next_match");
+        Spiral3NativeController replacement = next.create();
+        assertEquals(completed.prefix(), replacement.prefix(), "a fully cleaned prefix may be allocated to the next match");
+        assertEquals("", finished.block.command, "ranking world callbacks stay inert while its world remains loaded");
+        assertEquals("", finished.secondBlock.command);
+        assertFalse(next.block.command.isEmpty());
+        assertEquals(2, finished.block.updates);
+        assertEquals(2, finished.secondBlock.updates);
+    }
+
+    @Test void crashedInstancesExistingAdapterObjectiveReservesItsPrefix() throws Exception {
+        Objective stale = Harness.objective(1);
+        harness.objectives.put("00adapter", stale);
+        Fixture fixture = fixture("after_crash");
+        Spiral3NativeController controller = fixture.create();
+        assertEquals("01", controller.prefix());
+        controller.clear();
+        assertSame(stale, harness.objectives.get("00adapter"), "launching and clearing a fresh match must not overwrite a stale instance's state");
+    }
+
     @Test void invalidCompiledResourceDimensionOrMacroCannotBeInstalled() throws Exception {
         for (String command : List.of("execute in $(dimension) run function foreign:danger " + CONTEXT,
                 "execute in $(dimension) run execute in minecraft:overworld run kill @a",
@@ -316,8 +349,10 @@ class Spiral3NativeControllerTest {
         final List<Runner> runners = new ArrayList<>();
         final Map<ChunkPosition, ChunkState> chunks = new HashMap<>();
         final CommandBlockState block = new CommandBlockState();
+        final CommandBlockState secondBlock = new CommandBlockState();
         int consoleCount = 1;
         boolean blockPresent = true;
+        boolean additionalCommandBlock;
         String sourceCommand = NATIVE_SOURCE, compiledCommand = NATIVE_COMMAND;
 
         Fixture(String name, Path directory) throws Exception {
@@ -336,13 +371,16 @@ class Spiral3NativeControllerTest {
                     for (int index = 0; index < consoleCount; index++) markers.add(stub(Marker.class, (entityMethod, ignored) -> entityMethod.equals("getCustomName") ? "console" : null));
                     yield markers;
                 }
-                case "getBlockAt" -> block();
+                case "getBlockAt" -> (Integer) args[0] == 30 ? block(secondBlock) : block();
                 default -> null;
             });
+            block.owningBlock = this::block;
+            secondBlock.owningBlock = () -> block(secondBlock);
         }
-        Block block() { return stub(Block.class, (method, args) -> switch (method) {
+        Block block() { return block(block); }
+        Block block(CommandBlockState selected) { return stub(Block.class, (method, args) -> switch (method) {
             case "getWorld" -> world;
-            case "getState" -> blockPresent ? block.state : stub(BlockState.class, (ignored, values) -> null);
+            case "getState" -> blockPresent ? selected.state : stub(BlockState.class, (ignored, values) -> null);
             default -> null;
         }); }
         BlockCommandSender blockSender() { return stub(BlockCommandSender.class, (method, args) -> method.equals("getBlock") ? block() : null); }
@@ -362,7 +400,13 @@ class Spiral3NativeControllerTest {
             JsonObject command = new JsonObject(), position = new JsonObject();
             position.addProperty("x", -28); position.addProperty("y", 145); position.addProperty("z", 101);
             command.add("position", position); command.addProperty("sourceCommand", sourceCommand); command.addProperty("command", compiledCommand);
-            JsonArray commandBlocks = new JsonArray(); commandBlocks.add(command); nativeRules.add("commandBlocks", commandBlocks);
+            JsonArray commandBlocks = new JsonArray(); commandBlocks.add(command);
+            if (additionalCommandBlock) {
+                JsonObject additional = command.deepCopy(), additionalPosition = new JsonObject();
+                additionalPosition.addProperty("x", 30); additionalPosition.addProperty("y", 268); additionalPosition.addProperty("z", 113);
+                additional.add("position", additionalPosition); commandBlocks.add(additional);
+            }
+            nativeRules.add("commandBlocks", commandBlocks);
             profile.add("native", nativeRules);
             Files.writeString(directory.resolve(CourseProfile.FILE_NAME), profile.toString());
             return new Spiral3NativeController(world, plugin, player -> runners.stream().filter(runner -> runner.player == player).findFirst().orElseThrow().active, () -> "fixture");
@@ -380,8 +424,10 @@ class Spiral3NativeControllerTest {
     private static final class CommandBlockState {
         String command = NATIVE_SOURCE;
         int updates;
+        Supplier<Block> owningBlock = () -> null;
         final CommandBlock state = stub(CommandBlock.class, (method, args) -> switch (method) {
             case "getCommand" -> command;
+            case "getBlock" -> owningBlock.get();
             case "setCommand" -> { command = (String) args[0]; yield null; }
             case "update" -> { updates++; yield true; }
             default -> null;
@@ -437,6 +483,7 @@ class Spiral3NativeControllerTest {
         final List<ScheduledTask> tasks = new ArrayList<>();
         final Map<String, Objective> objectives = new HashMap<>();
         Command bridge;
+        Runnable cleanupObserver = () -> {};
         final ConsoleCommandSender console = stub(ConsoleCommandSender.class, (method, args) -> null);
         final Scoreboard scoreboard = stub(Scoreboard.class, (method, args) -> method.equals("getObjective") ? objectives.get(args[0]) : null);
         final ScoreboardManager scoreboardManager = stub(ScoreboardManager.class, (method, args) -> method.equals("getMainScoreboard") ? scoreboard : null);
@@ -474,6 +521,7 @@ class Spiral3NativeControllerTest {
                     objectives.put(prefix.group(1) + "diamond_timer", objective(0));
                     if (sentinel != Sentinel.MISSING) objectives.put(prefix.group(1) + "adapter", objective(sentinel == Sentinel.OK ? 1 : 0));
                 } else if (command.contains("function minicat_spiral3:cleanup")) {
+                    cleanupObserver.run();
                     objectives.keySet().removeIf(name -> name.startsWith(prefix.group(1)));
                 }
                 yield true;
