@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import yaml
 
 spec = importlib.util.spec_from_file_location('installer', Path(__file__).with_name('install-localization.py'))
@@ -13,6 +14,39 @@ JAR = Path(__file__).resolve().parents[1] / 'build/libs/minicat-1.0-SNAPSHOT.jar
 
 
 class InstallerTest(unittest.TestCase):
+    def test_utf8_config_survives_windows_default_encoding(self):
+        original_read_text = Path.read_text
+        original_write_text = Path.write_text
+
+        def windows_read_text(path, **kwargs):
+            kwargs.setdefault('encoding', 'cp1252')
+            return original_read_text(path, **kwargs)
+
+        def windows_write_text(path, text, **kwargs):
+            kwargs.setdefault('encoding', 'cp1252')
+            return original_write_text(path, text, **kwargs)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = {'operator-note': 'Visió', 'languages': {}, 'storage': {'type': 'local'}, 'language-creation': {key: {} for key in ['chat','guis','items','titles','actionbars','signs','scoreboards','holograms']}}
+            (root / 'config.yml').write_bytes(yaml.safe_dump(config, allow_unicode=True).encode('utf-8'))
+            with patch.object(Path, 'read_text', windows_read_text), patch.object(Path, 'write_text', windows_write_text):
+                installer.install(JAR, root)
+                installer.install(JAR, root)
+            saved = yaml.safe_load((root / 'config.yml').read_bytes().decode('utf-8'))
+            self.assertEqual(saved['languages']['ca_ES']['display-name'], '<gold>Català')
+            self.assertEqual(saved['operator-note'], 'Visió')
+
+    def test_legacy_windows_config_is_rewritten_as_utf8(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = {'operator-note': 'Visió', 'languages': {}, 'storage': {'type': 'local'}, 'language-creation': {key: {} for key in ['chat','guis','items','titles','actionbars','signs','scoreboards','holograms']}}
+            (root / 'config.yml').write_bytes(yaml.safe_dump(config, allow_unicode=True).encode('cp1252'))
+            installer.install(JAR, root)
+            saved = yaml.safe_load((root / 'config.yml').read_bytes().decode('utf-8'))
+            self.assertEqual(saved['languages']['ca_ES']['display-name'], '<gold>Català')
+            self.assertEqual(saved['operator-note'], 'Visió')
+
     def test_preserves_preferences_and_external_copy_and_remembers_sign_bindings(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

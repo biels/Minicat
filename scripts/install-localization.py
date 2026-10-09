@@ -11,7 +11,12 @@ import yaml
 
 def install(jar_path, triton_directory, sign_bindings=None, private_catalan=None):
     config_path = triton_directory / 'config.yml'
-    config = yaml.safe_load(config_path.read_text())
+    try:
+        config_text = config_path.read_text(encoding='utf-8')
+    except UnicodeDecodeError:
+        # Earlier Windows installs wrote the configuration using the local code page.
+        config_text = config_path.read_text(encoding='cp1252')
+    config = yaml.safe_load(config_text)
     with zipfile.ZipFile(jar_path) as jar:
         definition = json.loads(jar.read('i18n/languages.json'))
         resources = json.loads(jar.read('i18n/catalog-index.json'))
@@ -24,7 +29,7 @@ def install(jar_path, triton_directory, sign_bindings=None, private_catalan=None
     if binding_path.exists():
         catalog = {item['key']: item for content in collections.values() for item in json.loads(content)['items']}
         signs = []
-        for binding in json.loads(binding_path.read_text()):
+        for binding in json.loads(binding_path.read_text(encoding='utf-8')):
             lines = binding['lines']
             if len(lines) > 8 or any(key is not None and (key not in catalog or contracts[key]['arguments']) for key in lines):
                 raise ValueError('Sign bindings require at most eight argument-free catalog keys')
@@ -60,7 +65,7 @@ def install(jar_path, triton_directory, sign_bindings=None, private_catalan=None
     for surface in ['guis','items','actionbars','titles','signs','scoreboards','holograms']:
         features[surface].update({'syntax-lang': 'lang', 'syntax-arg': 'arg'})
     manifest_path = triton_directory / 'minicat-catalog-files.json'
-    old_files = json.loads(manifest_path.read_text()) if manifest_path.exists() else ['minicat-common.json']
+    old_files = json.loads(manifest_path.read_text(encoding='utf-8')) if manifest_path.exists() else ['minicat-common.json']
     if any(Path(name).name != name or not name.startswith('minicat-') for name in old_files):
         raise ValueError('Invalid Minicat collection ownership manifest')
     translations = triton_directory / 'translations'
@@ -76,8 +81,8 @@ def install(jar_path, triton_directory, sign_bindings=None, private_catalan=None
     if sign_bindings is not None and sign_bindings.resolve() != saved_bindings.resolve(): shutil.copy2(sign_bindings, saved_bindings)
     for name, content in collections.items(): (translations / name).write_bytes(content)
     for name in set(old_files) - set(collections): (translations / name).unlink(missing_ok=True)
-    config_path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False))
-    manifest_path.write_text(json.dumps(sorted(collections), indent=2) + '\n')
+    config_path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding='utf-8')
+    manifest_path.write_text(json.dumps(sorted(collections), indent=2) + '\n', encoding='utf-8')
     print(f'Installed {len(collections)} collections; configuration backup: {backup}')
 
 
