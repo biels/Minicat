@@ -1,0 +1,26 @@
+src/main/java/com/biel/lobby/mapes/jocs/parkour/utils/CourseProfile.java
+  s_9dcea03fa54adb::t_bb2e6b32da1735 61-65,70,126-138,140-144,150,156-158
+src/test/java/com/biel/lobby/mapes/jocs/parkour/utils/CourseProfileTest.java
+  s_9dcea03fa54adb::t_0cecb061552ab9 74-96
+src/main/java/com/biel/lobby/mapes/jocs/parkour/ImportedCourseController.java
+  s_9dcea03fa54adb::t_bb2e6b32da1735 119-126,179-183
+  s_9dcea03fa54adb::t_459bb6dddd9bcd 184
+src/test/java/com/biel/lobby/mapes/jocs/parkour/ImportedCourseControllerTest.java
+  s_9dcea03fa54adb::t_0cecb061552ab9 211-281,288,304,312-314,323,345,362
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b1b74f9336f93db915b75d5c93de60d46f85257a",
+  "prompts": {},
+  "sessions": {
+    "s_9dcea03fa54adb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12179-bf14-7021-9c65-f9d6d22f586c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
