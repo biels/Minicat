@@ -1,0 +1,21 @@
+scripts/install-localization.py
+  s_8ddc464fc17cef::t_504006c865fad3 14-19,32,68,84-85
+scripts/test_install_localization.py
+  s_8ddc464fc17cef::t_dcfc53e19f38c2 7,17-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "06b5dcb0fbb7d609de2eaff65fb89f47d9c95722",
+  "prompts": {},
+  "sessions": {
+    "s_8ddc464fc17cef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a120f7-7303-7480-885d-c63df6101618",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
