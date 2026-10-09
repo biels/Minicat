@@ -64,20 +64,20 @@ class TheTowersBridgeTest {
     }
 
     @Test
-    void surveyedStairsExpandToAdjacentFloorsInBothDirections() throws Exception {
+    void sixFacadeAperturesExpandToAdjacentFloorsOnBothTeams() throws Exception {
         Fixture fixture = new Fixture();
-        for (int direction : List.of(-1, 1)) {
+        for (int direction : List.of(-1, 1)) for (int height : List.of(191, 196)) for (int z : List.of(1138, 1152, 1166)) {
             List<Location> route = TheTowers.expandBridgeRoute(List.of(
-                    fixture.at(direction * 62, 196, 1138), fixture.at(direction * 60, 198, 1138),
-                    fixture.at(direction * 2, 198, 1138), fixture.at(0, 196, 1138)), fixture.game.arenaBounds);
-            assertEquals(63, route.size());
-            assertEquals(196, route.getFirst().getBlockY());
-            assertEquals(198, route.get(2).getBlockY());
-            assertEquals(196, route.getLast().getBlockY());
+                    fixture.at(direction * 34, height, z), fixture.at(direction * 32, height + 2, z),
+                    fixture.at(direction * 4, height + 2, z), fixture.at(direction * 2, height, z)), fixture.game.arenaBounds);
+            assertEquals(33, route.size());
+            assertEquals(height, route.getFirst().getBlockY());
+            assertEquals(height + 2, route.get(2).getBlockY());
+            assertEquals(height, route.getLast().getBlockY());
             for (int step = 1; step < route.size(); step++) {
                 assertEquals(1, Math.abs(route.get(step).getBlockX() - route.get(step - 1).getBlockX()));
                 assertTrue(Math.abs(route.get(step).getBlockY() - route.get(step - 1).getBlockY()) <= 1);
-                assertEquals(1138, route.get(step).getBlockZ());
+                assertEquals(z, route.get(step).getBlockZ());
             }
         }
     }
@@ -174,7 +174,7 @@ class TheTowersBridgeTest {
     }
 
     @Test
-    void overlappingRowsStayReservedAndReinforcementPrecedesNewBalconies() throws Exception {
+    void physicalConflictsStayReservedAndReinforcementPrecedesNewBalconies() throws Exception {
         Fixture fixture = new Fixture();
         TheTowers.BridgeLane north = fixture.lane(0, 0, 5), south = fixture.lane(0, 28, 5), fartherNorth = fixture.lane(-4, 0, 5);
         fixture.routes(north, south, fartherNorth);
@@ -182,11 +182,55 @@ class TheTowersBridgeTest {
         fixture.game.requestBuilder(fixture.team);
         for (int kill = 0; kill < 30; kill++) fixture.game.requestBuilder(fixture.team);
         assertEquals(2, fixture.game.minions().size(), "two active builders cap a team's army");
-        assertTrue(north.active && south.active);
-        assertFalse(fartherNorth.active, "overlapping center paths cannot run two builders at once");
+        assertTrue(south.active);
+        assertNotEquals(north.active, fartherNorth.active, "exactly one overlapping route can have a builder");
         assertEquals(12, ((int[]) field(TheTowers.class, fixture.game, "builderCredits"))[0], "waiting kill credits are bounded");
         fixture.walkToEnd((TheTowers.BridgeBuilder) fixture.game.minions().getFirst());
-        assertSame(north, fixture.game.chooseBridgeLane(0), "the second pass widens the completed lane first");
+        TheTowers.BridgeLane completed = List.of(north, south, fartherNorth).stream()
+                .filter(lane -> lane.completedWidth == 1).findFirst().orElseThrow();
+        assertSame(completed, fixture.game.chooseBridgeLane(0), "the second pass widens the completed lane first");
+    }
+
+    @Test
+    void everyHeightAndTowerRemainsEligibleWhenTheOtherFiveLanesAreBusy() throws Exception {
+        Fixture fixture = new Fixture();
+        List<TheTowers.BridgeLane> lanes = new ArrayList<>();
+        for (int z : List.of(1138, 1152, 1166)) for (int height : List.of(191, 196)) {
+            lanes.add(new TheTowers.BridgeLane(TheTowers.expandBridgeRoute(List.of(
+                    fixture.at(34, height, z), fixture.at(32, height + 2, z),
+                    fixture.at(4, height + 2, z), fixture.at(2, height, z)), fixture.game.arenaBounds)));
+        }
+        fixture.routes(lanes.toArray(TheTowers.BridgeLane[]::new));
+        for (TheTowers.BridgeLane available : lanes) {
+            for (TheTowers.BridgeLane lane : lanes) lane.active = lane != available;
+            assertSame(available, fixture.game.chooseBridgeLane(0), "each of the six apertures is an independent candidate");
+        }
+    }
+
+    @Test
+    void verticallySeparatedBuildersCanRunInTheSameTowerColumn() throws Exception {
+        Fixture fixture = new Fixture();
+        TheTowers.BridgeLane lower = fixture.lane(0, 0, 0, 5), upper = fixture.lane(0, 5, 0, 5);
+        fixture.routes(lower, upper);
+        fixture.game.requestBuilder(fixture.team);
+        fixture.game.requestBuilder(fixture.team);
+        assertTrue(lower.active && upper.active);
+        assertEquals(2, fixture.game.minions().size());
+        assertFalse(lower.overlaps(upper));
+        for (Minion builder : new ArrayList<>(fixture.game.minions())) fixture.walkToEnd((TheTowers.BridgeBuilder) builder);
+        assertEquals(1, lower.completedWidth);
+        assertEquals(1, upper.completedWidth);
+    }
+
+    @Test
+    void onlyIntersectingFloorAndBodyVolumesConflict() throws Exception {
+        Fixture fixture = new Fixture();
+        TheTowers.BridgeLane route = fixture.lane(0, 0, 0, 5);
+        assertTrue(route.overlaps(fixture.lane(0, 0, 2, 5)), "future widening strips can intersect");
+        assertTrue(route.overlaps(fixture.lane(0, 2, 0, 5)), "an upper floor cannot intersect a lower builder's body");
+        assertFalse(route.overlaps(fixture.lane(0, 3, 0, 5)), "touching volume boundaries do not occupy the same blocks");
+        assertFalse(route.overlaps(fixture.lane(0, 0, 3, 5)), "adjacent three-wide strips are independent");
+        assertFalse(route.overlaps(fixture.lane(6, 0, 0, 10)), "disjoint x segments do not reserve an entire column");
     }
 
     @Test
@@ -287,7 +331,10 @@ class TheTowersBridgeTest {
             });
         }
         TheTowers.BridgeLane lane(int fromX, int z, int endX) {
-            return new TheTowers.BridgeLane(TheTowers.expandBridgeRoute(List.of(at(fromX, 0, z), at(endX, 0, z)), game.arenaBounds));
+            return lane(fromX, 0, z, endX);
+        }
+        TheTowers.BridgeLane lane(int fromX, int floorY, int z, int endX) {
+            return new TheTowers.BridgeLane(TheTowers.expandBridgeRoute(List.of(at(fromX, floorY, z), at(endX, floorY, z)), game.arenaBounds));
         }
         void routes(TheTowers.BridgeLane... lanes) throws Exception {
             set(TheTowers.class, game, "bridgeLanes", List.of(List.of(lanes), List.of()));

@@ -2,6 +2,7 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
@@ -64,7 +65,7 @@ public class TheTowers extends JocTeamScoreRace implements Listener {
     private int scoreToWin = 10, generatorIntervalSeconds = 1, generatorItemLifetimeTicks = 100;
     private static final int BRIDGE_LANES_PER_TEAM = 6, MAX_BRIDGE_STEPS = 128, MAX_BUILDER_CREDITS = 12;
     private List<List<BridgeLane>> bridgeLanes = List.of();
-    private final int[] builderCredits = new int[2], nextBuilderLane = new int[2];
+    private final int[] builderCredits = new int[2];
     private boolean builderOnKill = true;
     private int builderStartSeconds = 300, builderIntervalSeconds = 60, builderMaxActivePerTeam = 2,
             builderLifetimeSeconds = 120, nextPeriodicBuilderSecond = 300;
@@ -377,16 +378,17 @@ public class TheTowers extends JocTeamScoreRace implements Listener {
     BridgeLane chooseBridgeLane(int side) {
         List<BridgeLane> lanes = bridgeLanes.get(side);
         // A second builder reinforces an arrived narrow bridge before another balcony starts.
-        for (int pass = 0; pass < 2; pass++) for (int offset = 0; offset < lanes.size(); offset++) {
-            int index = (nextBuilderLane[side] + offset) % lanes.size();
-            BridgeLane lane = lanes.get(index);
-            if (lane.active || (pass == 0) != (lane.completedWidth == 1)) continue;
-            if (lanes.stream().anyMatch(other -> other.active && lane.overlaps(other))) continue;
-            Location start = lane.floors.getFirst();
-            if (!bridgeSpaceClear(start) || (!safeBridgeSupport(start.getBlock().getType()) && !canPlaceBridge(start.getBlock()))
-                    || !bridgeNeedsWork(lane, lane.nextWidth())) continue;
-            nextBuilderLane[side] = (index + 1) % lanes.size();
-            return lane;
+        for (int pass = 0; pass < 2; pass++) {
+            List<BridgeLane> candidates = new ArrayList<>();
+            for (BridgeLane lane : lanes) {
+                if (lane.active || (pass == 0) != (lane.completedWidth == 1)) continue;
+                if (lanes.stream().anyMatch(other -> other.active && lane.overlaps(other))) continue;
+                Location start = lane.floors.getFirst();
+                if (!bridgeSpaceClear(start) || (!safeBridgeSupport(start.getBlock().getType()) && !canPlaceBridge(start.getBlock()))
+                        || !bridgeNeedsWork(lane, lane.nextWidth())) continue;
+                candidates.add(lane);
+            }
+            if (!candidates.isEmpty()) return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
         }
         return null;
     }
@@ -445,8 +447,13 @@ public class TheTowers extends JocTeamScoreRace implements Listener {
             if (arrived) completedWidth = Math.max(completedWidth, width);
         }
         boolean overlaps(BridgeLane other) {
-            // The three balconies in each row share a central corridor, including their widening strips.
-            return Math.abs(floors.getFirst().getBlockZ() - other.floors.getFirst().getBlockZ()) <= 2;
+            // Reserve the eventual three-wide floor and two blocks of body space, not an entire z column.
+            for (Location floor : floors) for (Location otherFloor : other.floors) {
+                if (floor.getWorld() == otherFloor.getWorld() && floor.getBlockX() == otherFloor.getBlockX()
+                        && Math.abs(floor.getBlockZ() - otherFloor.getBlockZ()) <= 2
+                        && Math.abs(floor.getBlockY() - otherFloor.getBlockY()) <= 2) return true;
+            }
+            return false;
         }
     }
 
