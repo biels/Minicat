@@ -2,236 +2,282 @@ package com.biel.lobby.mapes.jocs;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 
 import com.biel.lobby.Com;
+import com.biel.lobby.localization.MessageArgument;
+import com.biel.lobby.localization.MessageKey;
 import com.biel.lobby.mapes.JocLastStanding;
 import com.biel.lobby.utilities.ScoreBoardUpdater;
 import com.biel.lobby.utilities.Utils;
 
+/** Hot potato: pass the TNT before the sixty-second round expires. */
 public class TNTRun extends JocLastStanding {
-	// Keyed by name, not Player: a player who rejoins after a disconnect is a new Player object, and a stored reference would never match again
-	ArrayList<String> tntPlayers = new ArrayList<>();
-	ArrayList<String> immunePlayers = new ArrayList<>();
-	int temps = 60;
-	int round = 0;
-	@Override
-	protected void setCustomGameRules() {
-				
-	}
+    // Names outlive the Player entity across disconnects.
+    final ArrayList<String> tntPlayers = new ArrayList<>();
+    private final Map<String, Long> immunityTokens = new HashMap<>();
+    private long nextImmunityToken;
+    private long hyperSpeedToken;
+    private boolean hyperSpeed;
+    int temps = 60;
+    int round;
+    private int roundTaskId = -1;
 
-	@Override
-	protected ArrayList<ItemStack> getStartingItems(Player ply) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override protected void setCustomGameRules() {}
+    @Override protected ArrayList<ItemStack> getStartingItems(Player player) { return new ArrayList<>(); }
+    @Override protected int getBaseSkillUnlockerAmount() { return 0; }
+    @Override public String getGameName() { return "TNTRun"; }
 
-	@Override
-	protected void teletransportarTothom() {
-		for (Player p : getPlayers()){
-			p.teleport(getWorld().getSpawnLocation());
-		}
-		
-	}
+    @Override
+    protected void teletransportarTothom() {
+        for (Player player : getAlivePlayers()) player.teleport(getWorld().getSpawnLocation());
+    }
 
-	@Override
-	protected void customJocIniciat() {
-		super.customJocIniciat();
-		startRound();
-		
-	}
-	@Override
-	protected int getBaseSkillUnlockerAmount() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	@Override
-	public String getGameName() {
-		// TODO Auto-generated method stub
-		return "TNTRun";
-	}
-	void updateEffects(Boolean hyper){
-		for (Player p : getPlayers()) {
-			Utils.clearEffects(p);
-			if (!hyper){
-				int speed = 2;
-				if (hasTNT(p)){
-					speed = 4;
-				}
-				p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 800 * 20, 0, true), true);
-				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 800 * 20, speed, true), true);
-			}else{
-				p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 800 * 20, 20, true), true);
-			}
-		
-		}
-	}
-	void dispersarJugadors(){
-		for (Player p : getPlayers()){
-			Vector vec = Vector.getRandom();
-			vec.normalize();
-			vec.multiply(Utils.NombreEntre(3, 8));
-			p.setVelocity(vec);
-		}
-	}
-	Boolean hasTNT(Player ply){
-		return tntPlayers.contains(ply.getName());
-	}
-	Boolean isImmune(Player ply){
-		return immunePlayers.contains(ply.getName());
-	}
-	void giveImmunity(final Player ply, int secs){
-		if (!isImmune(ply)){
-			immunePlayers.add(ply.getName());
-			ply.getInventory().setHelmet(new ItemStack(Material.QUARTZ_BLOCK));
-			ply.getInventory().setItem(8, new ItemStack(Material.QUARTZ_BLOCK));
-			scheduleGameplayTask(() -> {
-                ply.getInventory().setHelmet(null);
-                   ply.getInventory().clear(8);
-                immunePlayers.remove(ply.getName());
-            }, 20L * secs);
-		}
-	}
-	void passarTNT(Player de, Player a){
-		if (isImmune(a)){return;}
-		if (!hasTNT(de)){return;}
-		if (hasTNT(a)){return;}
-		treureTNT(de);
-		posarTNT(a);
-		giveImmunity(de, 2);
-		updateEffects(false);
-		sendGlobalMessage(ChatColor.YELLOW + de.getName() + ChatColor.WHITE + " ha posat el seu TNT a " + ChatColor.RED + a.getName());
-	}
-	void posarTNT(Player ply){
-		ply.getInventory().setHelmet(new ItemStack(Material.TNT));
-		ply.getInventory().setItem(8, new ItemStack(Material.TNT));
-		ply.updateInventory();
-		if(!hasTNT(ply)){
-			tntPlayers.add(ply.getName());
-			ply.sendMessage("Tens un "+ ChatColor.DARK_RED + "TNT"+ ChatColor.WHITE +"!");
-		}
-	}
-	void treureTNT(Player ply){
-		ply.getInventory().setHelmet(null);
-		ply.getInventory().clear(8);
-		ply.updateInventory();
-		tntPlayers.remove(ply.getName());
-	}
-	int getTNTAmount(){
-		return (int) Math.ceil(getAlivePlayers().size() / ((double) 3));
-	}
-	void tntInicial(){
-		@SuppressWarnings("unchecked")
-		ArrayList<Player> alives = (ArrayList<Player>) getAlivePlayers().clone();
-		Collections.shuffle(alives);
-		int tnt = getTNTAmount();
-		int done = 0;
-		while (done < tnt){
-			posarTNT(alives.get(0));
-			done++;
-		}
-	}
-	void explotarJugadors(){
-		for (Player p : getPlayers()){
-			if (!hasTNT(p)) continue;
-			//getWorld().createExplosion(p.getLocation(), 4F, false);
-			removeIfAlive(p);
-			Com.teleportPlayerToLobby(p);
-		}
-	}
-	void startRound(){
-		round = round + 1;
-		temps = 60;
-		sendGlobalMessage("Ronda " + Integer.toString(round) + " en 3s...");
-		//dispersarJugadors();
-		Utils.clearPlayers(getPlayers());
-		teletransportarTothom();
-		tntInicial();
-		updateEffects(false);
-		ProgTask();
-		
-	}
-	void endRound(){
-		explotarJugadors();
-		if (getAlivePlayers().size() > 1){
-			startRound();
-		}
-	}
-	int taskId = 0;
-	public void ProgTask(){
-		 
-		taskId = scheduleGameplayRepeatingTask(() -> {
-           //time
-            temps = temps - 1;
-            if(Utils.Possibilitat(1)){
-                if(Utils.Possibilitat(80)){
-                    hipervelocitat();
-                }
-            }
-            updateScoreBoards();
-            if (temps <= 0){
-                plugin.getServer().getScheduler().cancelTask(taskId);
+    @Override
+    protected void customJocIniciat() {
+        super.customJocIniciat();
+        startRound();
+    }
+
+    // Joc gives the starting kit after customJocIniciat; restore what that reset wipes.
+    @Override
+    protected void donarItemsInicials(Player player) {
+        super.donarItemsInicials(player);
+        restoreRoundState(player);
+    }
+
+    @Override
+    protected void onPlayerRespawnAfterTick(PlayerRespawnEvent event, Player player) {
+        super.onPlayerRespawnAfterTick(event, player);
+        restoreRoundState(player);
+    }
+
+    @Override
+    protected void onSeatResumed(Player player) {
+        super.onSeatResumed(player);
+        if (JocEnMarxa() && !isAlive(player)) {
+            Com.teleportPlayerToLobby(player);
+            return;
+        }
+        restoreRoundState(player);
+    }
+
+    void restoreRoundState(Player player) {
+        if (!JocEnMarxa() || !isAlive(player) || !getPlayers().contains(player)) return;
+        Material marker = hasTNT(player) ? Material.TNT : isImmune(player) ? Material.QUARTZ_BLOCK : null;
+        player.getInventory().setHelmet(marker == null ? null : new ItemStack(marker));
+        player.getInventory().setItem(8, marker == null ? null : new ItemStack(marker));
+        applyEffects(player);
+    }
+
+    void applyEffects(Player player) {
+        player.removePotionEffect(PotionEffectType.SPEED);
+        player.removePotionEffect(PotionEffectType.JUMP_BOOST);
+        int speed = hyperSpeed ? 20 : hasTNT(player) ? 4 : 2;
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 800 * 20, speed, true), true);
+        if (!hyperSpeed) player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 800 * 20, 0, true), true);
+    }
+
+    private void updateEffects() {
+        for (Player player : getAlivePlayers()) {
+            if (getPlayers().contains(player)) applyEffects(player);
+        }
+    }
+
+    Boolean hasTNT(Player player) { return tntPlayers.contains(player.getName()); }
+    Boolean isImmune(Player player) { return immunityTokens.containsKey(player.getName()); }
+
+    void giveImmunity(Player player, int seconds) {
+        String playerName = player.getName();
+        long token = ++nextImmunityToken;
+        immunityTokens.put(playerName, token);
+        restoreRoundState(player);
+        scheduleGameplayTask(() -> {
+            if (!Long.valueOf(token).equals(immunityTokens.get(playerName))) return;
+            immunityTokens.remove(playerName);
+            // Resolve the current entity and fence inventory writes to this active match.
+            Player currentPlayer = Bukkit.getPlayerExact(playerName);
+            if (currentPlayer != null) restoreRoundState(currentPlayer);
+        }, 20L * seconds);
+    }
+
+    void passarTNT(Player from, Player to) {
+        if (!JocEnMarxa() || !isAlive(from) || !isAlive(to)
+                || !getPlayers().contains(from) || !getPlayers().contains(to)
+                || isImmune(to) || !hasTNT(from) || hasTNT(to)) return;
+        treureTNT(from);
+        posarTNT(to);
+        giveImmunity(from, 2);
+        updateEffects();
+        sendGlobalMessage(ChatColor.YELLOW + from.getName() + ChatColor.WHITE + " ha posat el seu TNT a " + ChatColor.RED + to.getName());
+    }
+
+    void posarTNT(Player player) {
+        if (!hasTNT(player)) {
+            tntPlayers.add(player.getName());
+            player.sendMessage("Tens un " + ChatColor.DARK_RED + "TNT" + ChatColor.WHITE + "!");
+        }
+        restoreRoundState(player);
+    }
+
+    void treureTNT(Player player) {
+        tntPlayers.remove(player.getName());
+        restoreRoundState(player);
+    }
+
+    int getTNTAmount() { return (getAlivePlayers().size() + 2) / 3; }
+
+    void tntInicial() {
+        ArrayList<Player> alivePlayers = new ArrayList<>(getAlivePlayers());
+        Collections.shuffle(alivePlayers);
+        for (int index = 0; index < getTNTAmount(); index++) posarTNT(alivePlayers.get(index));
+    }
+
+    protected void returnEliminatedPlayerToLobby(Player player) { Com.teleportPlayerToLobby(player); }
+
+    void explotarJugadors() {
+        // Offline holders still lose. getPlayers() alone allowed disconnecting to dodge the timer.
+        for (String playerName : new ArrayList<>(tntPlayers)) {
+            tntPlayers.remove(playerName);
+            immunityTokens.remove(playerName);
+            removeIfAlive(playerName);
+            Player player = Bukkit.getPlayerExact(playerName);
+            if (player != null && getPlayers().contains(player)) returnEliminatedPlayerToLobby(player);
+        }
+    }
+
+    void startRound() {
+        if (!JocEnMarxa() || getAliveNames().size() <= 1) return;
+        cancelRoundTask();
+        round++;
+        temps = 60;
+        tntPlayers.clear();
+        immunityTokens.clear();
+        hyperSpeed = false;
+        hyperSpeedToken++;
+        sendGlobalMessage(MessageKey.TNT_RUN_ROUND_START, MessageArgument.number("round", round));
+        Utils.clearPlayers(getAlivePlayers());
+        teletransportarTothom();
+        tntInicial();
+        updateEffects();
+        updateScoreBoards();
+        ProgTask();
+    }
+
+    void endRound() {
+        cancelRoundTask();
+        explotarJugadors();
+        if (JocEnMarxa() && getAliveNames().size() > 1) startRound();
+    }
+
+    private void cancelRoundTask() {
+        if (roundTaskId != -1) Bukkit.getScheduler().cancelTask(roundTaskId);
+        roundTaskId = -1;
+    }
+
+    public void ProgTask() {
+        int scheduledRound = round;
+        // Three seconds of preparation, then sixty one-second countdown steps.
+        roundTaskId = scheduleGameplayRepeatingTask(() -> {
+            if (!JocEnMarxa() || round != scheduledRound) return;
+            temps--;
+            if (temps <= 0) {
                 endRound();
+                return;
             }
-        }, 20 * 2, 10);
-	}
-	public void hipervelocitat(){
-		int secs = Utils.NombreEntre(2, 8);
-		updateEffects(true);
-		sendGlobalMessage(ChatColor.AQUA + "HIPERVELOCITAT! (" + Integer.toString(secs) + "s)" );
-		scheduleGameplayTask(() -> updateEffects(false), 20L * secs);
-	}
-	@Override
-	protected void updateScoreBoard(Player ply) {
-		if (JocIniciat && !JocFinalitzat){
-			ArrayList<String> list = new ArrayList<>();
-			ChatColor col = ChatColor.DARK_GREEN;
-			if(temps <= 45){col = ChatColor.GREEN;}
-			if(temps <= 25){col = ChatColor.YELLOW;}
-			if(temps <= 12){col = ChatColor.RED;}
-			if(temps <= 4){col = ChatColor.DARK_RED;}
-			list.add(ChatColor.YELLOW + "Temps: " +  col + "" + ChatColor.BOLD + Integer.toString(temps));
-			list.add(ChatColor.GREEN + "Ronda: " + ChatColor.WHITE + Integer.toString(round));
-			list.add(ChatColor.BLUE + "Jugadors: " + ChatColor.WHITE + Integer.toString(getAlivePlayers().size()));
-			ScoreBoardUpdater.setScoreBoard(getPlayers(), "Estadístiques", list, null);
-		}
-	}
-	@Override
-	protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent evt,
-			Player damaged, Player damager, boolean ranged) {
-		// TODO Auto-generated method stub
-		super.onPlayerDamageByPlayer(evt, damaged, damager, ranged);
-		passarTNT(damager, damaged);
-	}
-	@Override
-	protected void onPlayerDamage(EntityDamageEvent evt, Player p) {
-		// TODO Auto-generated method stub
-		super.onPlayerDamage(evt, p);
-		evt.setDamage(0.2);
-		if(JocIniciat){
-			//sendGlobalMessage(evt.getCause().name());
-			//removeIfAlive(ply);
-			if(evt.getCause() == DamageCause.VOID){
-				evt.setDamage(40);
-			}
-			if(evt.getCause() == DamageCause.BLOCK_EXPLOSION){
-				removeIfAlive(p);
-			}
-		}
-	}
+            if (Utils.Possibilitat(1) && Utils.Possibilitat(80)) hipervelocitat();
+            updateScoreBoards();
+        }, 20L * 4, 20L);
+    }
 
+    public void hipervelocitat() {
+        int seconds = Utils.NombreEntre(2, 8);
+        long token = ++hyperSpeedToken;
+        hyperSpeed = true;
+        updateEffects();
+        sendGlobalMessage(ChatColor.AQUA + "HIPERVELOCITAT! (" + seconds + "s)");
+        scheduleGameplayTask(() -> {
+            if (!JocEnMarxa() || token != hyperSpeedToken) return;
+            hyperSpeed = false;
+            updateEffects();
+        }, 20L * seconds);
+    }
 
+    @Override
+    protected void customLeave(Player player, List<String> attachments) {
+        super.customLeave(player, attachments);
+        eliminateLeaver(player.getName());
+    }
 
-	
+    @Override
+    protected void onSeatAbandoned(Seat seat, List<String> attachments) {
+        super.onSeatAbandoned(seat, attachments);
+        eliminateLeaver(seat.getName());
+    }
 
+    private void eliminateLeaver(String playerName) {
+        tntPlayers.remove(playerName);
+        immunityTokens.remove(playerName);
+        if (!JocEnMarxa()) return;
+        removeIfAlive(playerName);
+        if (JocEnMarxa() && tntPlayers.isEmpty()) startRound();
+    }
+
+    @Override
+    public void clearExternals() {
+        super.clearExternals();
+        roundTaskId = -1;
+        tntPlayers.clear();
+        immunityTokens.clear();
+        hyperSpeed = false;
+        hyperSpeedToken++;
+    }
+
+    @Override
+    protected void updateScoreBoard(Player player) {
+        if (!JocEnMarxa()) return;
+        ArrayList<String> lines = new ArrayList<>();
+        ChatColor color = ChatColor.DARK_GREEN;
+        if (temps <= 45) color = ChatColor.GREEN;
+        if (temps <= 25) color = ChatColor.YELLOW;
+        if (temps <= 12) color = ChatColor.RED;
+        if (temps <= 4) color = ChatColor.DARK_RED;
+        lines.add(ChatColor.YELLOW + "Temps: " + color + "" + ChatColor.BOLD + temps);
+        lines.add(ChatColor.GREEN + "Ronda: " + ChatColor.WHITE + round);
+        lines.add(ChatColor.BLUE + "Jugadors: " + ChatColor.WHITE + getAliveNames().size());
+        ScoreBoardUpdater.setScoreBoard(player, "Estadístiques", lines, null);
+    }
+
+    @Override
+    protected void onPlayerDamageByPlayer(EntityDamageByEntityEvent event, Player damaged, Player damager, boolean ranged) {
+        super.onPlayerDamageByPlayer(event, damaged, damager, ranged);
+        if (!event.isCancelled() && !ranged) passarTNT(damager, damaged);
+    }
+
+    @Override
+    protected void onPlayerDamage(EntityDamageEvent event, Player player) {
+        super.onPlayerDamage(event, player);
+        event.setDamage(0.2);
+        if (JocEnMarxa()) {
+            if (event.getCause() == DamageCause.VOID) event.setDamage(40);
+            if (!event.isCancelled() && event.getCause() == DamageCause.BLOCK_EXPLOSION) {
+                eliminateLeaver(player.getName());
+                returnEliminatedPlayerToLobby(player);
+            }
+        }
+    }
 }

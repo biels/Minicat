@@ -1,0 +1,18 @@
+{
+  "keys": {
+    "minicat.tnt-run.round.start": {
+      "constant": "TNT_RUN_ROUND_START",
+      "purpose": "Announce the round and three-second preparation before the sixty-second countdown.",
+      "arguments": [
+        {
+          "name": "round",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 150
+    }
+  }
+}

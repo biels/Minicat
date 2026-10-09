@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "type": "text",
+      "key": "minicat.tnt-run.round.start",
+      "languages": {
+        "en_US": "[minimsg]<yellow>Round %1 starts in 3 seconds. Pass the TNT before the 60-second timer expires!</yellow>",
+        "ca_ES": "[minimsg]<yellow>La ronda %1 comença en 3 segons. Passa el TNT abans que acabi el compte de 60 segons!</yellow>"
+      }
+    }
+  ]
+}
