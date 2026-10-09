@@ -1,0 +1,27 @@
+src/test/java/com/biel/lobby/mapes/jocs/parkour/Spiral3NativeControllerTest.java
+  s_9dcea03fa54adb::t_e191290a2d408e 30,276-309,576-577,601-608
+  s_9dcea03fa54adb::t_907abfa8ba0d78 19,367-369,397,406-437,456,467-468,475,478,481-488,499,504-507,523-525,550-557,609,637,640,643-646,665,682-684,693,695-701
+  s_9dcea03fa54adb::t_cbca448516caca 14,27,31,54,73-85,591-594
+  s_9dcea03fa54adb::t_0c099f559a8f49 310-333,511-516,573,586,589,638-639,666
+src/main/java/com/biel/lobby/mapes/jocs/parkour/Spiral3NativeController.java
+  s_9dcea03fa54adb::t_94c03af6ab11b6 57,138-142,159,168,176-177,179,181-182,198
+  s_9dcea03fa54adb::t_8ed0c1446b4c44 178,180,191-197
+  s_9dcea03fa54adb::t_3055cff063cd5f 54,69,85-86,88-91,121-122,189-190,201,208-213,216,261-262
+  s_9dcea03fa54adb::t_4b8178a2c7874f 87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "03fde25044e8b29b812136074c105dc4b159e62e",
+  "prompts": {},
+  "sessions": {
+    "s_9dcea03fa54adb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12179-bf14-7021-9c65-f9d6d22f586c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
