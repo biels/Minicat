@@ -1,0 +1,60 @@
+src/main/java/com/biel/lobby/GestorMapes.java
+  s_9dcea03fa54adb::t_74d8f9e764f028 42
+src/main/resources/i18n/translations/parkour.json
+  s_9dcea03fa54adb::t_53aaa053c3cb22 1-16
+src/main/java/com/biel/lobby/mapes/jocs/parkour/ImportedCourseController.java
+  s_9dcea03fa54adb::t_1ea51e26868519 144-145
+  s_9dcea03fa54adb::t_1acd4b6397ce12 1-143,146-196
+src/main/resources/i18n/contracts/parkour.json
+  s_9dcea03fa54adb::t_53aaa053c3cb22 1-21
+src/main/java/com/biel/lobby/mapes/jocs/parkour/utils/package-info.java
+  s_9dcea03fa54adb::t_34e089485bbd6e 1-5
+src/main/java/com/biel/lobby/mapes/jocs/parkour/utils/CourseProfile.java
+  s_9dcea03fa54adb::t_34e089485bbd6e 1-155,161-167,171-196
+  s_9dcea03fa54adb::t_1ea51e26868519 156-160,168-170
+src/test/java/com/biel/lobby/mapes/jocs/parkour/Spiral3NativeControllerTest.java
+  s_9dcea03fa54adb::t_ec20e89526520c 16,32,202-222,435-436,461-468,470
+  s_9dcea03fa54adb::t_f3f586a499a4f6 1-15,17-31,33-36,39-201,274-393,400-404,406-411,420-434,437-460,469,471-504
+  s_9dcea03fa54adb::t_bbd89530a4b43c 37-38,223-273,394-399,405,412-419
+src/test/java/com/biel/lobby/mapes/jocs/parkour/utils/CourseProfileTest.java
+  s_9dcea03fa54adb::t_4a69af7a1158f4 1-75
+src/main/java/com/biel/lobby/mapes/jocs/parkour/package-info.java
+  s_9dcea03fa54adb::t_34e089485bbd6e 1-3,6-7
+  s_9dcea03fa54adb::t_9bd5b53b660efe 4-5
+src/test/java/com/biel/lobby/mapes/jocs/parkour/ImportedCourseControllerTest.java
+  s_9dcea03fa54adb::t_ef5aa6d68af9b0 1-306
+src/main/java/com/biel/lobby/mapes/jocs/parkour/Parkour.java
+  s_9dcea03fa54adb::t_74d8f9e764f028 1-257,261,263-266,268-279,284-303,306-943
+  s_9dcea03fa54adb::t_f202e5dd0ca423 267
+  s_9dcea03fa54adb::t_5ca4132e6200e7 258-260,262
+  s_9dcea03fa54adb::t_53aaa053c3cb22 280-283,304-305
+src/main/java/com/biel/lobby/mapes/jocs/parkour/utils/CourseRun.java
+  s_9dcea03fa54adb::t_34e089485bbd6e 1-59
+src/main/java/com/biel/lobby/mapes/TemplateImport.java
+  s_9dcea03fa54adb::t_74d8f9e764f028 63-64
+src/test/java/com/biel/lobby/mapes/jocs/parkour/utils/CourseRunTest.java
+  s_9dcea03fa54adb::t_4a69af7a1158f4 1-74
+src/main/java/com/biel/lobby/mapes/jocs/parkour/Spiral3NativeController.java
+  s_9dcea03fa54adb::t_487f849f5ce3b8 222
+  s_9dcea03fa54adb::t_f1baa386b7f7a3 1-24,26-49,52-53,55,57-63,71-86,89,91-109,111-143,145-146,160-164,166,168-174,176-185,192-209,213-221,223-238
+  s_9dcea03fa54adb::t_f202e5dd0ca423 25,54,144,148-150,155-159,165
+  s_9dcea03fa54adb::t_7e3d0c6b2c6783 50-51,64-70,175,210-212
+  s_9dcea03fa54adb::t_399181b59e1382 56,87-88,90,110,167
+  s_9dcea03fa54adb::t_5ca4132e6200e7 147,151-154,186-191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fe3c7e4b6d2d7347ad9455fc8fb6fc5f4ea56eca",
+  "prompts": {},
+  "sessions": {
+    "s_9dcea03fa54adb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12179-bf14-7021-9c65-f9d6d22f586c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
