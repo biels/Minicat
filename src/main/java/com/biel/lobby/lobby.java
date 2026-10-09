@@ -46,6 +46,8 @@ public final class lobby extends JavaPlugin {
 		Messages.initialize(this);
 		dataAPI = new DataAPI();
 		dataAPI.requireReady();
+		getServer().getPluginManager().registerEvents(new ImmediateRespawn(), this);
+		for (World world : Bukkit.getWorlds()) ImmediateRespawn.configure(world);
 		// TODO Insert logic to be performed when the plugin is enabled
 		new LoginListener();
 
