@@ -208,12 +208,84 @@ class ImportedCourseControllerTest {
         assertThrows(IllegalArgumentException.class, missingSupport::controller);
     }
 
+    @Test void undamagingFoundationFloorContactReturnsTheLivingRunner() {
+        Fixture fixture = new Fixture(withSurfaces(new CourseProfile.Surface("BEDROCK", -64, -64)));
+        Runner runner = fixture.add("Biel");
+        ImportedCourseController controller = fixture.start(runner);
+        runner.location = location(fixture.world, CHECKPOINT.safePosition());
+        controller.tick(20);
+        fixture.blocks.put(new Cell(20, -64, 20), Material.BEDROCK);
+        runner.location = new Location(fixture.world, 20.5, -63, 20.5);
+        runner.fallDistance = 0;
+        controller.tick(30);
+        assertEquals(144.0625, runner.location.getY());
+        assertEquals(1, controller.getRun("Biel").failures());
+        assertEquals(List.of("Biel"), fixture.failures);
+        assertEquals(0, runner.damageCalls, "surface failure needs no damage or death event");
+        assertEquals(GameMode.ADVENTURE, runner.mode);
+        controller.tick(31);
+        assertEquals(1, fixture.failures.size());
+    }
+
+    @Test void otherBedrockHeightsAndLowerWaterOrAirRemainSafe() {
+        for (Material material : List.of(Material.BEDROCK, Material.WATER, Material.AIR)) {
+            Fixture fixture = new Fixture(withSurfaces(new CourseProfile.Surface("BEDROCK", -64, -64)));
+            Runner runner = fixture.add("Biel");
+            ImportedCourseController controller = fixture.start(runner);
+            int blockY = material == Material.BEDROCK ? -62 : -64;
+            fixture.blocks.put(new Cell(20, blockY, 20), material);
+            runner.location = new Location(fixture.world, 20.5, blockY + 1, 20.5);
+            controller.tick(20);
+            assertEquals(blockY + 1, runner.location.getY(), material.name());
+            assertTrue(fixture.failures.isEmpty(), material.name());
+        }
+    }
+
+    @Test void headContactDoesNotClaimADeclaredFailureSurface() {
+        Fixture fixture = new Fixture(withSurfaces(new CourseProfile.Surface("BEDROCK", 10, 10)));
+        Runner runner = fixture.add("Biel");
+        ImportedCourseController controller = fixture.start(runner);
+        fixture.blocks.put(new Cell(20, 10, 20), Material.BEDROCK);
+        runner.location = new Location(fixture.world, 20.5, 9, 20.5);
+        controller.tick(20);
+        assertEquals(9, runner.location.getY());
+        assertTrue(fixture.failures.isEmpty());
+    }
+
+    @Test void profileWithoutSurfacesKeepsItsPreviousFoundationBehavior() {
+        Fixture fixture = new Fixture();
+        Runner runner = fixture.add("Biel");
+        ImportedCourseController controller = fixture.start(runner);
+        fixture.blocks.put(new Cell(20, -64, 20), Material.BEDROCK);
+        runner.location = new Location(fixture.world, 20.5, -63, 20.5);
+        controller.tick(20);
+        assertEquals(-63, runner.location.getY());
+        assertTrue(fixture.failures.isEmpty());
+    }
+
+    @Test void invalidSurfaceMaterialOrWorldLayerPreventsLaunch() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Fixture(withSurfaces(new CourseProfile.Surface("UNKNOWN_MATERIAL", -64, -64))).controller());
+        assertThrows(IllegalArgumentException.class,
+                () -> new Fixture(withSurfaces(new CourseProfile.Surface("BEDROCK", -65, -64))).controller());
+        assertThrows(IllegalArgumentException.class,
+                () -> new Fixture(withSurfaces(new CourseProfile.Surface("BEDROCK", 320, 320))).controller());
+    }
+
+    private static CourseProfile withSurfaces(CourseProfile.Surface... surfaces) {
+        CourseProfile.Failure failure = PROFILE.failure();
+        return new CourseProfile(PROFILE.schemaVersion(), PROFILE.engine(), PROFILE.start(), PROFILE.finish(),
+                new CourseProfile.Failure(failure.minY(), failure.hazardMaterials(), failure.damageCauses(),
+                        failure.defaultMaxDrop(), failure.volumes(), List.of(surfaces)), PROFILE.checkpoints());
+    }
+
     private record Cell(int x, int y, int z) {}
     private static Location location(World world, CourseProfile.Position position) {
         return new Location(world, position.x(), position.y(), position.z(), position.yaw(), position.pitch());
     }
 
     private static final class Fixture {
+        final CourseProfile profile;
         final Map<Cell, Material> blocks = new HashMap<>();
         final Map<String, Runner> runners = new HashMap<>();
         final List<String> checkpoints = new ArrayList<>(), failures = new ArrayList<>();
@@ -229,6 +301,7 @@ class ImportedCourseControllerTest {
                 Material material = blocks.getOrDefault(cell, Material.AIR);
                 yield stub(Block.class, (blockMethod, ignored) -> switch (blockMethod) {
                     case "getType" -> material;
+                    case "getY" -> cell.y();
                     case "isPassable" -> material != Material.STONE;
                     default -> null;
                 });
@@ -236,7 +309,9 @@ class ImportedCourseControllerTest {
             default -> null;
         });
 
-        Fixture() {
+        Fixture() { this(PROFILE); }
+        Fixture(CourseProfile profile) {
+            this.profile = profile;
             blocks.put(new Cell(1, -62, 60), Material.STONE);
             for (CourseProfile.BlockPosition plate : List.of(START, CHECKPOINT.trigger())) {
                 blocks.put(new Cell(plate.x(), plate.y(), plate.z()), Material.LIGHT_WEIGHTED_PRESSURE_PLATE);
@@ -245,7 +320,7 @@ class ImportedCourseControllerTest {
         }
         Runner add(String name) { Runner runner = new Runner(this, name); runners.put(name, runner); return runner; }
         ImportedCourseController controller() {
-            return new ImportedCourseController(world, PROFILE, player -> runners.get(player.getName()).active,
+            return new ImportedCourseController(world, profile, player -> runners.get(player.getName()).active,
                     player -> checkpoints.add(player.getName()), player -> failures.add(player.getName()),
                     (player, ticks) -> finishedTicks.add(ticks));
         }
@@ -267,6 +342,7 @@ class ImportedCourseControllerTest {
         Vector velocity = new Vector();
         float fallDistance;
         int fireTicks;
+        int damageCalls;
         boolean online = true, active = true;
         Runner(Fixture fixture, String name) {
             currentWorld = fixture.world;
@@ -283,6 +359,7 @@ class ImportedCourseControllerTest {
                 case "setVelocity" -> { velocity = (Vector) args[0]; yield null; }
                 case "setFallDistance" -> { fallDistance = (Float) args[0]; yield null; }
                 case "setFireTicks" -> { fireTicks = (Integer) args[0]; yield null; }
+                case "damage", "setHealth" -> { damageCalls++; yield null; }
                 default -> null;
             });
         }

@@ -71,5 +71,28 @@ class CourseProfileTest {
         assertFalse(profile.failure().belowCheckpoint(140, anchor, 10.0));
     }
 
+    @Test void declaredFailureSurfacesMatchOnlyTheInclusiveMaterialLayer() {
+        CourseProfile profile = parse(PROFILE.replace("\"defaultMaxDrop\":null",
+                "\"defaultMaxDrop\":null,\"surfaces\":[{\"material\":\"bedrock\",\"minY\":-64,\"maxY\":-63}]"));
+        assertEquals(List.of(new CourseProfile.Surface("BEDROCK", -64, -63)), profile.failure().surfaces());
+        assertTrue(profile.failure().contacts("BEDROCK", -64));
+        assertTrue(profile.failure().contacts("BEDROCK", -63));
+        assertFalse(profile.failure().contacts("BEDROCK", -62));
+        assertFalse(profile.failure().contacts("BEDROCK", -65));
+        assertFalse(profile.failure().contacts("WATER", -64));
+        assertFalse(profile.failure().contacts("AIR", -64));
+        assertThrows(UnsupportedOperationException.class, () -> profile.failure().surfaces().clear());
+        assertTrue(parse(PROFILE).failure().surfaces().isEmpty(), "legacy profiles keep no inferred failure floor");
+    }
+
+    @Test void malformedSurfaceBoundsAndMaterialsAreRejected() {
+        String surface = "\"defaultMaxDrop\":null,\"surfaces\":[{\"material\":\"BEDROCK\",\"minY\":-64,\"maxY\":-64}]";
+        String json = PROFILE.replace("\"defaultMaxDrop\":null", surface);
+        assertThrows(IllegalArgumentException.class, () -> parse(json.replace("\"maxY\":-64", "\"maxY\":-65")));
+        assertThrows(IllegalArgumentException.class, () -> parse(json.replace("\"minY\":-64", "\"minY\":-64.2")));
+        assertThrows(IllegalArgumentException.class, () -> parse(json.replace("\"BEDROCK\"", "\"\"")));
+        assertThrows(IllegalArgumentException.class, () -> parse(json.replace("\"BEDROCK\"", "\"minecraft:bedrock\"")));
+    }
+
     private static CourseProfile parse(String json) { return CourseProfile.parse(new StringReader(json)); }
 }

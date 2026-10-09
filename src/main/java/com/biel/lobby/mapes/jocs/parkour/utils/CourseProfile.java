@@ -58,11 +58,16 @@ public record CourseProfile(int schemaVersion, String engine, Start start, Spher
                     JsonObject volume = value.getAsJsonObject();
                     return new Volume(point(object(volume, "min")), point(object(volume, "max")));
                 }).toList() : List.of();
+        List<Surface> surfaces = failure.has("surfaces") ? array(failure, "surfaces").asList().stream()
+                .map(value -> {
+                    JsonObject surface = value.getAsJsonObject();
+                    return new Surface(string(surface, "material"), integer(surface, "minY"), integer(surface, "maxY"));
+                }).toList() : List.of();
         return new CourseProfile(integer(root, "schemaVersion"), string(root, "engine"),
                 new Start(position(object(start, "entry")), block(object(start, "trigger"))),
                 new Sphere(point(object(finish, "center")), number(finish, "radius")),
                 new Failure(number(failure, "minY"), strings(failure, "hazardMaterials"),
-                        strings(failure, "damageCauses"), optionalPositive(failure, "defaultMaxDrop"), volumes), checkpoints);
+                        strings(failure, "damageCauses"), optionalPositive(failure, "defaultMaxDrop"), volumes, surfaces), checkpoints);
     }
 
     public record Point(double x, double y, double z) {
@@ -118,17 +123,38 @@ public record CourseProfile(int schemaVersion, String engine, Start start, Spher
         }
     }
 
+    /** A declared contact block layer, independent of the player's elevation. */
+    public record Surface(String material, int minY, int maxY) {
+        public Surface {
+            if (material == null || material.isBlank()) throw invalid("Failure surface requires a material");
+            material = material.toUpperCase(Locale.ROOT);
+            if (!material.matches("[A-Z][A-Z0-9_]*")) throw invalid("Invalid failure surface material: " + material);
+            if (minY > maxY) throw invalid("Failure surface minY must not exceed maxY");
+        }
+        public boolean matches(String blockMaterial, int blockY) {
+            return material.equals(blockMaterial) && blockY >= minY && blockY <= maxY;
+        }
+    }
+
     public record Failure(double minY, Set<String> hazardMaterials, Set<String> damageCauses,
-                          Double defaultMaxDrop, List<Volume> volumes) {
+                          Double defaultMaxDrop, List<Volume> volumes, List<Surface> surfaces) {
+        public Failure(double minY, Set<String> hazardMaterials, Set<String> damageCauses,
+                       Double defaultMaxDrop, List<Volume> volumes) {
+            this(minY, hazardMaterials, damageCauses, defaultMaxDrop, volumes, List.of());
+        }
         public Failure {
             finite(minY, "minY");
             hazardMaterials = Set.copyOf(hazardMaterials);
             damageCauses = Set.copyOf(damageCauses);
             volumes = List.copyOf(volumes);
+            surfaces = List.copyOf(surfaces);
             if (defaultMaxDrop != null) positive(defaultMaxDrop, "defaultMaxDrop");
         }
         public boolean contains(double x, double y, double z) {
             return y < minY || volumes.stream().anyMatch(volume -> volume.contains(x, y, z));
+        }
+        public boolean contacts(String blockMaterial, int blockY) {
+            return surfaces.stream().anyMatch(surface -> surface.matches(blockMaterial, blockY));
         }
         public boolean belowCheckpoint(double y, Position anchor, Double stageMaxDrop) {
             Double maxDrop = stageMaxDrop == null ? defaultMaxDrop : stageMaxDrop;

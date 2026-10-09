@@ -116,10 +116,14 @@ final class ImportedCourseController {
         CourseProfile.Failure failure = profile.failure();
         if (failure.contains(feet.getX(), feet.getY(), feet.getZ())
                 || failure.belowCheckpoint(feet.getY(), run.returnPosition(), run.maxDrop())) return true;
-        // Test feet, the lower contact surface and head. Water is a hazard only
-        // when explicitly declared; Spiral's conditional water section is native.
-        return hazardous(player, feet.getBlock().getType())
-                || hazardous(player, feet.clone().add(0, -.08, 0).getBlock().getType())
+        Block feetBlock = feet.getBlock(), contactBlock = feet.clone().add(0, -.08, 0).getBlock();
+        // Declared foundation layers use contacted block coordinates, so other
+        // blocks and legitimate lower route segments retain their map behavior.
+        // Head contact is checked only for ordinary hazards, never for surfaces.
+        return failure.contacts(feetBlock.getType().name(), feetBlock.getY())
+                || failure.contacts(contactBlock.getType().name(), contactBlock.getY())
+                || hazardous(player, feetBlock.getType())
+                || hazardous(player, contactBlock.getType())
                 || hazardous(player, feet.clone().add(0, 1, 0).getBlock().getType());
     }
 
@@ -171,6 +175,12 @@ final class ImportedCourseController {
         for (String causeName : profile.failure().damageCauses()) {
             try { DamageCause.valueOf(causeName); }
             catch (IllegalArgumentException exception) { throw invalid("Unknown damage cause " + causeName); }
+        }
+        for (CourseProfile.Surface surface : profile.failure().surfaces()) {
+            try { Material.valueOf(surface.material()); }
+            catch (IllegalArgumentException exception) { throw invalid("Unknown failure surface material " + surface.material()); }
+            if (surface.minY() < world.getMinHeight() || surface.maxY() >= world.getMaxHeight())
+                throw invalid("Failure surface layer lies outside the imported world: " + surface);
         }
         if (profile.failure().minY() < world.getMinHeight() - 1 || profile.failure().minY() >= world.getMaxHeight())
             throw invalid("Failure minY lies outside the imported world");
