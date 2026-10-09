@@ -1,0 +1,41 @@
+src/main/java/com/biel/lobby/mapes/jocs/TheTowers.java
+  s_65995d0a0ac4fa::t_db9ebb8f7a7168 280-283,363,384-386,412-415,417,434,440
+  s_65995d0a0ac4fa::t_951c81557e19c2 31,500-502
+  s_65995d0a0ac4fa::t_6815e7c2fd379f 6,17-18,20-21,33-35,38,52,64-69,97,108-149,151-178
+  s_65995d0a0ac4fa::t_320a6f2191d349 150,179,227,259-265,277-279,284-285,316-322,338-362,364-383,387-411,416,418-433,435-439,441-499,503-533,605,607-608
+  s_ebe019701d5ac3::t_9a43162689b8e6 180
+src/test/java/com/biel/lobby/mapes/jocs/TheTowersBridgeTest.java
+  s_65995d0a0ac4fa::t_42d5b04066528c 1-25,27-41,48-69,71,73-219,236-310,312-315,322-356
+  s_65995d0a0ac4fa::t_3e07f568d0e650 70,72
+  s_65995d0a0ac4fa::t_06c66bd568aa98 26,42-47
+  s_65995d0a0ac4fa::t_ecb5fa9009e1bc 311,316-321
+  s_65995d0a0ac4fa::t_61dfd0a7e36784 220-235
+src/main/resources/i18n/contracts/the-towers.json
+  s_65995d0a0ac4fa::t_b1cf17f068fa0d 60-86
+src/main/resources/i18n/translations/the-towers.json
+  s_65995d0a0ac4fa::t_c4c3731c3d7315 58-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8c0ba446964b3eb5c3a4bb2927ab7afe5fd671bc",
+  "prompts": {},
+  "sessions": {
+    "s_65995d0a0ac4fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1218a-5210-70e3-894f-2a462874bdda",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_ebe019701d5ac3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2f0f0dc4-7bb1-4ef5-86af-e6765c22e89f",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
