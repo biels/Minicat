@@ -1,0 +1,21 @@
+{
+  "keys": {
+    "minicat.parkour.imported.rules": {
+      "constant": "PARKOUR_IMPORTED_RULES",
+      "purpose": "Explain the imported course start, checkpoints and instant recovery.",
+      "arguments": [], "surfaces": ["chat"], "maxTemplateCharacters": 260
+    },
+    "minicat.parkour.checkpoint": {
+      "constant": "PARKOUR_CHECKPOINT",
+      "purpose": "Confirm a newly reached authored checkpoint without awarding revisits.",
+      "arguments": [{"name": "count", "type": "NUMBER"}, {"name": "total", "type": "NUMBER"}],
+      "surfaces": ["chat"], "maxTemplateCharacters": 110
+    },
+    "minicat.parkour.finished": {
+      "constant": "PARKOUR_FINISHED",
+      "purpose": "Announce a runner's imported-course finish and elapsed seconds.",
+      "arguments": [{"name": "player", "type": "TEXT"}, {"name": "seconds", "type": "NUMBER"}],
+      "surfaces": ["chat"], "maxTemplateCharacters": 120
+    }
+  }
+}

@@ -60,6 +60,8 @@ public final class TemplateImport {
 			if (properties.isFile()) {
 				FileUtils.copyFile(properties, new File(imported, MapaResetejable.PropertiesFile));
 			}
+			File courseProfile = new File(template, "parkour-course.json");
+			if (courseProfile.isFile()) FileUtils.copyFile(courseProfile, new File(imported, courseProfile.getName()));
 			supersedeExistingArchive(archive);
 			Files.createDirectories(archive.toPath().getParent());
 			Files.move(template.toPath(), archive.toPath());

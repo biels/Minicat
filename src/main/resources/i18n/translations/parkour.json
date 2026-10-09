@@ -1,0 +1,16 @@
+{
+  "items": [
+    {"type": "text", "key": "minicat.parkour.imported.rules", "languages": {
+      "en_US": "[minimsg]<white>Cross the start plate to begin your timer. Gold checkpoint plates save your return point. Falls and hazards return you there instantly. Fastest course time wins.</white>",
+      "ca_ES": "[minimsg]<white>Trepitja la placa d'inici per començar el cronòmetre. Les plaques de control daurades desen el punt de retorn. Les caigudes i els perills t'hi tornen a l'instant. Guanya el temps més ràpid.</white>"
+    }},
+    {"type": "text", "key": "minicat.parkour.checkpoint", "languages": {
+      "en_US": "[minimsg]<green>Checkpoint saved: %1 / %2.</green>",
+      "ca_ES": "[minimsg]<green>Punt de control desat: %1 / %2.</green>"
+    }},
+    {"type": "text", "key": "minicat.parkour.finished", "languages": {
+      "en_US": "[minimsg]<green>%1 finished the course in %2 seconds!</green>",
+      "ca_ES": "[minimsg]<green>%1 ha completat el recorregut en %2 segons!</green>"
+    }}
+  ]
+}

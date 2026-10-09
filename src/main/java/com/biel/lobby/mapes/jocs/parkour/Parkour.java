@@ -1,4 +1,4 @@
-package com.biel.lobby.mapes.jocs;
+package com.biel.lobby.mapes.jocs.parkour;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
@@ -32,8 +32,15 @@ import com.biel.BielAPI.Utils.Pair;
 import com.biel.BielAPI.events.PlayerWorldEventBus;
 import com.biel.lobby.Com;
 import com.biel.lobby.mapes.JocScoreCombo;
-import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble;
-import com.biel.lobby.mapes.jocs.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
+import com.biel.lobby.mapes.jocs.parkour.Parkour.ParkourProvider.ParkourBubble;
+import com.biel.lobby.mapes.jocs.parkour.Parkour.ParkourProvider.ParkourBubble.Checkpoint;
+import com.biel.lobby.mapes.jocs.parkour.utils.CourseProfile;
+import com.biel.lobby.mapes.jocs.parkour.utils.CourseRun;
+import com.biel.lobby.localization.MessageKey;
+import com.biel.lobby.localization.MessageArgument;
+import com.biel.lobby.localization.Messages;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 import com.biel.lobby.utilities.Cuboid;
 import com.biel.lobby.utilities.Utils;
 import com.biel.lobby.utilities.PaperMessages;
@@ -48,11 +55,64 @@ public class Parkour extends JocScoreCombo{
 	int playerCount = 0;
 	int mapLength = 40;
 	boolean nativeDatapackMap = false;
+	private ImportedCourseController importedCourse;
+	private Spiral3NativeController nativeMechanics;
 	@Override
 	public void initialize() {
 		super.initialize();
-		nativeDatapackMap = pMapaActual().ExisteixPropietat("nativeDatapack")
-				&& Boolean.parseBoolean(pMapaActual().ObtenirPropietat("nativeDatapack"));
+		nativeDatapackMap = java.nio.file.Files.isRegularFile(getWorld().getWorldFolder().toPath().resolve(CourseProfile.FILE_NAME));
+		if (!nativeDatapackMap && pMapaActual().ExisteixPropietat("nativeDatapack")
+				&& Boolean.parseBoolean(pMapaActual().ObtenirPropietat("nativeDatapack")))
+			throw new IllegalArgumentException("Imported Parkour requires an analyzed parkour-course.json profile");
+		if (nativeDatapackMap) {
+			importedCourse = new ImportedCourseController(getWorld(), this::isActiveImportedRunner,
+					this::importedCheckpoint, player -> incrementScore(player, Score.FAIL), this::importedFinish);
+			nativeMechanics = new Spiral3NativeController(getWorld(), plugin, this::isActiveImportedRunner, this::importedStatus);
+		}
+	}
+	private boolean isActiveImportedRunner(Player player) {
+		Seat seat = seatOf(player);
+		return JocEnMarxa() && player.isOnline() && player.getWorld() == getWorld()
+				&& seat != null && seat.isOccupied() && seat.getRole() == Seat.Role.PLAYER
+				&& getPlayerInfo(player).isInGame();
+	}
+	private void importedCheckpoint(Player player) {
+		incrementCombo(player, 0.1);
+		incrementScore(player, Score.N300);
+		Messages.send(player, MessageKey.PARKOUR_CHECKPOINT,
+				MessageArgument.number("count", importedCourse.getRun(player.getName()).completedCheckpoints().size()),
+				MessageArgument.number("total", importedCourse.profile().checkpoints().size()));
+		player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.7F, 1.5F);
+	}
+	private void importedFinish(Player player, Long elapsedTicks) {
+		if (nativeFinishers.contains(player.getName())) return;
+		nativeFinishers.add(player.getName());
+		getPlayerInfo(player).setInGame(false);
+		player.setGameMode(GameMode.SPECTATOR);
+		nativeMechanics.releasePlayer(player);
+		sendGlobalMessage(MessageKey.PARKOUR_FINISHED, MessageArgument.text("player", player.getName()),
+				MessageArgument.number("seconds", elapsedTicks / 20.0));
+	}
+	private String importedStatus() {
+		JsonObject root = new JsonObject();
+		root.addProperty("world", getWorld().getName());
+		root.addProperty("prefix", nativeMechanics == null ? "" : nativeMechanics.prefix());
+		JsonArray runs = new JsonArray();
+		for (String playerName : getParticipantNames()) {
+			CourseRun run = importedCourse.getRun(playerName);
+			if (run == null) continue;
+			JsonObject entry = new JsonObject();
+			entry.addProperty("name", playerName);
+			entry.addProperty("started", run.started());
+			entry.addProperty("checkpointId", run.checkpointId());
+			entry.addProperty("checkpointCount", run.completedCheckpoints().size());
+			entry.addProperty("finished", run.finished());
+			entry.addProperty("elapsedTicks", run.elapsedTicks(getUltraHeartbeatCount()));
+			entry.addProperty("failures", run.failures());
+			runs.add(entry);
+		}
+		root.add("runs", runs);
+		return root.toString();
 	}
 	@Override
 	public String getGameName() {
@@ -111,30 +171,16 @@ public class Parkour extends JocScoreCombo{
 		// TODO Auto-generated method stub
 		super.customJoin(ply);
 		if(nativeDatapackMap){
-			ply.removeScoreboardTag("joined");
-			ply.removeScoreboardTag("finished");
-			ply.removeScoreboardTag("ingame");
+			nativeMechanics.releasePlayer(ply);
 		}
 		//updateStartingPlatforms();
 	}
 	@Override
 	protected void teletransportarTothom() {
 		if(nativeDatapackMap){
-			Location courseStart = pMapaActual().ExisteixPropietat("courseStart")
-					? pMapaActual().ObtenirLocation("courseStart", getWorld()).add(0.5, 0, 0.5)
-					: getWorld().getSpawnLocation();
-			float courseStartYaw = pMapaActual().ExisteixPropietat("courseStartYaw")
-					? pMapaActual().ObtenirPropietatDouble("courseStartYaw").floatValue() : 0F;
-			float courseStartPitch = pMapaActual().ExisteixPropietat("courseStartPitch")
-					? pMapaActual().ObtenirPropietatDouble("courseStartPitch").floatValue() : 10F;
-			courseStart.setYaw(courseStartYaw);
-			courseStart.setPitch(courseStartPitch);
 			for(Player player : getPlayers()){
 				getPlayerInfo(player).setInGame(true);
-				player.removeScoreboardTag("finished");
-				player.removeScoreboardTag("ingame");
-				player.setGameMode(GameMode.ADVENTURE);
-				player.teleport(courseStart);
+				importedCourse.initializePlayer(player);
 			}
 			return;
 		}
@@ -170,15 +216,12 @@ public class Parkour extends JocScoreCombo{
 	
 	public void comprovarFinish(){
 		if(nativeDatapackMap){
-			for(Player player : getPlayers()){
-				ParkourPlayerInfo playerInfo = getPlayerInfo(player);
-				if(playerInfo.isInGame() && player.getScoreboardTags().contains("finished")){
-					nativeFinishers.add(player.getName());
-					playerInfo.setInGame(false);
-					player.setGameMode(GameMode.SPECTATOR);
-					sendGlobalMessage(player.getName() + " ha arribat a la meta!");
-				}
-			}
+			List<String> participants = getParticipantNames();
+			if (!participants.isEmpty() && participants.stream().allMatch(name -> {
+				CourseRun run = importedCourse.getRun(name);
+				return run != null && run.finished();
+			})) comprovarGuanyador();
+			return;
 		}
 		//boolean allFinished = streams.stream().mapToInt(ParkourStream::getTargetBubbleIndex).min().getAsInt() > 100;
 		boolean allFinished = getPlayers().stream().map(p -> getPlayerInfo(p).isInGame()).allMatch(b -> b == false);
@@ -205,7 +248,39 @@ public class Parkour extends JocScoreCombo{
 		if(!nativeDatapackMap){
 			streams.removeIf(ParkourStream::isAbandoned);
 			streams.forEach(ParkourStream::ultraTick);
+		} else if (JocEnMarxa()) {
+			nativeMechanics.tick(getUltraHeartbeatCount());
+			importedCourse.tick(getUltraHeartbeatCount());
 		}
+	}
+	@Override protected void onSeatDropped(Player player) {
+		super.onSeatDropped(player);
+		if (nativeMechanics != null) nativeMechanics.suspendPlayer(player);
+	}
+	@Override protected void customLeave(Player player, List<String> attachments) {
+		if (nativeMechanics != null) nativeMechanics.releasePlayer(player);
+		super.customLeave(player, attachments);
+	}
+	@Override protected void onSeatResumed(Player player) {
+		super.onSeatResumed(player);
+		if (importedCourse != null && JocEnMarxa()) {
+			nativeMechanics.resumePlayer(player);
+			importedCourse.resumePlayer(player);
+			CourseRun run = importedCourse.getRun(player.getName());
+			getPlayerInfo(player).setInGame(run != null && !run.finished());
+		}
+	}
+	@Override public void clearExternals(Player player) {
+		if (nativeMechanics != null) nativeMechanics.releasePlayer(player);
+		super.clearExternals(player);
+	}
+	@Override public void clearExternals() {
+		if (nativeMechanics != null) nativeMechanics.clear();
+		super.clearExternals();
+	}
+	@Override public void clearAllExternals() {
+		super.clearAllExternals();
+		if (importedCourse != null) importedCourse.clear();
 	}
 	@Override
 	public ArrayList<Player> getOrderedWinnerList(){
@@ -218,12 +293,16 @@ public class Parkour extends JocScoreCombo{
 		for(Player player : players){
 			if(!orderedPlayers.contains(player))orderedPlayers.add(player);
 		}
+		orderedPlayers.sort(java.util.Comparator.comparingLong(player -> {
+			CourseRun run = importedCourse.getRun(player.getName());
+			return run != null && run.finished() ? run.elapsedTicks(getUltraHeartbeatCount()) : Long.MAX_VALUE;
+		}));
 		return orderedPlayers;
 	}
 	@Override
 	protected void customJocIniciat() {
-
-
+		if (nativeDatapackMap) for (Player player : getPlayers())
+			Messages.send(player, MessageKey.PARKOUR_IMPORTED_RULES);
 	}
 
 	@Override
@@ -245,6 +324,7 @@ public class Parkour extends JocScoreCombo{
 		// TODO Auto-generated method stub
 		super.onPlayerDamage(evt, p);
 		evt.setCancelled(true);
+		if (importedCourse != null && importedCourse.shouldRecoverDamage(p, evt.getCause())) importedCourse.recover(p);
 	}
 	public class ParkourStream extends PlayerWorldEventBus { //One for each player
 		private Location startLocation;
