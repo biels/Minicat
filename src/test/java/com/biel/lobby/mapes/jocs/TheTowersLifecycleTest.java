@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +23,10 @@ import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.util.BoundingBox;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -30,10 +34,19 @@ import com.biel.lobby.Mapa;
 import com.biel.lobby.mapes.Joc;
 import com.biel.lobby.mapes.JocEquips;
 import com.biel.lobby.mapes.JocTeamScoreRace;
+import com.biel.lobby.utilities.GestorPropietats;
 
 /** Exercises The Towers scoring lifecycle without loading a Bukkit world. */
 class TheTowersLifecycleTest {
     private static final Map<String, Player> online = new HashMap<>();
+    private static final List<Path> temporaryProperties = new ArrayList<>();
+
+    @AfterEach
+    void removeTemporaryProperties() throws Exception {
+        for (Path file : temporaryProperties) Files.deleteIfExists(file);
+        temporaryProperties.clear();
+        online.clear();
+    }
 
     @BeforeAll
     static void installServer() throws Exception {
@@ -100,6 +113,47 @@ class TheTowersLifecycleTest {
         assertFalse(fixture.game.running);
     }
 
+    @Test
+    void voidDeathTriggersBelowConfiguredHeightButNotAtThreshold() throws Exception {
+        Fixture fixture = new Fixture();
+        fixture.redLocation = new Location(fixture.world, 20, 188, 1);
+        fixture.game.move(fixture.red, new Location(fixture.world, 20, 188, 1));
+        assertEquals(20, fixture.health, "the configured boundary remains playable");
+
+        fixture.game.move(fixture.red, new Location(fixture.world, 20, 187.99, 1));
+        assertEquals(0, fixture.health, "falling below MinHeight enters the normal death flow");
+    }
+
+    @Test
+    void voidDeathGuardsRejectNonGameplayMovement() throws Exception {
+        Fixture fixture = new Fixture();
+        fixture.redLocation = new Location(fixture.world, 20, 187, 1);
+        fixture.redMode = GameMode.CREATIVE;
+        fixture.game.move(fixture.red, new Location(fixture.world, 20, 187, 1));
+        fixture.redMode = GameMode.SPECTATOR;
+        fixture.game.move(fixture.red, new Location(fixture.world, 20, 187, 1));
+        fixture.redMode = GameMode.SURVIVAL;
+        fixture.redWorld = proxy(World.class, (method, args) -> null);
+        fixture.game.move(fixture.red, new Location(fixture.world, 20, 187, 1));
+        fixture.redWorld = fixture.world;
+        fixture.game.participants.clear();
+        fixture.game.move(fixture.red, new Location(fixture.world, 20, 187, 1));
+        fixture.game.participants.add(fixture.red);
+        fixture.game.running = false;
+        fixture.game.move(fixture.red, new Location(fixture.world, 20, 187, 1));
+        fixture.game.running = true;
+        fixture.redDead = true;
+        fixture.game.move(fixture.red, new Location(fixture.world, 20, 187, 1));
+        assertEquals(20, fixture.health, "spectators, inactive players, and dead players are ignored");
+
+        fixture.redDead = false;
+        PlayerMoveEvent cancelled = new PlayerMoveEvent(fixture.red, fixture.redLocation,
+                new Location(fixture.world, 20, 187, 1));
+        cancelled.setCancelled(true);
+        fixture.game.move(cancelled);
+        assertEquals(20, fixture.health, "a cancelled movement event cannot kill the player");
+    }
+
     private static final class Fixture {
         final TestGame game = new TestGame();
         final World world = proxy(World.class, (method, args) -> null);
@@ -112,10 +166,12 @@ class TheTowersLifecycleTest {
         GameMode redMode = GameMode.SURVIVAL;
         boolean redDead;
         boolean teleportSucceeds = true;
+        double health = 20;
 
         Fixture() throws Exception {
             red = player("red", () -> redLocation, () -> redWorld, () -> redMode, () -> redDead,
-                    destination -> { if (teleportSucceeds) redLocation = destination; return teleportSucceeds; });
+                    destination -> { if (teleportSucceeds) redLocation = destination; return teleportSucceeds; },
+                    value -> { health = value; if (value <= 0) redDead = true; });
             online.put(red.getName(), red);
             redTeam = game.new EquipScoreRace(DyeColor.RED, "red") {
                 @Override public Location getTeamSpawnLocation() { return redSpawn.clone(); }
@@ -132,17 +188,33 @@ class TheTowersLifecycleTest {
             set(TheTowers.class, game, "scoringPits", List.of(
                     new BoundingBox(-10, 0, -10, -1, 10, 10),
                     new BoundingBox(10, 0, -10, 30, 10, 10)));
+            game.participants.add(red);
             online.put(red.getName(), red);
         }
     }
 
     private static final class TestGame extends TheTowers {
+        final GestorPropietats properties;
+        TestGame() {
+            try {
+                Path file = Files.createTempFile("the-towers-test-", ".properties");
+                Files.writeString(file, "MinHeight=188\n");
+                temporaryProperties.add(file);
+                properties = new GestorPropietats(file.toString());
+            } catch (java.io.IOException failure) {
+                throw new AssertionError(failure);
+            }
+        }
+        @Override public GestorPropietats pMapaActual() { return properties; }
         @Override public boolean JocEnMarxa() { return running; }
-        @Override public ArrayList<Player> getPlayers() { return new ArrayList<>(online.values()); }
+        @Override public ArrayList<Player> getPlayers() { return new ArrayList<>(participants); }
         @Override public ArrayList<Player> getViewers() { return new ArrayList<>(); }
         @Override public void winGame(Equip e) { wins++; running = false; }
         @Override protected void updateScoreBoard(Player player) {}
         @Override public void updateScoreBoards() {}
+        void move(Player player, Location to) { move(new PlayerMoveEvent(player, player.getLocation(), to)); }
+        void move(PlayerMoveEvent event) { onPlayerMove(event, event.getPlayer()); }
+        final ArrayList<Player> participants = new ArrayList<>();
         boolean running = true;
         int wins;
     }
@@ -151,7 +223,7 @@ class TheTowersLifecycleTest {
     private interface Teleport { boolean move(Location destination); }
 
     private static Player player(String name, Value<Location> location, Value<World> world,
-            Value<GameMode> mode, Value<Boolean> dead, Teleport teleport) {
+            Value<GameMode> mode, Value<Boolean> dead, Teleport teleport, java.util.function.DoubleConsumer health) {
         UUID id = UUID.nameUUIDFromBytes(name.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         return proxy(Player.class, (method, args) -> switch (method) {
             case "getName" -> name;
@@ -162,6 +234,7 @@ class TheTowersLifecycleTest {
             case "isDead" -> dead.get();
             case "isOnline" -> true;
             case "teleport" -> teleport.move((Location) args[0]);
+            case "setHealth" -> { health.accept(((Number) args[0]).doubleValue()); yield null; }
             default -> null;
         });
     }

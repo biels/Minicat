@@ -27,6 +27,7 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -161,6 +162,13 @@ public class TheTowers extends JocTeamScoreRace implements Listener {
     @Override protected void onPlayerDeathByPlayer(PlayerDeathEvent event, Player killed, Player killer) {
         super.onPlayerDeathByPlayer(event, killed, killer);
         if (JocEnMarxa() && killed != killer && areEnemies(killed, killer) && !isSpectator(killer)) killer.giveExpLevels(4);
+    }
+
+    @Override protected void onPlayerMove(PlayerMoveEvent event, Player player) {
+        super.onPlayerMove(event, player);
+        if (!event.isCancelled() && JocEnMarxa() && !player.isDead() && player.getWorld() == world
+                && player.getGameMode() == GameMode.SURVIVAL && getPlayers().contains(player) && !isSpectator(player)
+                && event.getTo().getY() < getMinimumHeight()) player.setHealth(0);
     }
 
     @Override public void ultraHeartbeat() {
