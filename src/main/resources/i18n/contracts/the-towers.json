@@ -57,6 +57,33 @@
       "arguments": [],
       "surfaces": ["chat", "menu", "item"],
       "maxTemplateCharacters": 120
+    },
+    "minicat.the-towers.info.builders": {
+      "constant": "TOWERS_INFO_BUILDERS",
+      "purpose": "Explain passive quartz bridge builders, widening and the need to protect them.",
+      "arguments": [],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 260
+    },
+    "minicat.the-towers.builder.spawned": {
+      "constant": "TOWERS_BUILDER_SPAWNED",
+      "purpose": "Announce a team bridge builder and the width it is constructing.",
+      "arguments": [
+        {
+          "name": "team",
+          "type": "TEXT"
+        },
+        {
+          "name": "width",
+          "type": "NUMBER"
+        }
+      ],
+      "surfaces": [
+        "chat"
+      ],
+      "maxTemplateCharacters": 180
     }
   }
 }

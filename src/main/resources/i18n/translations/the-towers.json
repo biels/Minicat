@@ -55,6 +55,22 @@
         "en_US": "[minimsg]<red>Choose at least one player for each team.</red>",
         "ca_ES": "[minimsg]<red>Tria com a mínim un jugador per a cada equip.</red>"
       }
+    },
+    {
+      "type": "text",
+      "key": "minicat.the-towers.info.builders",
+      "languages": {
+        "en_US": "[minimsg]<aqua>Protect your bridge builders: snowmen connect the balconies to the middle with quartz, then widen the bridges to three blocks.</aqua>",
+        "ca_ES": "[minimsg]<aqua>Protegeix els constructors de ponts: els ninots de neu uneixen els balcons amb el mig amb quars i després eixamplen els ponts fins a tres blocs.</aqua>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.the-towers.builder.spawned",
+      "languages": {
+        "en_US": "[minimsg]<aqua>%1 sends a bridge builder!</aqua> <white>Bridge width: %2.</white>",
+        "ca_ES": "[minimsg]<aqua>%1 envia un constructor de ponts!</aqua> <white>Amplada del pont: %2.</white>"
+      }
     }
   ]
 }
