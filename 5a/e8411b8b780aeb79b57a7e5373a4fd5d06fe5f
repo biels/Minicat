@@ -1,0 +1,21 @@
+src/main/java/com/biel/lobby/lobby.java
+  s_65995d0a0ac4fa::t_cca2c295ebd983 49-50
+src/main/java/com/biel/lobby/ImmediateRespawn.java
+  s_65995d0a0ac4fa::t_cca2c295ebd983 1-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5ae8411b8b780aeb79b57a7e5373a4fd5d06fe5f",
+  "prompts": {},
+  "sessions": {
+    "s_65995d0a0ac4fa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1218a-5210-70e3-894f-2a462874bdda",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
