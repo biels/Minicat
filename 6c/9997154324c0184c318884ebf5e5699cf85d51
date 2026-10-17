@@ -1,0 +1,21 @@
+build.gradle
+  s_d5413f0bf0564b::t_81bdff5b5f77c8 55
+src/main/resources/plugin.yml
+  s_d5413f0bf0564b::t_81bdff5b5f77c8 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6c9997154324c0184c318884ebf5e5699cf85d51",
+  "prompts": {},
+  "sessions": {
+    "s_d5413f0bf0564b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a145e3-419c-7d90-a9b2-43a3fbcdd113",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
