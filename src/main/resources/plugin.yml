@@ -8,7 +8,7 @@ depend:
 loadBefore:
 - AuthMe
 version: 1.4-dev
-api-version: '26.2'
+api-version: '26.3'
 libraries:
 - commons-io:commons-io:2.21.0
 - commons-lang:commons-lang:2.6

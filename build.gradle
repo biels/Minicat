@@ -52,7 +52,7 @@ dependencies {
             'NametagEdit*.jar',
             'spigot-*.jar'
     ])
-    compileOnly 'io.papermc.paper:paper-api:26.2.build.92-stable'
+    compileOnly 'io.papermc.paper:paper-api:26.3.build.200-stable'
     compileOnly('com.github.decentsoftware-eu.decentholograms:plugin:2.10.1') {
         transitive = false
     }
