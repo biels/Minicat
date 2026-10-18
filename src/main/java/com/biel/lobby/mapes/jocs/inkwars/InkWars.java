@@ -21,6 +21,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
@@ -474,7 +475,7 @@ public class InkWars extends JocEquips {
 			if(wet.amount <= 0){
 				iter.remove();
 				EquipInkWars owner = getTeamOwningBlock(b);
-				if (owner != null) b.setType(getPaintMaterial(b.getType(), owner.getColor()), false);
+				if (owner != null) recolor(b, owner.getColor());
 				continue;
 			}
 			if(!flowStep)continue;
@@ -512,7 +513,7 @@ public class InkWars extends JocEquips {
 	 * unless it outweighs what is left, and only then does the block flip. Returns whether the block ends up in the team's colour.
 	 */
 	boolean paint(Block b, EquipInkWars team, String painterName, double ink){
-		if(isShape(b))b = b.getRelative(BlockFace.DOWN); // ink on a stair or slab lands on the block beneath
+		if(isShape(b) && !isPaintable(b))b = b.getRelative(BlockFace.DOWN); // only shapes without a dyed twin borrow the surface beneath
 		boolean forcedly = isPaintableUnsafely(b);
 		if(!isPaintable(b) && !forcedly)return false;
 		EquipInkWars oldOwner = getTeamOwningBlock(b);
@@ -525,8 +526,7 @@ public class InkWars extends JocEquips {
 			ink -= wet.amount;
 		}
 		if(oldOwner != team)registerBlockPaint(painterName, team, oldOwner);
-		Material painted = getPaintMaterial(b.getType(), team.getStrongColor());
-		if(b.getType() != painted)b.setType(painted, false);
+		recolor(b, team.getStrongColor());
 		double carried = (wet != null && oldOwner == team) ? wet.amount : 0;
 		wetInk.put(b, new WetInk(painterName, Math.min(MAX_INK_PER_BLOCK, carried + ink)));
 		return true;
@@ -536,8 +536,7 @@ public class InkWars extends JocEquips {
 		if(getTeamOwningBlock(b) != team)return;
 		WetInk wet = wetInk.get(b);
 		if(wet != null && wet.amount >= 1)return;
-		Material painted = getPaintMaterial(b.getType(), team.getStrongColor());
-		if(b.getType() != painted)b.setType(painted, false);
+		recolor(b, team.getStrongColor());
 		wetInk.put(b, new WetInk(painterName, 1));
 	}
 	/** The score of a block changing hands goes to the painter if they are online and still on that team, else to the team alone. */
@@ -552,7 +551,7 @@ public class InkWars extends JocEquips {
 	}
 	public EquipInkWars getTeamOwningBlock(Block b){
 		if(b == null)return null;
-		if(isShape(b))return getTeamOwningBlock(b.getRelative(BlockFace.DOWN)); // a stair or slab wears the colour beneath it
+		if(isShape(b) && !isPaintable(b))return getTeamOwningBlock(b.getRelative(BlockFace.DOWN)); // only shapes without a dyed twin borrow ownership
 		if(!isPaintable(b))return null;
 		DyeColor blockColor = getPaintColor(b.getType());
 		for(Equip e : Equips){
@@ -562,8 +561,8 @@ public class InkWars extends JocEquips {
 		return null;
 	}
 	/** The dyeable families, the ones with sixteen colours; the longer suffix first so glazed terracotta is not mistaken for terracotta. */
-	static final String[] DYED_SUFFIXES = {"_GLAZED_TERRACOTTA", "_STAINED_GLASS_PANE", "_STAINED_GLASS", "_CONCRETE_POWDER", "_CONCRETE", "_TERRACOTTA", "_WOOL", "_CARPET"};
-	/** Shapes with no dyed twin in vanilla: never painted or scored themselves, they carry the colour of the block beneath them. */
+	static final String[] DYED_SUFFIXES = {"_GLAZED_TERRACOTTA", "_STAINED_GLASS_PANE", "_STAINED_GLASS", "_CONCRETE_POWDER", "_CONCRETE_SLAB", "_CONCRETE_STAIRS", "_WOOL_SLAB", "_WOOL_STAIRS", "_CONCRETE", "_TERRACOTTA", "_WOOL", "_CARPET"};
+	/** Geometric shapes, including dyed stairs/slabs: movement needs their step geometry independently of paint ownership. */
 	static final String[] SHAPE_SUFFIXES = {"_STAIRS", "_SLAB", "_FENCE", "_FENCE_GATE", "_WALL", "_TRAPDOOR", "_LEAVES"};
 	public boolean isPaintable(Block b){
 		return getPaintColor(b.getType()) != null;
@@ -586,6 +585,15 @@ public class InkWars extends JocEquips {
 		if (currentMaterial == Material.GLASS) return Material.valueOf(color.name() + "_STAINED_GLASS");
 		if (currentMaterial == Material.GLASS_PANE || currentMaterial == Material.IRON_BARS) return Material.valueOf(color.name() + "_STAINED_GLASS_PANE");
 		return Material.valueOf(color.name() + "_TERRACOTTA");
+	}
+	/** Recolour without changing compatible geometry, connections or waterlogging, including when wet ink dries. */
+	private void recolor(Block block, DyeColor color){
+		Material paintedMaterial = getPaintMaterial(block.getType(), color);
+		if(block.getType() == paintedMaterial)return;
+		BlockData originalData = block.getBlockData();
+		BlockData paintedData = paintedMaterial.createBlockData();
+		originalData.copyTo(paintedData);
+		block.setBlockData(paintedData, false);
 	}
 	/** Blocks with no colour yet that take one: plain glass, panes and bars keep their shape, plain terracotta its own family, and any full occluding block turns into terracotta. */
 	public boolean isPaintableUnsafely(Block b){
