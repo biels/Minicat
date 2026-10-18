@@ -1,0 +1,24 @@
+docs/inkwars-painting-26.3.md
+  s_ce3952ed36d074::t_2cb29c574a7bbb 1-77
+  s_ce3952ed36d074::t_916632f0306bcc 78-97
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkWars.java
+  s_ce3952ed36d074::t_3d0813ea3ba584 24,478,516,529,539,554,564-565,589-597
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkWarsPaintingTest.java
+  s_ce3952ed36d074::t_9d9aeecbe361dc 1-218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cacc64ddea3ccff262c7ed97a5bd227541b66cf6",
+  "prompts": {},
+  "sessions": {
+    "s_ce3952ed36d074": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14ef9-5712-75c0-b9d1-3a63caff851c",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
