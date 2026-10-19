@@ -513,7 +513,7 @@ public class InkWars extends JocEquips {
 	 * unless it outweighs what is left, and only then does the block flip. Returns whether the block ends up in the team's colour.
 	 */
 	boolean paint(Block b, EquipInkWars team, String painterName, double ink){
-		if(isShape(b) && !isPaintable(b))b = b.getRelative(BlockFace.DOWN); // only shapes without a dyed twin borrow the surface beneath
+		if(borrowsPaintFromSupport(b))b = b.getRelative(BlockFace.DOWN);
 		boolean forcedly = isPaintableUnsafely(b);
 		if(!isPaintable(b) && !forcedly)return false;
 		EquipInkWars oldOwner = getTeamOwningBlock(b);
@@ -551,7 +551,7 @@ public class InkWars extends JocEquips {
 	}
 	public EquipInkWars getTeamOwningBlock(Block b){
 		if(b == null)return null;
-		if(isShape(b) && !isPaintable(b))return getTeamOwningBlock(b.getRelative(BlockFace.DOWN)); // only shapes without a dyed twin borrow ownership
+		if(borrowsPaintFromSupport(b))return getTeamOwningBlock(b.getRelative(BlockFace.DOWN));
 		if(!isPaintable(b))return null;
 		DyeColor blockColor = getPaintColor(b.getType());
 		for(Equip e : Equips){
@@ -576,14 +576,28 @@ public class InkWars extends JocEquips {
 		}
 		return null;
 	}
-	/** The coloured block a block becomes: its own family in the colour; plain glass, panes and iron bars their stained twins; anything else coloured terracotta. */
+	/** Neutral blocks with a coloured counterpart of the same geometry. All undyed stairs/slabs use concrete; dyed wool keeps its own family. */
+	private String getNeutralPaintSuffix(Material material){
+		if(material.isLegacy())return null;
+		if(material.name().endsWith("_STAIRS"))return "_CONCRETE_STAIRS";
+		if(material.name().endsWith("_SLAB"))return "_CONCRETE_SLAB";
+		if(material == Material.GLASS || material == Material.TINTED_GLASS)return "_STAINED_GLASS";
+		if(material == Material.GLASS_PANE || material == Material.IRON_BARS)return "_STAINED_GLASS_PANE";
+		if(material == Material.MOSS_CARPET)return "_CARPET";
+		return null;
+	}
+	/** Shapes without a compatible coloured replacement still borrow the surface beneath, for paint and ownership alike. */
+	private boolean borrowsPaintFromSupport(Block block){
+		return isShape(block) && !isPaintable(block) && getNeutralPaintSuffix(block.getType()) == null;
+	}
+	/** Keep dyed families, translate neutral geometry to its coloured counterpart, and use terracotta for ordinary solid cubes. */
 	private Material getPaintMaterial(Material currentMaterial, DyeColor color){
 		String materialName = currentMaterial.name();
 		for (String suffix : DYED_SUFFIXES) {
 			if (materialName.endsWith(suffix)) return Material.valueOf(color.name() + suffix);
 		}
-		if (currentMaterial == Material.GLASS) return Material.valueOf(color.name() + "_STAINED_GLASS");
-		if (currentMaterial == Material.GLASS_PANE || currentMaterial == Material.IRON_BARS) return Material.valueOf(color.name() + "_STAINED_GLASS_PANE");
+		String neutralSuffix = getNeutralPaintSuffix(currentMaterial);
+		if(neutralSuffix != null)return Material.valueOf(color.name() + neutralSuffix);
 		return Material.valueOf(color.name() + "_TERRACOTTA");
 	}
 	/** Recolour without changing compatible geometry, connections or waterlogging, including when wet ink dries. */
@@ -595,11 +609,11 @@ public class InkWars extends JocEquips {
 		originalData.copyTo(paintedData);
 		block.setBlockData(paintedData, false);
 	}
-	/** Blocks with no colour yet that take one: plain glass, panes and bars keep their shape, plain terracotta its own family, and any full occluding block turns into terracotta. */
+	/** Neutral counterparts paint directly; any other full occluding block turns into terracotta. */
 	public boolean isPaintableUnsafely(Block b){
 		Material t = b.getType();
 		if (t == Material.BARRIER || isPaintable(b)) return false;
-		if (t == Material.GLASS || t == Material.GLASS_PANE || t == Material.IRON_BARS || t == Material.TERRACOTTA) return true;
+		if (getNeutralPaintSuffix(t) != null || t == Material.TERRACOTTA) return true;
 		return t.isBlock() && t.isOccluding();
 	}
 	public boolean isShape(Block b){

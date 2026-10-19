@@ -135,11 +135,77 @@ class InkWarsPaintingTest {
     }
 
     @Test
+    void everyUndyedStairAndSlabHasAConcreteTranslationInEveryColor() throws Exception {
+        InkWars game = new InkWars();
+        Method mapping = InkWars.class.getDeclaredMethod("getPaintMaterial", Material.class, DyeColor.class);
+        mapping.setAccessible(true);
+        int neutralShapes = 0;
+        for (Material material : Material.values()) {
+            if (material.isLegacy() || !(material.name().endsWith("_STAIRS") || material.name().endsWith("_SLAB"))) continue;
+            Surface surface = new Surface(material, Map.of());
+            if (game.isPaintable(surface.block)) continue;
+            neutralShapes++;
+            assertTrue(game.isPaintableUnsafely(surface.block), material.name());
+            String targetFamily = material.name().endsWith("_STAIRS") ? "_CONCRETE_STAIRS" : "_CONCRETE_SLAB";
+            for (DyeColor color : DyeColor.values()) {
+                assertEquals(Material.valueOf(color.name() + targetFamily), mapping.invoke(game, material, color), material.name());
+            }
+        }
+        assertTrue(neutralShapes > 100, "cover the whole registered neutral shape palette");
+    }
+
+    @Test
+    void neutralCounterpartsPaintThemselvesAndStayIndependentOfTheirSupport() {
+        Map<Material, String> translations = Map.of(
+                Material.QUARTZ_STAIRS, "_CONCRETE_STAIRS",
+                Material.OAK_STAIRS, "_CONCRETE_STAIRS",
+                Material.STONE_SLAB, "_CONCRETE_SLAB",
+                Material.PETRIFIED_OAK_SLAB, "_CONCRETE_SLAB",
+                Material.GLASS, "_STAINED_GLASS",
+                Material.TINTED_GLASS, "_STAINED_GLASS",
+                Material.GLASS_PANE, "_STAINED_GLASS_PANE",
+                Material.IRON_BARS, "_STAINED_GLASS_PANE",
+                Material.MOSS_CARPET, "_CARPET");
+        for (var translation : translations.entrySet()) {
+            InkWars game = new InkWars();
+            var orange = game.new EquipInkWars(DyeColor.ORANGE, DyeColor.RED, "Orange");
+            var blue = game.new EquipInkWars(DyeColor.LIGHT_BLUE, DyeColor.BLUE, "Blue");
+            game.Equips.add(orange);
+            game.Equips.add(blue);
+            Surface surface = new Surface(translation.getKey(), Map.of("compatible", "retained"));
+            Surface support = new Surface(Material.BLUE_WOOL, Map.of());
+            surface.support = support;
+            assertNull(game.getTeamOwningBlock(surface.block), "unpainted shape does not inherit the substrate's owner");
+            assertTrue(game.isPaintableUnsafely(surface.block));
+            assertTrue(game.paint(surface.block, orange, "offline", .01), translation.getKey().name());
+            assertEquals(Material.valueOf("RED" + translation.getValue()), surface.data.material);
+            assertEquals(1, orange.getOwnedBlocks());
+            game.tickWetInk();
+            assertEquals(Material.valueOf("ORANGE" + translation.getValue()), surface.data.material);
+            assertSame(orange, game.getTeamOwningBlock(surface.block));
+            game.rewet(surface.block, orange, "offline");
+            assertEquals(Material.valueOf("RED" + translation.getValue()), surface.data.material);
+            assertTrue(game.paint(surface.block, orange, "offline", .25));
+            assertEquals(1, orange.getOwnedBlocks(), "same-team repaint does not score twice");
+            assertFalse(game.paint(surface.block, blue, "offline", .5));
+            assertTrue(game.paint(surface.block, blue, "offline", 1));
+            assertEquals(Material.valueOf("BLUE" + translation.getValue()), surface.data.material);
+            assertEquals(0, orange.getOwnedBlocks());
+            assertEquals(1, blue.getOwnedBlocks());
+            assertEquals(Map.of("compatible", "retained"), surface.data.properties);
+            assertEquals(0, surface.supportReads);
+            assertEquals(0, support.writes);
+            assertEquals(Material.BLUE_WOOL, support.data.material);
+            assertFalse(game.wetInk.containsKey(support.block));
+        }
+    }
+
+    @Test
     void unsupportedShapesStillBorrowSupportWhilePlainGlassKeepsItsFamily() {
         InkWars game = new InkWars();
         var team = game.new EquipInkWars(DyeColor.ORANGE, DyeColor.RED, "Orange");
         game.Equips.add(team);
-        for (Material material : new Material[]{Material.OAK_STAIRS, Material.STONE_SLAB, Material.OAK_FENCE,
+        for (Material material : new Material[]{Material.OAK_FENCE,
                 Material.COBBLESTONE_WALL, Material.OAK_TRAPDOOR, Material.OAK_LEAVES}) {
             Surface shape = new Surface(material, Map.of());
             shape.support = new Surface(Material.WHITE_WOOL, Map.of());

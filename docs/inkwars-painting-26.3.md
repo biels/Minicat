@@ -1,5 +1,9 @@
 # InkWars painting on 26.3
 
+The 2026-10-20 [neutral-surface extension](inkwars-neutral-surfaces.md) builds on
+this accepted implementation and also translates undyed stairs/slabs. Its new
+candidate supersedes this document's older candidate for the pending rollout.
+
 ## Scope and starting point
 
 Add painting for all 16 colors of wool slabs, wool stairs, concrete slabs and
