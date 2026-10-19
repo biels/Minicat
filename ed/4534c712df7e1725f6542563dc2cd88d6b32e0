@@ -1,0 +1,28 @@
+src/test/java/com/biel/lobby/mapes/jocs/inkwars/InkWarsPaintingTest.java
+  s_a4af07bb9acfbc::t_ee3ea55a7ecc74 137-143,145-202,208
+  s_a4af07bb9acfbc::t_fc9d2c60aa8a0c 144
+docs/inkwars-painting-26.3.md
+  s_a4af07bb9acfbc::t_b018d050bff16b 3-6
+src/main/java/com/biel/lobby/mapes/jocs/inkwars/InkWars.java
+  s_a4af07bb9acfbc::t_a81b3c68871ce0 516,554,579-580,582-590,592-593,599-600,612,616
+  s_a4af07bb9acfbc::t_fc9d2c60aa8a0c 581,591
+docs/inkwars-neutral-surfaces.md
+  s_a4af07bb9acfbc::t_1cfe0d87f97c5c 1-70,78-82
+  s_a4af07bb9acfbc::t_32880063cceec9 71-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ed4534c712df7e1725f6542563dc2cd88d6b32e0",
+  "prompts": {},
+  "sessions": {
+    "s_a4af07bb9acfbc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1566a-a5ec-7bb0-9dc4-ac264e27443d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
