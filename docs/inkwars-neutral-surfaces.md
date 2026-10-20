@@ -77,6 +77,12 @@ services stopped; the source runtime and public backend were untouched.
 
 Candidate SHA256: `f8f74df37ddbfc3135dc953266ea0fd342be978f4072a3a69a4d506f2f246841`.
 Raw palette and runtime results are under the web checkout's ignored
-`.build/lane/inkwars-26.3/neutral-surfaces/`. No full match or live-server
-deployment is claimed. The backend is production; the operations rollout plan
-requires approval for its guarded jar/profile update and zero-player restart.
+`.build/lane/inkwars-26.3/neutral-surfaces/`.
+
+2026-10-20: after Biel's explicit approval, source commit `ed4534c` was deployed
+with a zero-player graceful restart and a verified jar/profile rollback backup.
+The running jar matches the candidate above; normal startup, all eight plugins,
+database/HTTP health and an ordinary public protocol-777 login/logout passed.
+Task policy, admission and configuration values were preserved. No full live
+InkWars match is claimed. The operations repository's
+`docs/operations/inkwars-painting-26.3.md` records the exact backup and receipts.
