@@ -45,7 +45,7 @@ dependencies {
     if (providers.gradleProperty('tritonApiJar').isPresent()) {
         compileOnly files(providers.gradleProperty('tritonApiJar').get())
     } else {
-        compileOnly 'com.rexcantor64.triton:triton-api:4.1.0'
+        compileOnly 'com.rexcantor64.triton:triton-api:4.2.0'
     }
     compileOnly fileTree(dir: 'lib', include: '*.jar', exclude: [
             'BielAPI-*.jar',
@@ -53,7 +53,7 @@ dependencies {
             'spigot-*.jar'
     ])
     compileOnly 'io.papermc.paper:paper-api:26.3.build.200-stable'
-    compileOnly('com.github.decentsoftware-eu.decentholograms:plugin:2.10.1') {
+    compileOnly('com.github.decentsoftware-eu:decentholograms:2.10.2') {
         transitive = false
     }
     testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'

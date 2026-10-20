@@ -40,7 +40,7 @@ public final class Messages {
 		LocalizationCatalog.validate();
 
 		Plugin plugin = Bukkit.getPluginManager().getPlugin("Triton");
-		if (plugin == null || !plugin.isEnabled()) throw new IllegalStateException("Triton 4.1.0 must be loaded before Minicat");
+		if (plugin == null || !plugin.isEnabled()) throw new IllegalStateException("Triton 4.2.0 must be loaded before Minicat");
 		Triton api = TritonAPI.getInstance();
 		if (api == null) throw new IllegalStateException("Triton's public API is unavailable");
 		privateCatalan = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), "config.yml")).getBoolean("minicat.private-catalan", false);
@@ -51,8 +51,8 @@ public final class Messages {
 	}
 
 	private static void validateConfiguration(Plugin plugin, Triton api) {
-		if (!"4.1.0".equals(plugin.getPluginMeta().getVersion())) {
-			throw new IllegalStateException("Minicat requires Triton 4.1.0; found " + plugin.getPluginMeta().getVersion());
+		if (!"4.2.0".equals(plugin.getPluginMeta().getVersion())) {
+			throw new IllegalStateException("Minicat requires Triton 4.2.0; found " + plugin.getPluginMeta().getVersion());
 		}
 		for (String alias : api.getConfig().getCommandAliases()) {
 			if (java.util.Set.of("lang", "language", "llengua", "idioma").contains(alias.toLowerCase(Locale.ROOT))) {
