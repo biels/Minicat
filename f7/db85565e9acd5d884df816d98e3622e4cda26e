@@ -1,0 +1,19 @@
+docs/inkwars-neutral-surfaces.md
+  s_a4af07bb9acfbc::t_3cc7da63fece4a 80-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f7db85565e9acd5d884df816d98e3622e4cda26e",
+  "prompts": {},
+  "sessions": {
+    "s_a4af07bb9acfbc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1566a-a5ec-7bb0-9dc4-ac264e27443d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
