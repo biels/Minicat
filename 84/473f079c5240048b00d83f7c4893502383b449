@@ -1,0 +1,21 @@
+build.gradle
+  s_1675ec6b058e6d::t_ec788a773c8c5f 48,56
+src/main/java/com/biel/lobby/localization/Messages.java
+  s_1675ec6b058e6d::t_3f5c51314e975c 43,54-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "84473f079c5240048b00d83f7c4893502383b449",
+  "prompts": {},
+  "sessions": {
+    "s_1675ec6b058e6d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15adc-5bf5-7d42-bcdc-7912d61de472",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
