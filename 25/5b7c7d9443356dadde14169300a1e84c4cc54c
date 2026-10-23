@@ -1,0 +1,33 @@
+src/main/java/com/biel/lobby/utilities/data/ForwardedAccount.java
+  s_5718bc3cfa1c49::t_d47db6ab86541c 1-49
+src/main/java/com/biel/lobby/utilities/data/PlayerData.java
+  s_5718bc3cfa1c49::t_d47db6ab86541c 23-29
+src/main/resources/i18n/contracts/accounts.json
+  s_5718bc3cfa1c49::t_d47db6ab86541c 1-11
+src/main/resources/i18n/translations/accounts.json
+  s_5718bc3cfa1c49::t_d47db6ab86541c 1-10
+src/test/java/com/biel/lobby/utilities/data/ForwardedAccountTest.java
+  s_5718bc3cfa1c49::t_d47db6ab86541c 1-28
+src/main/java/com/biel/lobby/lobby.java
+  s_5718bc3cfa1c49::t_d47db6ab86541c 46
+src/main/java/com/biel/lobby/LoginListener.java
+  s_5718bc3cfa1c49::t_d47db6ab86541c 9-11,39-49,52-56
+src/main/java/com/biel/lobby/localization/Messages.java
+  s_5718bc3cfa1c49::t_d47db6ab86541c 169-176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "255b7c7d9443356dadde14169300a1e84c4cc54c",
+  "prompts": {},
+  "sessions": {
+    "s_5718bc3cfa1c49": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16981-6a69-77c2-bb36-3a1efec5e37b",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
