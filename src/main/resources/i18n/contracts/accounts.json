@@ -1,0 +1,11 @@
+{
+  "keys": {
+    "minicat.account.gateway-required": {
+      "constant": "ACCOUNT_GATEWAY_REQUIRED",
+      "purpose": "Refuse a connection lacking the gateway's verified account properties.",
+      "arguments": [],
+      "surfaces": ["chat"],
+      "maxTemplateCharacters": 220
+    }
+  }
+}

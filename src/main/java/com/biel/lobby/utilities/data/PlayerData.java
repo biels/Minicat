@@ -20,7 +20,13 @@ public class PlayerData {
 		this.id = Com.getDataAPI().getPlayerId(user_name);
 	}
 	public PlayerData(Player ply) {
-		this(ply.getName());
+		if (ForwardedAccount.required()) {
+			this.id = ForwardedAccount.of(ply).playerId();
+			this.userName = Com.getDataAPI().getPlayerName(this.id);
+		} else {
+			this.userName = ply.getName();
+			this.id = Com.getDataAPI().getPlayerId(this.userName);
+		}
 	}
 	public int getId() {
 		return id;

@@ -6,6 +6,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import com.biel.lobby.utilities.data.ForwardedAccount;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -33,12 +36,24 @@ public class LoginListener implements Listener {
 		plugin.getLogger().info("Listener created!");
 
 	}
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
+		if (!ForwardedAccount.required()) return;
+		try {
+			ForwardedAccount.fromProperties(event.getPlayerProfile().getProperties());
+		} catch (IllegalArgumentException invalidAccount) {
+			event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+					Messages.beforeLogin(MessageKey.ACCOUNT_GATEWAY_REQUIRED));
+		}
+	}
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
-		String name = player.getName();
-		
-		Com.getDataAPI().registerNewPlayer(player);
+		if (ForwardedAccount.required()) {
+			player.setOp(ForwardedAccount.of(player).operator());
+		} else {
+			Com.getDataAPI().registerNewPlayer(player);
+		}
 		player.setCanPickupItems(true);
 		// A dropped seat is taken back before anything else: the lobby teleport would
 		// find the player where Paper put them, in the game world, and leave them again.

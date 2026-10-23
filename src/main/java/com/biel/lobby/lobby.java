@@ -43,6 +43,7 @@ public final class lobby extends JavaPlugin {
 	@SuppressWarnings("unused")
 	@Override
 	public void onEnable(){
+		com.biel.lobby.utilities.data.ForwardedAccount.verifyForwardingConfiguration();
 		Messages.initialize(this);
 		dataAPI = new DataAPI();
 		dataAPI.requireReady();
