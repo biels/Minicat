@@ -1,0 +1,10 @@
+{
+  "items": [{
+    "type": "text",
+    "key": "minicat.account.gateway-required",
+    "languages": {
+      "en_US": "[minimsg]<red>Join through Minicat at minicat.protocolapp.net or bcn.protocolapp.net:12346.</red>",
+      "ca_ES": "[minimsg]<red>Entra a Minicat des de minicat.protocolapp.net o bcn.protocolapp.net:12346.</red>"
+    }
+  }]
+}

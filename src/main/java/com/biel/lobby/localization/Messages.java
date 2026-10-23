@@ -166,6 +166,14 @@ public final class Messages {
 				.orElseThrow(() -> new IllegalStateException("Missing runtime translation " + key.key() + " for " + languagePlayer.getLang().getName()));
 	}
 
+    /** A refused connection has no Player or saved preference yet; use the deployment fallback. */
+    public static Component beforeLogin(MessageKey key) {
+        validateArguments(key, new MessageArgument[0]);
+        return get().triton.getTranslationManager().getTextComponent(
+                get().triton.getLanguageManager().getMainLanguage(), key.key(), new Component[0])
+                .orElseThrow(() -> new IllegalStateException("Missing login refusal translation " + key.key()));
+    }
+
 	public static void send(Player player, MessageKey key, MessageArgument... arguments) {
 		player.sendMessage(component(player, key, arguments));
 	}
