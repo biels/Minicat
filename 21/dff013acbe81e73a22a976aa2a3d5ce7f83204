@@ -1,0 +1,33 @@
+docs/database/README.md
+  s_e2fbf974bd1970::t_1c0954ef329d21 7-8,14-18
+src/main/java/com/biel/lobby/mapes/Joc.java
+  s_d1b37d0324af02::t_94dfc20a80d6d4 553,555
+src/main/resources/db/migration/V003__last_played_means_rated.sql
+  s_d1b37d0324af02::t_e8cb9fb2234322 1-16
+src/test/java/com/biel/lobby/utilities/data/PostgresqlIntegrationTest.java
+  s_d1b37d0324af02::t_9248ad470e43c3 32,35,101-108,149-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "21dff013acbe81e73a22a976aa2a3d5ce7f83204",
+  "prompts": {},
+  "sessions": {
+    "s_d1b37d0324af02": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b73d4e7a-9f72-4494-9c54-5d41c04d05b4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    },
+    "s_e2fbf974bd1970": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef3f3c0-ad3a-4b9b-9237-d386daa92b5b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
