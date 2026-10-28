@@ -18,6 +18,9 @@ public class MatchData {
 		super();
 		this.id = id;
 	}
+	public int getId() {
+		return id;
+	}
 	public static MatchData registerStart(int gameId, int mapId, String teams){
 		if(Com.getDataAPI().isInDatalessMode())return new DatalessMatchData();
 		return Com.getDataAPI().registerMatchStart(gameId, mapId, teams);

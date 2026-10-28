@@ -7,20 +7,26 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.OptionalDouble;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /** The existing gameplay storage contract, backed exclusively by PostgreSQL. */
 public class DataAPI {
     private static final double UNKNOWN_AVG_GAME_LENGTH_SECONDS = 1800;
+    private static final long LIVE_STATUS_SHUTDOWN_SECONDS = 3;
     private final DatabaseConfig config;
     private final Logger logger = Logger.getLogger("DataAPI");
     private final Set<String> warnings = ConcurrentHashMap.newKeySet();
     private Connection connection;
     private Connection timestampConnection;
+    private Connection liveStatusConnection;
     private volatile boolean unavailable;
     private volatile boolean closed;
     private final ThreadPoolExecutor timestampWriter = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS,
@@ -29,6 +35,13 @@ public class DataAPI {
                 thread.setDaemon(true);
                 return thread;
             }, (runnable, executor) -> warnOnce("telemetry-full", "Timestamp queue is full or stopped; telemetry was not saved."));
+    // One slot, newest wins: a slow database skips intermediate snapshots, never the latest one.
+    private final ThreadPoolExecutor liveStatusWriter = new ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(1), runnable -> {
+                Thread thread = new Thread(runnable, "Minicat live status writer");
+                thread.setDaemon(true);
+                return thread;
+            }, new ThreadPoolExecutor.DiscardOldestPolicy());
 
     public DataAPI() { this(DatabaseConfig.load()); }
     public DataAPI(DatabaseConfig config) { this.config = config; }
@@ -36,9 +49,9 @@ public class DataAPI {
     /** Refuse to enable gameplay against an absent or unmigrated database. */
     public synchronized void requireReady() {
         try (PreparedStatement statement = mainConnection().prepareStatement(
-                "SELECT version FROM minicat_schema_history WHERE version=1")) {
+                "SELECT version FROM minicat_schema_history WHERE version=2")) {
             try (ResultSet rows = statement.executeQuery()) {
-                if (!rows.next()) throw new SQLException("Minicat schema version 1 is not installed");
+                if (!rows.next()) throw new SQLException("Minicat schema version 2 is not installed");
             }
         } catch (SQLException exception) {
             unavailable = true;
@@ -92,6 +105,7 @@ public class DataAPI {
             Thread.currentThread().interrupt();
             timestampWriter.shutdownNow();
         }
+        shutDownLiveStatusWriter();
         synchronized (this) {
             closed = true;
             closeQuietly(connection);
@@ -99,6 +113,22 @@ public class DataAPI {
         }
         // A worker exceeding the shutdown timeout closes its connection when its final job exits.
         if (timestampWriter.isTerminated()) closeQuietly(timestampConnection);
+    }
+
+    private void shutDownLiveStatusWriter() {
+        liveStatusWriter.shutdown();
+        try {
+            if (!liveStatusWriter.awaitTermination(LIVE_STATUS_SHUTDOWN_SECONDS, TimeUnit.SECONDS)) {
+                logger.warning("Live status writer did not finish; the last snapshot may be missing.");
+                liveStatusWriter.shutdownNow();
+                liveStatusWriter.awaitTermination(LIVE_STATUS_SHUTDOWN_SECONDS, TimeUnit.SECONDS);
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            liveStatusWriter.shutdownNow();
+        }
+        // A worker exceeding the shutdown timeout closes its connection when its final job exits.
+        if (liveStatusWriter.isTerminated()) closeQuietly(liveStatusConnection);
     }
 
     public void registerNewPlayer(Player player) { registerNewPlayer(player.getName()); }
@@ -182,7 +212,7 @@ public class DataAPI {
         return execute("ranking", new ArrayList<>(), database -> {
             ArrayList<Integer> ranking = new ArrayList<>();
             try (PreparedStatement statement = database.prepareStatement(
-                    "SELECT player_id FROM players WHERE last_played > statement_timestamp() - INTERVAL '15 days' ORDER BY elo DESC, player_id");
+                    "SELECT player_id FROM ranking ORDER BY position");
                  ResultSet rows = statement.executeQuery()) { while (rows.next()) ranking.add(rows.getInt(1)); }
             return ranking;
         });
@@ -299,5 +329,55 @@ public class DataAPI {
                 if (timestampWriter.isShutdown() && timestampWriter.getQueue().isEmpty()) closeQuietly(timestampConnection);
             }
         });
+    }
+
+    /** Queues the document for the live status writer; only the newest queued document is kept. */
+    public void publishLiveStatus(UUID serverSession, String documentJson) {
+        if (closed || liveStatusWriter.isShutdown()) return;
+        liveStatusWriter.execute(() -> writeLiveStatus(serverSession, documentJson));
+    }
+
+    /** Like {@link #publishLiveStatus}, but waits up to the timeout for PostgreSQL to take the document. */
+    public boolean publishLiveStatusAndWait(UUID serverSession, String documentJson, long timeoutMillis) {
+        if (closed || liveStatusWriter.isShutdown()) return false;
+        FutureTask<Boolean> written = new FutureTask<>(() -> writeLiveStatus(serverSession, documentJson));
+        liveStatusWriter.execute(written);
+        try {
+            return written.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException | ExecutionException exception) {
+            warnOnce("live-status-wait", "Live status was not confirmed within " + timeoutMillis + " ms.");
+            return false;
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    private boolean writeLiveStatus(UUID serverSession, String documentJson) {
+        try {
+            if (liveStatusConnection == null || liveStatusConnection.isClosed() || !liveStatusConnection.isValid(1)) {
+                closeQuietly(liveStatusConnection);
+                liveStatusConnection = config.open("Minicat live status");
+            }
+            try (PreparedStatement statement = liveStatusConnection.prepareStatement("""
+                    INSERT INTO live_status(server, server_session, published_at, document)
+                    VALUES ('minicat', ?, statement_timestamp(), ?::jsonb)
+                    ON CONFLICT (server) DO UPDATE SET server_session=EXCLUDED.server_session,
+                      published_at=EXCLUDED.published_at, document=EXCLUDED.document
+                    """)) {
+                statement.setObject(1, serverSession);
+                statement.setString(2, documentJson);
+                statement.executeUpdate();
+            }
+            warnings.remove("live-status");
+            return true;
+        } catch (SQLException exception) {
+            warnOnce("live-status", "Live status publication failed (SQLSTATE " + exception.getSQLState() + ")");
+            closeQuietly(liveStatusConnection);
+            liveStatusConnection = null;
+            return false;
+        } finally {
+            if (liveStatusWriter.isShutdown() && liveStatusWriter.getQueue().isEmpty()) closeQuietly(liveStatusConnection);
+        }
     }
 }

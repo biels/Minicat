@@ -29,9 +29,10 @@ class PostgresqlIntegrationTest {
         try (Statement statement = fixture.createStatement()) {
             statement.execute("CREATE SCHEMA " + schema);
             statement.execute("SET search_path TO " + schema);
-            String ddl = new String(PostgresqlIntegrationTest.class.getResourceAsStream("/db/migration/V001__postgresql_baseline.sql").readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-            statement.execute(ddl);
-            statement.execute("INSERT INTO minicat_schema_history VALUES (1,'test',repeat('0',64),now())");
+            for (String script : new String[] {"V001__postgresql_baseline.sql", "V002__live_status_and_ranking.sql"}) {
+                statement.execute(new String(PostgresqlIntegrationTest.class.getResourceAsStream("/db/migration/" + script).readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+            }
+            statement.execute("INSERT INTO minicat_schema_history VALUES (1,'test',repeat('0',64),now()), (2,'test',repeat('0',64),now())");
         }
         config = new DatabaseConfig(url + "?currentSchema=" + schema, config.user(), config.password());
     }
@@ -42,7 +43,7 @@ class PostgresqlIntegrationTest {
         }
     }
     @BeforeEach void prepare() throws Exception {
-        fixture.createStatement().execute("TRUNCATE player_match_timestamps, match_history, maps, games, players, map_ratings RESTART IDENTITY CASCADE");
+        fixture.createStatement().execute("TRUNCATE player_match_timestamps, match_history, maps, games, players, map_ratings, live_status RESTART IDENTITY CASCADE");
         api = new DataAPI(config);
         api.requireReady();
     }
@@ -93,6 +94,48 @@ class PostgresqlIntegrationTest {
         }
         try (ResultSet rows = fixture.createStatement().executeQuery("SELECT map_id, winner, end_time IS NOT NULL FROM match_history")) {
             rows.next(); assertEquals(map, rows.getInt(1)); assertEquals(player, rows.getInt(2)); assertTrue(rows.getBoolean(3));
+        }
+    }
+
+    @Test void rankingViewOrdersByRatingThenIdWithinTheWindow() throws Exception {
+        for (String name : new String[] {"Low", "TieFirst", "TieSecond", "Top", "Stale"}) api.registerNewPlayer(name);
+        fixture.createStatement().execute("UPDATE players SET elo=1500 WHERE username='Top'");
+        fixture.createStatement().execute("UPDATE players SET elo=1300 WHERE username IN ('TieFirst','TieSecond')");
+        fixture.createStatement().execute("UPDATE players SET elo=2000, last_played=now()-interval '16 days' WHERE username='Stale'");
+        assertEquals(java.util.List.of(api.getPlayerId("Top"), api.getPlayerId("TieFirst"), api.getPlayerId("TieSecond"), api.getPlayerId("Low")), api.getRanking());
+        try (ResultSet rows = fixture.createStatement().executeQuery("SELECT position, username, elo FROM ranking ORDER BY position")) {
+            rows.next(); assertEquals(1, rows.getInt(1)); assertEquals("Top", rows.getString(2)); assertEquals(1500, rows.getDouble(3));
+            rows.next(); rows.next(); rows.next(); assertEquals(4, rows.getInt(1)); assertEquals("Low", rows.getString(2));
+            assertFalse(rows.next());
+        }
+    }
+
+    @Test void liveStatusKeepsOneRowAndTheLatestDocument() throws Exception {
+        var firstSession = java.util.UUID.randomUUID();
+        var secondSession = java.util.UUID.randomUUID();
+        api.publishLiveStatus(firstSession, "{\"schema\":1,\"state\":\"running\",\"sequence\":1}");
+        for (int sequence = 2; sequence <= 50; sequence++) {
+            api.publishLiveStatus(secondSession, "{\"schema\":1,\"state\":\"running\",\"sequence\":" + sequence + "}");
+        }
+        api.closeConnection();
+        try (ResultSet rows = fixture.createStatement().executeQuery("SELECT count(*) OVER (), server, server_session, document->>'sequence', published_at > now()-interval '1 minute' FROM live_status")) {
+            assertTrue(rows.next());
+            assertEquals(1, rows.getInt(1));
+            assertEquals("minicat", rows.getString(2));
+            assertEquals(secondSession.toString(), rows.getString(3));
+            assertEquals("50", rows.getString(4));
+            assertTrue(rows.getBoolean(5));
+            assertFalse(rows.next());
+        }
+    }
+
+    @Test void stoppedDocumentIsConfirmedBeforeShutdown() throws Exception {
+        var session = java.util.UUID.randomUUID();
+        api.publishLiveStatus(session, "{\"state\":\"running\"}");
+        assertTrue(api.publishLiveStatusAndWait(session, "{\"state\":\"stopped\"}", 3000));
+        try (ResultSet rows = fixture.createStatement().executeQuery("SELECT document->>'state' FROM live_status")) {
+            assertTrue(rows.next());
+            assertEquals("stopped", rows.getString(1));
         }
     }
 

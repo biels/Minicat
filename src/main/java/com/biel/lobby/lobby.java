@@ -24,6 +24,7 @@ import com.biel.lobby.agent.AgentSnapshotHttpServer;
 import com.biel.lobby.localization.MessageArgument;
 import com.biel.lobby.localization.MessageKey;
 import com.biel.lobby.localization.Messages;
+import com.biel.lobby.status.LiveStatusPublisher;
 import com.biel.lobby.utilities.Catalan;
 import com.biel.lobby.utilities.GestorPropietats;
 import com.biel.lobby.utilities.HologramFacade;
@@ -37,6 +38,7 @@ public final class lobby extends JavaPlugin {
 	public GestorMapes gest;
 	public DataAPI dataAPI;
 	private AgentSnapshotHttpServer agentSnapshotHttpServer;
+	private LiveStatusPublisher liveStatusPublisher;
 	// Off at every start. Only an operator's /minicatai on turns it on, never launcher
 	// configuration: the endpoint being up is transport, not consent to publish players.
 	private boolean agentSnapshotsEnabled = false;
@@ -60,10 +62,16 @@ public final class lobby extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new com.biel.lobby.guide.GuideSigns(), this);
 		agentSnapshotHttpServer = new AgentSnapshotHttpServer(this);
 		agentSnapshotHttpServer.start();
+		liveStatusPublisher = new LiveStatusPublisher(this, dataAPI);
+		liveStatusPublisher.start();
 	}
 
 	@Override
 	public void onDisable() {
+		if (liveStatusPublisher != null) {
+			liveStatusPublisher.stop();
+			liveStatusPublisher = null;
+		}
 		if (agentSnapshotHttpServer != null) {
 			agentSnapshotHttpServer.stop();
 			agentSnapshotHttpServer = null;

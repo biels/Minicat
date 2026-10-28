@@ -3,6 +3,7 @@ import com.biel.lobby.localization.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -453,6 +454,14 @@ public abstract class Joc extends MapaResetejable {
 	private Long establirTempsInicial() {
 		return startTimeMillis = System.currentTimeMillis();
 	}
+	/** The match_history row of this match; null until the match has started. */
+	public MatchData getMatchData() {
+		return matchData;
+	}
+	/** When the match started, or null while it has not. */
+	public Instant getStartInstant() {
+		return JocIniciat ? Instant.ofEpochMilli(startTimeMillis) : null;
+	}
 	public Long tempsTranscorregut() {
 		return System.currentTimeMillis() - startTimeMillis;
 	}
@@ -522,12 +531,8 @@ public abstract class Joc extends MapaResetejable {
 	protected boolean onlyPlayersFromSameIP(){
 		String firstAddress = null;
 		for(Player p : getPlayers()){
-			java.net.InetSocketAddress socketAddress = p.getAddress();
-			if (socketAddress == null) return false;
-			java.net.InetAddress resolvedAddress = socketAddress.getAddress();
-			String numericAddress = resolvedAddress != null
-					? resolvedAddress.getHostAddress()
-					: socketAddress.getHostString();
+			String numericAddress = numericAddressOf(p);
+			if (numericAddress == null) return false;
 			if(firstAddress == null) {
 				firstAddress = numericAddress;
 			} else if(!firstAddress.equals(numericAddress)) {
@@ -535,6 +540,15 @@ public abstract class Joc extends MapaResetejable {
 			}
 		}
 		return firstAddress != null;
+	}
+	/** The numeric remote address of this player's connection, or null when it is unknown. */
+	public static String numericAddressOf(Player p){
+		java.net.InetSocketAddress socketAddress = p.getAddress();
+		if (socketAddress == null) return null;
+		java.net.InetAddress resolvedAddress = socketAddress.getAddress();
+		return resolvedAddress != null
+				? resolvedAddress.getHostAddress()
+				: socketAddress.getHostString();
 	}
 	protected boolean canBeRanked(){
 		return(segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 20) && getEloK() != 0 && Com.getPlugin().isInRankedMode() && !unfairFlag);

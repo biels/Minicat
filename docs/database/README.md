@@ -4,7 +4,9 @@ Minicat uses PostgreSQL exclusively. Gameplay SQL stays in `DataAPI`; schema SQL
 lives in `src/main/resources/db/migration`. The runtime checks the migration ledger
 at startup and does not apply DDL with application credentials.
 
-Provision an empty Minicat database, apply `V001__postgresql_baseline.sql` through
+Provision an empty Minicat database, apply `V001__postgresql_baseline.sql` and
+`V002__live_status_and_ranking.sql` (the `live_status` projection table and the
+`ranking` view that in-game `/top`, the MOTD and the Telegram bot all read) through
 the operations migration tool, and install a restricted server-local
 `plugins/lobby/database.properties` (see `database.properties.example`). The file
 can instead be selected by `minicat.database.config` or `MINICAT_DATABASE_CONFIG`.
@@ -28,7 +30,7 @@ with `MINICAT_TEST_DATABASE_CONFIG=/path/to/properties ./gradlew postgresTest`.
 The configured database must be named `minicat_test`; the test role must own it.
 Tests create/drop a uniquely named schema there and never clear a shared schema.
 The suite covers generated map IDs, naming, fractional money, reporting, telemetry
-drain, atomic concurrent rating changes, failed-write acknowledgement and reconnect.
+drain, the ranking view, the latest-wins live status writer, atomic concurrent rating changes, failed-write acknowledgement and reconnect.
 
 Operational export/import/equivalence/restore and cutover procedures live in
 `minicat-repo/ops/database/postgresql`; do not run the retired MySQL dev container
