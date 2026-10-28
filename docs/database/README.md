@@ -4,14 +4,17 @@ Minicat uses PostgreSQL exclusively. Gameplay SQL stays in `DataAPI`; schema SQL
 lives in `src/main/resources/db/migration`. The runtime checks the migration ledger
 at startup and does not apply DDL with application credentials.
 
-Provision an empty Minicat database, apply `V001__postgresql_baseline.sql` and
-`V002__live_status_and_ranking.sql` (the `live_status` projection table and the
-`ranking` view that in-game `/top`, the MOTD and the Telegram bot all read) through
-the operations migration tool, and install a restricted server-local
+Provision an empty Minicat database, apply every script in `db/migration` in order
+through the operations migration tool, and install a restricted server-local
 `plugins/lobby/database.properties` (see `database.properties.example`). The file
 can instead be selected by `minicat.database.config` or `MINICAT_DATABASE_CONFIG`.
 Do not commit the populated file. Startup fails explicitly if configuration,
 PostgreSQL or the required schema version is unavailable.
+
+`V002` adds the `live_status` projection and the `ranking` view, which in-game `/top`,
+the MOTD and the Telegram bot all read. `V003` makes `players.last_played` the time of the
+player's last rated or scored result: a new player has none, so they enter the ranking
+only after their first one.
 
 The connection has bounded connect/socket/statement/lock timeouts. Main gameplay
 operations serialize ownership of one JDBC connection; telemetry has an independent

@@ -550,8 +550,9 @@ public abstract class Joc extends MapaResetejable {
 				? resolvedAddress.getHostAddress()
 				: socketAddress.getHostString();
 	}
+	/** A rating compares players: alone, a match would only write a zero change that counts as having played. */
 	protected boolean canBeRanked(){
-		return(segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 20) && getEloK() != 0 && Com.getPlugin().isInRankedMode() && !unfairFlag);
+		return(getParticipantNames().size() >= 2 && segonsTranscorreguts() > (onlyPlayersFromSameIP() ? 60 * 15 : 20) && getEloK() != 0 && Com.getPlugin().isInRankedMode() && !unfairFlag);
 	}
 	/**
 	 * Rates the match by seat, not by presence: a player away for a moment at the end

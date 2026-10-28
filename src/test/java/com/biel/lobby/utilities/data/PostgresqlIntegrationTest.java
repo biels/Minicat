@@ -29,10 +29,10 @@ class PostgresqlIntegrationTest {
         try (Statement statement = fixture.createStatement()) {
             statement.execute("CREATE SCHEMA " + schema);
             statement.execute("SET search_path TO " + schema);
-            for (String script : new String[] {"V001__postgresql_baseline.sql", "V002__live_status_and_ranking.sql"}) {
+            for (String script : new String[] {"V001__postgresql_baseline.sql", "V002__live_status_and_ranking.sql", "V003__last_played_means_rated.sql"}) {
                 statement.execute(new String(PostgresqlIntegrationTest.class.getResourceAsStream("/db/migration/" + script).readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
             }
-            statement.execute("INSERT INTO minicat_schema_history VALUES (1,'test',repeat('0',64),now()), (2,'test',repeat('0',64),now())");
+            statement.execute("INSERT INTO minicat_schema_history VALUES (1,'test',repeat('0',64),now()), (2,'test',repeat('0',64),now()), (3,'test',repeat('0',64),now())");
         }
         config = new DatabaseConfig(url + "?currentSchema=" + schema, config.user(), config.password());
     }
@@ -98,10 +98,14 @@ class PostgresqlIntegrationTest {
     }
 
     @Test void rankingViewOrdersByRatingThenIdWithinTheWindow() throws Exception {
-        for (String name : new String[] {"Low", "TieFirst", "TieSecond", "Top", "Stale"}) api.registerNewPlayer(name);
-        fixture.createStatement().execute("UPDATE players SET elo=1500 WHERE username='Top'");
-        fixture.createStatement().execute("UPDATE players SET elo=1300 WHERE username IN ('TieFirst','TieSecond')");
-        fixture.createStatement().execute("UPDATE players SET elo=2000, last_played=now()-interval '16 days' WHERE username='Stale'");
+        for (String name : new String[] {"Low", "TieFirst", "TieSecond", "Top", "Stale", "Newcomer"}) api.registerNewPlayer(name);
+        // Rated results put players in the ranking; Newcomer has none and stays out.
+        assertTrue(api.setElo(api.getPlayerId("Low"), 1200));
+        assertTrue(api.setElo(api.getPlayerId("Top"), 1500));
+        assertTrue(api.setElo(api.getPlayerId("TieFirst"), 1300));
+        assertTrue(api.setElo(api.getPlayerId("TieSecond"), 1300));
+        assertTrue(api.setElo(api.getPlayerId("Stale"), 2000));
+        fixture.createStatement().execute("UPDATE players SET last_played=now()-interval '16 days' WHERE username='Stale'");
         assertEquals(java.util.List.of(api.getPlayerId("Top"), api.getPlayerId("TieFirst"), api.getPlayerId("TieSecond"), api.getPlayerId("Low")), api.getRanking());
         try (ResultSet rows = fixture.createStatement().executeQuery("SELECT position, username, elo FROM ranking ORDER BY position")) {
             rows.next(); assertEquals(1, rows.getInt(1)); assertEquals("Top", rows.getString(2)); assertEquals(1500, rows.getDouble(3));
@@ -142,6 +146,9 @@ class PostgresqlIntegrationTest {
     @Test void reportsKeepEligibilityAndDurations() throws Exception {
         api.registerNewPlayer("Recent"); api.registerNewPlayer("Old");
         int recent = api.getPlayerId("Recent");
+        assertEquals(java.util.List.of(), api.getRanking());
+        assertTrue(api.addElo(recent, 4));
+        assertTrue(api.addElo(api.getPlayerId("Old"), 4));
         fixture.createStatement().execute("UPDATE players SET last_played=now()-interval '15 days 1 second' WHERE username='Old'");
         assertEquals(java.util.List.of(recent), api.getRanking());
         int first = api.getGameId("First"); int second = api.getGameId("Second");
