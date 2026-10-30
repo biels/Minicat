@@ -210,6 +210,13 @@ public final class lobby extends JavaPlugin {
 			return true;
 		}
 
+		if(cmd.getName().equalsIgnoreCase("r")){
+			if (!sender.isOp()) return true;
+			ranked = !ranked;
+			for (Player recipient : Bukkit.getOnlinePlayers()) Messages.send(recipient, ranked ? MessageKey.RANKED_ON : MessageKey.RANKED_OFF);
+			return true;
+		}
+
 		if (!(sender instanceof Player)) {
 			sender.sendMessage("Aquesta ordre només es pot executar com a jugador.");
 			return true;
@@ -263,12 +270,6 @@ public final class lobby extends JavaPlugin {
 			return true;
 		}
 
-		if(cmd.getName().equalsIgnoreCase("r")){
-
-			ranked = !ranked;
-			for (Player recipient : Bukkit.getOnlinePlayers()) Messages.send(recipient, ranked ? MessageKey.RANKED_ON : MessageKey.RANKED_OFF);
-			return true;
-		}
 		if(cmd.getName().equalsIgnoreCase("a")){
 			gest.openAllGamesMenu(ply);
 			return true;

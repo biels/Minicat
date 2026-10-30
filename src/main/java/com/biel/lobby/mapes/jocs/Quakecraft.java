@@ -344,7 +344,7 @@ public class Quakecraft extends JocScoreRace {
 						Player p = (Player) ent;
 						PlayerInfo i = getPlayerInfo(p);
 						//getWorld().playEffect(p.getEyeLocation(), Effect.CLOUD, 0);
-						if(i.isImmune() || i.isAFK() || isSpectator(p))continue;
+						if(i.isImmune() || isSpectator(p))continue;
 					}
 					toAdd.add(ent);						
 					toAdd.addAll(getAffectedEntities(ent, depth - 1, bRange));

@@ -303,14 +303,6 @@
         "en_US": "[minimsg]<red>Player not found: %1.</red>",
         "ca_ES": "[minimsg]<red>No es troba el jugador: %1.</red>"
       }
-    },
-    {
-      "type": "text",
-      "key": "minicat.navigation.instance.ready",
-      "languages": {
-        "en_US": "[minimsg]<gray>Instance %1 is ready. Join with %2.</gray>",
-        "ca_ES": "[minimsg]<gray>La instància %1 ja està llesta. Entra-hi amb %2.</gray>"
-      }
     }
   ]
 }

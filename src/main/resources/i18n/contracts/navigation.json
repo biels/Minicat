@@ -457,24 +457,6 @@
         "actionbar"
       ],
       "maxTemplateCharacters": 220
-    },
-    "minicat.navigation.instance.ready": {
-      "constant": "INSTANCE_READY",
-      "purpose": "Instance %1 is ready. Join with %2.",
-      "arguments": [
-        {
-          "name": "instance",
-          "type": "TEXT"
-        },
-        {
-          "name": "command",
-          "type": "TEXT"
-        }
-      ],
-      "surfaces": [
-        "chat"
-      ],
-      "maxTemplateCharacters": 220
     }
   }
 }

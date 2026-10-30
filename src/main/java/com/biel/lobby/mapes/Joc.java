@@ -1562,7 +1562,7 @@ public abstract class Joc extends MapaResetejable {
 			this.objectivesCompleted = objectivesCompleted;
 		}
 		public boolean isImmune() {
-			return immune || isAFK(); //|| Duration.between(lastRespawnEvent, ZonedDateTime.now()).compareTo(Duration.ofSeconds(4)) > 0;
+			return immune;
 		}
 		public void setImmune(boolean immune) {
 			this.immune = immune;

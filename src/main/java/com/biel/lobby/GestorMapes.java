@@ -461,7 +461,12 @@ public class GestorMapes implements Listener{
 			return null;
 		}
 		/** Creations under way, by template map id (-1 for a single-map game). */
-		private final Map<Integer, CompletableFuture<Joc>> pendingCreations = new HashMap<>();
+		private final Map<Integer, PendingInstanceCreation> pendingCreations = new HashMap<>();
+		private static final class PendingInstanceCreation {
+			final CompletableFuture<Joc> completion = new CompletableFuture<>();
+			boolean retainEmpty;
+			PendingInstanceCreation(boolean retainEmpty) { this.retainEmpty = retainEmpty; }
+		}
 
 		/**
 		 * Creates an instance without freezing the server: the world folder is copied
@@ -470,11 +475,21 @@ public class GestorMapes implements Listener{
 		 * one instead of starting another. The future completes on the main thread.
 		 */
 		public CompletableFuture<Joc> addMap(Integer map){
+			return addMap(map, true);
+		}
+		/** Menu creations are reclaimed if none of their waiting players enters. */
+		CompletableFuture<Joc> createForPlayers(Integer map){
+			return addMap(map, false);
+		}
+		private CompletableFuture<Joc> addMap(Integer map, boolean retainEmpty){
 			Integer templateKey = map == null ? -1 : map;
-			CompletableFuture<Joc> pending = pendingCreations.get(templateKey);
-			if (pending != null) return pending;
+			PendingInstanceCreation pending = pendingCreations.get(templateKey);
+			if (pending != null) {
+				pending.retainEmpty |= retainEmpty;
+				return pending.completion;
+			}
 
-			CompletableFuture<Joc> creation = new CompletableFuture<>();
+			PendingInstanceCreation creation = new PendingInstanceCreation(retainEmpty);
 			Joc newInstance;
 			try {
 				newInstance = (Joc) ClassMapa.newInstance();
@@ -484,8 +499,8 @@ public class GestorMapes implements Listener{
 				newInstance.reserveLiveWorld();
 			} catch (ReflectiveOperationException | RuntimeException e) {
 				plugin.getLogger().log(Level.SEVERE, "Could not start creating an instance of " + nom, e);
-				creation.completeExceptionally(e);
-				return creation;
+				creation.completion.completeExceptionally(e);
+				return creation.completion;
 			}
 			pendingCreations.put(templateKey, creation);
 			Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -498,16 +513,21 @@ public class GestorMapes implements Listener{
 				RuntimeException outcome = copyFailure;
 				Bukkit.getScheduler().runTask(plugin, () -> finishCreation(templateKey, creation, newInstance, outcome));
 			});
-			return creation;
+			return creation.completion;
 		}
-		private void finishCreation(Integer templateKey, CompletableFuture<Joc> creation, Joc newInstance, RuntimeException copyFailure){
-			pendingCreations.remove(templateKey);
+		private void finishCreation(Integer templateKey, PendingInstanceCreation creation, Joc newInstance, RuntimeException copyFailure){
+			pendingCreations.remove(templateKey, creation);
 			RuntimeException failure = copyFailure;
 			if (failure == null) {
 				try {
 					newInstance.initialize();
 					Instàncies.add(newInstance);
-					creation.complete(newInstance);
+					creation.completion.complete(newInstance);
+					if (!creation.retainEmpty) {
+						// Complete every shared join first; an abandoned requester must not
+						// unload a world another requester is about to enter.
+						Bukkit.getScheduler().runTask(plugin, () -> checkNecessary(newInstance));
+					}
 					return;
 				} catch (RuntimeException e) {
 					failure = e;
@@ -520,7 +540,7 @@ public class GestorMapes implements Listener{
 				newInstance.discardLiveWorldFiles();
 			}
 			newInstance.destroyEventBus();
-			creation.completeExceptionally(failure);
+			creation.completion.completeExceptionally(failure);
 		}
 		/** Sends the player into an instance once it exists, and tells them if it never does. */
 		void joinWhenCreated(CompletableFuture<Joc> creation, Player ply){
@@ -533,9 +553,8 @@ public class GestorMapes implements Listener{
 					return;
 				}
 				if (!lobby.isOnLobby(ply)) {
-					// They went somewhere else while the world was being copied; do not
-					// pull them out of it, just tell them where the new one is.
-					Messages.send(ply, MessageKey.INSTANCE_READY, MessageArgument.text("instance", game.getMapName()), MessageArgument.text("command", "/minicatjoin " + game.getMapName()));
+					// The request was abandoned; do not pull them out of another game
+					// or offer a link to an empty instance that will be reclaimed.
 					return;
 				}
 				game.Join(ply);
@@ -654,7 +673,7 @@ public class GestorMapes implements Listener{
                     map.Join(event.getPlayer());
                 } else {
                     event.setWillClose(true);
-                    joinWhenCreated(addMap(m == MapMode.MULTIPLE ? 26 - event.getPosition() : null), event.getPlayer()); /*New*/
+                    joinWhenCreated(createForPlayers(m == MapMode.MULTIPLE ? 26 - event.getPosition() : null), event.getPlayer()); /*New*/
                 }
 
             });
