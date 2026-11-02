@@ -39,6 +39,7 @@ public final class lobby extends JavaPlugin {
 	public DataAPI dataAPI;
 	private AgentSnapshotHttpServer agentSnapshotHttpServer;
 	private LiveStatusPublisher liveStatusPublisher;
+	private SurvivalEntry survivalEntry;
 	// Off at every start. Only an operator's /minicatai on turns it on, never launcher
 	// configuration: the endpoint being up is transport, not consent to publish players.
 	private boolean agentSnapshotsEnabled = false;
@@ -49,6 +50,7 @@ public final class lobby extends JavaPlugin {
 		Messages.initialize(this);
 		dataAPI = new DataAPI();
 		dataAPI.requireReady();
+		survivalEntry = new SurvivalEntry(this);
 		getServer().getPluginManager().registerEvents(new ImmediateRespawn(), this);
 		for (World world : Bukkit.getWorlds()) ImmediateRespawn.configure(world);
 		// TODO Insert logic to be performed when the plugin is enabled
@@ -81,6 +83,9 @@ public final class lobby extends JavaPlugin {
 	}
 	public AgentSnapshotHttpServer getAgentSnapshotHttpServer() {
 		return agentSnapshotHttpServer;
+	}
+	public SurvivalEntry getSurvivalEntry() {
+		return survivalEntry;
 	}
 	public boolean isAgentSnapshotsEnabled() {
 		return agentSnapshotsEnabled;

@@ -121,6 +121,33 @@
         "chat"
       ],
       "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.survival": {
+      "constant": "LOBBY_SURVIVAL",
+      "purpose": "Enter the persistent survival world.",
+      "arguments": [],
+      "surfaces": [
+        "item"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.survival.lore": {
+      "constant": "LOBBY_SURVIVAL_LORE",
+      "purpose": "Registered accounts only; save your account with /account.",
+      "arguments": [],
+      "surfaces": [
+        "item"
+      ],
+      "maxTemplateCharacters": 220
+    },
+    "minicat.lobby.survival.return": {
+      "constant": "LOBBY_SURVIVAL_RETURN",
+      "purpose": "Return from survival with /lobby.",
+      "arguments": [],
+      "surfaces": [
+        "item"
+      ],
+      "maxTemplateCharacters": 220
     }
   }
 }

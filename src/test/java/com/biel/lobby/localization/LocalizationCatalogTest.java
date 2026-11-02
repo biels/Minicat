@@ -7,6 +7,14 @@ class LocalizationCatalogTest {
   assertEquals(MessageKey.values().length, LocalizationCatalog.bundledItems().size());
   assertEquals(java.util.List.of("en", "ca"), LanguageCatalog.entries().stream().map(LanguageCatalog.Entry::code).toList());
  }
+ @Test void survivalEntryExplainsAccountAccessAndTheReturnCommandInBothLanguages() {
+  var items = LocalizationCatalog.bundledItems();
+  for (String locale : java.util.List.of("en_US", "ca_ES")) {
+   assertFalse(items.get("minicat.lobby.survival").getAsJsonObject("languages").get(locale).getAsString().isBlank());
+   assertTrue(items.get("minicat.lobby.survival.lore").getAsJsonObject("languages").get(locale).getAsString().contains("/account"));
+   assertTrue(items.get("minicat.lobby.survival.return").getAsJsonObject("languages").get(locale).getAsString().contains("/lobby"));
+  }
+ }
  @Test void rejectsMissingPlaceholder() {
   var items = LocalizationCatalog.bundledItems();
   items.get(MessageKey.INFO_UNKNOWN_GAME.key()).getAsJsonObject("languages").addProperty("ca_ES", "[minimsg]Missing argument");

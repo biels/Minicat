@@ -34,13 +34,8 @@ public class Options {
 		inventory.setItem(3, button3.getItemStack());
 		ItemButton button4 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.BLAZE_POWDER), Messages.sharedItemMarker(MessageKey.LOBBY_INSTANCES), Messages.sharedItemMarker(MessageKey.LOBBY_INSTANCES_LORE)), ply, event -> Com.getGest().openAllGamesMenu(event.getPlayer()));
 		inventory.setItem(5, button4.getItemStack());
-//		ItemButton button5 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.SAPLING), ChatColor.RED + "Fast" + ChatColor.GREEN + "Survival", "Servidor sense normes, mode de joc FastSurvival", "(Cercar FastSurvival al google)"), ply, new ItemButton.OptionClickEventHandler() {
-//			@Override
-//			public void onOptionClick(ItemButton.OptionClickEvent event) {
-//				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), MessageFormat.format("sync console bungee send {0} FastSurvival", event.getPlayer().getName()));			
-//			}
-//		});
-//		inventory.setItem(6, button5.getItemStack());
+		ItemButton survivalButton = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.OAK_SAPLING), Messages.sharedItemMarker(MessageKey.LOBBY_SURVIVAL), Messages.sharedItemMarker(MessageKey.LOBBY_SURVIVAL_LORE), Messages.sharedItemMarker(MessageKey.LOBBY_SURVIVAL_RETURN)), ply, event -> lobby.getPlugin().getSurvivalEntry().connect(event.getPlayer()));
+		inventory.setItem(6, survivalButton.getItemStack());
 		if (ply.isOp()){
 			ItemButton button2 = new ItemButton(Utils.setItemNameAndLore(new ItemStack(Material.LEVER), ChatColor.RED + "Reiniciar",  ChatColor.WHITE + "Reinicia el servidor.", ChatColor.WHITE + "Cal esperar uns 10-15s per tornar a entrar."), ply, event -> {
                 for(Player p : Bukkit.getOnlinePlayers())p.kickPlayer(ChatColor.GREEN + "" + ChatColor.BOLD + "REINICIANT...");

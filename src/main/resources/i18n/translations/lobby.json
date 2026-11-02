@@ -87,6 +87,30 @@
         "en_US": "[minimsg]<gray>%1 returned you to the lobby.</gray>",
         "ca_ES": "[minimsg]<gray>%1 t’ha fet tornar al lobby.</gray>"
       }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.survival",
+      "languages": {
+        "en_US": "[minimsg]<green>Survival</green>",
+        "ca_ES": "[minimsg]<green>Supervivència</green>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.survival.lore",
+      "languages": {
+        "en_US": "[minimsg]<white>Registered accounts only. Save yours with /account.</white>",
+        "ca_ES": "[minimsg]<white>Només comptes registrats. Desa el teu amb /account.</white>"
+      }
+    },
+    {
+      "type": "text",
+      "key": "minicat.lobby.survival.return",
+      "languages": {
+        "en_US": "[minimsg]<gray>Return here with /lobby.</gray>",
+        "ca_ES": "[minimsg]<gray>Torna aquí amb /lobby.</gray>"
+      }
     }
   ]
 }
