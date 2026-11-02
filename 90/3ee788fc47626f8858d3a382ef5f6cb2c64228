@@ -1,0 +1,32 @@
+src/main/java/com/biel/lobby/SurvivalEntry.java
+  s_686da832c74fbb::t_31f807abd0d90e 1-23
+src/main/java/com/biel/lobby/utilities/Options.java
+  s_686da832c74fbb::t_31f807abd0d90e 37-38
+src/test/java/com/biel/lobby/localization/LocalizationCatalogTest.java
+  s_686da832c74fbb::t_31f807abd0d90e 10-17
+src/test/java/com/biel/lobby/SurvivalEntryTest.java
+  s_686da832c74fbb::t_976d8318867d52 1-49
+src/main/java/com/biel/lobby/lobby.java
+  s_686da832c74fbb::t_31f807abd0d90e 42,53,87-88
+  s_686da832c74fbb::t_666482584a6029 89
+src/main/resources/i18n/contracts/lobby.json
+  s_686da832c74fbb::t_5906ccc6a4bddb 124-150
+src/main/resources/i18n/translations/lobby.json
+  s_686da832c74fbb::t_3efd6f63b07058 90-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "903ee788fc47626f8858d3a382ef5f6cb2c64228",
+  "prompts": {},
+  "sessions": {
+    "s_686da832c74fbb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a19e17-5ffd-79d2-b541-32acec41c0ef",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Biel Simon Rojas <bielsimon2@gmail.com>"
+    }
+  }
+}
